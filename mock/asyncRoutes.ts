@@ -2,9 +2,17 @@
 import { defineFakeRoute } from "vite-plugin-fake-server/client";
 
 /**
- * roles：页面级别权限，这里模拟二种 "admin"、"common"
- * admin：管理员角色
- * common：普通角色
+ * roles：页面级别权限。
+ *
+ * PR-4：角色名已映射为 srvf-nest-api 的真实 Role enum（裁决 3）：
+ *   - SUPER_ADMIN：超级管理员
+ *   - ADMIN：管理员
+ *   - USER：普通用户
+ *
+ * 说明：本 mock 文件在 starter 阶段被禁用（`mock/asyncRoutes.ts` data 数组中已隐藏
+ * 演示路由的注册），第一阶段一律不启用 `src/router/asyncRoutes.ts`（裁决 2）。
+ * 但 mock 内 roles 字段仍按后端真实角色名保持，避免历史演示路径残留 admin/common
+ * 字面量，污染后续派生项目（裁决 3：演示角色名不得作为正式角色）。
  */
 
 const permissionRouter = {
@@ -20,14 +28,14 @@ const permissionRouter = {
       name: "PermissionPage",
       meta: {
         title: "页面权限",
-        roles: ["admin", "common"]
+        roles: ["SUPER_ADMIN", "ADMIN", "USER"]
       }
     },
     {
       path: "/permission/button",
       meta: {
         title: "按钮权限",
-        roles: ["admin", "common"]
+        roles: ["SUPER_ADMIN", "ADMIN", "USER"]
       },
       children: [
         {
@@ -69,7 +77,7 @@ const scheduleRouter = {
       name: "Schedule",
       meta: {
         title: "日历排班",
-        roles: ["admin"]
+        roles: ["SUPER_ADMIN", "ADMIN"]
       }
     }
   ]
@@ -88,7 +96,7 @@ const dictManagementRouter = {
       name: "SystemDict",
       meta: {
         title: "字典管理",
-        roles: ["admin"]
+        roles: ["SUPER_ADMIN", "ADMIN"]
       }
     }
   ]
@@ -110,7 +118,7 @@ const _tenantManagementRouter = {
       meta: {
         icon: "ri:list-check",
         title: "租户列表",
-        roles: ["admin"]
+        roles: ["SUPER_ADMIN", "ADMIN"]
       }
     },
     {
@@ -119,7 +127,7 @@ const _tenantManagementRouter = {
       meta: {
         icon: "ri:file-paper-line",
         title: "租户套餐",
-        roles: ["admin"]
+        roles: ["SUPER_ADMIN", "ADMIN"]
       }
     }
   ]
