@@ -605,3 +605,96 @@ Refs:
 - docs/srvf-api-contract-readiness.md §5 / §6
 - docs/srvf-frontend-derivation.md §4 Q4 (Role enum)
 ```
+
+---
+
+## 17. PR-5-B Implementation Record
+
+> 本节由 PR-5-B 实施时追加。仅记录"实际落地结果"，**不**回头改本文 §0~§16 任何方案规定。
+
+### 17.1 实际新增 / 修改文件
+
+| 类型 | 路径                                                                                                         |
+| ---- | ------------------------------------------------------------------------------------------------------------ |
+| 新增 | `src/router/modules/srvf.ts`                                                                                 |
+| 新增 | `src/views/srvf/base-data/dictionaries/index.vue`                                                            |
+| 新增 | `src/views/srvf/base-data/organizations/index.vue`                                                           |
+| 新增 | `src/views/srvf/base-data/contribution-rules/index.vue`                                                      |
+| 新增 | `src/views/srvf/members-domain/members/index.vue`                                                            |
+| 新增 | `src/views/srvf/members-domain/certificates/index.vue`                                                       |
+| 新增 | `src/views/srvf/activities-domain/activities/index.vue`                                                      |
+| 新增 | `src/views/srvf/activities-domain/registrations/index.vue`                                                   |
+| 新增 | `src/views/srvf/activities-domain/attendances/index.vue`                                                     |
+| 新增 | `src/views/srvf/system/users/index.vue`                                                                      |
+| 新增 | `src/views/srvf/system/rbac/index.vue`                                                                       |
+| 新增 | `src/views/srvf/system/audit-logs/index.vue`                                                                 |
+| 修改 | `src/views/welcome/index.vue`（替换 template 为 SRVF dashboard 占位；`defineOptions.name = "Welcome"` 保持） |
+| 追加 | `docs/srvf-static-menu-skeleton-plan.md`（本节 §17）                                                         |
+
+→ **合计**：1 个新路由模块 + 11 个新占位页 + 1 个 welcome 改造 + 1 个文档追加 = **14 个文件改动**。
+
+### 17.2 实际菜单结构（与 §6.1 / §7.2 / §7.3 一致）
+
+```
+首页 (Welcome, rank 0,  已存在)
+├─ /welcome  ← 替换为 SRVF dashboard 占位
+
+SRVF · 基础数据 (rank 10) — /srvf/base-data → /srvf/base-data/dictionaries
+├─ 字典管理     SrvfDictionaries
+├─ 组织架构     SrvfOrganizations
+└─ 贡献值规则   SrvfContributionRules
+
+SRVF · 队员 (rank 11) — /srvf/members-domain → /srvf/members-domain/members
+├─ 队员列表     SrvfMembers
+└─ 证书         SrvfCertificates
+
+SRVF · 活动 (rank 12) — /srvf/activities-domain → /srvf/activities-domain/activities
+├─ 活动列表     SrvfActivities
+├─ 报名记录     SrvfRegistrations
+└─ 考勤管理     SrvfAttendances
+
+SRVF · 系统 (rank 13, meta.roles=["SUPER_ADMIN"]) — /srvf/system → /srvf/system/users
+├─ 用户管理     SrvfUsers       (roles: ["SUPER_ADMIN","ADMIN"])
+├─ 角色权限     SrvfRbac        (roles: ["SUPER_ADMIN"])
+└─ 审计日志     SrvfAuditLogs   (roles: ["SUPER_ADMIN"])
+
+异常页面 (Error, rank 9, 已存在)
+```
+
+### 17.3 边界自检（grep）
+
+| 检查项                            | 结果                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 是否接 API                        | **否**。占位页 `<script setup>` 内无 `import` 任何 `@/api/*`、无 `request`、无 `axios`、无 `fetch`                                                                                                                                                                                                                                                                                                                                                                                                   |
+| 是否新增 mock                     | **否**。`mock/**` diff 为 0                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| 是否触碰禁止范围                  | **否**。`src/router/asyncRoutes.ts` / `src/router/index.ts` / `src/router/utils.ts` / `src/router/modules/{home,error,remaining}.ts` / `src/views/login/**` / `src/api/**` / `src/utils/auth.ts` / `src/utils/http/**` / `src/store/modules/user.ts` / `package.json` / `pnpm-lock.yaml` / `vite.config.ts` / `.env*` / `tsconfig.json` / `README.md` / `CLAUDE.md` / `AGENTS.md` / `docs/pure-admin/**` / `docs/srvf-api-contract-readiness.md` / `docs/srvf-frontend-derivation.md` 全部 diff 为 0 |
+| 是否启用 `asyncRoutes`            | **否**。`src/router/asyncRoutes.ts` 未触碰；`src/views/login/index.vue` import 不变；未新增 `getMenuList`                                                                                                                                                                                                                                                                                                                                                                                            |
+| 是否恢复 `tenantManagementRouter` | **否**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| 是否定义后端字段 / 状态机 code    | **否**。占位页文案不含 `memberNo / displayName / activityTypeCode / certStatusCode / contributionPoints / pending / pass / present / verified / approved / final_rejected` 等                                                                                                                                                                                                                                                                                                                        |
+| 是否新增依赖                      | **否**。仅用项目已有 Element Plus 与 iconify（`ri/*`）；`package.json` 未触碰                                                                                                                                                                                                                                                                                                                                                                                                                        |
+
+### 17.4 检查命令（执行结果填入 commit 报告）
+
+- `pnpm typecheck`
+- `pnpm lint`
+- `pnpm build`
+- `git diff -- src/router/asyncRoutes.ts src/router/index.ts src/router/utils.ts src/router/modules/home.ts src/router/modules/error.ts src/router/modules/remaining.ts src/views/login src/api src/utils/auth.ts src/utils/http src/store/modules/user.ts mock build .env* vite.config.ts package.json pnpm-lock.yaml README.md CLAUDE.md AGENTS.md public tsconfig.json types docs/pure-admin docs/srvf-api-contract-readiness.md docs/srvf-frontend-derivation.md`（必须空）
+
+### 17.5 落地差异（v0.2 → 实施）
+
+| #   | 方案 §x                                                  | 实施差异                                                | 原因                                                                                                                                                                                                                                                                                        |
+| --- | -------------------------------------------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | §10.1 `/srvf/system` 容器 `meta.roles = ["SUPER_ADMIN"]` | **容器顶层 `meta.roles` 未写**；3 个子菜单 `roles` 保留 | starter 底座类型 `RouteConfigsTable.meta` 顶层仅支持 `title/icon/showLink/rank`（见 `types/router.d.ts:92-101`），不支持 `roles`。`types/router.d.ts` 在禁止修改范围。语义不变：3 个子菜单均带 `roles`，sidebar 对所有子项均无权时自动隐藏父级（Pure Admin sidebar `hasShowingChild` 机制） |
+
+→ 该差异**不影响 PR-5-B DoD**：sidebar 表现一致；其余结构与方案 v0.2 完全一致。
+
+### 17.6 浏览器人工验证（人类执行）
+
+PR-5-B 合并前由人类启动 `pnpm dev`，在浏览器手动验证：
+
+- 登录后侧边栏出现 4 个 SRVF 容器（基础数据 / 队员 / 活动 / 系统）；
+- 4 个容器展开共 11 个子菜单；
+- 点击每个子菜单进入 `/srvf/<group>/<page>` 占位页；
+- `/welcome` 为 SRVF dashboard 占位卡 + 统一占位文案；
+- DevTools Network 无对 `srvf-nest-api` / `localhost:3000` 的业务请求；
+- DevTools Console 无明显 error。
