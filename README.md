@@ -1,10 +1,19 @@
-# Repository Notice
+# srvf-admin-web
 
-> **本仓库为私有内部 starter，禁止公开。**
+> SRVF admin web frontend derived from `u-admin-web-starter`.
 
-- 本仓库（`u-admin-web-starter`）基于**已购买的商业模板** [`pure-admin-thin-max-ts`](https://github.com/xiaoxian521/pure-admin-thin-max-ts)（Pure Admin Max-Ts 版本 v7.0.0）派生；**上游许可证禁止源代码再分发或公开披露**，因此本仓库必须始终保持 Private（GitHub Private 仓库、无 fork、无公开镜像）。
-- 本仓库定位为**通用后台前端 starter / 母版**——具体业务项目（如 `srvf-admin-web` / `u-studio-admin-web` / `token-admin-web` / `health-admin-web` 等）应**从本 starter 派生为独立的 Private 仓库**进行业务开发，**不要在本仓库内直接开发任何业务页面**。
-- 项目长期架构边界、AI 协作约束与第一阶段落地路线，请阅读：`docs/pure-admin-max-ts-baseline.md`（baseline v0.2.1）。
+## Repository Notice
+
+This repository is the SRVF-specific admin frontend derived from the private `u-admin-web-starter`.
+
+- This repository must remain private.
+- This repository is a business project, not the upstream starter.
+- The upstream starter baseline is `u-admin-web-starter`.
+- Backend API contracts, roles, permissions, business rules, and data models are defined by `srvf-nest-api`.
+- Do not derive backend schemas from Pure Admin / Max-Ts demo pages, mock data, tenant features, or asyncRoutes.
+- Do not enable asyncRoutes in phase one.
+- Do not restore tenant management menu entries from the starter.
+- 业务派生记录见 `docs/srvf-frontend-derivation.md`；底座规则继承自 starter 的 `docs/pure-admin-max-ts-baseline.md` 主入口及 `docs/pure-admin/01~11-*.md` 11 份专题文档。
 
 ---
 

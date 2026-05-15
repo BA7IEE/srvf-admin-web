@@ -1,8 +1,8 @@
 {
-  "name": "u-admin-web-starter",
+  "name": "srvf-admin-web",
   "version": "7.0.0",
   "private": true,
-  "description": "AI-friendly admin web starter based on Pure Admin Max-Ts",
+  "description": "SRVF admin web frontend based on u-admin-web-starter",
   "type": "module",
   "scripts": {
     "dev": "NODE_OPTIONS=--max-old-space-size=4096 vite",
