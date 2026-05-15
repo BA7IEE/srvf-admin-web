@@ -111,15 +111,15 @@ DoD（沿 starter `docs/pure-admin/09-pr-roadmap.md` PR-4 节）：
 
 ## 6. 后续 PR 顺序（与 starter `09-pr-roadmap.md` 对齐）
 
-| PR                               | 范围                                                                                                                             | 状态                    |
-| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
-| PR-1 派生身份调整                | `package.json` + `README.md` + 本文件                                                                                            | **本轮完成**            |
-| PR-2.1 Vite proxy                | `vite.config.ts: server.proxy` 加 `/api`                                                                                         | 待启动                  |
-| PR-4 NestJS 登录对接             | `src/api/user.ts` / `src/utils/auth.ts` / `src/store/modules/user.ts` / `src/utils/http/index.ts` / `mock/asyncRoutes.ts` 角色名 | 待启动（PR-2.1 完成后） |
-| PR-5 SRVF 静态菜单骨架           | `src/router/modules/srvf-*.ts` + `src/views/srvf-*/` 占位 + `src/views/welcome/` SRVF dashboard                                  | 待启动                  |
-| PR-6 字典页面改造（隐藏 + 占位） | 同 starter PR-6                                                                                                                  | 待启动                  |
-| PR-7 组织架构页面骨架            | `src/router/modules/srvf-org.ts` + `src/views/srvf-org/`                                                                         | 待启动                  |
-| PR-8 活动日历 UI 占位            | `src/router/modules/srvf-calendar.ts` + `src/views/srvf-calendar/`                                                               | 待启动                  |
+| PR                               | 范围                                                                                                                             | 状态                                                                                                             |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| PR-1 派生身份调整                | `package.json` + `README.md` + 本文件                                                                                            | **本轮完成**                                                                                                     |
+| PR-2.1 Vite proxy                | `vite.config.ts: server.proxy` 加 `/api`                                                                                         | 待启动                                                                                                           |
+| PR-4 NestJS 登录对接             | `src/api/user.ts` / `src/utils/auth.ts` / `src/store/modules/user.ts` / `src/utils/http/index.ts` / `mock/asyncRoutes.ts` 角色名 | ⛔ 暂停中（见 `docs/srvf-api-contract-readiness.md` §6 Readiness Checklist；10 项全过 + 人类显式批准前禁止重启） |
+| PR-5 SRVF 静态菜单骨架           | `src/router/modules/srvf-*.ts` + `src/views/srvf-*/` 占位 + `src/views/welcome/` SRVF dashboard                                  | 待启动                                                                                                           |
+| PR-6 字典页面改造（隐藏 + 占位） | 同 starter PR-6                                                                                                                  | 待启动                                                                                                           |
+| PR-7 组织架构页面骨架            | `src/router/modules/srvf-org.ts` + `src/views/srvf-org/`                                                                         | 待启动                                                                                                           |
+| PR-8 活动日历 UI 占位            | `src/router/modules/srvf-calendar.ts` + `src/views/srvf-calendar/`                                                               | 待启动                                                                                                           |
 
 ## 7. 已知残留问题（继承自 starter 的 review-log）
 
