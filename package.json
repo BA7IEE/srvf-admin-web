@@ -1,7 +1,8 @@
 {
-  "name": "pure-admin-thin-max-ts",
+  "name": "u-admin-web-starter",
   "version": "7.0.0",
   "private": true,
+  "description": "AI-friendly admin web starter based on Pure Admin Max-Ts",
   "type": "module",
   "scripts": {
     "dev": "NODE_OPTIONS=--max-old-space-size=4096 vite",
