@@ -8,7 +8,7 @@ export default [
     redirect: "/srvf/base-data/dictionaries",
     meta: {
       icon: "ri/database-2-line",
-      title: "SRVF · 基础数据",
+      title: "基础数据",
       rank: 10
     },
     children: [
@@ -51,7 +51,7 @@ export default [
     redirect: "/srvf/members-domain/members",
     meta: {
       icon: "ri/team-line",
-      title: "SRVF · 队员",
+      title: "队员",
       rank: 11
     },
     children: [
@@ -84,7 +84,7 @@ export default [
     redirect: "/srvf/activities-domain/activities",
     meta: {
       icon: "ri/calendar-event-line",
-      title: "SRVF · 活动",
+      title: "活动",
       rank: 12
     },
     children: [
@@ -127,7 +127,7 @@ export default [
     redirect: "/srvf/system/users",
     meta: {
       icon: "ri/settings-3-line",
-      title: "SRVF · 系统",
+      title: "系统",
       rank: 13
     },
     children: [

@@ -698,3 +698,15 @@ PR-5-B 合并前由人类启动 `pnpm dev`，在浏览器手动验证：
 - `/welcome` 为 SRVF dashboard 占位卡 + 统一占位文案；
 - DevTools Network 无对 `srvf-nest-api` / `localhost:3000` 的业务请求；
 - DevTools Console 无明显 error。
+
+### 17.7 PR-5-C Menu Label Adjustment
+
+- Removed the redundant `SRVF ·` prefix from top-level sidebar menu labels.
+- Final top-level labels:
+  - `/srvf/base-data` → `基础数据`
+  - `/srvf/members-domain` → `队员`
+  - `/srvf/activities-domain` → `活动`
+  - `/srvf/system` → `系统`
+- Leaf-level labels unchanged (`字典管理 / 组织架构 / 贡献值规则 / 队员列表 / 证书 / 活动列表 / 报名记录 / 考勤管理 / 用户管理 / 角色权限 / 审计日志`)。
+- `path / name / component / redirect / rank / roles / icon` all unchanged; only the four top-level `meta.title` strings shortened.
+- Reason: this repository is already SRVF-specific; repeating `SRVF` in each sidebar group makes labels too long and noisy for daily admin use.
