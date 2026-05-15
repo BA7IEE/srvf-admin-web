@@ -171,3 +171,19 @@ DoD（沿 starter `docs/pure-admin/09-pr-roadmap.md` PR-4 节）：
 
 - `src/api/*.ts` 中演示 URL（`/login` / `/dict-tree` 等）仍写老路径，**不会**自动走 `/api` 代理——这是预期，待 PR-4 时改 `src/api/user.ts:getLogin` URL 为 `/api/auth/login` 等；
 - `src/utils/http/index.ts` 仍无 `baseURL`，依赖前端代码自行写完整路径——也是 PR-4 范畴。
+
+## PR-4 Status Update
+
+PR-4 NestJS login integration is paused.
+
+The previous implementation attempt was preserved in:
+
+- `archive/pr-4-login-attempt-b81afec`
+
+Main branch reverted the PR-4 implementation because the backend auth / refresh-token / RBAC contract is not stable enough.
+
+See:
+
+- `docs/srvf-api-contract-readiness.md`
+
+Do not restart PR-4 until the readiness checklist is confirmed.
