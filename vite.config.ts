@@ -24,7 +24,15 @@ export default async ({ mode }: ConfigEnv): Promise<UserConfigExport> => {
       port: VITE_PORT,
       host: "0.0.0.0",
       // 本地跨域代理 https://cn.vitejs.dev/config/server-options.html#server-proxy
-      proxy: {},
+      // PR-2.1：把 /api 代理到 srvf-nest-api（http://localhost:3000）。
+      // 后端 globalPrefix 就是 /api，原样转发，**不要 rewrite**。
+      // 接 NestJS 登录 / 业务接口的范围归 PR-4，本 PR 仅做 dev proxy 配置。
+      proxy: {
+        "/api": {
+          target: "http://localhost:3000",
+          changeOrigin: true
+        }
+      },
       // 预热文件以提前转换和缓存结果，降低启动期间的初始页面加载时长并防止转换瀑布
       warmup: {
         clientFiles: ["./index.html", "./src/{views,components}/*"]
