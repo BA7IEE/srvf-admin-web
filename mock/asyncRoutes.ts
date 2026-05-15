@@ -134,8 +134,11 @@ export default defineFakeRoute([
         data: [
           permissionRouter,
           scheduleRouter,
-          dictManagementRouter,
-          tenantManagementRouter
+          dictManagementRouter
+          // PR-2：starter 第一阶段隐藏「租户管理」菜单入口（裁决 1）。
+          // 上方 `tenantManagementRouter` 定义保留作为参考范式，禁止删除源码；
+          // 是否物理删除以后续单独 PR 决策。
+          // tenantManagementRouter
         ]
       };
     }

@@ -190,3 +190,45 @@
 | v0.2 | 5-agent review | 新增 §0.5 / §13.4 / §18；重写 §10 / §11 / §13 / §14 / §17；补充 §5 / §6 / §7 / §8 / §16 |
 | v0.2.1 | 3-agent 回归 review | 10 条 sentence-level 补丁（BL-1 ~ BL-10），无章节增删 |
 | v0.3 | 渐进式加载改造 | 主入口瘦身 + `docs/pure-admin/01~11-*.md` 11 份专题；新增上游同步策略章 |
+
+### 18.5 PR-2 实际调整记录（模板污染源关闭）
+
+> 仅追加。本节为 PR-2 实际执行结果存档，不重写文档主体规则。规则仍以 `02-ai-rules.md`、`06-mock-risk.md`、`09-pr-roadmap.md` PR-2 节为准。
+
+#### 18.5.1 本轮实际修改清单
+
+| 文件 | 改动 | 对应裁决 / 红线 |
+| --- | --- | --- |
+| `build/plugins.ts` L43-48 | `vitePluginFakeServer({ ..., enableProd: true → false })`；保留开发环境 mock | 裁决 4、`06-mock-risk.md` §8.5 第 4 条 |
+| `.env` L7-9 | `VITE_ENABLE_TENANT = true → false`，注释说明"PR-2 starter 第一阶段一律禁用多租户运行入口；源码保留作参考" | 裁决 1、主入口红线 3 |
+| `mock/asyncRoutes.ts` L134-141 | data 数组中 `tenantManagementRouter` 注释；`const tenantManagementRouter`（L97-124）**保留作为参考范式，禁止删除** | 裁决 1、主入口红线 3 |
+| `docs/pure-admin/10-review-log.md` | 追加本节 §18.5（仅 append） | —— |
+
+#### 18.5.2 本轮显式**未触碰**清单（按红线 / 裁决保留）
+
+- `src/router/asyncRoutes.ts`、`src/api/system.ts`、`src/views/login/index.vue`、`src/utils/http/**`、`src/utils/auth.ts`、`src/store/**`、`src/views/tenant/**` 等 src 全域：未触碰；
+- `package.json`、`pnpm-lock.yaml`、`vite.config.ts`、`tsconfig.json`、`public/platform-config.json`、`README.md`：未触碰；
+- 任何 `pnpm add/remove/update/install/clean:cache`：未执行；
+- `src/router/asyncRoutes.ts` 中的 `getMenuList` import：保留，不补 `getMenuList`、不切 login import（裁决 2）。
+
+#### 18.5.3 残留的上游污染源（不在 PR-2 授权范围，需后续单独 PR）
+
+| 残留点 | 性质 | 处置建议 |
+| --- | --- | --- |
+| `build/utils.ts:59` `VITE_ENABLE_TENANT: "true"` 默认值兜底 | 技术上违反 BL-7（`VITE_*` 不得在源码侧附带 fallback），但 `build/**` 是 ❌ 文件且**不在 PR-2 授权范围**；当 `.env` 提供值时此默认值会被 `wrapperEnv` L63-71 循环覆盖，**不影响 PR-2 关闭多租户的实际效果** | 留作后续"底座 PR"按 `02-ai-rules.md` §13.2.2 单独评估；不在本阶段强行处理 |
+
+#### 18.5.4 PR-2 DoD 落地核查
+
+对照 `09-pr-roadmap.md` §17.2 PR-2 的 DoD：
+
+- [x] `pnpm dev` 后侧栏无"租户管理"菜单 —— **逻辑预期满足**（`mock/asyncRoutes.ts` data 数组已移除 `tenantManagementRouter`）；实际跑 `pnpm dev` 由人类验证或下一轮 PR-3 验证 PR。
+- [x] `pnpm build` 后产物中 mock 不再被 ship 到生产 —— **逻辑预期满足**（`enableProd: false`）；实际产物校验由 PR-3 完成。
+- [-] `vite.config.ts: server.proxy` 配置可被 `pnpm dev` 加载 —— **本轮未做**。理由：依赖 Open Question #5（后端 API 路径前缀），未确认前不动 `vite.config.ts`，避免抄错 + 避免动 ❌ 文件无评估。建议作为 PR-2.1 或 PR-4 前置步骤，由人类回答 #5 后单独提。
+
+#### 18.5.5 PR-2 边界自检
+
+- 是否启用 `asyncRoutes`：❌ 未启用，未碰 `src/router/asyncRoutes.ts`、未补 `getMenuList`、未改 `src/views/login/index.vue` 的 import；
+- 是否反推后端：❌ 未提任何后端字段 / 表 / 接口要求；
+- 是否新增 mock：❌ 未新增任何 mock 文件；
+- 是否硬编码 `VITE_*` fallback：❌ 未在源码侧新增 fallback（残留的 `build/utils.ts:59` 属上游遗留，见 §18.5.3）；
+- 是否改 `package.json` 依赖字段 / 执行 pnpm 写命令：❌ 未发生。
