@@ -94,7 +94,9 @@ const dictManagementRouter = {
   ]
 };
 
-const tenantManagementRouter = {
+// PR-3：重命名为下划线前缀（符合 ESLint `@typescript-eslint/no-unused-vars`
+// 允许 `/^_/u` 例外），源码保留作为参考范式；不恢复进 data 数组（裁决 1）。
+const _tenantManagementRouter = {
   path: "/tenant",
   meta: {
     icon: "ri:home-gear-line",
@@ -136,9 +138,9 @@ export default defineFakeRoute([
           scheduleRouter,
           dictManagementRouter
           // PR-2：starter 第一阶段隐藏「租户管理」菜单入口（裁决 1）。
-          // 上方 `tenantManagementRouter` 定义保留作为参考范式，禁止删除源码；
+          // 上方 `_tenantManagementRouter` 定义保留作为参考范式，禁止删除源码；
           // 是否物理删除以后续单独 PR 决策。
-          // tenantManagementRouter
+          // _tenantManagementRouter
         ]
       };
     }
