@@ -203,32 +203,3 @@ pnpm dev
 2. 推进 Open Questions #1~#5 答题（NestJS 后端侧）；
 3. 进入 **PR-4：NestJS 登录对接**（同时补 `vite.config.ts: server.proxy`）；
 4. 评估「派生 SRVF 项目」的时机（在 starter 内还是派生项目内继续 PR-4 ~ PR-8）。
-
----
-
-## 8. PR-4 验证记录（srvf-admin-web 派生项目内执行）
-
-> 仅追加。本节为 srvf-admin-web 派生项目 PR-4「NestJS 登录对接」实际跑通的检查记录。
-> 操作明细与改动清单见同仓库 `docs/srvf-frontend-derivation.md` §PR-4 Actual Changes。
-
-### 8.1 检查命令结果
-
-| 命令                                 | 退出码    | 备注                                                                                                                                                                               |
-| ------------------------------------ | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pnpm typecheck`                     | **0** ✅  | 第一次报 `src/utils/sso.ts:40` 用 `DataInfo<Date>` 不兼容；通过把 `setToken` 形参改为 `DataInfo<number> \| DataInfo<Date>` 联合类型保留向后兼容，未修改 `sso.ts`（非本轮允许范围） |
-| `pnpm lint`                          | **0** ✅  | eslint + prettier + stylelint 三件套全部通过；prettier 在 `lint --fix` 中自动重排了 `src/utils/http/index.ts` 部分三元表达式列宽                                                   |
-| `pnpm build`                         | **0** ✅  | 3.65s 完成，2.4M dist；新 `index-*.js` chunk 含 PR-4 改动                                                                                                                          |
-| `pnpm dev`                           | **OK** ✅ | vite 8.0.3 ready in 1142ms；HTTP 200 @ localhost:8848                                                                                                                              |
-| `curl /api/docs-json` via vite proxy | **502**   | 后端未启动；vite proxy 已注册并尝试转发到 `http://localhost:3000`——属预期；真实联调需人类启后端                                                                                    |
-
-### 8.2 真实登录联调状态
-
-⚠️ **本轮未做浏览器真实登录验证**。原因：AI 无浏览器交互能力，且 srvf-nest-api 后端需要 Postgres / Prisma migrate / seed 才能起服务，超出 PR-4 范围。
-
-完整人类手动验证清单已写入派生项目 `docs/srvf-frontend-derivation.md §PR-4.6`，含 7 项 DoD：成功登录 / cookie 字段 / localStorage 字段 / Network 双请求 / 错密码 / 限流 / 过期登出。
-
-### 8.3 lockfile / 禁止范围
-
-- `pnpm-lock.yaml` md5 未变化；
-- `vite.config.ts / package.json / .env* / build/** / tsconfig.json / README.md / public/** / types/**` 未触碰；
-- `src/router/asyncRoutes.ts` 未触碰，未补 `getMenuList`，未改 login `initRouter` import。
