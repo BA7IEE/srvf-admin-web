@@ -88,33 +88,34 @@
 
 ### AI 任务接入 8 步 Checklist（每次开工必做，详见 `02-ai-rules.md` §13.4）
 
-| Step | 动作 |
-| --- | --- |
-| 1 | 读主入口 §0 / §0.5 + `02-ai-rules.md` §13 + `09-pr-roadmap.md` + `02-ai-rules.md` §16 阅读清单，确认本任务不踩任何红线；并明确写：本任务是否涉及后端字段 / 表 / API 路径定义？若涉及，逐项列出 |
-| 2 | `vue-pure-admin/src/views/` 搜相似范式 |
-| 3 | 本仓库 `src/views/` 找最相似的现有范式 |
-| 4 | 列出涉及的文件改动清单，每条标 `02-ai-rules.md` §13.1 矩阵中的 ✅ / ⚠️ / ❌ |
-| 5 | 列出复用组件、不新增依赖 |
-| 6 | 列出新增 `src/api/<模块>.ts` 接口与类型，对照 Swagger；显式说明 mock 边界 |
-| 7 | `pnpm lint && pnpm typecheck` 全绿 |
-| 8 | `pnpm build` 验证；涉及路由/菜单/权限的跑 `pnpm dev` 自查 |
+| Step | 动作                                                                                                                                                                                           |
+| ---- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1    | 读主入口 §0 / §0.5 + `02-ai-rules.md` §13 + `09-pr-roadmap.md` + `02-ai-rules.md` §16 阅读清单，确认本任务不踩任何红线；并明确写：本任务是否涉及后端字段 / 表 / API 路径定义？若涉及，逐项列出 |
+| 2    | `vue-pure-admin/src/views/` 搜相似范式                                                                                                                                                         |
+| 3    | 本仓库 `src/views/` 找最相似的现有范式                                                                                                                                                         |
+| 4    | 列出涉及的文件改动清单，每条标 `02-ai-rules.md` §13.1 矩阵中的 ✅ / ⚠️ / ❌                                                                                                                    |
+| 5    | 列出复用组件、不新增依赖                                                                                                                                                                       |
+| 6    | 列出新增 `src/api/<模块>.ts` 接口与类型，对照 Swagger；显式说明 mock 边界                                                                                                                      |
+| 7    | `pnpm lint && pnpm typecheck` 全绿                                                                                                                                                             |
+| 8    | `pnpm build` 验证；涉及路由/菜单/权限的跑 `pnpm dev` 自查                                                                                                                                      |
 
 ---
 
 ## 2. 任务类型 → 必读文档映射（每次开工查这里）
 
-| 任务类型 | 🔴 每次必读 | 🟡 相关任务必读 |
-| --- | --- | --- |
-| 任何前端改动 | 本主入口（§0 / §0.5 / §1 / §3 PR 摘要）+ `02-ai-rules.md`（重点 §13.1 矩阵、§13.4 Checklist）+ `.env` + `public/platform-config.json` + `types/router.d.ts` + `package.json` | — |
-| 改路由 / 菜单 | 同上 | `03-router-menu.md`、`src/router/index.ts`、`src/router/utils.ts`、`src/router/modules/{home,error,remaining}.ts`（**禁碰 `src/router/asyncRoutes.ts`**） |
-| 改登录 / Token / 接 NestJS | 同上 | `04-auth-permission.md`、`05-http-api.md`、`08-starter-derivation.md`、`src/views/login/index.vue`、`src/api/user.ts`、`src/utils/auth.ts`、`src/utils/http/index.ts`、`src/utils/http/types.d.ts`、`src/store/modules/user.ts`、`mock/login.ts`、`mock/refreshToken.ts` |
-| 改权限 / 按钮显隐 | 同上 | `04-auth-permission.md`、`src/store/modules/permission.ts`、`src/components/ReAuth/src/auth.tsx`、`src/components/RePerms/src/perms.tsx`、`src/directives/auth/index.ts`、`src/directives/perms/index.ts`、`src/utils/auth.ts:hasPerms` |
-| 新增业务列表 / 表单页 | 同上 | `07-max-ts-modules.md` §9 范式表、`src/views/tenant/list/index.vue` + `utils/hook.tsx`、`src/views/dict/index.vue` + `utils/hook.tsx`、`src/components/ReDialog/index.vue`、`src/components/RePureTableBar/src/bar.tsx` |
-| 改 layout / 主题 | 同上 | `01-project-map.md` §3.7、`02-ai-rules.md` §13.1 ❌ 行；改前必须输出 §13.2.2 单独 PR 评估 |
-| 改 vite / 构建 | 同上 | 同上；走 `02-ai-rules.md` §13.2.1 + §13.2.2 流程 |
-| 同步上游 | 同上 | `11-upstream-sync.md` 必读全文 |
-| 派生业务项目（如 srvf-admin-web） | 同上 | `08-starter-derivation.md`、`09-pr-roadmap.md`、`11-upstream-sync.md` |
-| Mock / 字典占位 | 同上 | `06-mock-risk.md`、`07-max-ts-modules.md` §10.1 |
+| 任务类型                          | 🔴 每次必读                                                                                                                                                                  | 🟡 相关任务必读                                                                                                                                                                                                                                                          |
+| --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 任何前端改动                      | 本主入口（§0 / §0.5 / §1 / §3 PR 摘要）+ `02-ai-rules.md`（重点 §13.1 矩阵、§13.4 Checklist）+ `.env` + `public/platform-config.json` + `types/router.d.ts` + `package.json` | —                                                                                                                                                                                                                                                                        |
+| 改路由 / 菜单                     | 同上                                                                                                                                                                         | `03-router-menu.md`、`src/router/index.ts`、`src/router/utils.ts`、`src/router/modules/{home,error,remaining}.ts`（**禁碰 `src/router/asyncRoutes.ts`**）                                                                                                                |
+| 改登录 / Token / 接 NestJS        | 同上                                                                                                                                                                         | `04-auth-permission.md`、`05-http-api.md`、`08-starter-derivation.md`、`src/views/login/index.vue`、`src/api/user.ts`、`src/utils/auth.ts`、`src/utils/http/index.ts`、`src/utils/http/types.d.ts`、`src/store/modules/user.ts`、`mock/login.ts`、`mock/refreshToken.ts` |
+| 改权限 / 按钮显隐                 | 同上                                                                                                                                                                         | `04-auth-permission.md`、`src/store/modules/permission.ts`、`src/components/ReAuth/src/auth.tsx`、`src/components/RePerms/src/perms.tsx`、`src/directives/auth/index.ts`、`src/directives/perms/index.ts`、`src/utils/auth.ts:hasPerms`                                  |
+| 新增业务列表 / 表单页             | 同上                                                                                                                                                                         | `07-max-ts-modules.md` §9 范式表、`src/views/tenant/list/index.vue` + `utils/hook.tsx`、`src/views/dict/index.vue` + `utils/hook.tsx`、`src/components/ReDialog/index.vue`、`src/components/RePureTableBar/src/bar.tsx`                                                  |
+| 改 layout / 主题                  | 同上                                                                                                                                                                         | `01-project-map.md` §3.7、`02-ai-rules.md` §13.1 ❌ 行；改前必须输出 §13.2.2 单独 PR 评估                                                                                                                                                                                |
+| 改 vite / 构建                    | 同上                                                                                                                                                                         | 同上；走 `02-ai-rules.md` §13.2.1 + §13.2.2 流程                                                                                                                                                                                                                         |
+| 同步上游                          | 同上                                                                                                                                                                         | `11-upstream-sync.md` 必读全文                                                                                                                                                                                                                                           |
+| 派生业务项目（如 srvf-admin-web） | 同上                                                                                                                                                                         | `08-starter-derivation.md`、`09-pr-roadmap.md`、`11-upstream-sync.md`                                                                                                                                                                                                    |
+| Mock / 字典占位                   | 同上                                                                                                                                                                         | `06-mock-risk.md`、`07-max-ts-modules.md` §10.1                                                                                                                                                                                                                          |
+| 查官方文档 / 排查 FAQ             | 同上                                                                                                                                                                         | `12-official-docs-index.md` 必读 §3 阅读表 + §5 禁止反推清单                                                                                                                                                                                                             |
 
 🟢 必要时参考：`vue-pure-admin/src/views/<对应模块>` / `src/main.ts` / `App.vue` / `src/config/index.ts` / `build/plugins.ts` / `src/style/index.scss` / `src/style/tailwind.css` / `vite.config.ts` / `src/store/modules/multiTags.ts` / `app.ts` / `settings.ts` / `epTheme.ts` / `src/layout/hooks/*`。
 
@@ -124,16 +125,16 @@
 
 > 每个 PR 都有「目标」「修改范围」「禁止范围」「DoD」。**按顺序、独立提，不得合并**。
 
-| PR | 目标 | 关键修改范围 | 关键禁止 |
-| --- | --- | --- | --- |
-| **PR-1** | 文档初始化（baseline + 11 份专题） | `docs/**` | 任何业务代码、配置、依赖、`.env`、根 `README.md` |
-| **PR-2** | 模板污染源关闭 | `.env: VITE_ENABLE_TENANT=false`、`mock/asyncRoutes.ts` 注释 `tenantManagementRouter`、`build/plugins.ts: enableProd=false`、`vite.config.ts: server.proxy` | 不删 `src/views/tenant/*`；不动 `src/utils/http` |
-| **PR-3** | 本地运行 / 构建验证 | 仅文档或无代码变更 | 任何业务 / 底座改动 |
-| **PR-4** | NestJS 登录对接 | `src/api/user.ts`、`src/utils/auth.ts`、`src/utils/http/index.ts`（**底座单独 PR 评估**）、`mock/login.ts`、`mock/asyncRoutes.ts` 角色名 | 禁启用 `asyncRoutes.ts`；禁反向定义后端字段 |
-| **PR-5** | 业务静态菜单骨架 | `src/router/modules/<业务>-*.ts`、`src/views/<业务>-*/index.vue`、`src/views/welcome/index.vue` | 禁启用 `asyncRoutes`；禁接真 API；禁硬编码字典/角色；mock 不得新增 |
-| **PR-6** | 字典页面改造（隐藏 + 占位） | `mock/asyncRoutes.ts` 注释 `dictManagementRouter`、可选 `src/constants/<模块>.demo.ts` | 禁把 demo 当正式字典；禁反推后端字典字段 |
-| **PR-7** | 组织架构页面骨架 | `src/router/modules/<业务>-org.ts`、`src/views/<业务>-org/index.vue` | 禁硬编码真实层级；禁设计后端表结构 |
-| **PR-8** | 活动日历 UI 占位 | `src/router/modules/<业务>-calendar.ts`、`src/views/<业务>-calendar/index.vue` | 禁设计活动 schema / 状态机 |
+| PR       | 目标                               | 关键修改范围                                                                                                                                                | 关键禁止                                                           |
+| -------- | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| **PR-1** | 文档初始化（baseline + 11 份专题） | `docs/**`                                                                                                                                                   | 任何业务代码、配置、依赖、`.env`、根 `README.md`                   |
+| **PR-2** | 模板污染源关闭                     | `.env: VITE_ENABLE_TENANT=false`、`mock/asyncRoutes.ts` 注释 `tenantManagementRouter`、`build/plugins.ts: enableProd=false`、`vite.config.ts: server.proxy` | 不删 `src/views/tenant/*`；不动 `src/utils/http`                   |
+| **PR-3** | 本地运行 / 构建验证                | 仅文档或无代码变更                                                                                                                                          | 任何业务 / 底座改动                                                |
+| **PR-4** | NestJS 登录对接                    | `src/api/user.ts`、`src/utils/auth.ts`、`src/utils/http/index.ts`（**底座单独 PR 评估**）、`mock/login.ts`、`mock/asyncRoutes.ts` 角色名                    | 禁启用 `asyncRoutes.ts`；禁反向定义后端字段                        |
+| **PR-5** | 业务静态菜单骨架                   | `src/router/modules/<业务>-*.ts`、`src/views/<业务>-*/index.vue`、`src/views/welcome/index.vue`                                                             | 禁启用 `asyncRoutes`；禁接真 API；禁硬编码字典/角色；mock 不得新增 |
+| **PR-6** | 字典页面改造（隐藏 + 占位）        | `mock/asyncRoutes.ts` 注释 `dictManagementRouter`、可选 `src/constants/<模块>.demo.ts`                                                                      | 禁把 demo 当正式字典；禁反推后端字典字段                           |
+| **PR-7** | 组织架构页面骨架                   | `src/router/modules/<业务>-org.ts`、`src/views/<业务>-org/index.vue`                                                                                        | 禁硬编码真实层级；禁设计后端表结构                                 |
+| **PR-8** | 活动日历 UI 占位                   | `src/router/modules/<业务>-calendar.ts`、`src/views/<业务>-calendar/index.vue`                                                                              | 禁设计活动 schema / 状态机                                         |
 
 ### 第一阶段 DoD 总览
 
@@ -167,19 +168,20 @@
 
 ## 5. 专题文档索引
 
-| # | 文件 | 内容 |
-| --- | --- | --- |
-| 01 | [`docs/pure-admin/01-project-map.md`](./pure-admin/01-project-map.md) | 项目定位 / 技术栈 / 目录结构 / 工程命令 |
-| 02 | [`docs/pure-admin/02-ai-rules.md`](./pure-admin/02-ai-rules.md) | AI 开发硬规则（文件改动矩阵、命令权限、单独 PR、8 步 Checklist、阅读清单分级） |
-| 03 | [`docs/pure-admin/03-router-menu.md`](./pure-admin/03-router-menu.md) | 路由与菜单系统（静态 / 动态 / asyncRoutes 禁用红线 / 双 whiteList / meta 字段 / 拍平因果） |
-| 04 | [`docs/pure-admin/04-auth-permission.md`](./pure-admin/04-auth-permission.md) | 登录 / Token / 权限体系（三层权限决策树、演示角色名生命周期、前后端权限边界） |
-| 05 | [`docs/pure-admin/05-http-api.md`](./pure-admin/05-http-api.md) | 请求封装与 API 管理（NestJS 返回结构 / `expires` / refresh-token 适配） |
-| 06 | [`docs/pure-admin/06-mock-risk.md`](./pure-admin/06-mock-risk.md) | Mock 体系与硬规则（默认禁新增、`*.demo.ts` 限制、生产关闭） |
-| 07 | [`docs/pure-admin/07-max-ts-modules.md`](./pure-admin/07-max-ts-modules.md) | 组件 / 页面范式 / Max-Ts 特有能力盘点 / vue-pure-admin 完整版参考策略 |
-| 08 | [`docs/pure-admin/08-starter-derivation.md`](./pure-admin/08-starter-derivation.md) | 从 starter 派生业务项目 / NestJS 后端对接策略 / 多产品复用 |
-| 09 | [`docs/pure-admin/09-pr-roadmap.md`](./pure-admin/09-pr-roadmap.md) | 第一阶段落地路线 / PR-1 ~ PR-8 / DoD / 风险清单 |
-| 10 | [`docs/pure-admin/10-review-log.md`](./pure-admin/10-review-log.md) | Review 修订记录 v0.2 → v0.2.1 → v0.3 / 采纳与未采纳清单 / Open Questions |
-| 11 | [`docs/pure-admin/11-upstream-sync.md`](./pure-admin/11-upstream-sync.md) | 上游 → starter → 业务项目 同步策略 / 高风险文件清单 / 同步分类 |
+| #   | 文件                                                                                  | 内容                                                                                                                     |
+| --- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| 01  | [`docs/pure-admin/01-project-map.md`](./pure-admin/01-project-map.md)                 | 项目定位 / 技术栈 / 目录结构 / 工程命令                                                                                  |
+| 02  | [`docs/pure-admin/02-ai-rules.md`](./pure-admin/02-ai-rules.md)                       | AI 开发硬规则（文件改动矩阵、命令权限、单独 PR、8 步 Checklist、阅读清单分级）                                           |
+| 03  | [`docs/pure-admin/03-router-menu.md`](./pure-admin/03-router-menu.md)                 | 路由与菜单系统（静态 / 动态 / asyncRoutes 禁用红线 / 双 whiteList / meta 字段 / 拍平因果）                               |
+| 04  | [`docs/pure-admin/04-auth-permission.md`](./pure-admin/04-auth-permission.md)         | 登录 / Token / 权限体系（三层权限决策树、演示角色名生命周期、前后端权限边界）                                            |
+| 05  | [`docs/pure-admin/05-http-api.md`](./pure-admin/05-http-api.md)                       | 请求封装与 API 管理（NestJS 返回结构 / `expires` / refresh-token 适配）                                                  |
+| 06  | [`docs/pure-admin/06-mock-risk.md`](./pure-admin/06-mock-risk.md)                     | Mock 体系与硬规则（默认禁新增、`*.demo.ts` 限制、生产关闭）                                                              |
+| 07  | [`docs/pure-admin/07-max-ts-modules.md`](./pure-admin/07-max-ts-modules.md)           | 组件 / 页面范式 / Max-Ts 特有能力盘点 / vue-pure-admin 完整版参考策略                                                    |
+| 08  | [`docs/pure-admin/08-starter-derivation.md`](./pure-admin/08-starter-derivation.md)   | 从 starter 派生业务项目 / NestJS 后端对接策略 / 多产品复用                                                               |
+| 09  | [`docs/pure-admin/09-pr-roadmap.md`](./pure-admin/09-pr-roadmap.md)                   | 第一阶段落地路线 / PR-1 ~ PR-8 / DoD / 风险清单                                                                          |
+| 10  | [`docs/pure-admin/10-review-log.md`](./pure-admin/10-review-log.md)                   | Review 修订记录 v0.2 → v0.2.1 → v0.3 / 采纳与未采纳清单 / Open Questions                                                 |
+| 11  | [`docs/pure-admin/11-upstream-sync.md`](./pure-admin/11-upstream-sync.md)             | 上游 → starter → 业务项目 同步策略 / 高风险文件清单 / 同步分类                                                           |
+| 12  | [`docs/pure-admin/12-official-docs-index.md`](./pure-admin/12-official-docs-index.md) | Pure Admin 官方文档索引与 FAQ 裁决（不复制官网全文；任务类型 → 官方页 + 本地文档映射；禁止反推清单；路径与环境注意事项） |
 
 ---
 
