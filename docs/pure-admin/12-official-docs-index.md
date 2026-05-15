@@ -253,3 +253,55 @@
 
 - 官方文档变更**不得直接改变后端契约**——任何后端行为变化必须经 srvf-nest-api 仓库的 Swagger / Prisma schema 拍板，再回头适配前端。
 - 本文件不是规则源——所有硬规则仍以 `02-ai-rules.md` / `03-router-menu.md` / `04-auth-permission.md` / `05-http-api.md` / `06-mock-risk.md` / `08-starter-derivation.md` / `09-pr-roadmap.md` / `11-upstream-sync.md` 为准；本文件只做"官方文档 → 本项目"的映射 + 裁决索引。
+
+---
+
+## 8. Official Docs vs Full Version Reference
+
+> 本节明确"官方文档（pure-admin.cn）"与"本地完整版（`vue-pure-admin`）"两个不同来源的角色边界，避免混用。
+
+### 8.1 两个来源的定位
+
+| 来源                           | 路径 / URL                                                                               | 用途                                                                            | 不可用作            |
+| ------------------------------ | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | ------------------- |
+| **官方文档**                   | `https://pure-admin.cn/pages/*`（30 条真实链接见 §2）                                    | 理解 Pure Admin **框架机制**（路由、菜单、布局、主题、Tailwind、构建插件、FAQ） | 业务需求 / 后端契约 |
+| **完整版参考库**               | `/Users/dengwang/Documents/coding/SRVF-web-admin参考/vue-pure-admin`                     | 观察 **页面 / 组件 / UI 交互范式**                                              | 业务需求 / 后端契约 |
+| **Pure Admin Max-Ts 上游母版** | `/Users/dengwang/Documents/coding/SRVF-web-admin参考/pure-admin-thin-max-ts`（付费私有） | starter 的派生来源；通过 cherry-pick 同步（见 `11-upstream-sync.md`）           | 业务需求 / 后端契约 |
+
+### 8.2 共同禁止
+
+无论 **官方文档** 还是 **完整版参考库**，都不能：
+
+- ⛔ 作为**后端契约**来源（API 路径 / 字段命名 / 返回结构 / 错误码）；
+- ⛔ 反推**业务需求**（"它有 → 我们也要"是错误推理）；
+- ⛔ 反推**后端模型**（schema / 表 / RBAC / tenant / 菜单管理表 / 状态机）；
+- ⛔ 反推**业务流程**（如完整版的"角色分配菜单流程"不一定是项目流程）。
+
+### 8.3 各自的合法读取场景
+
+| 场景                                       | 优先读官方文档                               | 优先读完整版参考库                                                 |
+| ------------------------------------------ | -------------------------------------------- | ------------------------------------------------------------------ |
+| 想知道"Pure Admin 的路由是怎么设计的"      | ✅（`/pages/routerMenu/`）                   | ⚠️ 可参考完整版 `src/router/modules/*.ts` 但只看写法               |
+| 想知道"`<PureTable>` 的列配置怎么写"       | ⚠️（官方文档不一定有；`/pages/components/`） | ✅（直接读完整版任一 list 页面）                                   |
+| 想知道"Tailwind v4 在本项目怎么用"         | ✅（`/pages/tailwindcss/`）                  | ⚠️ 看完整版 `src/style/tailwind.css` 配合                          |
+| 想知道"FAQ 中 `rank only home` 是怎么回事" | ✅（`/pages/FAQ/#快速入门-新手必看`）        | —                                                                  |
+| 想知道"组织树 + 表格 + 弹窗如何组合"       | ⚠️（官方文档侧重机制不侧重 UI 样例）         | ✅（完整版 `src/views/system/dept/`）                              |
+| 想知道"Pure Admin 支持哪些 vite 插件"      | ✅（`/pages/viteplugin/`）                   | ⚠️ 看完整版 `build/plugins.ts` 实际接法                            |
+| 想知道"i18n 如何接"                        | ✅（`/pages/i18n/`）                         | ✅（完整版 `src/plugins/i18n.ts`）—— **但第一阶段一律不启用 i18n** |
+
+### 8.4 参考路径决策树
+
+```
+我想做的事
+├── 框架机制 / 配置语法 / FAQ → 读官方文档（§2 真实链接表）
+├── 页面 / 组件 UI 范式      → 读完整版（07-max-ts-modules.md §12.4）
+├── 同步上游 Max-Ts 母版     → 读 11-upstream-sync.md
+├── 业务字段 / API / 角色    → 读后端 Swagger（不是官方文档，不是完整版！）
+└── 派生新业务项目          → 读 08-starter-derivation.md §17.3 + §17.4
+```
+
+### 8.5 互不替代
+
+- 官方文档**不可替代**完整版（机制 ≠ 范式）；
+- 完整版**不可替代**官方文档（代码 ≠ 配置说明）；
+- 两者**都不可替代** NestJS Swagger（前端文档 / 框架 / 范式 ≠ 后端契约）。

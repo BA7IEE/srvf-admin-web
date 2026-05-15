@@ -53,18 +53,18 @@
 
 > 「现状」= 本 starter 是否有前端现成模块；「第一阶段动作」= 第一阶段做什么；「等待后端」= 等什么。
 
-| 业务模块 | starter 现状 | 第一阶段动作 | 等待后端 | 备注 |
-| --- | --- | --- | --- | --- |
-| **登录 / Token** | ✅ `src/views/login/`、`src/api/user.ts`、`src/utils/auth.ts`、`src/utils/http/index.ts` | **必做**：接 NestJS `/auth/login`；适配返回结构与 `expires`；按 `05-http-api.md` §7.6 决定 refresh 适配 | 否（已具备） | 见 `09-pr-roadmap.md` PR-4 |
-| **当前用户信息** | ✅ Pinia `user` store + setToken 写入 | **必做**：把登录返回字段映射到 store | 后端返回结构 | 注意角色名替换（`04-auth-permission.md` §6.6.2） |
-| **用户管理（列表/详情/启停）** | ⚠️ 无（thin-max-ts 不带 `system/user` 页） | **暂缓**第一阶段；可参考 vue-pure-admin `src/views/system/user/` 作为范式 | 后端 `/users` CRUD API + Prisma `User` 模型 | 字段以后端为准；分页参数 (`page/pageSize` 与否) 也以后端为准 |
-| **字典管理** | ✅ `src/views/dict/` + mock `/dict-*`（演示） | **暂缓**接真接口；菜单先隐藏；UI 占位用 `*.demo.ts` 常量 | 后端 `dict_types / dict_items` schema | 见 `07-max-ts-modules.md` §10.1、裁决 6 |
-| **组织架构（队伍/分队/队员）** | ❌ 无 | **可前移 UI 骨架**（裁决 8）；只做菜单 + 占位页 | 后端"组织 / 部门 / 分队 / 岗位"模型（由 NestJS 设计） | 不硬编码真实层级；不固定字段；参考 vue-pure-admin `system/dept/` 仅作交互范式 |
-| **活动 / 训练 / 出勤日历** | ⚠️ `src/views/schedule/` 是简化排班演示 | **可前移 UI 占位**（裁决 7）；只做菜单 + 静态页 | 后端 `Activity / Event / Attendance` 模型 | 不设计活动数据库；不定义状态流；接真 API 前不引入真实数据 |
-| **附件 / 文件管理** | ❌ 无（无 upload 组件） | **不前移**；待后端附件 API + 对象存储确定后再做 | 后端 `Attachment / FileObject` 模型 + 上传策略 | 可参考 vue-pure-admin `src/views/components/upload/` 作为范式 |
-| **审计日志** | ❌ 无 | **不前移** | 后端 `AuditLog` 模型 | 可参考 vue-pure-admin `src/views/monitor/logs/system/` 作为范式 |
-| **角色 / 权限管理** | ❌ 无对应管理页（仅 mock 演示） | **不前移**；前端只消费登录返回 | 后端 RBAC 模型（红线 4） | 不允许提前定义按钮 code 体系 |
-| **菜单管理（动态菜单）** | ⚠️ `src/router/asyncRoutes.ts` 演示（红线 2 + 裁决 2） | **禁止启用** | 无（第一阶段一律禁启 asyncRoutes，与后端是否已有菜单 API 无关） | 不补 `getMenuList`、不切 import |
+| 业务模块                       | starter 现状                                                                             | 第一阶段动作                                                                                            | 等待后端                                                        | 备注                                                                          |
+| ------------------------------ | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| **登录 / Token**               | ✅ `src/views/login/`、`src/api/user.ts`、`src/utils/auth.ts`、`src/utils/http/index.ts` | **必做**：接 NestJS `/auth/login`；适配返回结构与 `expires`；按 `05-http-api.md` §7.6 决定 refresh 适配 | 否（已具备）                                                    | 见 `09-pr-roadmap.md` PR-4                                                    |
+| **当前用户信息**               | ✅ Pinia `user` store + setToken 写入                                                    | **必做**：把登录返回字段映射到 store                                                                    | 后端返回结构                                                    | 注意角色名替换（`04-auth-permission.md` §6.6.2）                              |
+| **用户管理（列表/详情/启停）** | ⚠️ 无（thin-max-ts 不带 `system/user` 页）                                               | **暂缓**第一阶段；可参考 vue-pure-admin `src/views/system/user/` 作为范式                               | 后端 `/users` CRUD API + Prisma `User` 模型                     | 字段以后端为准；分页参数 (`page/pageSize` 与否) 也以后端为准                  |
+| **字典管理**                   | ✅ `src/views/dict/` + mock `/dict-*`（演示）                                            | **暂缓**接真接口；菜单先隐藏；UI 占位用 `*.demo.ts` 常量                                                | 后端 `dict_types / dict_items` schema                           | 见 `07-max-ts-modules.md` §10.1、裁决 6                                       |
+| **组织架构（队伍/分队/队员）** | ❌ 无                                                                                    | **可前移 UI 骨架**（裁决 8）；只做菜单 + 占位页                                                         | 后端"组织 / 部门 / 分队 / 岗位"模型（由 NestJS 设计）           | 不硬编码真实层级；不固定字段；参考 vue-pure-admin `system/dept/` 仅作交互范式 |
+| **活动 / 训练 / 出勤日历**     | ⚠️ `src/views/schedule/` 是简化排班演示                                                  | **可前移 UI 占位**（裁决 7）；只做菜单 + 静态页                                                         | 后端 `Activity / Event / Attendance` 模型                       | 不设计活动数据库；不定义状态流；接真 API 前不引入真实数据                     |
+| **附件 / 文件管理**            | ❌ 无（无 upload 组件）                                                                  | **不前移**；待后端附件 API + 对象存储确定后再做                                                         | 后端 `Attachment / FileObject` 模型 + 上传策略                  | 可参考 vue-pure-admin `src/views/components/upload/` 作为范式                 |
+| **审计日志**                   | ❌ 无                                                                                    | **不前移**                                                                                              | 后端 `AuditLog` 模型                                            | 可参考 vue-pure-admin `src/views/monitor/logs/system/` 作为范式               |
+| **角色 / 权限管理**            | ❌ 无对应管理页（仅 mock 演示）                                                          | **不前移**；前端只消费登录返回                                                                          | 后端 RBAC 模型（红线 4）                                        | 不允许提前定义按钮 code 体系                                                  |
+| **菜单管理（动态菜单）**       | ⚠️ `src/router/asyncRoutes.ts` 演示（红线 2 + 裁决 2）                                   | **禁止启用**                                                                                            | 无（第一阶段一律禁启 asyncRoutes，与后端是否已有菜单 API 无关） | 不补 `getMenuList`、不切 import                                               |
 
 ### 11.3 登录对接（PR-4 操作手册）
 
@@ -113,15 +113,15 @@
 
 ## 14.4 永不从前端模板反推的事项
 
-| 事项 | 永不允许反推到后端 | 替代做法 |
-| --- | --- | --- |
-| 多租户 / 套餐 / 套餐菜单 | tenant 表、package 表、租户菜单 RBAC | 后端单租户；SaaS 化由后端独立立项 |
-| 菜单管理（动态路由） | 23 字段菜单表、`MenuData` 结构 | 后端如需菜单 API，自行设计字段 |
-| 权限 code | `permission:btn:add` 字符串、`*:*:*` 通配 | 后端 BizCode / Scope 由 NestJS 独立设计 |
-| 字典字段 | `dictId/label/value/status/color/sort/remark/createTime` | 后端字典 schema 独立设计 |
-| 日历 / 排班字段 | `上午/中午/晚上` 简化模型、事件类型、状态机（draft / published / cancelled 等） | 后端 Activity / Event / Attendance 独立设计 |
-| API 路径风格 | `/dict-tree / /tenant-list / /get-async-routes` | 后端 REST 风格由 NestJS 决定 |
-| 返回结构 | `{ code: 0, message, data }` 强假设 | 后端返回什么，前端拦截器适配什么 |
+| 事项                     | 永不允许反推到后端                                                              | 替代做法                                    |
+| ------------------------ | ------------------------------------------------------------------------------- | ------------------------------------------- |
+| 多租户 / 套餐 / 套餐菜单 | tenant 表、package 表、租户菜单 RBAC                                            | 后端单租户；SaaS 化由后端独立立项           |
+| 菜单管理（动态路由）     | 23 字段菜单表、`MenuData` 结构                                                  | 后端如需菜单 API，自行设计字段              |
+| 权限 code                | `permission:btn:add` 字符串、`*:*:*` 通配                                       | 后端 BizCode / Scope 由 NestJS 独立设计     |
+| 字典字段                 | `dictId/label/value/status/color/sort/remark/createTime`                        | 后端字典 schema 独立设计                    |
+| 日历 / 排班字段          | `上午/中午/晚上` 简化模型、事件类型、状态机（draft / published / cancelled 等） | 后端 Activity / Event / Attendance 独立设计 |
+| API 路径风格             | `/dict-tree / /tenant-list / /get-async-routes`                                 | 后端 REST 风格由 NestJS 决定                |
+| 返回结构                 | `{ code: 0, message, data }` 强假设                                             | 后端返回什么，前端拦截器适配什么            |
 
 ---
 
@@ -156,3 +156,126 @@
 3. `package.json: private: true` 保持不变；
 4. `README.md`：替换 Repository Notice，强调"派生自 `u-admin-web-starter`"+ 仍是 Private；
 5. 不要立刻改业务代码，先按 `09-pr-roadmap.md` 的 PR 顺序逐项推进。
+
+---
+
+## 17.4 派生初始化完整 checklist
+
+> 本节是 §17.3 多产品复用策略 + 上方"派生项目身份调整 checklist"的**端到端展开**。每次派生新业务项目（如 `u-studio-admin-web` / `token-admin-web` / `health-admin-web`）时**逐条执行**，不要跳步。
+>
+> 已有派生案例参考：`srvf-admin-web` 基于 `fd24cd4` 派生（详见该仓 `docs/srvf-frontend-derivation.md`）。
+
+### 17.4.1 派生前置条件
+
+派生前必须满足：
+
+- [ ] starter 工作区 clean（`git status --short` 空）；
+- [ ] starter HEAD 是 `origin/main` 最新 commit（无未推送变更）；
+- [ ] 目标业务项目名已确定（如 `u-studio-admin-web`），且**全英文 + 短横线分隔**（FAQ 规则：禁止中文路径）；
+- [ ] 在 GitHub 上**先创建 Private 仓库**（不勾选 README / .gitignore / License；让 starter 的内容直接 push 上去）；
+- [ ] 已确认目标本地目录**不存在**（避免覆盖）。
+
+### 17.4.2 派生 11 步执行清单
+
+```bash
+# Step 1：clone starter 到新目录（全英文路径）
+cd /Users/dengwang/Documents/coding
+git clone git@github.com:BA7IEE/u-admin-web-starter.git <业务项目名>
+cd <业务项目名>
+
+# Step 2：删除原 origin（指向 starter），并验证
+git remote remove origin
+git remote -v   # 应为空
+
+# Step 3：添加新 origin 指向自己的 Private 仓库
+git remote add origin git@github.com:BA7IEE/<业务项目名>.git
+git remote -v
+
+# Step 4：验证远端仓库可达（不是 404）
+git ls-remote origin
+# 若返回 "Repository not found" → 停下，先去 GitHub 把 Private 仓库建好
+# 若返回空（空仓库）→ OK
+
+# Step 5：改 package.json 三字段（手工编辑，禁止改 dependencies / devDependencies / engines / pnpm）
+#   - name: "<业务项目名>"
+#   - description: "<业务项目描述> based on u-admin-web-starter"
+#   - private: true（保持）
+
+# Step 6：改 README.md 顶部 Repository Notice
+#   - 改为"<业务项目名> 派生自 u-admin-web-starter"
+#   - 必须保留"派生自 u-admin-web-starter"字样
+#   - 必须仍标注 Private
+#   - 保留原文档其余内容
+#   - （建议）顶部加 1 段"当前状态"，便于 AI 5 秒可见
+
+# Step 7：新增派生记录文档 docs/<业务>-frontend-derivation.md
+#   §1 Source：starter commit at derivation time（记录 starter 当前 HEAD SHA）
+#   §2 Purpose
+#   §3 Backend Contract Source（如已有后端仓库，写仓库路径与 Swagger 地址）
+#   §4 PR-? Open Questions / 调研结论（如已做契约调研）
+#   §5 后续 PRs（不在 starter 内推进的事）
+#   §6 PR 顺序表 / 状态
+#   §7 已知残留问题（继承自 starter）
+#   §8 上游同步规则提醒（cherry-pick + 不 merge）
+
+# Step 8：核查禁止范围（应为空 diff）
+git status --short
+git diff -- src mock build .env* vite.config.ts pnpm-lock.yaml public tsconfig.json types
+# 上面 diff 应全空——派生身份调整不应触碰任何业务代码 / 配置 / lockfile
+
+# Step 9：首次 commit（派生身份）
+git add package.json README.md docs/<业务>-frontend-derivation.md
+git commit -m "chore: derive <业务项目名> from starter"
+
+# Step 10：push 到新 Private 仓库
+git push -u origin main
+
+# Step 11：确认远端属性
+gh repo view BA7IEE/<业务项目名> --json visibility,isEmpty,defaultBranchRef
+#   visibility 必须是 PRIVATE
+#   isEmpty 必须是 false（已 push）
+#   defaultBranchRef.name 必须是 main
+```
+
+### 17.4.3 派生后**绝不允许**立刻做的事
+
+| 行为                                                                             | 禁止理由                                                     | 应该走哪个 PR                                            |
+| -------------------------------------------------------------------------------- | ------------------------------------------------------------ | -------------------------------------------------------- |
+| 直接改 `vite.config.ts: server.proxy`                                            | 是 ❌ 文件，需走 `02-ai-rules.md §13.2.2` 单独 PR + 4 项评估 | PR-2.1（后端 API 路径前缀确认后）                        |
+| 改 `src/api/user.ts` / `src/utils/auth.ts` / `src/utils/http/index.ts` 接 NestJS | 是 PR-4 范畴，且依赖后端契约 readiness                       | PR-4（仅当人类批准 + readiness 全过）                    |
+| 写 SRVF / U Studio / token / health 等业务页面                                   | 是 PR-5 范畴                                                 | PR-5（静态菜单骨架）→ PR-7（组织骨架）→ PR-8（日历占位） |
+| 启用 `src/router/asyncRoutes.ts` / 补 `getMenuList`                              | 红线 2，永远禁止                                             | 无                                                       |
+| 改 `package.json` 依赖字段 / 跑 `pnpm add / remove / update`                     | 裁决 5，永远禁止                                             | 由人类执行                                               |
+| 把派生项目的业务改动 PR 回 starter                                               | 反向流禁止（见 `11-upstream-sync.md §11-2.4`）               | 无                                                       |
+
+### 17.4.4 派生后**允许**立刻做的事
+
+派生项目第一个 commit（派生身份调整）push 后，允许按 `09-pr-roadmap.md` 顺序推进：
+
+- **PR-2.1**：Vite proxy 配置（依赖后端 API 路径前缀已确认）；
+- **PR-3**：本地运行与构建验证（无代码变更，仅记录 `setup-notes.md`）；
+- **PR-5**：业务静态菜单骨架（不接 API，仅占位）；
+- **PR-7 / PR-8**：组织 / 日历占位页（裁决 7 / 8，UI 占位不设计 schema）。
+
+**绝不允许** PR-2.1 → PR-4 跳号直接接登录。
+
+### 17.4.5 派生案例对照（学习模板）
+
+派生 `srvf-admin-web` 时：
+
+- Step 1~10 已完整执行，初始 commit `3056f1e chore: derive srvf admin web from starter`；
+- Step 7 派生记录文档 `docs/srvf-frontend-derivation.md` 详细记录了 starter base commit `fd24cd4`；
+- 后续 PR-2.1 (Vite proxy)、PR-3 (验证)、PR-4 抢跑 + revert + 暂停 等全部按上述规则推进。
+
+新派生项目应参考 `srvf-admin-web` 的 `docs/srvf-frontend-derivation.md` 写法。
+
+### 17.4.6 完整版参考库使用约束（派生项目同样适用）
+
+派生项目可以读取本地 `vue-pure-admin` **开源完整版**（路径 `/Users/dengwang/Documents/coding/SRVF-web-admin参考/vue-pure-admin`）作为 **UI 范式参考**，但**必须遵守 starter 的 Full Version Reference Rule**（见 starter `CLAUDE.md` §9 + `AGENTS.md` §9 + `07-max-ts-modules.md` §12.4）：
+
+- ✅ 允许：读取页面结构 / 组件组合 / UI 交互 / 路由 meta 写法 / 目录范式；
+- ⛔ 禁止：把完整版的**业务**（API / mock / RBAC / tenant / 动态菜单 / 业务字段 / 状态机 / 菜单名）迁入派生项目；
+- ⛔ 禁止：把完整版当作"产品需求"来源——"完整版有这个页所以我们也要做"是错误推理；
+- ⛔ 禁止：修改完整版仓库（read-only）。
+
+完整版与 Pure Admin Max-Ts 上游母版的区别参见 `07-max-ts-modules.md` §12.4.5；PR-5 ~ PR-8 各自如何安全使用完整版参见 `07-max-ts-modules.md` §12.4.4。

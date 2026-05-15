@@ -64,7 +64,22 @@ This repository is the SRVF-specific admin frontend derived from the private `u-
 - **starter**：`BA7IEE/u-admin-web-starter`（Private）
 - **starter base commit**：`fd24cd4` (`chore: record starter setup verification`)
 - **官方文档索引同步自 starter commit**：`ebcddc0`
+- **完整版参考规则同步自 starter commit**：`0669f46`
 - **上游同步规则**：见 starter 的 `docs/pure-admin/11-upstream-sync.md`（cherry-pick，禁 merge）
+
+## 完整版参考库
+
+本地路径：`/Users/dengwang/Documents/coding/SRVF-web-admin参考/vue-pure-admin`
+
+说明：
+
+- 本地完整版 `vue-pure-admin` **只作为 UI / 组件 / 页面范式参考**；
+- ⛔ **不直接开发**（不在该目录写代码）；
+- ⛔ **不修改**（read-only）；
+- ⛔ **不作为业务需求来源**（不能因为完整版有某个页面就说"本项目也要做这个业务"）；
+- ⛔ **不作为后端契约来源**（完整版的 API / mock / RBAC / tenant / 动态菜单 schema 都不能反推到任何业务后端）；
+- ✅ 本仓库可以读取完整版作为 UI 范式参考，但必须遵守 **Full Version Reference Rule**（见 `CLAUDE.md` §9 / `AGENTS.md` §9）；
+- 参考细则见 `docs/pure-admin/07-max-ts-modules.md` 与 `docs/pure-admin/12-official-docs-index.md`。
 
 ---
 

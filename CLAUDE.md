@@ -121,3 +121,47 @@ When in doubt about a starter-level concern: go look at the starter repo (`/User
 - srvf → starter 反向流：**禁止**（极少数无业务语义的修复才候选，见 `11-upstream-sync.md` §11-2.4）
 
 When in doubt: read `docs/srvf-api-contract-readiness.md` first — it is the single source of truth for "what is paused, what is allowed".
+
+## 9. Full Version Reference Rule
+
+Local full-version reference path:
+
+`/Users/dengwang/Documents/coding/SRVF-web-admin参考/vue-pure-admin`
+
+This is the **open-source full version of vue-pure-admin**. It contains 60+ demo pages (table / form / editor / chart / flowchart / Excel / upload / dept / role / user / dict / log / etc.) that the Max-Ts starter does not ship. It exists purely as a **UI / component / page-pattern read-only reference**.
+
+### Allowed use
+
+- ✅ **read-only reference** — never write to this directory;
+- ✅ UI **layout patterns**;
+- ✅ **component composition** (how `<PureTable>` / `<ReDialog>` / Schema Form / Drawer / etc. are composed);
+- ✅ **table / form / dialog** patterns;
+- ✅ **route module** examples (`src/router/modules/*`);
+- ✅ **page directory naming** conventions;
+- ✅ **icon / menu meta** examples (`meta.icon` / `meta.rank` / `meta.title`);
+- ✅ **dictionary / organization / calendar** UI patterns.
+
+### Forbidden use
+
+- ⛔ Do **not** modify the full-version repository (it is local read-only reference, not a git workspace for us);
+- ⛔ Do **not** copy backend API contracts from full-version `src/api/*`;
+- ⛔ Do **not** copy mock API as real contract;
+- ⛔ Do **not** copy RBAC model;
+- ⛔ Do **not** copy tenant model;
+- ⛔ Do **not** copy dynamic routing implementation (`asyncRoutes` / `getMenuList` / `MenuData` schema);
+- ⛔ Do **not** derive backend schema from full-version pages;
+- ⛔ Do **not** treat full-version menus as business requirements (e.g. "完整版有 system/role 页 → 我们也要做" is wrong);
+- ⛔ Do **not** import full-version code blindly — every copied page must have its API / fields / roles / permissions adapted to the actual backend (Swagger / Prisma).
+
+### Workflow
+
+1. **Search first** in `vue-pure-admin/src/views/` for a similar pattern (e.g. `grep -r "el-tree"` for tree examples).
+2. **Read** the matching file, understand the layout / composition / interaction.
+3. **Recreate** in the derived business project, but:
+   - replace API calls with backend-aligned `src/api/<biz>-*.ts`;
+   - replace fields / enums / roles with backend types;
+   - replace permission codes (avoid `permission:btn:add` / `*:*:*` style);
+   - reuse the starter-side `Re*` components when possible (do not import full-version-specific components).
+4. **Never** open a PR against the full-version repo; it is **not** ours.
+
+See `docs/pure-admin/07-max-ts-modules.md` §Full Version Reference Strategy for PR-5 ~ PR-8 specific guidance.

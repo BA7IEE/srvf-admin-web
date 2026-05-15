@@ -119,6 +119,50 @@ Every AI task must state BEFORE editing:
 
 When in doubt: read `docs/srvf-api-contract-readiness.md` first — single source of truth for "what is paused, what is allowed".
 
+## 9. Full Version Reference Rule
+
+Local full-version reference path:
+
+`/Users/dengwang/Documents/coding/SRVF-web-admin参考/vue-pure-admin`
+
+This is the **open-source full version of vue-pure-admin** (60+ demo pages). It exists purely as a **UI / component / page-pattern read-only reference**.
+
+### Allowed use
+
+- ✅ **read-only reference** — never write to this directory;
+- ✅ UI **layout patterns**;
+- ✅ **component composition** (`<PureTable>` / `<ReDialog>` / Schema Form / Drawer / etc.);
+- ✅ **table / form / dialog** patterns;
+- ✅ **route module** examples (`src/router/modules/*`);
+- ✅ **page directory naming** conventions;
+- ✅ **icon / menu meta** examples;
+- ✅ **dictionary / organization / calendar** UI patterns.
+
+### Forbidden use
+
+- ⛔ Do **not** modify the full-version repository;
+- ⛔ Do **not** copy backend API contracts from full-version `src/api/*`;
+- ⛔ Do **not** copy mock API as real contract;
+- ⛔ Do **not** copy RBAC model;
+- ⛔ Do **not** copy tenant model;
+- ⛔ Do **not** copy dynamic routing implementation (`asyncRoutes` / `getMenuList` / `MenuData` schema);
+- ⛔ Do **not** derive backend schema from full-version pages;
+- ⛔ Do **not** treat full-version menus as business requirements;
+- ⛔ Do **not** import full-version code blindly — every copied page must have its API / fields / roles / permissions adapted to the actual backend (Swagger / Prisma).
+
+### Workflow
+
+1. **Search first** in `vue-pure-admin/src/views/` for a similar pattern.
+2. **Read** the matching file, understand layout / composition / interaction.
+3. **Recreate** in the derived business project, but:
+   - replace API calls with backend-aligned `src/api/<biz>-*.ts`;
+   - replace fields / enums / roles with backend types;
+   - replace permission codes (avoid `permission:btn:add` / `*:*:*` style);
+   - reuse the starter-side `Re*` components when possible.
+4. **Never** open a PR against the full-version repo.
+
+See `docs/pure-admin/07-max-ts-modules.md` §Full Version Reference Strategy for PR-5 ~ PR-8 specific guidance.
+
 ---
 
 **Authority**: this file mirrors `CLAUDE.md`. If you find them out of sync, treat the stricter version as authoritative; default: `CLAUDE.md` wins.
