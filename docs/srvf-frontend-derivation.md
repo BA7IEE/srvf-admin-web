@@ -25,6 +25,10 @@ Backend repository: `srvf-nest-api`（NestJS 11 + Prisma 6 + JWT + Swagger，本
 
 ## 4. PR-4 Open Questions Resolved
 
+> ⚠️ **本节 Q1~Q5 + §4.x 基于 `srvf-nest-api` v0.10.0（2026-05-15）调研，已部分过时。**
+> 后端现已演进至 **v0.24.0**（2026-06-14，以实际代码为准）：**Q2（refresh-token）、Q5（API 路径）已反转**，Q4（`role` 作权限源）已被后端 DTO 注释显式否定。
+> **最新实际契约以 §4.y 为准**；本节保留作历史对照，不再作为 PR-4 实施依据。
+
 > 调研对象：`srvf-nest-api` v0.10.0；调研时间：2026-05-15；详细证据路径见调研对话存档（不在本文件展开）。
 
 | Question            | Decision                                                                                                                                                                                                                                                 |
@@ -46,6 +50,89 @@ Backend repository: `srvf-nest-api`（NestJS 11 + Prisma 6 + JWT + Swagger，本
 | Token 类型          | 响应含 `tokenType: "Bearer"`；前端 `formatToken` 拼 `Authorization: Bearer <token>`                                                                                      |
 | 多重身份登录        | 后端支持 `username` 或 `memberNo` 任一字符串作 `username` 字段值；前端 DTO 仍叫 `username`，UI 文案可改                                                                  |
 | 细粒度权限（可选）  | `GET /api/v2/rbac/me/permissions` 返回 `MyPermissionsResponseDto`（有效权限点集 + 业务角色摘要）；第一阶段不消费，留待二阶段                                             |
+
+### 4.y 后端契约 true-up（v0.24.0 · 2026-06-14 · 以实际代码为准）
+
+> 调研对象：`srvf-nest-api` **v0.24.0**（HEAD `56f4b81b`；`apply-swagger.ts` `setVersion('0.24.0')`）。
+> 调研方法：直接读后端源码（**非 mock、非 Swagger UI**）。证据文件：
+> `src/modules/auth/auth.controller.ts` / `auth.dto.ts` / `strategies/jwt.strategy.ts`；
+> `src/modules/users/controllers/admin-me.controller.ts` + `dto/admin/admin-me-response.dto.ts`；
+> `src/modules/users/controllers/app-me.controller.ts` + `dto/app/app-me-response.dto.ts`；
+> `src/modules/permissions/rbac.controller.ts`；`src/common/interceptors/response.interceptor.ts`；
+> `src/common/exceptions/biz-code.constant.ts`；`src/bootstrap/apply-global-setup.ts`（`setGlobalPrefix('/api')`）。
+
+#### 4.y.1 Q1~Q5 + 4.x 漂移对照
+
+| 项               | v0.10.0 旧结论                                   | v0.24.0 实际代码                                                                                                                                                                                                          | 状态                   |
+| ---------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
+| Q1 响应包裹      | `{code:0,message:"ok",data:T}`                   | `response.interceptor.ts` 成功仍 `{code:0,message:'ok',data}`                                                                                                                                                             | ✅ 不变                |
+| Q2 refresh-token | **不支持**，过期直接 logout                      | **已完整实现**：登录返 `refreshToken`+`refreshExpiresAt`；`POST /api/auth/v1/refresh`（rotation always + family revoke + absolute expiration）；`logout(-all)`；失败统一 `REFRESH_TOKEN_INVALID=10007`；`RefreshToken` 表 | ❌ **反转**            |
+| Q3 expiresIn     | JWT duration 串，例 `"7d"`                       | 字段在；example 改为 `"15m"`（access 短期化配合 refresh）                                                                                                                                                                 | ✅ 格式不变            |
+| Q4 角色          | 单角色 `role`，前端 `roles=[user.role]` 作权限源 | `role` 单字段仍在，但 DTO 注释钉死「**仅 UI 展示，非授权依据**」；权限走 RBAC                                                                                                                                             | ⚠️ **权限源否定**      |
+| Q5 API 路径      | `/api/auth/login`、`/api/users/me`               | `/api/auth/**v1**/login`；身份取 `/api/**admin/v1/me**`（新增）；旧 `/api/users/me` 已删除收口至 `app/v1/me`                                                                                                              | ❌ **路径全变**        |
+| 4.x 限流         | 登录 5/min，429+42900，无 Retry-After            | 仍是；扩展为 8 个物理隔离 throttler（refresh / password-change / password-reset / login-sms / login-wechat …）                                                                                                            | ✅ 扩展                |
+| 4.x 错误码       | 10004 / 40100 / 42900                            | 仍在；新增 10007（refresh）/ 24010（短信）/ 250xx（微信）等                                                                                                                                                               | ✅ 扩展                |
+| 4.x RBAC         | `GET /api/v2/rbac/me/permissions`，一阶段不消费  | 路径为 `GET /api/system/v1/rbac/me/permissions`；现为**前端唯一授权源**                                                                                                                                                   | ⚠️ 路径变 + 升级为必用 |
+
+#### 4.y.2 管理后台 auth 端点（`@Controller('auth/v1')`，共 11 个）
+
+| 端点                                             | 作用                     | 鉴权   | 限流实例              | 管理后台 |
+| ------------------------------------------------ | ------------------------ | ------ | --------------------- | -------- |
+| `POST /api/auth/v1/login`                        | 用户名+密码登录          | public | default               | ✅       |
+| `POST /api/auth/v1/refresh`                      | 刷新（rotation）         | public | refresh 30/60s        | ✅       |
+| `POST /api/auth/v1/logout`                       | 撤销当前 refresh（幂等） | public | 不限流（刻意）        | ✅       |
+| `POST /api/auth/v1/logout-all`                   | 撤销本人全部 refresh     | 需登录 | password-change 5/60s | 可选     |
+| `POST /api/auth/v1/password-reset(/send-code)`   | 短信找回密码             | public | password-reset 3/60s  | App 端   |
+| `POST /api/auth/v1/login-sms(/send-code)`        | 手机号+OTP 登录          | public | login-sms 5/60s       | App 端   |
+| `POST /api/auth/v1/login-wechat`、`wechat-bind*` | 微信登录/绑定            | public | login-wechat 5/60s    | 小程序端 |
+
+`LoginResponseDto`（login / refresh / login-sms / wechat-bind 共用，**恰好 5 字段，冻结禁增**）：
+
+```ts
+{
+  accessToken: string;
+  tokenType: "Bearer";
+  expiresIn: string /* 例 '15m' */;
+  refreshToken: string /* opaque 随机串，非 JWT */;
+  refreshExpiresAt: string; /* ISO8601 UTC，family 绝对过期时刻，rotation 不延长 */
+}
+```
+
+`LoginDto`：`username`(3-32，`^[a-zA-Z0-9_-]+$`，service 内 trim+lowercase) + `password`(仅非空，刻意不做长度校验防泄漏强度规则)。
+
+#### 4.y.3 管理后台 PR-4 身份链路（canonical，以代码为准）
+
+```
+登录   POST /api/auth/v1/login                  → access + refresh + expiresIn + refreshExpiresAt
+取身份 GET  /api/admin/v1/me                     → AdminMeResponseDto（9 字段纯身份，见下）
+取权限 GET  /api/system/v1/rbac/me/permissions   → 前端按钮/路由唯一授权源
+刷新   POST /api/auth/v1/refresh                 → access 过期时 rotation（带 refreshToken）
+登出   POST /api/auth/v1/logout                  → 带 refreshToken（幂等）
+```
+
+`GET /api/admin/v1/me`（commit `56f4b81b`，2026-06-14 新增；`@Controller('admin/v1/me')`，仅 `JwtAuthGuard` 不挂 `@Roles`）返回 `AdminMeResponseDto`，**恰好 9 字段、物理隔离不复用 App/Users DTO**：
+
+`userId / username / email / nickname / avatarKey / role / status / lastLoginAt / memberId`
+
+- 剔除 App 专属字段（`canUseApp` / `appAccessReason` / `memberNo` / `gradeCode` / `memberStatus`），是管理后台身份 bootstrap 的 canonical 入口；
+- `avatarKey` 只给 key 不给 signed URL；`memberId` 只表「是否已绑」，不返 member 业务字段。
+
+#### 4.y.4 必须钉死的硬契约（双 me DTO 一致）
+
+1. **`role` / `status` 仅前台 UI 展示，非授权依据**（`AdminMeResponseDto` + `AppMeResponseDto` 字段注释均明示）。前端按钮/路由权限**必须**走 `GET /api/system/v1/rbac/me/permissions`，**禁止**用 `role` 当 RBAC → 推翻 §4 Q4 与 §5「`roles=[user.role]`」。
+2. **JWT payload 极简** `{sub, username}` 不含 role；后端每请求查库取最新 `{role,status,memberId}` 鉴权。前端不应解析 JWT 取角色。
+3. **refresh token 是 opaque 随机串（非 JWT）**，前端不可解析；明文不入日志 / 存储展示 / 快照。
+4. **防账号枚举**：登录失败统一 10004、refresh 失败统一 10007、短信无效号泛化 200；429 不返 `Retry-After` / `X-RateLimit-*`。前端不得据错误码 / 响应差异反推账号状态。
+
+#### 4.y.5 对 §5 PR-4 实施计划的修正（旧步骤作废项）
+
+§5 PR-4 节基于 v0.10.0，以下步骤**以本节为准修正**：
+
+- `getLogin` URL：`/api/auth/login` → **`/api/auth/v1/login`**；
+- 取身份：`GET /api/users/me` → **`GET /api/admin/v1/me`**（旧路径已删除）；
+- `roles` 写入：**不再**用 `[user.role]` 作权限源；`role` 仅展示，权限走 `rbac/me/permissions`；
+- refresh：旧「Do not introduce refresh-token / 去掉 `handRefreshToken`」**反转** → 需实现 refresh rotation（access `15m` 过期 → `/refresh` 换新 access+refresh，至 `refreshExpiresAt` 才重登录）；
+- DoD「cookie 不含 refreshToken」**反转** → 需安全存储并使用 refreshToken。
 
 ## 5. Next PRs（在本仓库内推进，不再在 starter 内推进）
 
@@ -69,6 +156,9 @@ DoD：
 - [ ] `pnpm lint && pnpm typecheck && pnpm build` 全绿。
 
 ### PR-4: NestJS login integration
+
+> ⚠️ **以下修改范围 / 禁止范围 / DoD 基于 v0.10.0 调研，多处已被 §4.y（v0.24.0）修正。**
+> 重启 PR-4 时**以 §4.y 为准**：URL 加 `v1`、身份取 `/api/admin/v1/me`、`role` 非权限源、refresh-token 反转为必做。
 
 修改范围（每项均需对照 `docs/pure-admin/02-ai-rules.md §13.1` 矩阵）：
 
