@@ -88,7 +88,17 @@
       "Edit(./public/platform-config.json)",
       "Write(./public/platform-config.json)",
       "Edit(./mock/**)",
-      "Write(./mock/**)"
+      "Write(./mock/**)",
+      "Edit(./.claude/settings.json)",
+      "Write(./.claude/settings.json)",
+      "Edit(./.claude/hooks/**)",
+      "Write(./.claude/hooks/**)",
+      "Edit(./.claude/skills/**)",
+      "Write(./.claude/skills/**)",
+      "Edit(./.claude/commands/**)",
+      "Write(./.claude/commands/**)",
+      "Edit(./docs/pure-admin/13-ai-harness.md)",
+      "Write(./docs/pure-admin/13-ai-harness.md)"
     ]
   },
   "hooks": {

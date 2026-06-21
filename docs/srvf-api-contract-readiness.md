@@ -59,6 +59,14 @@ All backend-dependent fields, states, permissions, workflows, and enums must be 
 
 ## 6. Readiness Checklist
 
+> **Frozen contract baseline: srvf-nest-api v0.10.0 @ 2026-05-15.**
+> This checklist was frozen against that backend version. Before restarting PR-4, every
+> item below must be re-verified against the **current** backend — the live `srvf-nest-api`
+> has almost certainly advanced past v0.10.0 since the freeze. `node .claude/hooks/harness-doctor.mjs`
+> reads this baseline, compares it to `../srvf-nest-api/package.json`, and WARNs when they
+> diverge (see `docs/pure-admin/13-ai-harness.md` §13A.5). A WARN is a reminder to re-check —
+> it is not, by itself, permission to restart PR-4.
+
 PR-4 may restart only after humans confirm:
 
 - [ ] backend decides whether refresh-token will exist;
