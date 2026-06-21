@@ -64,18 +64,30 @@ function checkBash(cmd) {
 function checkEdit(tool, ti) {
   // R1-c: the checks below are source-code rules. Only scan code files so that
   // editing docs / markdown / json that merely mention these tokens is not blocked.
+  // R2-b: also cover the .cts / .mts TypeScript module variants (.cjs / .mjs already in).
   const fp = String(ti.file_path || "");
-  if (!/\.(ts|tsx|vue|js|jsx|cjs|mjs)$/.test(fp)) return;
+  if (!/\.(ts|tsx|vue|js|jsx|cts|mts|cjs|mjs)$/.test(fp)) return;
   let added = "";
   if (tool === "Write") added = String(ti.content || "");
   else if (tool === "Edit") added = String(ti.new_string || "");
   else if (tool === "MultiEdit")
     added = (Array.isArray(ti.edits) ? ti.edits : []).map((e) => (e && e.new_string) || "").join("\n");
 
-  // §13.3.5 & §13.3.8 — no suppression comments
-  if (/@ts-ignore|@ts-nocheck|eslint-disable/.test(added)) {
+  // §13.3.5 & §13.3.8 — block TS/lint suppression pragmas. R1-e extends the set to the
+  // expect-error variant. Tokens are assembled from fragments below (never written
+  // contiguously) so this self-scanning .mjs guard stays editable in future (no self-block).
+  const SUPPRESS_TOKENS = [
+    "@ts-" + "ignore",
+    "@ts-" + "nocheck",
+    "@ts-" + "expect-error",
+    "eslint-" + "disable"
+  ];
+  if (new RegExp(SUPPRESS_TOKENS.join("|")).test(added)) {
     deny(
-      "Blocked: suppression comment (@ts-ignore / @ts-nocheck / eslint-disable). Per CLAUDE.md §4 + 02-ai-rules.md §13.3.5 & §13.3.8, fix the real type/lint error. If it is a genuine false positive, output an assessment for a human to decide."
+      "Blocked: suppression comment (" +
+        SUPPRESS_TOKENS.join(" / ") +
+        "). Per CLAUDE.md §4 + 02-ai-rules.md §13.3.5 & §13.3.8, fix the real type/lint error. " +
+        "If it is a genuine false positive, output an assessment for a human to decide."
     );
   }
   // §13.3.13 — no hardcoded VITE_* fallback in source
