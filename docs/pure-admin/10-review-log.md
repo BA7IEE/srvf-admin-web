@@ -297,12 +297,12 @@
 
 ---
 
-### 18.6 PR #1（AI harness + goal+loop skill）只读评审 + 修复（2026-06-21）
+### 18.7 PR #1（AI harness + goal+loop skill）只读评审 + 修复（2026-06-21）
 
 **对象**：分支 `claude/ecstatic-darwin-75a516`（PR #1），相对 `main` 新增 10 文件 / +418 行，全部为 `.claude/` 工程级 AI 工具 + 文档（§13.2.2 单独 PR），不含业务代码，PR-4 不受影响。
 **方式**：先做只读六维评审（guard / verify / settings `deny`·`ask` / preflight·子目录 CLAUDE.md / SKILL / 文档与指针），零改动产报告；经人类拍板后在同分支追加 follow-up commit 修复。
 
-#### 18.6.1 发现总表（无 Crit / 无 High；8 Med 全部已修）
+#### 18.7.1 发现总表（无 Crit / 无 High；8 Med 全部已修）
 
 | 维          | 位置                                   | 严重度 | 一句话                                                                                            | 处置                                                           |
 | ----------- | -------------------------------------- | ------ | ------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
@@ -321,17 +321,17 @@
 
 （完整六维逐条 + §13.1 覆盖度对照表见评审会话；上表为合并结论 + 处置。）
 
-#### 18.6.2 总评
+#### 18.7.2 总评
 
 **修后合**：harness 架构稳健，`deny` 清单经 Claude Code 语义确认有效（`Edit(./path)` + glob 命中、`deny`>`allow`），是对"纯纸面规则"的净改进；8 条 Med 均属文档⇄代码漂移或 hook 缺口/误伤，方向安全（误拦非误放），无 Crit/High、无安全漏洞。3 必修（R1-c/R2-a/R6-a）+ 5 宜修（R4-a/R5-a/R1-a/R1-b/R3-a）已在本 follow-up commit 全部落地，逐条带 hook 自测探针。
 
-#### 18.6.3 反向验证
+#### 18.7.3 反向验证
 
 - hook 自测：guard 整套 battery（R1-a/b/c 新行为 + 回归：`pnpm add`/`npm i -D`/`git commit -n` 拦，裸/`--frozen-lockfile`/`dlx`/`npm ci`/`echo -n` 放行）通过；verify A（`stop_hook_active`）/ B（无改动）/ C（工具缺失 → fail-open exit 0）/ 真类型错（输出含 `error TS` → exit 2）全过。
 - `pnpm typecheck` / `pnpm build`：评审阶段 worktree 无 `node_modules`（熔断留 CI）；修复阶段在 PR-1 worktree（有 `node_modules`）执行验证（结果见 commit / PR）。
 - 零改动探针：评审阶段全程 `git status --short` 为空。
 
-#### 18.6.4 边界自检
+#### 18.7.4 边界自检
 
 - 未碰 §13.1 ❌ 文件、未加依赖、未开 `asyncRoutes`、未动登录/token（PR-4）；
 - **未改 `settings.json` 的 `deny`/`ask` 清单本身**——仅修正描述它的文档措辞，实际保护不削弱；
