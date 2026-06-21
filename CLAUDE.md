@@ -40,6 +40,7 @@ Every AI task in this repository must read these documents first, in order:
 3. **`docs/srvf-frontend-derivation.md`** (SRVF-specific derivation record · §1 starter base commit · §4 backend Q1~Q5 conclusions · §6 PR order table)
 4. **`docs/srvf-api-contract-readiness.md`** (PR-4 pause authoritative decree · §3 why paused · §4 blocked work · §5 allowed work · §6 readiness checklist)
 5. `docs/pure-admin/12-official-docs-index.md` (Pure Admin official docs index with verified URLs)
+6. `docs/pure-admin/13-ai-harness.md` (AI harness · `.claude/` deny+ask rules and guard/verify hooks that mechanically enforce §13.1 / §13.3 · how a human grants an exception by editing `settings.json` — `deny` always beats `allow`)
 
 For route / menu work also read:
 
