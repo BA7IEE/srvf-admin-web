@@ -14,15 +14,15 @@ CLAUDE.md / AGENTS.md / `02-ai-rules.md` 已经把红线写得很全，但这些
 
 ## 13A.2 组成清单
 
-| 文件                                         | 类型         | 机械化了哪条规则                                                                                                                                                                                                                                                                                                                            |
-| -------------------------------------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `.claude/settings.json` → `permissions.deny` | 静态护栏     | §13.1 矩阵所有 ❌ 文件（auth / token / login / http / user & permission store / 路由核心 / `asyncRoutes` / layout / style / plugins / `main` / `App` / config / `package.json` / lockfile / 工程配置 / `.env*`）的 Edit/Write 一律拒绝；`pnpm-lock.yaml` + `dist` 的 Read 拒绝（降噪，呼应 large-codebases「用 ignore/deny 排除生成物」）。 |
-| `.claude/settings.json` → `permissions.ask`  | 交互护栏     | §13.1 矩阵 ⚠️「改前评估」文件（`dict` / `tenant` / `schedule` / `permission` 演示模块、`home`/`error`/`remaining` 路由、`platform-config.json`、`mock/**`）改动前先询问人类。                                                                                                                                                               |
-| `.claude/hooks/guard.mjs`                    | PreToolUse   | deny 无法表达的动态规则：`pnpm add/remove/update/clean:cache` 等依赖变更与他源 install（§13.2.1）、`--no-verify` / `HUSKY=0`（§13.3.12）、新增 `@ts-ignore` / `@ts-nocheck` / `eslint-disable`（§13.3.5 & §13.3.8）、源码中硬编码 `VITE_*` fallback（§13.3.13）。每次拒绝都附带**指向具体文档章节的原因**，便于模型纠偏。                   |
-| `.claude/hooks/verify.mjs`                   | Stop         | §13.3.8「每次改动后跑 typecheck」。会话内 `src/**` 代码有改动时，结束前自动跑 `pnpm typecheck`，失败则要求修复。（eslint 已由 husky + lint-staged 在提交时保证；typecheck/`vue-tsc` 是会话内缺口。）                                                                                                                                        |
-| `src/router/modules/CLAUDE.md`               | 子目录上下文 | 就近重申路由模块本地规则（`srvf-*.ts`、真实角色名、`name` 一致、`asyncRoutes` 禁用），随导航按需加载、不被压缩丢弃。                                                                                                                                                                                                                        |
-| `src/views/srvf/CLAUDE.md`                   | 子目录上下文 | 就近重申业务页规则（占位 / 仅布局 / 不发 API / 不发明后端字段）。                                                                                                                                                                                                                                                                           |
-| `.claude/commands/srvf-preflight.md`         | Slash 命令   | 一键产出 §13.4 8 步 Checklist（渐进式披露，不占满每次会话）。用法：`/srvf-preflight <任务一句话>`。                                                                                                                                                                                                                                         |
+| 文件                                         | 类型         | 机械化了哪条规则                                                                                                                                                                                                                                                                                                                                                                                                       |
+| -------------------------------------------- | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.claude/settings.json` → `permissions.deny` | 静态护栏     | §13.1 矩阵中除 `mock/**`（该 ❌ 行刻意放进 ask 以保留裁决-4 的 `*.demo.ts` 例外）外的所有 ❌ 文件（auth / token / login / http / user & permission store / 路由核心 / `asyncRoutes` / layout / style / plugins / `main` / `App` / config / `package.json` / lockfile / 工程配置 / `.env*`）的 Edit/Write 一律拒绝；`pnpm-lock.yaml` + `dist` 的 Read 拒绝（降噪，呼应 large-codebases「用 ignore/deny 排除生成物」）。 |
+| `.claude/settings.json` → `permissions.ask`  | 交互护栏     | §13.1 矩阵 ⚠️「改前评估」文件（`dict` / `tenant` / `schedule` / `permission` 演示模块、`home`/`error`/`remaining` 路由、`platform-config.json`、`mock/**`）改动前先询问人类。                                                                                                                                                                                                                                          |
+| `.claude/hooks/guard.mjs`                    | PreToolUse   | deny 无法表达的动态规则：`pnpm add/remove/update/clean:cache` 等依赖变更与他源 install（§13.2.1）、`--no-verify` / `HUSKY=0`（§13.3.12）、新增 `@ts-ignore` / `@ts-nocheck` / `eslint-disable`（§13.3.5 & §13.3.8）、源码中硬编码 `VITE_*` fallback（§13.3.13）。每次拒绝都附带**指向具体文档章节的原因**，便于模型纠偏。                                                                                              |
+| `.claude/hooks/verify.mjs`                   | Stop         | §13.3.8「每次改动后跑 typecheck」。会话内 `src/**` 代码有改动时，结束前自动跑 `pnpm typecheck`，失败则要求修复。（eslint 已由 husky + lint-staged 在提交时保证；typecheck/`vue-tsc` 是会话内缺口。）                                                                                                                                                                                                                   |
+| `src/router/modules/CLAUDE.md`               | 子目录上下文 | 就近重申路由模块本地规则（`srvf-*.ts`、真实角色名、`name` 一致、`asyncRoutes` 禁用），随导航按需加载、不被压缩丢弃。                                                                                                                                                                                                                                                                                                   |
+| `src/views/srvf/CLAUDE.md`                   | 子目录上下文 | 就近重申业务页规则（占位 / 仅布局 / 不发 API / 不发明后端字段）。                                                                                                                                                                                                                                                                                                                                                      |
+| `.claude/commands/srvf-preflight.md`         | Slash 命令   | 一键产出 §13.4 8 步 Checklist（渐进式披露，不占满每次会话）。用法：`/srvf-preflight <任务一句话>`。                                                                                                                                                                                                                                                                                                                    |
 
 ## 13A.3 失效模式（重要）
 
@@ -32,13 +32,11 @@ CLAUDE.md / AGENTS.md / `02-ai-rules.md` 已经把红线写得很全，但这些
 
 ## 13A.4 人类如何临时放行（授权例外）
 
-deny / ask 写在**版本化**的 `settings.json` 里，所有 agent 共享。当人类确有授权需要改某个 ❌ 文件时（例如 PR-4 恢复、或 §13.1 允许的「接 NestJS 时一次性 http 适配」），在 **`.claude/settings.local.json`（已 gitignore，按人生效）** 中加允许规则即可覆盖团队默认，无需改版本化文件：
+deny / ask 写在**版本化**的 `settings.json` 里，所有 agent 共享。**注意 Claude Code 的权限优先级是 `deny` > `ask` > `allow`——`deny` 永远压过 `allow`**：在 `.claude/settings.local.json` 里加 `allow` **并不能**重新打开一个被 `deny` 的文件。同理，hooks 跨配置文件**累加合并**，本地设置也**无法**注销项目级 `Stop` 钩子。
 
-```json
-{ "permissions": { "allow": ["Edit(./src/utils/http/index.ts)"] } }
-```
+因此当人类确有授权需要改某个 ❌ 文件时（例如 PR-4 恢复、或 §13.1 允许的「接 NestJS 时一次性 http 适配」），唯一可靠的做法是**直接编辑版本化的 `settings.json`**——把对应的 `deny` 行删除或改窄。建议放在一个单独的、人类审过的 PR 里改（§13.2.2），用完即恢复，不要长期留在主干。
 
-临时关闭 Stop 校验：从 `settings.json` 删除 `Stop` 钩子，或在本地设置中覆盖。
+临时关闭 Stop 校验：从 `settings.json` 删除 `Stop` 钩子（同样要改版本化文件，本地覆盖无效）。
 
 ## 13A.5 维护节奏
 

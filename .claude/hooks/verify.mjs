@@ -39,6 +39,19 @@ function readStdin() {
       process.exit(0); // typecheck passed
     } catch (e) {
       const out = `${(e && e.stdout) || ""}\n${(e && e.stderr) || ""}`.trim();
+      // R2-a: only a genuine vue-tsc run prints `error TS<n>` diagnostics. If those are
+      // absent (or the process was killed/timed out), the failure is a tooling error —
+      // pnpm/vue-tsc missing, node_modules absent, timeout — not a type error. Fail OPEN
+      // so the harness never bricks a session (matches header + 13-ai-harness.md §13A.3).
+      const killed = !!(e && (e.killed || e.signal));
+      const hasTypeErrors = /error TS\d+/i.test(out);
+      if (killed || !hasTypeErrors) {
+        process.stderr.write(
+          "SRVF harness: skipped the typecheck gate — `pnpm typecheck` could not run to " +
+            "completion (toolchain missing or timed out). Fail-open per 13-ai-harness.md §13A.3.\n"
+        );
+        process.exit(0);
+      }
       process.stderr.write(
         "Stop blocked by SRVF harness: `pnpm typecheck` failed (02-ai-rules.md §13.3.8). " +
           "Fix the type errors below before finishing. If they are pre-existing and unrelated to this " +

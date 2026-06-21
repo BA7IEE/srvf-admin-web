@@ -294,3 +294,45 @@
 - 是否新增 mock：❌ 未新增任何 mock 文件；
 - 是否硬编码 `VITE_*` fallback：❌ 未在源码侧新增 fallback（残留的 `build/utils.ts:59` 属上游遗留，见 §18.5.3）；
 - 是否改 `package.json` 依赖字段 / 执行 pnpm 写命令：❌ 未发生。
+
+---
+
+### 18.6 PR #1（AI harness + goal+loop skill）只读评审 + 修复（2026-06-21）
+
+**对象**：分支 `claude/ecstatic-darwin-75a516`（PR #1），相对 `main` 新增 10 文件 / +418 行，全部为 `.claude/` 工程级 AI 工具 + 文档（§13.2.2 单独 PR），不含业务代码，PR-4 不受影响。
+**方式**：先做只读六维评审（guard / verify / settings `deny`·`ask` / preflight·子目录 CLAUDE.md / SKILL / 文档与指针），零改动产报告；经人类拍板后在同分支追加 follow-up commit 修复。
+
+#### 18.6.1 发现总表（无 Crit / 无 High；8 Med 全部已修）
+
+| 维          | 位置                                   | 严重度 | 一句话                                                                                            | 处置                                                           |
+| ----------- | -------------------------------------- | ------ | ------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| R1-c        | `guard.mjs` checkEdit                  | Med    | 内容抑制扫描不分文件类型，编辑提到 `@ts-ignore`/`eslint-disable` 的文档也被拦                     | ✅ 已修：仅 `.ts/.tsx/.vue/.js/.jsx/.cjs/.mjs` 才扫            |
+| R2-a        | `verify.mjs` catch                     | Med    | typecheck 工具错误（无 node_modules / 超时）fail-CLOSED（exit 2），与 §13A.3 矛盾                 | ✅ 已修：仅当输出含 `error TS<n>` 才 exit 2，否则 fail-open    |
+| R6-a        | `13A.4` + `CLAUDE.md`/`AGENTS.md` 指针 | Med    | 称本地 `settings.local.json` 加 `allow` 可覆盖 `deny`；实际 `deny`>`allow`、hook 合并不可本地禁用 | ✅ 已修：改为编辑版本化 `settings.json`                        |
+| R4-a        | `srvf-preflight.md`                    | Med    | 自称 §13.4 八步却把真 step7/8（lint·build）降级，"still run 7-8" 指错                             | ✅ 已修：step7=lint·typecheck、step8=build，PR-4/回滚下移 9/10 |
+| R5-a        | `SKILL.md:24`                          | Med    | 授权视图写 `src/views/srvf-*/`（横杠），实际嵌套于 `src/views/srvf/`                              | ✅ 已修：改 `src/views/srvf/**`                                |
+| R1-a        | `guard.mjs` install 检查               | Med    | flag 在前的安装（`npm i -D pkg`）绕过拦截                                                         | ✅ 已修：flag 后出现非 flag token 即拦（含 pnpm/npm/yarn/bun） |
+| R1-b        | `guard.mjs` commit 检查                | Med    | `git commit -n`（=`--no-verify` 短选项）未拦                                                      | ✅ 已修：git commit 语境拦 `-n` 短选项簇                       |
+| R3-a / R6-c | `13A.2` deny 行                        | Med    | 自述"所有 ❌ 一律 deny"，但 `mock/**`（❌）实为 `ask`                                             | ✅ 已修：措辞改"除 `mock/**`（走 ask）外"                      |
+| R1-d        | `guard.mjs`                            | Low    | `pnpm add` 作为子串出现在 commit message 等被误杀                                                 | 未修（安全方向误拦，保留）                                     |
+| R1-e        | `guard.mjs`                            | Low    | `@ts-expect-error` 未覆盖                                                                         | 未修（与成文规则一致，可选加固）                               |
+| R2-b        | `verify.mjs`                           | Low    | src 改动判定扩展名漏 `.cjs/.mts/.cts`                                                             | 未修（本仓 src 近乎全 `.ts`/`.vue`）                           |
+| R3-b        | `settings.json`                        | Low    | `Re*/**`、`plugins/**` glob 略宽于矩阵字面                                                        | 未修（可辩护加固）                                             |
+
+（完整六维逐条 + §13.1 覆盖度对照表见评审会话；上表为合并结论 + 处置。）
+
+#### 18.6.2 总评
+
+**修后合**：harness 架构稳健，`deny` 清单经 Claude Code 语义确认有效（`Edit(./path)` + glob 命中、`deny`>`allow`），是对"纯纸面规则"的净改进；8 条 Med 均属文档⇄代码漂移或 hook 缺口/误伤，方向安全（误拦非误放），无 Crit/High、无安全漏洞。3 必修（R1-c/R2-a/R6-a）+ 5 宜修（R4-a/R5-a/R1-a/R1-b/R3-a）已在本 follow-up commit 全部落地，逐条带 hook 自测探针。
+
+#### 18.6.3 反向验证
+
+- hook 自测：guard 整套 battery（R1-a/b/c 新行为 + 回归：`pnpm add`/`npm i -D`/`git commit -n` 拦，裸/`--frozen-lockfile`/`dlx`/`npm ci`/`echo -n` 放行）通过；verify A（`stop_hook_active`）/ B（无改动）/ C（工具缺失 → fail-open exit 0）/ 真类型错（输出含 `error TS` → exit 2）全过。
+- `pnpm typecheck` / `pnpm build`：评审阶段 worktree 无 `node_modules`（熔断留 CI）；修复阶段在 PR-1 worktree（有 `node_modules`）执行验证（结果见 commit / PR）。
+- 零改动探针：评审阶段全程 `git status --short` 为空。
+
+#### 18.6.4 边界自检
+
+- 未碰 §13.1 ❌ 文件、未加依赖、未开 `asyncRoutes`、未动登录/token（PR-4）；
+- **未改 `settings.json` 的 `deny`/`ask` 清单本身**——仅修正描述它的文档措辞，实际保护不削弱；
+- 未用 `--no-verify` / ts·eslint 抑制注释绕检查。

@@ -21,7 +21,7 @@ description: 当用户要把 srvf-admin-web(前端)的一项工作交给 runner 
 [goal+loop 文本骨架](必填仅 ★;其余按信息量取舍,迷你 goal 三段即可)
 ★ **背景**:已拍板事实 + 日期 + 当前阶段(PR-4 暂停)+ 本 goal 属 PR-几。
 ★ **DoD + 探针队列**:逐条终态各附自证命令 / 判据(原则 4);任务 T1…Tn,每项 = 做什么 + 触及的 ✅ 文件 + 探针(未满足才做)。
-★ **授权域**:runner 可自由新建 / 改的 ✅ 文件——`src/router/modules/srvf-*.ts`、`src/views/srvf-*/`、`src/api/srvf-*.ts`(占位)、`src/store/modules/srvf*.ts`。
+★ **授权域**:runner 可自由新建 / 改的 ✅ 文件——`src/router/modules/srvf-*.ts`、`src/views/srvf/**`(嵌套于单一 srvf/ 目录,与子目录 CLAUDE.md 一致)、`src/api/srvf-*.ts`(占位)、`src/store/modules/srvf*.ts`。
 ★ **禁止域**:§13.1 ❌ + 禁依赖 / asyncRoutes / 反推后端 / mock 当契约 / PR-4(原则 6)。
 **LOOP 协议**:整段抄进 goal(见下)。
 

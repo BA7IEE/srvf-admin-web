@@ -37,22 +37,24 @@ function checkBash(cmd) {
       "Blocked: dependency mutation (pnpm add/remove/update/clean:cache). Per CLAUDE.md §4 + 02-ai-rules.md §13.2.1, AI must not change dependencies — propose it in the PR for a human to run."
     );
   }
-  if (/\b(npm|yarn|bun)\s+(add|install|i)\s+[^-\s]/.test(c)) {
+  // R1-a: installing/adding a *specific package* is human-only. Match `<pm> add|install|i`
+  // with a non-flag token after any flags, so flag-first forms (`npm i -D pkg`) are caught too.
+  // Bare `pnpm install`, `pnpm install --frozen-lockfile`, `pnpm dlx`, `npm ci` stay allowed.
+  if (/\b(npm|yarn|bun|pnpm)\s+(add|install|i)\b(\s+-{1,2}[^\s]+)*\s+[^-\s|;&]/.test(c)) {
     deny(
-      "Blocked: dependency install via npm/yarn/bun. Per 02-ai-rules.md §13.2.1 this is human-only. This project uses pnpm; dependency changes go through a human."
-    );
-  }
-  // `pnpm install <pkg>` adds a dep; bare `pnpm install` (lockfile install) is allowed
-  if (/\bpnpm\s+(install|i)\s+[^-\s]/.test(c)) {
-    deny(
-      'Blocked: `pnpm install <pkg>` adds a dependency (02-ai-rules.md §13.2.1). Bare `pnpm install` is fine; to add a package, propose it for a human to run.'
+      "Blocked: installing/adding a package (npm/yarn/bun/pnpm add|install <pkg>) is human-only (02-ai-rules.md §13.2.1). Bare `pnpm install` / `pnpm install --frozen-lockfile` (lockfile restore) is fine; to add a dependency, propose it in the PR for a human to run."
     );
   }
   if (/\brm\b[^|;&\n]*pnpm-lock\.yaml/.test(c)) {
     deny("Blocked: removing pnpm-lock.yaml (02-ai-rules.md §13.2.1).");
   }
-  // §13.3.12 — never bypass husky / commitlint
-  if (/--no-verify\b/.test(c) || /\bhusky=0\b/.test(c)) {
+  // §13.3.12 — never bypass husky / commitlint. R1-b: also catch `-n` (short for
+  // --no-verify) inside a short-flag cluster, scoped to `git commit` so `echo -n` is safe.
+  if (
+    /--no-verify\b/.test(c) ||
+    /\bhusky=0\b/.test(c) ||
+    /\bgit\s+commit\b[^|;&\n]*\s-[a-z]*n[a-z]*\b/.test(c)
+  ) {
     deny(
       "Blocked: husky/commitlint bypass (--no-verify / HUSKY=0). Per CLAUDE.md §4 + 02-ai-rules.md §13.3.12, fix the lint/type error instead of bypassing the commit hook."
     );
@@ -60,6 +62,10 @@ function checkBash(cmd) {
 }
 
 function checkEdit(tool, ti) {
+  // R1-c: the checks below are source-code rules. Only scan code files so that
+  // editing docs / markdown / json that merely mention these tokens is not blocked.
+  const fp = String(ti.file_path || "");
+  if (!/\.(ts|tsx|vue|js|jsx|cjs|mjs)$/.test(fp)) return;
   let added = "";
   if (tool === "Write") added = String(ti.content || "");
   else if (tool === "Edit") added = String(ti.new_string || "");
