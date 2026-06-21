@@ -3,10 +3,11 @@
 // Run: `node .claude/hooks/harness-doctor.mjs`
 //
 // Two independent checks, so the harness cannot silently go stale (13A.5):
-//   [1] Structural: every ❌/⚠️ row of 02-ai-rules.md §13.1 must still be covered
-//       by a deny/ask glob in .claude/settings.json. A row with NO coverage is real
-//       drift (a guard was removed) -> non-zero exit. Extra settings entries beyond
-//       the matrix are reported as INFO (additive protection is never drift).
+//   [1] Structural: every ❌/⚠️ row of 02-ai-rules.md §13.1 must still be covered by
+//       BOTH an Edit and a Write deny/ask glob in .claude/settings.json. No coverage,
+//       or only one of the Edit/Write pair, is real drift (a guard removed or half-
+//       removed) -> non-zero exit. Extra settings entries beyond the matrix are
+//       reported as INFO (additive protection is never drift).
 //   [2] Advisory: compare the frozen backend baseline recorded in
 //       srvf-api-contract-readiness.md against the live ../srvf-nest-api version.
 //       A lag only WARNs (re-verify the §6 checklist before PR-4) — it never flips
@@ -190,22 +191,32 @@ function main() {
   console.log("SRVF harness-doctor\n");
   console.log("[1] §13.1 matrix ↔ settings.json coverage");
   for (const spec of specs) {
-    let best = null;
-    for (const e of editable) {
-      if (covers(e.glob, spec.path)) {
-        const exact = !e.glob.includes("*") && e.glob === spec.path;
-        if (!best || (exact && !best.exact)) best = { e, exact };
-      }
-    }
-    if (!best) {
+    // A ❌/⚠️ path needs BOTH Edit and Write blocked. One tool alone leaves a hole
+    // (e.g. Edit-deny removed but Write-deny kept => the file is editable again), so a
+    // partial pair is drift, not "ok".
+    const covering = editable.filter((e) => covers(e.glob, spec.path));
+    const hasEdit = covering.some((e) => e.tool === "Edit");
+    const hasWrite = covering.some((e) => e.tool === "Write");
+    if (!hasEdit && !hasWrite) {
       missing.push(spec);
       console.log(`  MISS  ${spec.symbol.padEnd(4)} ${spec.path}  (no deny/ask glob covers it)`);
+    } else if (!hasEdit || !hasWrite) {
+      const have = hasEdit ? "Edit" : "Write";
+      const gap = hasEdit ? "Write" : "Edit";
+      missing.push(spec);
+      for (const e of covering) e.used = true; // the present twin is intentional, not an extra
+      console.log(`  MISS  ${spec.symbol.padEnd(4)} ${spec.path}  (only ${have} covered; ${gap} deny/ask missing)`);
     } else {
-      // mark every covering entry used (Edit + Write twins, plus any broader glob)
-      // so a protected path never resurfaces as a false "extra".
-      for (const e of editable) if (covers(e.glob, spec.path)) e.used = true;
-      const via = best.e.bucket !== spec.symbol ? `  [via ${best.e.bucket}]` : "";
-      console.log(`  ok    ${spec.symbol.padEnd(4)} ${spec.path}  ← ${best.e.bucket} ${best.e.glob}${via}`);
+      // both twins present — mark every covering entry used so a protected path never
+      // resurfaces as a false "extra"; prefer an exact same-bucket match for display.
+      for (const e of covering) e.used = true;
+      let best = covering[0];
+      for (const e of covering) {
+        const exact = !e.glob.includes("*") && e.glob === spec.path;
+        if (exact && (best.glob.includes("*") || best.bucket !== spec.symbol)) best = e;
+      }
+      const via = best.bucket !== spec.symbol ? `  [via ${best.bucket}]` : "";
+      console.log(`  ok    ${spec.symbol.padEnd(4)} ${spec.path}  ← ${best.bucket} ${best.glob}${via}`);
     }
   }
 

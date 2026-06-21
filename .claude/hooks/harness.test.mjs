@@ -27,6 +27,7 @@ import {
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const GUARD = path.join(HERE, "guard.mjs");
 const VERIFY = path.join(HERE, "verify.mjs");
+const DOCTOR = path.join(HERE, "harness-doctor.mjs");
 
 // ---- runtime-reconstructed trigger tokens (never written contiguously) ----------
 const TS_IGNORE = "@ts-" + "ignore";
@@ -110,6 +111,34 @@ function runVerifyProcess({ input, cwd, extraPath }) {
       encoding: "utf8",
       stdio: ["pipe", "pipe", "pipe"] // capture the hook's own stderr instead of inheriting it
     });
+    return 0;
+  } catch (e) {
+    return typeof e.status === "number" ? e.status : -1;
+  }
+}
+
+// ---- harness-doctor.mjs fixture driver (B drift detection) -----------------------
+// Drive the doctor against throwaway §13.1 + settings fixtures via its SRVF_DOCTOR_*
+// env overrides, so the §13.1<->settings coverage logic is regression-locked.
+const DOCTOR_RULES = [
+  "### 13.1 matrix",
+  "",
+  "| 文件 / 目录 | AI 可改？ | 备注 |",
+  "| --- | --- | --- |",
+  "| `src/utils/auth.ts` | ❌ | token |",
+  "",
+  "### 13.2 next",
+  ""
+].join("\n");
+function runDoctor(denyList) {
+  const dir = mkTemp("srvf-h-doc-");
+  const sPath = path.join(dir, "settings.json");
+  const rPath = path.join(dir, "rules.md");
+  writeFileSync(sPath, JSON.stringify({ permissions: { deny: denyList } }));
+  writeFileSync(rPath, DOCTOR_RULES);
+  const env = { ...process.env, SRVF_DOCTOR_SETTINGS: sPath, SRVF_DOCTOR_RULES: rPath };
+  try {
+    execFileSync("node", [DOCTOR], { env, encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] });
     return 0;
   } catch (e) {
     return typeof e.status === "number" ? e.status : -1;
@@ -225,6 +254,13 @@ try {
       extraPath: pnpmShim("#!/bin/sh\necho 'src/probe.ts(1,5): error TS2304: nope'\nexit 1\n")
     }) === 2
   );
+
+  // ===== doctor: §13.1 coverage needs BOTH Edit and Write (B, pair-level) =========
+  check("doctor: full Edit+Write pair -> no drift (0)", runDoctor(["Edit(./src/utils/auth.ts)", "Write(./src/utils/auth.ts)"]) === 0);
+  check("doctor: covering glob pair -> no drift (0)", runDoctor(["Edit(./src/utils/**)", "Write(./src/utils/**)"]) === 0);
+  check("doctor: no coverage -> drift (1)", runDoctor([]) === 1);
+  check("doctor: only Write (Edit half-removed) -> drift (1)", runDoctor(["Write(./src/utils/auth.ts)"]) === 1);
+  check("doctor: only Edit (Write half-removed) -> drift (1)", runDoctor(["Edit(./src/utils/auth.ts)"]) === 1);
 } finally {
   for (const d of temps) {
     try {
