@@ -12,7 +12,7 @@ description: 当用户要把 srvf-admin-web(前端)的一项工作交给 runner 
 [第一性原则]
 
 1. **拍板先行**:goal 不留未决问题(runner 中途只能人话简报停)。"挑哪个先例 / 菜单层级与 rank / 占位字段口径 / 目录与路由命名"等未拍 → **逐题穷尽访谈,一次问一个,每题给推荐,能查代码或文档自答的先查再问**;纯占位无可拍之事则直接写。**严禁反推后端**:后端字段 / 枚举 / 状态 / 接口 / 角色一律标 `placeholder` 或"待后端确认",绝不替后端定义(红线 1~4)。
-2. **侦察先行**:写前核实况——`git` HEAD 与工作树、`gh pr list`、`docs/pure-admin/09-pr-roadmap.md`、`docs/srvf-static-menu-skeleton-plan.md`、`src/router/modules/`、`src/views/`;复用先例给精确 `file:line`;先去 `vue-pure-admin/src/views/` 找 UI 范式(只借布局 / 组合,不抄 API / RBAC / mock)。
+2. **侦察先行**:写前核实况——`git` HEAD 与工作树、`gh pr list`、`docs/pure-admin/09-pr-roadmap.md`、`docs/srvf-static-menu-skeleton-plan.md`、`src/router/modules/`、`src/views/`;复用先例给精确 `file:line`;先去 `vue-pure-admin/src/views/` 找 UI 范式(只借布局 / 组合,不抄 API / RBAC / mock)。**若 goal 要"追加进某编号文档"(如 review-log),先扫现有小节编号、取下一个未用号,别撞号**。
 3. **目标导向,不教过程**:goal 写"什么必须为真"(DoD)与"什么不许碰"(禁止域),执行打法交给内嵌 loop。规则不复述——点名引用 CLAUDE.md §4/§5/§6、02-ai-rules §13.1 矩阵 / §13.3 / §13.4、13-ai-harness;怪癖在仓库文档与项目 memory 里,runner 自取。
 4. **DoD 可自证**:每条终态用命令 / 产出物自证——`pnpm lint && pnpm typecheck`(零错零警)、`pnpm build`,必要时 `pnpm dev` 自查路由 / 菜单;外加"路由 name===组件 defineOptions.name""菜单出现在侧栏""页面纯布局、零 API 调用"等可核验判据。
 5. **探针驱动 + 幂等**:任务队列每项带"探针"(已完成判据,如"路由 srvf-xxx 已注册且 lint/typecheck 绿");探针已满足则跳过 → 同一 goal 文本中断后重跑即续命,不重复造。
