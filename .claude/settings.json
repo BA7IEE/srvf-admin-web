@@ -1,0 +1,117 @@
+{
+  "permissions": {
+    "deny": [
+      "Edit(./src/api/user.ts)",
+      "Write(./src/api/user.ts)",
+      "Edit(./src/utils/auth.ts)",
+      "Write(./src/utils/auth.ts)",
+      "Edit(./src/utils/http/**)",
+      "Write(./src/utils/http/**)",
+      "Edit(./src/store/modules/user.ts)",
+      "Write(./src/store/modules/user.ts)",
+      "Edit(./src/store/modules/permission.ts)",
+      "Write(./src/store/modules/permission.ts)",
+      "Edit(./src/store/modules/multiTags.ts)",
+      "Write(./src/store/modules/multiTags.ts)",
+      "Edit(./src/store/modules/app.ts)",
+      "Write(./src/store/modules/app.ts)",
+      "Edit(./src/store/modules/settings.ts)",
+      "Write(./src/store/modules/settings.ts)",
+      "Edit(./src/store/modules/epTheme.ts)",
+      "Write(./src/store/modules/epTheme.ts)",
+      "Edit(./src/views/login/**)",
+      "Write(./src/views/login/**)",
+      "Edit(./src/router/index.ts)",
+      "Write(./src/router/index.ts)",
+      "Edit(./src/router/utils.ts)",
+      "Write(./src/router/utils.ts)",
+      "Edit(./src/router/asyncRoutes.ts)",
+      "Write(./src/router/asyncRoutes.ts)",
+      "Edit(./src/components/Re*/**)",
+      "Write(./src/components/Re*/**)",
+      "Edit(./src/layout/**)",
+      "Write(./src/layout/**)",
+      "Edit(./src/style/**)",
+      "Write(./src/style/**)",
+      "Edit(./src/plugins/**)",
+      "Write(./src/plugins/**)",
+      "Edit(./src/main.ts)",
+      "Write(./src/main.ts)",
+      "Edit(./src/App.vue)",
+      "Write(./src/App.vue)",
+      "Edit(./src/config/index.ts)",
+      "Write(./src/config/index.ts)",
+      "Edit(./package.json)",
+      "Write(./package.json)",
+      "Edit(./pnpm-lock.yaml)",
+      "Write(./pnpm-lock.yaml)",
+      "Edit(./vite.config.ts)",
+      "Write(./vite.config.ts)",
+      "Edit(./tsconfig.json)",
+      "Write(./tsconfig.json)",
+      "Edit(./build/**)",
+      "Write(./build/**)",
+      "Edit(./eslint.config.js)",
+      "Write(./eslint.config.js)",
+      "Edit(./stylelint.config.js)",
+      "Write(./stylelint.config.js)",
+      "Edit(./.prettierrc.js)",
+      "Write(./.prettierrc.js)",
+      "Edit(./.lintstagedrc)",
+      "Write(./.lintstagedrc)",
+      "Edit(./commitlint.config.js)",
+      "Write(./commitlint.config.js)",
+      "Edit(./postcss.config.js)",
+      "Write(./postcss.config.js)",
+      "Edit(./.husky/**)",
+      "Write(./.husky/**)",
+      "Edit(./.env*)",
+      "Write(./.env*)",
+      "Read(./pnpm-lock.yaml)",
+      "Read(./dist/**)"
+    ],
+    "ask": [
+      "Edit(./src/views/dict/**)",
+      "Write(./src/views/dict/**)",
+      "Edit(./src/views/tenant/**)",
+      "Write(./src/views/tenant/**)",
+      "Edit(./src/views/schedule/**)",
+      "Write(./src/views/schedule/**)",
+      "Edit(./src/views/permission/**)",
+      "Write(./src/views/permission/**)",
+      "Edit(./src/router/modules/home.ts)",
+      "Write(./src/router/modules/home.ts)",
+      "Edit(./src/router/modules/error.ts)",
+      "Write(./src/router/modules/error.ts)",
+      "Edit(./src/router/modules/remaining.ts)",
+      "Write(./src/router/modules/remaining.ts)",
+      "Edit(./public/platform-config.json)",
+      "Write(./public/platform-config.json)",
+      "Edit(./mock/**)",
+      "Write(./mock/**)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard.mjs\""
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/verify.mjs\""
+          }
+        ]
+      }
+    ]
+  }
+}
