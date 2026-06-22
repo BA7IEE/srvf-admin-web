@@ -9,6 +9,11 @@ defineOptions({
 
 const {
   canRead,
+  canApprove,
+  canReject,
+  canFinalApprove,
+  canFinalReject,
+  canDelete,
   loading,
   columns,
   dataList,
@@ -20,6 +25,11 @@ const {
   loadActivities,
   onSearch,
   onActivityChange,
+  handleApprove,
+  handleReject,
+  handleFinalApprove,
+  handleFinalReject,
+  handleDelete,
   handleSizeChange,
   handleCurrentChange
 } = useAttendances();
@@ -83,6 +93,62 @@ onMounted(() => {
               <el-tag :type="statusMeta(row.statusCode).type">
                 {{ statusMeta(row.statusCode).text }}
               </el-tag>
+            </template>
+            <template #operation="{ row }">
+              <el-button
+                v-if="canApprove && row.statusCode === 'pending'"
+                class="reset-margin"
+                link
+                type="success"
+                :size="size"
+                @click="handleApprove(row)"
+              >
+                一级通过
+              </el-button>
+              <el-button
+                v-if="canReject && row.statusCode === 'pending'"
+                class="reset-margin"
+                link
+                type="danger"
+                :size="size"
+                @click="handleReject(row)"
+              >
+                一级驳回
+              </el-button>
+              <el-button
+                v-if="
+                  canFinalApprove && row.statusCode === 'pending_final_review'
+                "
+                class="reset-margin"
+                link
+                type="success"
+                :size="size"
+                @click="handleFinalApprove(row)"
+              >
+                终审通过
+              </el-button>
+              <el-button
+                v-if="
+                  canFinalReject && row.statusCode === 'pending_final_review'
+                "
+                class="reset-margin"
+                link
+                type="danger"
+                :size="size"
+                @click="handleFinalReject(row)"
+              >
+                终审驳回
+              </el-button>
+              <el-button
+                v-if="canDelete && row.statusCode === 'pending'"
+                class="reset-margin"
+                link
+                type="danger"
+                :size="size"
+                @click="handleDelete(row)"
+              >
+                删除
+              </el-button>
             </template>
           </pure-table>
         </template>
