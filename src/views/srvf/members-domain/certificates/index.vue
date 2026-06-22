@@ -2,6 +2,11 @@
 import { onMounted } from "vue";
 import { useCertificates } from "./utils/hook";
 import { PureTableBar } from "@/components/RePureTableBar";
+import { useRenderIcon } from "@/components/ReIcon/src/hooks";
+
+import Delete from "~icons/ep/delete";
+import EditPen from "~icons/ep/edit-pen";
+import AddFill from "~icons/ri/add-circle-line";
 
 defineOptions({
   name: "SrvfCertificates"
@@ -9,6 +14,11 @@ defineOptions({
 
 const {
   canRead,
+  canCreate,
+  canUpdate,
+  canDelete,
+  canVerify,
+  canReject,
   loading,
   columns,
   dataList,
@@ -18,7 +28,11 @@ const {
   certStatusTagType,
   dict,
   loadMembers,
-  onSearch
+  onSearch,
+  openDialog,
+  handleDelete,
+  handleVerify,
+  handleReject
 } = useCertificates();
 
 onMounted(() => {
@@ -51,6 +65,17 @@ onMounted(() => {
         </div>
       </el-card>
       <PureTableBar title="队员证书" :columns="columns" @refresh="onSearch">
+        <template #buttons>
+          <el-button
+            v-if="canCreate"
+            type="primary"
+            :icon="useRenderIcon(AddFill)"
+            :disabled="!memberId"
+            @click="openDialog('新建')"
+          >
+            新建
+          </el-button>
+        </template>
         <template v-slot="{ size, dynamicColumns }">
           <el-empty v-if="!memberId" description="请先选择一名队员查看其证书" />
           <pure-table
@@ -78,6 +103,50 @@ onMounted(() => {
               <el-tag :type="row.isInternal ? 'warning' : 'info'">
                 {{ row.isInternal ? "内部" : "外部" }}
               </el-tag>
+            </template>
+            <template #operation="{ row }">
+              <el-button
+                v-if="canUpdate"
+                class="reset-margin"
+                link
+                type="primary"
+                :size="size"
+                :icon="useRenderIcon(EditPen)"
+                @click="openDialog('编辑', row)"
+              >
+                编辑
+              </el-button>
+              <el-button
+                v-if="canVerify && row.certStatusCode === 'pending'"
+                class="reset-margin"
+                link
+                type="success"
+                :size="size"
+                @click="handleVerify(row)"
+              >
+                核验通过
+              </el-button>
+              <el-button
+                v-if="canReject && row.certStatusCode === 'pending'"
+                class="reset-margin"
+                link
+                type="warning"
+                :size="size"
+                @click="handleReject(row)"
+              >
+                核验驳回
+              </el-button>
+              <el-button
+                v-if="canDelete"
+                class="reset-margin"
+                link
+                type="danger"
+                :size="size"
+                :icon="useRenderIcon(Delete)"
+                @click="handleDelete(row)"
+              >
+                删除
+              </el-button>
             </template>
           </pure-table>
         </template>
