@@ -27,43 +27,53 @@ The Vite proxy from PR-2.1 is kept:
 
 This is infrastructure and does not bind frontend auth logic to an unstable backend contract.
 
-## 3. Why PR-4 Is Paused
+## 3. Why PR-4 Was Paused (historical · resolved)
 
-Frontend login integration is blocked by backend contract readiness:
+> **RESOLVED 2026-06-22 (backend v0.29.0).** Every blocker below was a v0.10.0-era gap; all are now
+> closed and PR-4 shipped via PR #6. Kept for history.
 
-- refresh-token is not implemented;
-- RBAC is not fully stable;
-- frontend permission source is not finalized;
-- token expiration strategy is not finalized;
-- `/api/users/me` usage is known but store mapping is not final;
-- error-code to frontend interaction mapping is not finalized;
-- Swagger/OpenAPI must reflect the final contract before frontend integration.
+At v0.10.0 the frontend login integration _was_ blocked by backend contract readiness:
 
-## 4. Blocked Frontend Work
+- refresh-token was not implemented → now `POST /api/auth/v1/refresh`;
+- RBAC was not fully stable → now `GET /api/system/v1/rbac/me/permissions`;
+- frontend permission source was not finalized → now the RBAC permissions endpoint;
+- token expiration strategy was not finalized → now `expiresIn` + `refreshExpiresAt`;
+- post-login user info source → now `GET /api/admin/v1/me`;
+- error-code → frontend interaction mapping → now defined (integration guide §3);
+- Swagger/OpenAPI now reflects the contract (`/api/docs-json`).
 
-Do not start these until this document's readiness checklist is complete:
+## 4. (Historical) Frontend Work That Was Blocked
 
-- real NestJS login integration;
-- `src/api/user.ts` auth API rewrite;
-- `src/utils/auth.ts` token strategy rewrite;
-- `src/store/modules/user.ts` login flow rewrite;
-- `src/utils/http/index.ts` auth error handling rewrite;
-- refresh-token handling;
-- RBAC / permission button integration.
+> **DONE 2026-06-22.** The §6 checklist is complete and all of the below shipped in PR #6. Kept for history.
 
-## 5. Allowed Frontend Work
+These were blocked until the §6 checklist was complete — all are now implemented:
 
-Allowed before contract readiness:
+- real NestJS login integration ✓;
+- `src/api/user.ts` auth API rewrite ✓;
+- `src/utils/auth.ts` token strategy rewrite ✓;
+- `src/store/modules/user.ts` login flow rewrite (3-call) ✓;
+- `src/utils/http/index.ts` auth error handling rewrite ✓;
+- refresh-token handling ✓;
+- RBAC / permission button integration ✓ (`hasPerms("<real code>")`).
 
-- static UI skeleton;
-- static SRVF menu placeholder;
-- layout-only pages;
-- activity calendar UI placeholder;
-- documentation;
-- frontend-only route grouping;
+## 5. Allowed Frontend Work (now expanded — readiness met)
+
+> **UPDATED 2026-06-22.** Readiness is met (§6) and PR-4 shipped, so **real data-driven pages are now
+> allowed** — wired to `/api/admin/v1/*` · `/api/system/v1/*` via `@/utils/http`, gated by real RBAC
+> codes (`hasPerms`). The pre-readiness list below is historical.
+
+Now allowed: real SRVF list / detail pages (reuse the 队员页 three-piece paradigm:
+`src/views/srvf/members-domain/members/` + `src/api/srvf-member.ts`), plus the original layout work.
+
+Pre-readiness (historical) allowed scope was:
+
+- static UI skeleton; static SRVF menu placeholder; layout-only pages;
+- activity calendar UI placeholder; documentation; frontend-only route grouping;
 - demo-only data clearly marked as placeholder.
 
-All backend-dependent fields, states, permissions, workflows, and enums must be marked `placeholder`.
+Backend-dependent fields, states, permissions, workflows, and enums must still **never be invented
+frontend-side** (red lines 1–4) — types come from live `/api/docs-json`; where a contract isn't ready,
+mark `placeholder`.
 
 ## 6. Readiness Checklist
 
@@ -96,3 +106,4 @@ PR-4 may restart only after humans confirm:
 - Reason: backend auth / refresh-token / RBAC contract is not stable enough.
 - Kept: PR-2.1 Vite proxy.
 - Preserved: login attempt branch `archive/pr-4-login-attempt-b81afec`.
+- **Resolution (2026-06-22):** backend reached v0.29.0, §6 confirmed 10/10, maintainer approved → PR-4 restarted and **shipped via PR #6**; §3–§5 above are now historical.
