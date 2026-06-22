@@ -38,6 +38,7 @@ Every AI task in this repository must read these documents first, in order:
 4. **`docs/srvf-api-contract-readiness.md`** (PR-4 readiness + decision record · §6 checklist 10/10 · §3–§5 historical pause context)
 5. `docs/pure-admin/12-official-docs-index.md` (Pure Admin official docs index with verified URLs)
 6. `docs/pure-admin/13-ai-harness.md` (AI harness · `.claude/` deny+ask rules and guard/verify hooks that mechanically enforce §13.1 / §13.3 · how a human grants an exception by editing `settings.json` — `deny` always beats `allow`)
+7. **后端交接能力图**:`../srvf-nest-api/docs/handoff/admin-web.md`(对接前必读 — **按任务设计页面,不是按资源**:任务→端点图 / 轴模型 / 踩坑 / 缺口;字段真相 = 后端 live `/api/docs-json`。缺接口在该文件 gap-ledger 登记)
 
 For route / menu work also read:
 

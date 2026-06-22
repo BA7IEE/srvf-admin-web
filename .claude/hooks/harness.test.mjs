@@ -283,6 +283,38 @@ try {
   check("doctor: no coverage -> drift (1)", runDoctor([]) === 1);
   check("doctor: only Write (Edit half-removed) -> drift (1)", runDoctor(["Write(./src/utils/auth.ts)"]) === 1);
   check("doctor: only Edit (Write half-removed) -> drift (1)", runDoctor(["Edit(./src/utils/auth.ts)"]) === 1);
+
+  // ===== doctor [3]: task-vs-resource flatten smell (heuristic, WARN-only) =========
+  function viewsFixture(files) {
+    const dir = mkTemp("srvf-h-views-");
+    for (const [rel, body] of Object.entries(files)) {
+      const abs = path.join(dir, rel);
+      mkdirSync(path.dirname(abs), { recursive: true });
+      writeFileSync(abs, body);
+    }
+    return dir;
+  }
+  // Clean rules+settings pair (no structural drift) so we isolate the [3] behavior;
+  // SRVF_DOCTOR_VIEWS points the scan at a throwaway views tree.
+  function runDoctorViews(viewsDir) {
+    const dir = mkTemp("srvf-h-docv-");
+    const sPath = path.join(dir, "settings.json");
+    const rPath = path.join(dir, "rules.md");
+    writeFileSync(sPath, JSON.stringify({ permissions: { deny: ["Edit(./src/utils/auth.ts)", "Write(./src/utils/auth.ts)"] } }));
+    writeFileSync(rPath, DOCTOR_RULES);
+    const env = { ...process.env, SRVF_DOCTOR_SETTINGS: sPath, SRVF_DOCTOR_RULES: rPath, SRVF_DOCTOR_VIEWS: viewsDir };
+    try {
+      const out = execFileSync("node", [DOCTOR], { env, encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] });
+      return { code: 0, out };
+    } catch (e) {
+      return { code: typeof e.status === "number" ? e.status : -1, out: String(e.stdout || "") };
+    }
+  }
+  const smelly = runDoctorViews(viewsFixture({ "act/index.vue": "<el-select v-model=x/>\n<el-empty description='请先选择一个活动'/>\n" }));
+  check("doctor[3]: flatten smell detected (WARN + filename)", /WARN/.test(smelly.out) && /act\/index\.vue/.test(smelly.out));
+  check("doctor[3]: smell is WARN-only, never flips exit (0)", smelly.code === 0);
+  const cleanV = runDoctorViews(viewsFixture({ "list/index.vue": "<el-select v-model=status/> <!-- status filter, no parent picker -->\n" }));
+  check("doctor[3]: legit el-select filter (no 请先选择) not flagged", /none — no/.test(cleanV.out) && cleanV.code === 0);
 } finally {
   for (const d of temps) {
     try {
