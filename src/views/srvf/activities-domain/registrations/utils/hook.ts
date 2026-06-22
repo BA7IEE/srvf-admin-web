@@ -1,11 +1,23 @@
 import dayjs from "dayjs";
-import { ref, reactive } from "vue";
+import { h, ref, reactive } from "vue";
 import type { PaginationProps } from "@pureadmin/table";
+import { ElMessageBox } from "element-plus";
+import { deviceDetection } from "@pureadmin/utils";
 import { message } from "@/utils/message";
 import { hasPerms } from "@/utils/auth";
+import { addDialog } from "@/components/ReDialog";
+import RegistrationForm, {
+  type RegistrationFormModel,
+  type MemberOption
+} from "../form.vue";
 import { getActivities } from "@/api/srvf-activity";
+import { getMembers } from "@/api/srvf-member";
 import {
   getActivityRegistrations,
+  approveRegistration,
+  rejectRegistration,
+  cancelRegistration,
+  createRegistration,
   type RegistrationItem
 } from "@/api/srvf-registration";
 import { useSrvfDictStoreHook } from "@/store/modules/srvfDict";
@@ -27,6 +39,17 @@ const STATUS_TAG_TYPE: Record<
 export function useRegistrations() {
   /** 读权限（后端真实 RBAC 码）；无权限不请求、不渲染 */
   const canRead = hasPerms("activity-registration.read.record");
+  /**
+   * 写权限（后端真实 RBAC 码）；行内按钮级显隐（SUPER_ADMIN 拥有全部码故全部可见）。
+   * 状态机交后端：approve/reject 仅 pending 显示、cancel 在 pending|pass 显示（基本显隐,
+   * 非前端复刻流转规则；后端拒绝时弹其 message）。
+   */
+  const canApprove = hasPerms("activity-registration.approve.record");
+  const canReject = hasPerms("activity-registration.reject.record");
+  const canCancel = hasPerms("activity-registration.cancel.record");
+  const hasAnyRowAction = canApprove || canReject || canCancel;
+  /** 代报名权限（工具栏按钮级显隐；需先选中活动才可代报名） */
+  const canCreate = hasPerms("activity-registration.create.record");
   /** 共享字典标签解析器：报名状态 code → 中文（registration_status 字典） */
   const dict = useSrvfDictStoreHook();
   dict.ensureTypes(["registration_status"]);
@@ -36,6 +59,10 @@ export function useRegistrations() {
   const activityId = ref<string>("");
   const activityOptions = ref<Array<{ label: string; value: string }>>([]);
   const activityLoading = ref(false);
+  /** 代报名队员下拉（懒加载;空数组 = 表单退化为文本输入 id） */
+  const memberOptions = ref<MemberOption[]>([]);
+  let memberOptionsResolved = false;
+  const formRef = ref();
   const pagination = reactive<PaginationProps>({
     total: 0,
     pageSize: 10,
@@ -78,7 +105,17 @@ export function useRegistrations() {
       minWidth: 170,
       formatter: ({ cancelledAt }) =>
         cancelledAt ? dayjs(cancelledAt).format("YYYY-MM-DD HH:mm:ss") : "—"
-    }
+    },
+    ...(hasAnyRowAction
+      ? [
+          {
+            label: "操作",
+            fixed: "right" as const,
+            width: 220,
+            slot: "operation"
+          }
+        ]
+      : [])
   ];
 
   /** 状态 code → 展示元数据：文案查 registration_status 字典，颜色按 code 给展示色（未知 → 原 code + info 灰） */
@@ -151,8 +188,193 @@ export function useRegistrations() {
     onSearch();
   }
 
+  /** 行主语：显示名 → 编号 → id（与队员列同口径） */
+  function rowSubject(row: RegistrationItem) {
+    return row.memberDisplayName ?? row.memberNo ?? row.memberId;
+  }
+
+  /** 审核通过（pending → pass；reviewNote 可空；后端拒绝/名额满时弹其 message） */
+  function handleApprove(row: RegistrationItem) {
+    ElMessageBox.prompt(
+      `确定通过「${rowSubject(row)}」的报名吗？可填写审核备注（可空）。`,
+      "审核通过",
+      {
+        confirmButtonText: "确定通过",
+        cancelButtonText: "返回",
+        type: "info",
+        inputType: "textarea",
+        inputPlaceholder: "审核备注（可空；≤ 500）",
+        inputValidator: (val: string) => {
+          if (val && val.length > 500) return "审核备注不能超过 500 字";
+          return true;
+        }
+      }
+    )
+      .then(async ({ value }) => {
+        if (!activityId.value) return;
+        try {
+          await approveRegistration(
+            activityId.value,
+            row.id,
+            value ? { reviewNote: value } : {}
+          );
+          message("已通过", { type: "success" });
+          onSearch();
+        } catch (error: any) {
+          message(error?.response?.data?.message ?? "审核通过失败", {
+            type: "error"
+          });
+        }
+      })
+      .catch(() => {});
+  }
+
+  /** 审核拒绝（pending → reject；reviewNote 必填 → 弹必填输入框；后端拒绝弹其 message） */
+  function handleReject(row: RegistrationItem) {
+    ElMessageBox.prompt(
+      `确定拒绝「${rowSubject(row)}」的报名吗？请填写拒绝理由（必填）。`,
+      "审核拒绝",
+      {
+        confirmButtonText: "确定拒绝",
+        cancelButtonText: "返回",
+        type: "warning",
+        inputType: "textarea",
+        inputPlaceholder: "拒绝理由（必填；≤ 500）",
+        inputValidator: (val: string) => {
+          if (!val || !val.trim()) return "拒绝理由为必填项";
+          if (val.length > 500) return "拒绝理由不能超过 500 字";
+          return true;
+        }
+      }
+    )
+      .then(async ({ value }) => {
+        if (!activityId.value) return;
+        try {
+          await rejectRegistration(activityId.value, row.id, {
+            reviewNote: value
+          });
+          message("已拒绝", { type: "success" });
+          onSearch();
+        } catch (error: any) {
+          message(error?.response?.data?.message ?? "审核拒绝失败", {
+            type: "error"
+          });
+        }
+      })
+      .catch(() => {});
+  }
+
+  /** 代取消（pending|pass → cancelled；cancelReason 可空；后端拒绝弹其 message） */
+  function handleCancel(row: RegistrationItem) {
+    ElMessageBox.prompt(
+      `确定取消「${rowSubject(row)}」的报名吗？可填写取消原因（可空）。`,
+      "代取消报名",
+      {
+        confirmButtonText: "确定取消",
+        cancelButtonText: "返回",
+        type: "warning",
+        inputType: "textarea",
+        inputPlaceholder: "取消原因（可空；≤ 500）",
+        inputValidator: (val: string) => {
+          if (val && val.length > 500) return "取消原因不能超过 500 字";
+          return true;
+        }
+      }
+    )
+      .then(async ({ value }) => {
+        if (!activityId.value) return;
+        try {
+          await cancelRegistration(
+            activityId.value,
+            row.id,
+            value ? { cancelReason: value } : {}
+          );
+          message("已取消", { type: "success" });
+          onSearch();
+        } catch (error: any) {
+          message(error?.response?.data?.message ?? "取消失败", {
+            type: "error"
+          });
+        }
+      })
+      .catch(() => {});
+  }
+
+  /**
+   * 懒加载代报名队员下拉（数据源 getMembers,仅 ACTIVE；参照活动页 organizationId 下拉做法）。
+   * 无 member.read.record / 后端不可达 → 静默保持空 → 表单退化为文本输入 id。
+   */
+  async function ensureMemberOptions() {
+    if (memberOptionsResolved) return;
+    memberOptionsResolved = true;
+    try {
+      const { code, data } = await getMembers({
+        status: "ACTIVE",
+        pageSize: 100
+      });
+      if (code === 0) {
+        memberOptions.value = data.items.map(m => ({
+          label: `${m.displayName}（${m.memberNo}）`,
+          value: m.id
+        }));
+      }
+    } catch {
+      // 无 member.read.record / 后端不可达 → 保持空 → 表单退化为文本输入 id
+    }
+  }
+
+  /** 代报名（POST registrations；需先选中活动；仅提交 { memberId }；后端拒绝弹其 message） */
+  async function openCreateDialog() {
+    if (!activityId.value) {
+      message("请先选择一个活动", { type: "warning" });
+      return;
+    }
+    await ensureMemberOptions();
+    addDialog({
+      title: "代报名",
+      width: "40%",
+      draggable: true,
+      fullscreen: deviceDetection(),
+      fullscreenIcon: true,
+      closeOnClickModal: false,
+      sureBtnLoading: true,
+      props: {
+        formInline: { memberId: "" } as RegistrationFormModel,
+        memberOptions: memberOptions.value
+      },
+      contentRenderer: () => h(RegistrationForm, { ref: formRef }),
+      beforeSure: (done, { options, closeLoading }) => {
+        const formComp = formRef.value;
+        const curData = options.props.formInline as RegistrationFormModel;
+        formComp.getRef().validate(async (valid: boolean) => {
+          if (!valid) {
+            closeLoading();
+            return;
+          }
+          try {
+            await createRegistration(activityId.value, {
+              memberId: curData.memberId
+            });
+            message("代报名成功", { type: "success" });
+            done();
+            onSearch();
+          } catch (error: any) {
+            message(error?.response?.data?.message ?? "代报名失败", {
+              type: "error"
+            });
+            closeLoading();
+          }
+        });
+      }
+    });
+  }
+
   return {
     canRead,
+    canApprove,
+    canReject,
+    canCancel,
+    canCreate,
     loading,
     columns,
     dataList,
@@ -164,6 +386,10 @@ export function useRegistrations() {
     loadActivities,
     onSearch,
     onActivityChange,
+    openCreateDialog,
+    handleApprove,
+    handleReject,
+    handleCancel,
     handleSizeChange,
     handleCurrentChange
   };
