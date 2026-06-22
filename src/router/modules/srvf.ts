@@ -110,26 +110,6 @@ export default [
           showLink: false,
           activePath: "/srvf/activities-domain/activities"
         }
-      },
-      {
-        path: "/srvf/activities-domain/registrations",
-        name: "SrvfRegistrations",
-        component: () =>
-          import("@/views/srvf/activities-domain/registrations/index.vue"),
-        meta: {
-          icon: "ri/user-add-line",
-          title: "报名记录"
-        }
-      },
-      {
-        path: "/srvf/activities-domain/attendances",
-        name: "SrvfAttendances",
-        component: () =>
-          import("@/views/srvf/activities-domain/attendances/index.vue"),
-        meta: {
-          icon: "ri/checkbox-circle-line",
-          title: "考勤管理"
-        }
       }
     ]
   },
