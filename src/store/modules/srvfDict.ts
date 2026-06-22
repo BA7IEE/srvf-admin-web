@@ -62,6 +62,20 @@ export const useSrvfDictStore = defineStore("srvf-dict", {
         if (code === undefined || code === null || code === "") return "—";
         return state.byType[typeCode]?.[code] ?? code;
       };
+    },
+    /**
+     * `(typeCode) → [{ label, value }]` 表单下拉选项，直接复用 `ensureType(s)` 已加载的条目
+     * （value=后端 item code，label=中文）；顺序沿用后端返回顺序（sortOrder）。
+     * 未加载 / 查不到该类型 → 返回空数组（调用页据此把下拉退化为文本输入，不臆造 code）。
+     */
+    options(
+      state
+    ): (typeCode: string) => Array<{ label: string; value: string }> {
+      return typeCode =>
+        Object.entries(state.byType[typeCode] ?? {}).map(([code, label]) => ({
+          label,
+          value: code
+        }));
     }
   },
   actions: {
