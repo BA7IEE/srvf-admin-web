@@ -1,32 +1,96 @@
 <script setup lang="ts">
+import { onMounted } from "vue";
+import { useCertificates } from "./utils/hook";
+import { PureTableBar } from "@/components/RePureTableBar";
+
 defineOptions({
   name: "SrvfCertificates"
+});
+
+const {
+  canRead,
+  loading,
+  columns,
+  dataList,
+  memberId,
+  memberOptions,
+  memberLoading,
+  certStatusTagType,
+  loadMembers,
+  onSearch
+} = useCertificates();
+
+onMounted(() => {
+  if (canRead) loadMembers();
 });
 </script>
 
 <template>
-  <div class="p-4">
-    <el-card shadow="never">
-      <template #header>
-        <span class="text-lg font-medium">证书</span>
-      </template>
-      <el-alert
-        type="warning"
-        :closable="false"
-        show-icon
-        title="本页面为静态占位页，字段、流程、权限、状态机以后端业务确认和 API 契约为准。"
-      />
-      <p class="mt-4 text-sm text-gray-500">
-        SRVF 队员域——证书占位（与队员强耦合，后续接入时挂在队员详情子页）。
-      </p>
-      <p class="mt-2 text-sm text-gray-500">
-        未来可能方向（非承诺，等后端契约就绪后由独立 PR 落地）：
-      </p>
-      <ul class="mt-2 list-disc pl-6 text-sm text-gray-500">
-        <li>证书列表浏览</li>
-        <li>证书状态浏览（状态机由后端字典维护，前端不复刻）</li>
-        <li>到期提示占位</li>
-      </ul>
-    </el-card>
+  <div class="main">
+    <template v-if="canRead">
+      <el-card shadow="never" class="mb-2">
+        <div class="flex items-center gap-2">
+          <span class="text-sm">选择队员：</span>
+          <el-select
+            v-model="memberId"
+            filterable
+            clearable
+            class="w-80"
+            placeholder="按姓名 / 编号搜索队员"
+            :loading="memberLoading"
+            @change="onSearch"
+          >
+            <el-option
+              v-for="m in memberOptions"
+              :key="m.value"
+              :label="m.label"
+              :value="m.value"
+            />
+          </el-select>
+        </div>
+      </el-card>
+      <PureTableBar title="队员证书" :columns="columns" @refresh="onSearch">
+        <template v-slot="{ size, dynamicColumns }">
+          <el-empty v-if="!memberId" description="请先选择一名队员查看其证书" />
+          <pure-table
+            v-else
+            row-key="id"
+            adaptive
+            :adaptiveConfig="{ offsetBottom: 108 }"
+            align-whole="center"
+            table-layout="auto"
+            :loading="loading"
+            :size="size"
+            :data="dataList"
+            :columns="dynamicColumns"
+            :header-cell-style="{
+              background: 'var(--el-fill-color-light)',
+              color: 'var(--el-text-color-primary)'
+            }"
+          >
+            <template #certStatusCode="{ row }">
+              <el-tag :type="certStatusTagType(row.certStatusCode)">
+                {{ row.certStatusCode }}
+              </el-tag>
+            </template>
+            <template #isInternal="{ row }">
+              <el-tag :type="row.isInternal ? 'warning' : 'info'">
+                {{ row.isInternal ? "内部" : "外部" }}
+              </el-tag>
+            </template>
+          </pure-table>
+        </template>
+      </PureTableBar>
+    </template>
+    <el-empty
+      v-else
+      description="您没有查看证书的权限（certificate.read.record）"
+    />
   </div>
 </template>
+
+<style scoped lang="scss">
+.main {
+  margin: 24px 24px 0 !important;
+}
+</style>
