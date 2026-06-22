@@ -16,6 +16,7 @@ const {
   activityOptions,
   activityLoading,
   pagination,
+  statusMeta,
   loadActivities,
   onSearch,
   onActivityChange,
@@ -77,7 +78,13 @@ onMounted(() => {
             }"
             @page-size-change="handleSizeChange"
             @page-current-change="handleCurrentChange"
-          />
+          >
+            <template #statusCode="{ row }">
+              <el-tag :type="statusMeta(row.statusCode).type">
+                {{ statusMeta(row.statusCode).text }}
+              </el-tag>
+            </template>
+          </pure-table>
         </template>
       </PureTableBar>
     </template>

@@ -19,8 +19,13 @@ import {
   type MemberItem
 } from "@/api/srvf-member";
 import { getDictTypes, getDictItems } from "@/api/srvf-dict";
+import { useSrvfDictStoreHook } from "@/store/modules/srvfDict";
 
 export function useMembers() {
+  /** 共享字典标签解析器：等级 code → 中文（member_grade 字典） */
+  const dict = useSrvfDictStoreHook();
+  dict.ensureTypes(["member_grade"]);
+
   const dataList = ref<MemberItem[]>([]);
   const loading = ref(false);
   const formRef = ref();
@@ -50,7 +55,7 @@ export function useMembers() {
       label: "等级",
       prop: "gradeCode",
       minWidth: 110,
-      formatter: ({ gradeCode }) => gradeCode ?? "—"
+      formatter: ({ gradeCode }) => dict.label("member_grade", gradeCode)
     },
     { label: "状态", prop: "status", minWidth: 100, slot: "status" },
     {

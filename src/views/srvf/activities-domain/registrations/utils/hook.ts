@@ -8,10 +8,28 @@ import {
   getActivityRegistrations,
   type RegistrationItem
 } from "@/api/srvf-registration";
+import { useSrvfDictStoreHook } from "@/store/modules/srvfDict";
+
+/**
+ * 报名状态 code → tag 颜色（仅展示色；文案查 registration_status 字典，前端不臆造）。
+ * code 取自契约 registration_status 闭集（pending / pass / reject / cancelled）。
+ */
+const STATUS_TAG_TYPE: Record<
+  string,
+  "primary" | "success" | "info" | "warning" | "danger"
+> = {
+  pending: "warning",
+  pass: "success",
+  reject: "danger",
+  cancelled: "info"
+};
 
 export function useRegistrations() {
   /** 读权限（后端真实 RBAC 码）；无权限不请求、不渲染 */
   const canRead = hasPerms("activity-registration.read.record");
+  /** 共享字典标签解析器：报名状态 code → 中文（registration_status 字典） */
+  const dict = useSrvfDictStoreHook();
+  dict.ensureTypes(["registration_status"]);
   const dataList = ref<RegistrationItem[]>([]);
   const loading = ref(false);
   /** 报名隶属活动：先选活动，再查其报名 */
@@ -39,7 +57,7 @@ export function useRegistrations() {
       minWidth: 140,
       formatter: ({ memberNo }) => memberNo ?? "—"
     },
-    { label: "状态", prop: "statusCode", minWidth: 110 },
+    { label: "状态", prop: "statusCode", minWidth: 110, slot: "statusCode" },
     {
       label: "报名时间",
       prop: "registeredAt",
@@ -62,6 +80,14 @@ export function useRegistrations() {
         cancelledAt ? dayjs(cancelledAt).format("YYYY-MM-DD HH:mm:ss") : "—"
     }
   ];
+
+  /** 状态 code → 展示元数据：文案查 registration_status 字典，颜色按 code 给展示色（未知 → 原 code + info 灰） */
+  function statusMeta(code: string) {
+    return {
+      text: dict.label("registration_status", code),
+      type: STATUS_TAG_TYPE[code] ?? ("info" as const)
+    };
+  }
 
   /** 活动下拉（数据源 getActivities；首页 50 条 + filterable 检索） */
   async function loadActivities() {
@@ -134,6 +160,7 @@ export function useRegistrations() {
     activityOptions,
     activityLoading,
     pagination,
+    statusMeta,
     loadActivities,
     onSearch,
     onActivityChange,

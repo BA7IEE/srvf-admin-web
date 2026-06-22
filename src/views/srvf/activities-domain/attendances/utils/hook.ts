@@ -8,10 +8,29 @@ import {
   getActivityAttendanceSheets,
   type AttendanceSheetItem
 } from "@/api/srvf-attendance";
+import { useSrvfDictStoreHook } from "@/store/modules/srvfDict";
+
+/**
+ * 考勤单据审核状态 code → tag 颜色（仅展示色；文案查 attendance_sheet_status 字典，前端不臆造）。
+ * code 取自契约 attendance_sheet_status 5 态闭集（approved 语义为终审通过）。
+ */
+const STATUS_TAG_TYPE: Record<
+  string,
+  "primary" | "success" | "info" | "warning" | "danger"
+> = {
+  pending: "warning",
+  pending_final_review: "warning",
+  approved: "success",
+  rejected: "danger",
+  final_rejected: "danger"
+};
 
 export function useAttendances() {
   /** 读权限（后端真实 RBAC 码）；无权限不请求、不渲染 */
   const canRead = hasPerms("attendance.read.sheet");
+  /** 共享字典标签解析器：考勤审核状态 code → 中文（attendance_sheet_status 字典） */
+  const dict = useSrvfDictStoreHook();
+  dict.ensureTypes(["attendance_sheet_status"]);
   const dataList = ref<AttendanceSheetItem[]>([]);
   const loading = ref(false);
   /** 考勤隶属活动：先选活动，再查其考勤单据 */
@@ -27,7 +46,7 @@ export function useAttendances() {
 
   const columns: TableColumnList = [
     { label: "提交人 ID", prop: "submitterUserId", minWidth: 200 },
-    { label: "状态", prop: "statusCode", minWidth: 110 },
+    { label: "状态", prop: "statusCode", minWidth: 110, slot: "statusCode" },
     { label: "版本", prop: "version", minWidth: 80 },
     {
       label: "提交时间",
@@ -51,6 +70,14 @@ export function useAttendances() {
         createdAt ? dayjs(createdAt).format("YYYY-MM-DD HH:mm:ss") : "—"
     }
   ];
+
+  /** 状态 code → 展示元数据：文案查 attendance_sheet_status 字典，颜色按 code 给展示色（未知 → 原 code + info 灰） */
+  function statusMeta(code: string) {
+    return {
+      text: dict.label("attendance_sheet_status", code),
+      type: STATUS_TAG_TYPE[code] ?? ("info" as const)
+    };
+  }
 
   /** 活动下拉（数据源 getActivities；首页 50 条 + filterable 检索） */
   async function loadActivities() {
@@ -123,6 +150,7 @@ export function useAttendances() {
     activityOptions,
     activityLoading,
     pagination,
+    statusMeta,
     loadActivities,
     onSearch,
     onActivityChange,

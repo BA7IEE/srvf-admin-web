@@ -22,19 +22,27 @@ import {
 } from "@/api/srvf-activity";
 import { getDictTypes, getDictItems } from "@/api/srvf-dict";
 import { getOrganizations } from "@/api/srvf-organization";
+import { useSrvfDictStoreHook } from "@/store/modules/srvfDict";
 
-/** 已知活动状态 code → 展示标签 / 颜色（code 取自契约端点摘要，非前端臆造）。 */
-const STATUS_META: Record<
+/**
+ * 活动状态 code → tag 颜色（仅展示色；状态文案改由 activity_status 字典提供，前端不臆造）。
+ * code 取自契约 activity_status 闭集（draft / published / cancelled / completed）。
+ */
+const STATUS_TAG_TYPE: Record<
   string,
-  { text: string; type: "primary" | "success" | "info" | "warning" | "danger" }
+  "primary" | "success" | "info" | "warning" | "danger"
 > = {
-  draft: { text: "草稿", type: "info" },
-  published: { text: "已发布", type: "success" },
-  cancelled: { text: "已取消", type: "danger" },
-  completed: { text: "已完成", type: "primary" }
+  draft: "info",
+  published: "success",
+  cancelled: "danger",
+  completed: "primary"
 };
 
 export function useActivities() {
+  /** 共享字典标签解析器：活动类型 / 活动状态 code → 中文 */
+  const dict = useSrvfDictStoreHook();
+  dict.ensureTypes(["activity_type", "activity_status"]);
+
   const dataList = ref<ActivityItem[]>([]);
   const loading = ref(false);
   const formRef = ref();
@@ -64,7 +72,13 @@ export function useActivities() {
 
   const columns: TableColumnList = [
     { label: "标题", prop: "title", minWidth: 180 },
-    { label: "类型", prop: "activityTypeCode", minWidth: 130 },
+    {
+      label: "类型",
+      prop: "activityTypeCode",
+      minWidth: 130,
+      formatter: ({ activityTypeCode }) =>
+        dict.label("activity_type", activityTypeCode)
+    },
     { label: "地点", prop: "location", minWidth: 140 },
     {
       label: "开始时间",
@@ -92,9 +106,12 @@ export function useActivities() {
       : [])
   ];
 
-  /** 状态 code → 展示元数据（未知 code 退化为原文 + info 灰） */
+  /** 状态 code → 展示元数据：文案查 activity_status 字典，颜色按 code 给展示色（未知 → 原 code + info 灰） */
   function statusMeta(code: string) {
-    return STATUS_META[code] ?? { text: code, type: "info" as const };
+    return {
+      text: dict.label("activity_status", code),
+      type: STATUS_TAG_TYPE[code] ?? ("info" as const)
+    };
   }
 
   async function onSearch() {

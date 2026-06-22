@@ -5,6 +5,20 @@ import { message } from "@/utils/message";
 import { hasPerms } from "@/utils/auth";
 import { getUserAccounts, type UserAccountItem } from "@/api/srvf-user";
 
+/**
+ * 系统角色 code → 中文展示 + tag 颜色。
+ * `role` 是 docs-json 固定枚举（SUPER_ADMIN / ADMIN / USER，描述无「字典」）→ 最小展示映射，
+ * 非字典、非前端臆造（值取自契约 enum）；颜色为纯展示选择。未知 code 退化为原文 + info 灰。
+ */
+const ROLE_META: Record<
+  string,
+  { text: string; type: "primary" | "success" | "info" | "warning" | "danger" }
+> = {
+  SUPER_ADMIN: { text: "超级管理员", type: "danger" },
+  ADMIN: { text: "管理员", type: "warning" },
+  USER: { text: "普通用户", type: "info" }
+};
+
 export function useUserAccounts() {
   const dataList = ref<UserAccountItem[]>([]);
   const loading = ref(false);
@@ -43,6 +57,11 @@ export function useUserAccounts() {
         dayjs(createdAt).format("YYYY-MM-DD HH:mm:ss")
     }
   ];
+
+  /** 系统角色 code → 展示元数据（中文 + 颜色；未知 → 原 code + info 灰） */
+  function roleMeta(code: string) {
+    return ROLE_META[code] ?? { text: code, type: "info" as const };
+  }
 
   async function onSearch() {
     if (!canRead) return;
@@ -83,6 +102,7 @@ export function useUserAccounts() {
     columns,
     dataList,
     pagination,
+    roleMeta,
     onSearch,
     handleSizeChange,
     handleCurrentChange

@@ -13,6 +13,7 @@ const {
   columns,
   dataList,
   pagination,
+  roleMeta,
   onSearch,
   handleSizeChange,
   handleCurrentChange
@@ -52,7 +53,9 @@ onMounted(() => {
           @page-current-change="handleCurrentChange"
         >
           <template #role="{ row }">
-            <el-tag>{{ row.role }}</el-tag>
+            <el-tag :type="roleMeta(row.role).type">
+              {{ roleMeta(row.role).text }}
+            </el-tag>
           </template>
           <template #status="{ row }">
             <el-tag :type="row.status === 'ACTIVE' ? 'success' : 'danger'">
