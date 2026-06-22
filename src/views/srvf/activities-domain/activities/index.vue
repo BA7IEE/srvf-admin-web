@@ -2,17 +2,32 @@
 import { onMounted } from "vue";
 import { useActivities } from "./utils/hook";
 import { PureTableBar } from "@/components/RePureTableBar";
+import { useRenderIcon } from "@/components/ReIcon/src/hooks";
+
+import Delete from "~icons/ep/delete";
+import EditPen from "~icons/ep/edit-pen";
+import AddFill from "~icons/ri/add-circle-line";
 
 defineOptions({
   name: "SrvfActivities"
 });
 
 const {
+  canCreate,
+  canUpdate,
+  canDelete,
+  canPublish,
+  canCancel,
   loading,
   columns,
   dataList,
   pagination,
+  statusMeta,
   onSearch,
+  openDialog,
+  handleDelete,
+  handlePublish,
+  handleCancel,
   handleSizeChange,
   handleCurrentChange
 } = useActivities();
@@ -25,6 +40,16 @@ onMounted(() => {
 <template>
   <div class="main">
     <PureTableBar title="活动列表" :columns="columns" @refresh="onSearch">
+      <template #buttons>
+        <el-button
+          v-if="canCreate"
+          type="primary"
+          :icon="useRenderIcon(AddFill)"
+          @click="openDialog('新建')"
+        >
+          新建
+        </el-button>
+      </template>
       <template v-slot="{ size, dynamicColumns }">
         <pure-table
           row-key="id"
@@ -45,10 +70,59 @@ onMounted(() => {
           @page-size-change="handleSizeChange"
           @page-current-change="handleCurrentChange"
         >
+          <template #statusCode="{ row }">
+            <el-tag :type="statusMeta(row.statusCode).type">
+              {{ statusMeta(row.statusCode).text }}
+            </el-tag>
+          </template>
           <template #isPublicRegistration="{ row }">
             <el-tag :type="row.isPublicRegistration ? 'success' : 'info'">
               {{ row.isPublicRegistration ? "公开" : "非公开" }}
             </el-tag>
+          </template>
+          <template #operation="{ row }">
+            <el-button
+              v-if="canUpdate"
+              class="reset-margin"
+              link
+              type="primary"
+              :size="size"
+              :icon="useRenderIcon(EditPen)"
+              @click="openDialog('编辑', row)"
+            >
+              编辑
+            </el-button>
+            <el-button
+              v-if="canPublish && row.statusCode === 'draft'"
+              class="reset-margin"
+              link
+              type="success"
+              :size="size"
+              @click="handlePublish(row)"
+            >
+              发布
+            </el-button>
+            <el-button
+              v-if="canCancel && row.statusCode !== 'cancelled'"
+              class="reset-margin"
+              link
+              type="warning"
+              :size="size"
+              @click="handleCancel(row)"
+            >
+              取消
+            </el-button>
+            <el-button
+              v-if="canDelete"
+              class="reset-margin"
+              link
+              type="danger"
+              :size="size"
+              :icon="useRenderIcon(Delete)"
+              @click="handleDelete(row)"
+            >
+              删除
+            </el-button>
           </template>
         </pure-table>
       </template>
