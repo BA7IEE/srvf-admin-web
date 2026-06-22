@@ -6,7 +6,7 @@ SRVF business pages. PR-4 (login / real API) is **PAUSED**, so everything here i
 
 ## Do
 
-- Build layout-only placeholder pages; reuse `Re*` components and the `dict` / `tenant/list` paradigm (§13.3.1, §13.3.4).
+- Build layout-only placeholder pages; reuse `Re*` components and the `dict` / `tenant/list` / `schedule` paradigm (§13.3.1, §13.3.4).
 - Mark every backend-dependent field / flow / state / permission with an explicit `placeholder` note.
 - Business stores: new files with an `srvf*` prefix (§13.1). No `any`; must pass `pnpm typecheck` (§13.3.5).
 
