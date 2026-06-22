@@ -2,6 +2,9 @@
 import { onMounted } from "vue";
 import { useRegistrations } from "./utils/hook";
 import { PureTableBar } from "@/components/RePureTableBar";
+import { useRenderIcon } from "@/components/ReIcon/src/hooks";
+
+import AddFill from "~icons/ri/add-circle-line";
 
 defineOptions({
   name: "SrvfRegistrations"
@@ -9,6 +12,10 @@ defineOptions({
 
 const {
   canRead,
+  canApprove,
+  canReject,
+  canCancel,
+  canCreate,
   loading,
   columns,
   dataList,
@@ -20,6 +27,10 @@ const {
   loadActivities,
   onSearch,
   onActivityChange,
+  openCreateDialog,
+  handleApprove,
+  handleReject,
+  handleCancel,
   handleSizeChange,
   handleCurrentChange
 } = useRegistrations();
@@ -54,6 +65,17 @@ onMounted(() => {
         </div>
       </el-card>
       <PureTableBar title="报名记录" :columns="columns" @refresh="onSearch">
+        <template #buttons>
+          <el-button
+            v-if="canCreate"
+            type="primary"
+            :icon="useRenderIcon(AddFill)"
+            :disabled="!activityId"
+            @click="openCreateDialog"
+          >
+            代报名
+          </el-button>
+        </template>
         <template v-slot="{ size, dynamicColumns }">
           <el-empty
             v-if="!activityId"
@@ -83,6 +105,41 @@ onMounted(() => {
               <el-tag :type="statusMeta(row.statusCode).type">
                 {{ statusMeta(row.statusCode).text }}
               </el-tag>
+            </template>
+            <template #operation="{ row }">
+              <el-button
+                v-if="canApprove && row.statusCode === 'pending'"
+                class="reset-margin"
+                link
+                type="success"
+                :size="size"
+                @click="handleApprove(row)"
+              >
+                审核通过
+              </el-button>
+              <el-button
+                v-if="canReject && row.statusCode === 'pending'"
+                class="reset-margin"
+                link
+                type="danger"
+                :size="size"
+                @click="handleReject(row)"
+              >
+                审核拒绝
+              </el-button>
+              <el-button
+                v-if="
+                  canCancel &&
+                  (row.statusCode === 'pending' || row.statusCode === 'pass')
+                "
+                class="reset-margin"
+                link
+                type="warning"
+                :size="size"
+                @click="handleCancel(row)"
+              >
+                代取消
+              </el-button>
             </template>
           </pure-table>
         </template>
