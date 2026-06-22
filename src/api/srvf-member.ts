@@ -47,6 +47,15 @@ export const getMembers = (params?: MemberListQuery) => {
   });
 };
 
+export type MemberDetailResult = Envelope<MemberItem>;
+
+/**
+ * 队员详情 `GET /api/admin/v1/members/{id}`（rbac: `member.read.record`）。
+ * 返回 `MemberResponseDto`，与列表项同 shape（id / memberNo / displayName / gradeCode / status / 时间戳）。
+ */
+export const getMember = (id: string) =>
+  http.request<MemberDetailResult>("get", `/api/admin/v1/members/${id}`);
+
 /* ----------------------------- 队员 写操作 ----------------------------- */
 
 /**

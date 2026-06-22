@@ -5,7 +5,6 @@ import { deviceDetection } from "@pureadmin/utils";
 import { message } from "@/utils/message";
 import { hasPerms } from "@/utils/auth";
 import { addDialog } from "@/components/ReDialog";
-import { getMembers } from "@/api/srvf-member";
 import CertificateForm, { type CertificateFormModel } from "../form.vue";
 import {
   getMemberCertificates,
@@ -19,7 +18,11 @@ import {
 } from "@/api/srvf-certificate";
 import { useSrvfDictStoreHook } from "@/store/modules/srvfDict";
 
-export function useCertificates() {
+/**
+ * @param externalMemberId 证书隶属队员 id（必传，来自队员作战室路由参数）。
+ *   作战室是唯一消费方（独立证书菜单页已退役），故固定该队员、无页内队员下拉。
+ */
+export function useCertificates(externalMemberId: string) {
   /** 读权限（后端真实 RBAC 码）；无权限不请求、不渲染 */
   const canRead = hasPerms("certificate.read.record");
   /**
@@ -37,10 +40,8 @@ export function useCertificates() {
   dict.ensureTypes(["cert_type", "cert_status"]);
   const dataList = ref<CertificateItem[]>([]);
   const loading = ref(false);
-  /** 证书隶属队员：先选队员，再查其证书（后端无平铺端点，列表无分页） */
-  const memberId = ref<string>("");
-  const memberOptions = ref<Array<{ label: string; value: string }>>([]);
-  const memberLoading = ref(false);
+  /** 证书隶属队员 id：由作战室经路由参数注入并固定。保留 ref 形态，CRUD/核验 handler 仍走 memberId.value 不改。 */
+  const memberId = ref<string>(externalMemberId);
   const formRef = ref();
 
   const columns: TableColumnList = [
@@ -100,27 +101,6 @@ export function useCertificates() {
       expired: "info"
     };
     return map[code] ?? "info";
-  }
-
-  /** 队员下拉（数据源同队员页 getMembers；首页 50 条 + 前端 filterable 检索） */
-  async function loadMembers() {
-    if (!canRead) return;
-    memberLoading.value = true;
-    try {
-      const { code, data } = await getMembers({ page: 1, pageSize: 50 });
-      if (code === 0) {
-        memberOptions.value = data.items.map(m => ({
-          label: `${m.displayName}（${m.memberNo}）`,
-          value: m.id
-        }));
-      }
-    } catch (error: any) {
-      message(error?.response?.data?.message ?? "加载队员失败", {
-        type: "error"
-      });
-    } finally {
-      memberLoading.value = false;
-    }
   }
 
   async function onSearch() {
@@ -343,12 +323,8 @@ export function useCertificates() {
     loading,
     columns,
     dataList,
-    memberId,
-    memberOptions,
-    memberLoading,
     certStatusTagType,
     dict,
-    loadMembers,
     onSearch,
     openDialog,
     handleDelete,

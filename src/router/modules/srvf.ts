@@ -66,13 +66,16 @@ export default [
         }
       },
       {
-        path: "/srvf/members-domain/certificates",
-        name: "SrvfCertificates",
+        // 队员作战室（实体详情页）：由队员列表行「管理」router.push 进入，非侧栏菜单项。
+        // showLink:false 不进侧栏；activePath 指回队员列表，停留时「队员列表」菜单保持高亮。
+        path: "/srvf/members-domain/members/:id",
+        name: "SrvfMemberCockpit",
         component: () =>
-          import("@/views/srvf/members-domain/certificates/index.vue"),
+          import("@/views/srvf/members-domain/members/cockpit.vue"),
         meta: {
-          icon: "ri/medal-line",
-          title: "证书"
+          title: "队员档案",
+          showLink: false,
+          activePath: "/srvf/members-domain/members"
         }
       }
     ]
