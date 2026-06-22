@@ -24,6 +24,7 @@ const {
   pagination,
   onSearch,
   openDialog,
+  openCockpit,
   handleDelete,
   handleToggleStatus,
   handleSizeChange,
@@ -79,6 +80,15 @@ onMounted(() => {
             </el-tag>
           </template>
           <template #operation="{ row }">
+            <el-button
+              class="reset-margin"
+              link
+              type="primary"
+              :size="size"
+              @click="openCockpit(row)"
+            >
+              管理
+            </el-button>
             <el-button
               v-if="canUpdate"
               class="reset-margin"

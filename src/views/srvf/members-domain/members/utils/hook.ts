@@ -1,4 +1,5 @@
 import { h, ref, reactive } from "vue";
+import { useRouter } from "vue-router";
 import dayjs from "dayjs";
 import type { PaginationProps } from "@pureadmin/table";
 import { ElMessageBox } from "element-plus";
@@ -22,6 +23,7 @@ import { getDictTypes, getDictItems } from "@/api/srvf-dict";
 import { useSrvfDictStoreHook } from "@/store/modules/srvfDict";
 
 export function useMembers() {
+  const router = useRouter();
   /** 共享字典标签解析器：等级 code → 中文（member_grade 字典） */
   const dict = useSrvfDictStoreHook();
   dict.ensureTypes(["member_grade"]);
@@ -65,16 +67,14 @@ export function useMembers() {
       formatter: ({ createdAt }) =>
         dayjs(createdAt).format("YYYY-MM-DD HH:mm:ss")
     },
-    ...(canUpdate || canUpdateStatus || canDelete
-      ? [
-          {
-            label: "操作",
-            fixed: "right" as const,
-            width: 220,
-            slot: "operation"
-          }
-        ]
-      : [])
+    // 「管理」(进作战室)对任何可见此列表的用户开放(列表已 member.read.record 门控,作战室同码),
+    // 故操作列恒显;写操作(编辑/启停/删除)仍按各自 RBAC 码做按钮级显隐。
+    {
+      label: "操作",
+      fixed: "right" as const,
+      width: 260,
+      slot: "operation"
+    }
   ];
 
   async function onSearch() {
@@ -252,6 +252,11 @@ export function useMembers() {
       .catch(() => {});
   }
 
+  /** 进入队员作战室（实体详情页）：行内「管理」入口，router.push 带 member id（非侧栏菜单） */
+  function openCockpit(row: MemberItem) {
+    router.push(`/srvf/members-domain/members/${row.id}`);
+  }
+
   return {
     canRead,
     canCreate,
@@ -264,6 +269,7 @@ export function useMembers() {
     pagination,
     onSearch,
     openDialog,
+    openCockpit,
     handleDelete,
     handleToggleStatus,
     handleSizeChange,
