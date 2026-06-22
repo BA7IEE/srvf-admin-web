@@ -1,32 +1,95 @@
 <script setup lang="ts">
+import { onMounted } from "vue";
+import { useAttendances } from "./utils/hook";
+import { PureTableBar } from "@/components/RePureTableBar";
+
 defineOptions({
   name: "SrvfAttendances"
+});
+
+const {
+  canRead,
+  loading,
+  columns,
+  dataList,
+  activityId,
+  activityOptions,
+  activityLoading,
+  pagination,
+  loadActivities,
+  onSearch,
+  onActivityChange,
+  handleSizeChange,
+  handleCurrentChange
+} = useAttendances();
+
+onMounted(() => {
+  if (canRead) loadActivities();
 });
 </script>
 
 <template>
-  <div class="p-4">
-    <el-card shadow="never">
-      <template #header>
-        <span class="text-lg font-medium">考勤管理</span>
-      </template>
-      <el-alert
-        type="warning"
-        :closable="false"
-        show-icon
-        title="本页面为静态占位页，字段、流程、权限、状态机以后端业务确认和 API 契约为准。"
-      />
-      <p class="mt-4 text-sm text-gray-500">
-        SRVF 活动域——考勤管理占位（与活动强耦合）。
-      </p>
-      <p class="mt-2 text-sm text-gray-500">
-        未来可能方向（非承诺，等后端契约就绪后由独立 PR 落地）：
-      </p>
-      <ul class="mt-2 list-disc pl-6 text-sm text-gray-500">
-        <li>考勤表浏览</li>
-        <li>考勤记录浏览</li>
-        <li>个人考勤记录入口</li>
-      </ul>
-    </el-card>
+  <div class="main">
+    <template v-if="canRead">
+      <el-card shadow="never" class="mb-2">
+        <div class="flex items-center gap-2">
+          <span class="text-sm">选择活动：</span>
+          <el-select
+            v-model="activityId"
+            filterable
+            clearable
+            class="w-80"
+            placeholder="按标题搜索活动"
+            :loading="activityLoading"
+            @change="onActivityChange"
+          >
+            <el-option
+              v-for="a in activityOptions"
+              :key="a.value"
+              :label="a.label"
+              :value="a.value"
+            />
+          </el-select>
+        </div>
+      </el-card>
+      <PureTableBar title="考勤管理" :columns="columns" @refresh="onSearch">
+        <template v-slot="{ size, dynamicColumns }">
+          <el-empty
+            v-if="!activityId"
+            description="请先选择一个活动查看考勤单据"
+          />
+          <pure-table
+            v-else
+            row-key="id"
+            adaptive
+            :adaptiveConfig="{ offsetBottom: 108 }"
+            align-whole="center"
+            table-layout="auto"
+            :loading="loading"
+            :size="size"
+            :data="dataList"
+            :columns="dynamicColumns"
+            :pagination="pagination"
+            :paginationSmall="size === 'small' ? true : false"
+            :header-cell-style="{
+              background: 'var(--el-fill-color-light)',
+              color: 'var(--el-text-color-primary)'
+            }"
+            @page-size-change="handleSizeChange"
+            @page-current-change="handleCurrentChange"
+          />
+        </template>
+      </PureTableBar>
+    </template>
+    <el-empty
+      v-else
+      description="您没有查看考勤的权限（attendance.read.sheet）"
+    />
   </div>
 </template>
+
+<style scoped lang="scss">
+.main {
+  margin: 24px 24px 0 !important;
+}
+</style>

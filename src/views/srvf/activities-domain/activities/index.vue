@@ -1,30 +1,63 @@
 <script setup lang="ts">
+import { onMounted } from "vue";
+import { useActivities } from "./utils/hook";
+import { PureTableBar } from "@/components/RePureTableBar";
+
 defineOptions({
   name: "SrvfActivities"
+});
+
+const {
+  loading,
+  columns,
+  dataList,
+  pagination,
+  onSearch,
+  handleSizeChange,
+  handleCurrentChange
+} = useActivities();
+
+onMounted(() => {
+  onSearch();
 });
 </script>
 
 <template>
-  <div class="p-4">
-    <el-card shadow="never">
-      <template #header>
-        <span class="text-lg font-medium">活动列表</span>
+  <div class="main">
+    <PureTableBar title="活动列表" :columns="columns" @refresh="onSearch">
+      <template v-slot="{ size, dynamicColumns }">
+        <pure-table
+          row-key="id"
+          adaptive
+          :adaptiveConfig="{ offsetBottom: 108 }"
+          align-whole="center"
+          table-layout="auto"
+          :loading="loading"
+          :size="size"
+          :data="dataList"
+          :columns="dynamicColumns"
+          :pagination="pagination"
+          :paginationSmall="size === 'small' ? true : false"
+          :header-cell-style="{
+            background: 'var(--el-fill-color-light)',
+            color: 'var(--el-text-color-primary)'
+          }"
+          @page-size-change="handleSizeChange"
+          @page-current-change="handleCurrentChange"
+        >
+          <template #isPublicRegistration="{ row }">
+            <el-tag :type="row.isPublicRegistration ? 'success' : 'info'">
+              {{ row.isPublicRegistration ? "公开" : "非公开" }}
+            </el-tag>
+          </template>
+        </pure-table>
       </template>
-      <el-alert
-        type="warning"
-        :closable="false"
-        show-icon
-        title="本页面为静态占位页，字段、流程、权限、状态机以后端业务确认和 API 契约为准。"
-      />
-      <p class="mt-4 text-sm text-gray-500">SRVF 活动域——活动列表入口。</p>
-      <p class="mt-2 text-sm text-gray-500">
-        未来可能方向（非承诺，等后端契约就绪后由独立 PR 落地）：
-      </p>
-      <ul class="mt-2 list-disc pl-6 text-sm text-gray-500">
-        <li>活动列表浏览</li>
-        <li>活动详情占位</li>
-        <li>日历视图占位（裁决 7：不设计活动 schema / 状态机）</li>
-      </ul>
-    </el-card>
+    </PureTableBar>
   </div>
 </template>
+
+<style scoped lang="scss">
+.main {
+  margin: 24px 24px 0 !important;
+}
+</style>
