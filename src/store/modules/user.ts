@@ -8,13 +8,20 @@ import {
   storageLocal
 } from "../utils";
 import {
-  type UserResult,
-  type RefreshTokenResult,
+  type LoginResult,
   getLogin,
-  refreshTokenApi
+  refreshTokenApi,
+  getAdminMe,
+  getMyPermissions
 } from "@/api/user";
 import { useMultiTagsStoreHook } from "./multiTags";
-import { type DataInfo, setToken, removeToken, userKey } from "@/utils/auth";
+import {
+  type DataInfo,
+  setToken,
+  removeToken,
+  userKey,
+  parseDurationMs
+} from "@/utils/auth";
 
 export const useUserStore = defineStore("pure-user", {
   state: (): userType => ({
@@ -63,22 +70,58 @@ export const useUserStore = defineStore("pure-user", {
     SET_LOGINDAY(value: number) {
       this.loginDay = Number(value);
     },
-    /** 登入 */
-    async loginByUsername(data) {
-      return new Promise<UserResult>((resolve, reject) => {
-        getLogin(data)
-          .then(data => {
-            if (data.code === 0) {
-              setToken(data.data);
-              resolve(data);
-            } else {
-              reject(data.message);
-            }
-          })
-          .catch(error => {
-            reject(error);
-          });
-      });
+    /**
+     * 登入（NestJS 真实后端：登录 + 身份 + 权限「三段式」组合）
+     * 见 docs/srvf-api-integration-guide.md §4。
+     */
+    async loginByUsername(data): Promise<LoginResult> {
+      try {
+        const res = await getLogin(data); // POST /api/auth/v1/login
+        // 业务失败是 HTTP 4xx，axios 已 reject 进 catch；此处再防御性校验
+        if (res?.code !== 0) {
+          return Promise.reject(res?.message ?? "登录失败");
+        }
+        const t = res.data;
+        // gotcha B：expiresIn 是 "15m" 时长串，需现算 access 过期时间戳
+        const expires = Date.now() + parseDurationMs(t.expiresIn);
+        // 先落 token，后面两个 authed 请求才能带上 Authorization
+        setToken({
+          accessToken: t.accessToken,
+          refreshToken: t.refreshToken,
+          expires,
+          refreshExpiresAt: t.refreshExpiresAt
+        });
+        // 身份 + 权限（两个 authed 端点并行取）
+        const [meRes, permRes] = await Promise.all([
+          getAdminMe(), // GET /api/admin/v1/me
+          getMyPermissions() // GET /api/system/v1/rbac/me/permissions
+        ]);
+        const me = meRes.data;
+        const perm = permRes.data;
+        // 组装进 user store 期望形状并持久化。
+        // roles 用「系统角色」(me.role) 驱动静态菜单粗粒度门控
+        //   （src/router/modules/srvf.ts 的 meta.roles 用的就是 SUPER_ADMIN/ADMIN），
+        //   并附带 RBAC 业务角色 code；真正的按钮级鉴权用 permissions[]（真实点格式码）。
+        setToken({
+          accessToken: t.accessToken,
+          refreshToken: t.refreshToken,
+          expires,
+          refreshExpiresAt: t.refreshExpiresAt,
+          avatar: me.avatarKey ?? "",
+          username: me.username,
+          nickname: me.nickname ?? me.username,
+          roles: Array.from(
+            new Set([me.role, ...perm.effectiveRoles.map(r => r.code)])
+          ),
+          permissions: perm.permissions
+        });
+        return res;
+      } catch (error: any) {
+        // gotcha A：业务体在 err.response.data.{code,message}
+        return Promise.reject(
+          error?.response?.data?.message ?? error?.message ?? error
+        );
+      }
     },
     /** 前端登出（不调用接口） */
     logOut() {
@@ -90,22 +133,24 @@ export const useUserStore = defineStore("pure-user", {
       resetRouter();
       router.push("/login");
     },
-    /** 刷新`token` */
-    async handRefreshToken(data) {
-      return new Promise<RefreshTokenResult>((resolve, reject) => {
-        refreshTokenApi(data)
-          .then(data => {
-            if (data.code === 0) {
-              setToken(data.data);
-              resolve(data);
-            } else {
-              reject(data.message);
-            }
-          })
-          .catch(error => {
-            reject(error);
-          });
-      });
+    /** 刷新`token`（rotation：换发新 access + 新 refresh，并重算 expires） */
+    async handRefreshToken(data): Promise<LoginResult> {
+      try {
+        const res = await refreshTokenApi(data); // POST /api/auth/v1/refresh, data={refreshToken}
+        if (res?.code !== 0) {
+          return Promise.reject(res?.message ?? "刷新失败");
+        }
+        const t = res.data;
+        setToken({
+          accessToken: t.accessToken,
+          refreshToken: t.refreshToken,
+          expires: Date.now() + parseDurationMs(t.expiresIn),
+          refreshExpiresAt: t.refreshExpiresAt
+        });
+        return res;
+      } catch (error) {
+        return Promise.reject(error);
+      }
     }
   }
 });
