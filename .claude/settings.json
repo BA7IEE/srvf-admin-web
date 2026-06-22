@@ -85,8 +85,6 @@
       "Write(./src/router/modules/error.ts)",
       "Edit(./src/router/modules/remaining.ts)",
       "Write(./src/router/modules/remaining.ts)",
-      "Edit(./public/platform-config.json)",
-      "Write(./public/platform-config.json)",
       "Edit(./mock/**)",
       "Write(./mock/**)",
       "Edit(./.claude/settings.json)",

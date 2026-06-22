@@ -183,6 +183,28 @@ try {
   // ===== guard: clean code passes ================================================
   check("guard allows: clean code edit", edit("src/x.ts", "export const ok = 1;").decision === "allow");
 
+  // ===== guard: public/platform-config.json value-vs-field rule (§13.1) ===========
+  const pcFixture = (obj) => {
+    const f = path.join(mkTemp("srvf-h-pc-"), "public", "platform-config.json");
+    mkdirSync(path.dirname(f), { recursive: true });
+    writeFileSync(f, JSON.stringify(obj, null, 2));
+    return f;
+  };
+  const pcWrite = (obj, content) => runGuard("Write", { file_path: pcFixture(obj), content });
+  const pcEdit = (obj, old_string, new_string) =>
+    runGuard("Edit", { file_path: pcFixture(obj), old_string, new_string });
+  check(
+    "guard allows: platform-config value-only Write",
+    pcWrite({ A: 1, EpThemeColor: "#409EFF" }, JSON.stringify({ A: 1, EpThemeColor: "#C4001B" }, null, 2)).decision === "allow"
+  );
+  check(
+    "guard allows: platform-config value-only Edit",
+    pcEdit({ A: 1, EpThemeColor: "#409EFF" }, '"#409EFF"', '"#C4001B"').decision === "allow"
+  );
+  check("guard denies: platform-config add field", pcWrite({ A: 1 }, JSON.stringify({ A: 1, B: 2 }, null, 2)).decision === "deny");
+  check("guard denies: platform-config remove field", pcWrite({ A: 1, B: 2 }, JSON.stringify({ A: 1 }, null, 2)).decision === "deny");
+  check("guard asks: platform-config malformed result", pcWrite({ A: 1 }, "{ not json").decision === "ask");
+
   // ===== verify: exported pure helpers (deterministic, no toolchain) ==============
   check("classifyCodeChange: src/.mts true", classifyCodeChange("?? src/x.mts") === true);
   check("classifyCodeChange: src/.cts true", classifyCodeChange(" M src/x.cts") === true);

@@ -5,6 +5,7 @@
 // Fails OPEN on any internal error — the static permissions.deny rules in
 // .claude/settings.json remain the hard backstop for protected files.
 import process from "node:process";
+import { readFileSync } from "node:fs";
 
 function readStdin() {
   return new Promise((resolve) => {
@@ -16,17 +17,20 @@ function readStdin() {
   });
 }
 
-function deny(reason) {
+function decide(decision, reason) {
   process.stdout.write(
     JSON.stringify({
       hookSpecificOutput: {
         hookEventName: "PreToolUse",
-        permissionDecision: "deny",
+        permissionDecision: decision,
         permissionDecisionReason: reason
       }
     })
   );
   process.exit(0);
+}
+function deny(reason) {
+  decide("deny", reason);
 }
 
 function checkBash(cmd) {
@@ -57,6 +61,49 @@ function checkBash(cmd) {
   ) {
     deny(
       "Blocked: husky/commitlint bypass (--no-verify / HUSKY=0). Per CLAUDE.md §4 + 02-ai-rules.md §13.3.12, fix the lint/type error instead of bypassing the commit hook."
+    );
+  }
+}
+
+// §13.1 — public/platform-config.json: AI may change VALUES, never the field set.
+// The guard reads the on-disk file, reconstructs the post-edit JSON, and compares the
+// top-level key set: unchanged => allow (value-only); added/removed => deny; can't tell
+// (read/parse error) => ask (safe floor). This replaces the file's static ask rule.
+function applyEdits(text, tool, ti) {
+  if (tool === "Write") return String(ti.content || "");
+  // String#replace with a function replacement treats new text literally ($ is not special).
+  if (tool === "Edit") return text.replace(String(ti.old_string ?? ""), () => String(ti.new_string ?? ""));
+  if (tool === "MultiEdit") {
+    let t = text;
+    for (const e of Array.isArray(ti.edits) ? ti.edits : []) {
+      t = t.replace(String((e && e.old_string) ?? ""), () => String((e && e.new_string) ?? ""));
+    }
+    return t;
+  }
+  return text;
+}
+function checkPlatformConfig(tool, ti) {
+  const fp = String(ti.file_path || "");
+  if (!/(^|\/)public\/platform-config\.json$/.test(fp)) return;
+  try {
+    const root = process.env.CLAUDE_PROJECT_DIR || process.cwd();
+    const abs = fp.startsWith("/") ? fp : `${root}/${fp.replace(/^\.\//, "")}`;
+    const text = readFileSync(abs, "utf8");
+    const before = Object.keys(JSON.parse(text)).sort();
+    const after = Object.keys(JSON.parse(applyEdits(text, tool, ti))).sort();
+    if (JSON.stringify(before) === JSON.stringify(after)) {
+      decide(
+        "allow",
+        "Allowed: public/platform-config.json value-only change (top-level fields unchanged) — 02-ai-rules.md §13.1「改值可」. Adding/removing a field stays human-only."
+      );
+    }
+    deny(
+      "Blocked: public/platform-config.json field add/remove is human-only (02-ai-rules.md §13.1「改值可 / 增删字段不可」). Change existing values, not the config shape."
+    );
+  } catch {
+    decide(
+      "ask",
+      "public/platform-config.json: could not verify this is a value-only change (read/parse error) — deferring to a human (safe floor)."
     );
   }
 }
@@ -104,7 +151,10 @@ function checkEdit(tool, ti) {
     const tool = input.tool_name || "";
     const ti = input.tool_input || {};
     if (tool === "Bash") checkBash(String(ti.command || ""));
-    else if (tool === "Edit" || tool === "Write" || tool === "MultiEdit") checkEdit(tool, ti);
+    else if (tool === "Edit" || tool === "Write" || tool === "MultiEdit") {
+      checkPlatformConfig(tool, ti); // §13.1: value-only allow / field-change deny / unsure ask
+      checkEdit(tool, ti);
+    }
   } catch {
     // fail open — static deny rules remain the hard backstop
   }
