@@ -16,7 +16,7 @@
 // Path inputs can be overridden via env (SRVF_DOCTOR_SETTINGS / _RULES / _READINESS
 // / _NESTAPI) so the logic is testable against fixtures.
 import process from "node:process";
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { execSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
@@ -27,6 +27,8 @@ const SETTINGS = process.env.SRVF_DOCTOR_SETTINGS || path.join(ROOT, ".claude", 
 const RULES = process.env.SRVF_DOCTOR_RULES || path.join(ROOT, "docs", "pure-admin", "02-ai-rules.md");
 const READINESS =
   process.env.SRVF_DOCTOR_READINESS || path.join(ROOT, "docs", "srvf-api-contract-readiness.md");
+// [3] task-vs-resource smell scan root (overridable for tests).
+const VIEWS = process.env.SRVF_DOCTOR_VIEWS || path.join(ROOT, "src", "views", "srvf");
 
 // ---- glob helpers ----------------------------------------------------------------
 // Single left-to-right pass so `**` -> `.*` and a lone `*` -> `[^/]*` without any
@@ -182,6 +184,41 @@ function extraReason(glob, tool) {
   return "additive — verify intent";
 }
 
+// ---- [3] task-vs-resource flatten smell ------------------------------------------
+// Heuristic: a business page (index.vue under src/views/srvf) owning BOTH an
+// <el-select> AND a "请先选择…" empty-state is almost certainly the flatten-parent
+// anti-pattern — a nested backend sub-resource (registrations / attendances /
+// certificates) promoted to a top-level menu + manual parent picker, instead of living
+// as a tab inside the parent's detail page. See ../srvf-nest-api/docs/handoff/admin-web.md
+// §1 (axis model). WARN only: a legit status filter has <el-select> but no "请先选择".
+function walkVue(dir, acc) {
+  let entries;
+  try {
+    entries = readdirSync(dir, { withFileTypes: true });
+  } catch {
+    return acc; // dir absent (fresh checkout / fixture) — nothing to scan
+  }
+  for (const e of entries) {
+    const full = path.join(dir, e.name);
+    if (e.isDirectory()) walkVue(full, acc);
+    else if (e.name === "index.vue") acc.push(full);
+  }
+  return acc;
+}
+function scanFlattenSmell() {
+  const hits = [];
+  for (const file of walkVue(VIEWS, [])) {
+    let src;
+    try {
+      src = readFileSync(file, "utf8");
+    } catch {
+      continue;
+    }
+    if (src.includes("el-select") && src.includes("请先选择")) hits.push(path.relative(ROOT, file));
+  }
+  return hits;
+}
+
 function main() {
   const settings = loadSettings();
   const editable = settings.filter((e) => e.tool !== "Read");
@@ -263,6 +300,17 @@ function main() {
     } else {
       console.log(`  frozen baseline v${baseline} == live v${live.version} — in sync.`);
     }
+  }
+
+  console.log("\n[3] task-vs-resource smell (src/views/srvf · heuristic, WARN-only)");
+  const smells = scanFlattenSmell();
+  if (!smells.length) {
+    console.log("  none — no <el-select> + “请先选择” flatten-parent smell found.");
+  } else {
+    for (const f of smells) {
+      console.log(`  WARN  ${f}  — 疑似把嵌套子资源拍平成「菜单 + 手选父级」;改父级详情页 tab 内嵌(handoff admin-web.md §1)`);
+    }
+    console.log(`  (${smells.length} 处;启发式,需 el-select 且 请先选择 并存——合法状态过滤下拉不命中)`);
   }
 
   const drift = missing.length > 0;
