@@ -16,6 +16,7 @@ const {
   memberOptions,
   memberLoading,
   certStatusTagType,
+  dict,
   loadMembers,
   onSearch
 } = useCertificates();
@@ -70,7 +71,7 @@ onMounted(() => {
           >
             <template #certStatusCode="{ row }">
               <el-tag :type="certStatusTagType(row.certStatusCode)">
-                {{ row.certStatusCode }}
+                {{ dict.label("cert_status", row.certStatusCode) }}
               </el-tag>
             </template>
             <template #isInternal="{ row }">

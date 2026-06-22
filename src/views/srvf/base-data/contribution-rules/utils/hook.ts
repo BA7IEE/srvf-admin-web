@@ -15,8 +15,13 @@ import {
   deleteContributionRule,
   type ContributionRuleItem
 } from "@/api/srvf-contribution-rule";
+import { useSrvfDictStoreHook } from "@/store/modules/srvfDict";
 
 export function useContributionRules() {
+  /** 共享字典标签解析器：活动类型 / 考勤角色 code → 中文 */
+  const dict = useSrvfDictStoreHook();
+  dict.ensureTypes(["activity_type", "attendance_role"]);
+
   const dataList = ref<ContributionRuleItem[]>([]);
   const loading = ref(false);
   const formRef = ref();
@@ -35,8 +40,20 @@ export function useContributionRules() {
   });
 
   const columns: TableColumnList = [
-    { label: "活动类型", prop: "activityTypeCode", minWidth: 140 },
-    { label: "考勤角色", prop: "attendanceRoleCode", minWidth: 130 },
+    {
+      label: "活动类型",
+      prop: "activityTypeCode",
+      minWidth: 140,
+      formatter: ({ activityTypeCode }) =>
+        dict.label("activity_type", activityTypeCode)
+    },
+    {
+      label: "考勤角色",
+      prop: "attendanceRoleCode",
+      minWidth: 130,
+      formatter: ({ attendanceRoleCode }) =>
+        dict.label("attendance_role", attendanceRoleCode)
+    },
     {
       label: "时长阈值",
       prop: "durationThreshold",

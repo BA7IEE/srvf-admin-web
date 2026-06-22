@@ -7,10 +7,14 @@ import {
   getMemberCertificates,
   type CertificateItem
 } from "@/api/srvf-certificate";
+import { useSrvfDictStoreHook } from "@/store/modules/srvfDict";
 
 export function useCertificates() {
   /** 读权限（后端真实 RBAC 码）；无权限不请求、不渲染 */
   const canRead = hasPerms("certificate.read.record");
+  /** 共享字典标签解析器：证书类型 / 核验状态 code → 中文（cert_type / cert_status 字典） */
+  const dict = useSrvfDictStoreHook();
+  dict.ensureTypes(["cert_type", "cert_status"]);
   const dataList = ref<CertificateItem[]>([]);
   const loading = ref(false);
   /** 证书隶属队员：先选队员，再查其证书（后端无平铺端点，列表无分页） */
@@ -19,7 +23,12 @@ export function useCertificates() {
   const memberLoading = ref(false);
 
   const columns: TableColumnList = [
-    { label: "证书类型", prop: "certTypeCode", minWidth: 140 },
+    {
+      label: "证书类型",
+      prop: "certTypeCode",
+      minWidth: 140,
+      formatter: ({ certTypeCode }) => dict.label("cert_type", certTypeCode)
+    },
     { label: "发证机构", prop: "issuingOrg", minWidth: 160 },
     {
       label: "状态",
@@ -110,6 +119,7 @@ export function useCertificates() {
     memberOptions,
     memberLoading,
     certStatusTagType,
+    dict,
     loadMembers,
     onSearch
   };

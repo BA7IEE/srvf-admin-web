@@ -13,8 +13,13 @@ import {
   updateOrganizationStatus,
   type OrgTreeNode
 } from "@/api/srvf-organization";
+import { useSrvfDictStoreHook } from "@/store/modules/srvfDict";
 
 export function useOrganizations() {
+  /** 共享字典标签解析器：节点类别 code → 中文（node_type 字典） */
+  const dict = useSrvfDictStoreHook();
+  dict.ensureTypes(["node_type"]);
+
   const dataList = ref<OrgTreeNode[]>([]);
   const loading = ref(false);
   const formRef = ref();
@@ -33,7 +38,12 @@ export function useOrganizations() {
       minWidth: 110,
       formatter: ({ code }) => code ?? "—"
     },
-    { label: "节点类别", prop: "nodeTypeCode", minWidth: 130 },
+    {
+      label: "节点类别",
+      prop: "nodeTypeCode",
+      minWidth: 130,
+      formatter: ({ nodeTypeCode }) => dict.label("node_type", nodeTypeCode)
+    },
     { label: "排序", prop: "sortOrder", minWidth: 70 },
     { label: "状态", prop: "status", minWidth: 90, slot: "status" },
     ...(canUpdate || canDelete || canCreate
