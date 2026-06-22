@@ -4,7 +4,6 @@ import type { PaginationProps } from "@pureadmin/table";
 import { ElMessageBox } from "element-plus";
 import { message } from "@/utils/message";
 import { hasPerms } from "@/utils/auth";
-import { getActivities } from "@/api/srvf-activity";
 import {
   getActivityAttendanceSheets,
   approveAttendanceSheet,
@@ -32,10 +31,10 @@ const STATUS_TAG_TYPE: Record<
 };
 
 /**
- * @param externalActivityId 外部注入的活动 id（作战室 tab 用，来自路由参数）。
- *   传入 → 固定该活动、不渲染/不加载页内活动下拉；不传 → 维持独立菜单页现状（页内下拉自选活动）。
+ * @param externalActivityId 考勤隶属活动 id（必传，来自活动作战室路由参数）。
+ *   作战室是唯一消费方（独立考勤菜单页已退役），故固定该活动、无页内活动下拉。
  */
-export function useAttendances(externalActivityId?: string) {
+export function useAttendances(externalActivityId: string) {
   /** 读权限（后端真实 RBAC 码）；无权限不请求、不渲染 */
   const canRead = hasPerms("attendance.read.sheet");
   /**
@@ -55,16 +54,8 @@ export function useAttendances(externalActivityId?: string) {
   dict.ensureTypes(["attendance_sheet_status"]);
   const dataList = ref<AttendanceSheetItem[]>([]);
   const loading = ref(false);
-  /**
-   * 考勤隶属活动 id。
-   * - 独立菜单页：留空，由页内活动下拉选定（现状）。
-   * - 作战室 tab：由外部（路由参数）注入并固定，不渲染/不加载活动下拉。
-   */
-  const activityId = ref<string>(externalActivityId ?? "");
-  /** 是否由外部注入活动（作战室嵌入）：true 时跳过页内活动下拉加载 */
-  const isExternalActivity = !!externalActivityId;
-  const activityOptions = ref<Array<{ label: string; value: string }>>([]);
-  const activityLoading = ref(false);
+  /** 考勤隶属活动 id：由作战室经路由参数注入并固定。保留 ref 形态，列表加载仍走 activityId.value 不改。 */
+  const activityId = ref<string>(externalActivityId);
   const pagination = reactive<PaginationProps>({
     total: 0,
     pageSize: 10,
@@ -117,27 +108,6 @@ export function useAttendances(externalActivityId?: string) {
     };
   }
 
-  /** 活动下拉（数据源 getActivities；首页 50 条 + filterable 检索）。外部注入活动时无需下拉，直接跳过。 */
-  async function loadActivities() {
-    if (isExternalActivity || !canRead) return;
-    activityLoading.value = true;
-    try {
-      const { code, data } = await getActivities({ page: 1, pageSize: 50 });
-      if (code === 0) {
-        activityOptions.value = data.items.map(a => ({
-          label: a.title,
-          value: a.id
-        }));
-      }
-    } catch (error: any) {
-      message(error?.response?.data?.message ?? "加载活动失败", {
-        type: "error"
-      });
-    } finally {
-      activityLoading.value = false;
-    }
-  }
-
   async function onSearch() {
     if (!canRead || !activityId.value) {
       dataList.value = [];
@@ -162,11 +132,6 @@ export function useAttendances(externalActivityId?: string) {
     } finally {
       loading.value = false;
     }
-  }
-
-  function onActivityChange() {
-    pagination.currentPage = 1;
-    onSearch();
   }
 
   function handleSizeChange(val: number) {
@@ -351,15 +316,9 @@ export function useAttendances(externalActivityId?: string) {
     loading,
     columns,
     dataList,
-    activityId,
-    isExternalActivity,
-    activityOptions,
-    activityLoading,
     pagination,
     statusMeta,
-    loadActivities,
     onSearch,
-    onActivityChange,
     handleApprove,
     handleReject,
     handleFinalApprove,
