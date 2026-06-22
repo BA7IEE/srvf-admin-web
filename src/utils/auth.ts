@@ -9,6 +9,8 @@ export interface DataInfo<T> {
   expires: T;
   /** 用于调用刷新accessToken的接口时所需的token */
   refreshToken: string;
+  /** refresh token family 绝对死期（ISO8601 UTC）；到点须重新登录（guide §3 gotcha B） */
+  refreshExpiresAt?: string;
   /** 头像 */
   avatar?: string;
   /** 用户名 */
@@ -41,16 +43,26 @@ export function getToken(): DataInfo<number> {
 
 /**
  * @description 设置`token`以及一些必要信息并采用无感刷新`token`方案
- * 无感刷新：后端返回`accessToken`（访问接口使用的`token`）、`refreshToken`（用于调用刷新`accessToken`的接口时所需的`token`，`refreshToken`的过期时间（比如30天）应大于`accessToken`的过期时间（比如2小时））、`expires`（`accessToken`的过期时间）
- * 将`accessToken`、`expires`、`refreshToken`这三条信息放在key值为authorized-token的cookie里（过期自动销毁）
- * 将`avatar`、`username`、`nickname`、`roles`、`permissions`、`refreshToken`、`expires`这七条信息放在key值为`user-info`的localStorage里（利用`multipleTabsKey`当浏览器完全关闭后自动销毁）
+ * 无感刷新：后端返回`accessToken`（访问接口使用的`token`）、`refreshToken`（用于调用刷新`accessToken`的接口时所需的`token`）、`expiresIn`（JWT 配置时长字符串，前端用 `parseDurationMs` 现算出 `expires` 时间戳）、`refreshExpiresAt`（refresh token family 的绝对死期）
+ * 将`accessToken`、`expires`、`refreshToken`、`refreshExpiresAt`这四条信息放在key值为authorized-token的cookie里（过期自动销毁）
+ * 将`avatar`、`username`、`nickname`、`roles`、`permissions`、`refreshToken`、`expires`这些信息放在key值为`user-info`的localStorage里（利用`multipleTabsKey`当浏览器完全关闭后自动销毁）
  */
-export function setToken(data: DataInfo<Date>) {
+export function setToken(data: DataInfo<Date | number>) {
   let expires = 0;
   const { accessToken, refreshToken } = data;
   const { isRemembered, loginDay } = useUserStoreHook();
-  expires = new Date(data.expires).getTime(); // 如果后端直接设置时间戳，将此处代码改为expires = data.expires，然后把上面的DataInfo<Date>改成DataInfo<number>即可
-  const cookieString = JSON.stringify({ accessToken, expires, refreshToken });
+  // PR-4：`expires` 通常是前端用 `parseDurationMs(expiresIn)` 现算的时间戳（number, ms）；
+  // 兼容 SSO 等仍传 `Date`/字符串 的旧路径（guide §3 gotcha B）。
+  expires =
+    typeof data.expires === "number"
+      ? data.expires
+      : new Date(data.expires).getTime();
+  const cookieString = JSON.stringify({
+    accessToken,
+    expires,
+    refreshToken,
+    refreshExpiresAt: data.refreshExpiresAt
+  });
 
   expires > 0
     ? Cookies.set(TokenKey, cookieString, {
@@ -126,6 +138,35 @@ export function removeToken() {
 export const formatToken = (token: string): string => {
   return "Bearer " + token;
 };
+
+/**
+ * 把后端 `expiresIn`（JWT 配置时长字符串，如 `"15m"`/`"3600s"`/`"2h"`/`"7d"`，或纯数字秒）解析为毫秒。
+ * 见 guide §3 gotcha B：`expiresIn` 是时长串、不是时间戳；
+ * 解析失败回退 15 分钟，避免 0 值导致「每请求都判过期 → 刷新风暴」。
+ */
+export function parseDurationMs(expiresIn: string | number): number {
+  const FALLBACK = 15 * 60 * 1000;
+  if (typeof expiresIn === "number")
+    return expiresIn > 0 ? expiresIn : FALLBACK;
+  if (!expiresIn) return FALLBACK;
+  const s = String(expiresIn).trim();
+  if (/^\d+$/.test(s)) return parseInt(s, 10) * 1000; // 纯数字按秒（JWT 约定）
+  const matched = s.match(/^(\d+)\s*(ms|s|m|h|d)$/i);
+  if (!matched) return FALLBACK;
+  const n = parseInt(matched[1], 10);
+  const unit = matched[2].toLowerCase();
+  const multiplier =
+    unit === "ms"
+      ? 1
+      : unit === "s"
+        ? 1000
+        : unit === "m"
+          ? 60 * 1000
+          : unit === "h"
+            ? 60 * 60 * 1000
+            : 24 * 60 * 60 * 1000;
+  return n * multiplier;
+}
 
 /** 是否有按钮级别的权限（根据登录接口返回的`permissions`字段进行判断）*/
 export const hasPerms = (value: string | Array<string>): boolean => {

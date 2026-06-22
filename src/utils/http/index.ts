@@ -71,7 +71,8 @@ class PureHttp {
           return config;
         }
         /** 请求白名单，放置一些不需要`token`的接口（通过设置请求白名单，防止`token`过期后再请求造成的死循环问题） */
-        const whiteList = ["/refresh-token", "/login"];
+        // 登录 / 刷新 两端点不参与「过期自动刷新」逻辑，避免凭证失败时死循环（guide §3 gotcha A）
+        const whiteList = ["/api/auth/v1/login", "/api/auth/v1/refresh"];
         return whiteList.some(url => config.url.endsWith(url))
           ? config
           : new Promise(resolve => {
