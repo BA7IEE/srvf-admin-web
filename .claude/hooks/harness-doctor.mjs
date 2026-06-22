@@ -190,7 +190,15 @@ function main() {
 
   console.log("SRVF harness-doctor\n");
   console.log("[1] §13.1 matrix ↔ settings.json coverage");
+  // Rows whose protection is enforced dynamically by guard.mjs rather than by a static
+  // deny/ask glob. They are intentionally absent from settings.json, so the Edit+Write
+  // coverage rule below would otherwise misreport them as drift.
+  const GUARD_ENFORCED = new Set(["public/platform-config.json"]);
   for (const spec of specs) {
+    if (GUARD_ENFORCED.has(spec.path)) {
+      console.log(`  ok    ${spec.symbol.padEnd(4)} ${spec.path}  ← guard.mjs (改值 allow / 增删字段 deny)`);
+      continue;
+    }
     // A ❌/⚠️ path needs BOTH Edit and Write blocked. One tool alone leaves a hole
     // (e.g. Edit-deny removed but Write-deny kept => the file is editable again), so a
     // partial pair is drift, not "ok".

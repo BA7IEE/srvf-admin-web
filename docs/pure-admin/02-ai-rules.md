@@ -33,31 +33,31 @@
 
 ### 13.1 文件改动矩阵
 
-| 文件 / 目录 | AI 可改？ | 备注 |
-| --- | --- | --- |
-| `src/views/<新业务模块>/` | ✅ 可自由新建 | 必须沿用 `01-project-map.md` §3.14 范式 |
-| `src/api/<新业务模块>.ts` | ✅ 可自由新建 | 类型按后端 Swagger |
-| `src/store/modules/<新业务模块>.ts` | ✅ 可自由新建 | **命名必须有业务前缀**（如 `srvfTeam.ts`、`uStudioApps.ts`），禁止用 `data.ts`、`state.ts` 等无意义命名；不可改既有 store |
-| `src/constants/<业务模块>.ts`、`src/types/business/` 等业务侧目录 | ✅ 新建 | UI 临时占位常量必须 `*.demo.ts` 命名或文件头注 `TEMPORARY / DEMO`（裁决 6） |
-| `src/views/welcome/index.vue` | ✅ 可改占位文案 | 不要改路由名 |
-| `src/router/modules/srvf-*.ts` / 业务静态路由 | ✅ 可新建 | meta.roles 用 NestJS 真实角色名 |
-| `src/views/dict/* / tenant/* / schedule/* / permission/*` | ⚠️ 改前先评估 | Max-Ts 演示模块；裁决 1：源码保留为参考 |
-| `src/router/modules/home.ts / error.ts / remaining.ts` | ⚠️ 仅在新增"绝对静态路由"时追加 | 不要改既有 |
-| `mock/**` | ❌ | 业务 mock 禁止新增；仅 `*.demo.ts` 临时占位、且 PR 描述明确"接真 API 后立即删除"时允许（裁决 4） |
-| `public/platform-config.json` | ⚠️ AI 不得改默认值；改值不改字段 | 由人类决策 |
-| `src/components/Re*/` | ❌ 不可改 | 底座组件，要扩展请 wrapper |
-| `src/layout/**` | ❌ 不可改源码 | 改动等同破坏整套主题 / 多标签 / keep-alive；扩展用 mitt 事件 / 业务子组件 |
-| `src/router/index.ts / utils.ts / asyncRoutes.ts` | ❌ 不可改 | 影响登录、动态路由、白屏防护；asyncRoutes 第一阶段绝对禁用（裁决 2） |
-| `src/utils/http/**` | ❌ 不可改（除接 NestJS 时的"一次性适配"由人类拍板） | 改动 = 全局副作用 |
-| `src/utils/auth.ts` | ❌ 不可改（除 token 字段适配） | token 主流程 |
-| `src/store/modules/user.ts / permission.ts / multiTags.ts / app.ts / settings.ts / epTheme.ts` | ❌ 不可改 | 同上 |
-| `src/style/**` | ❌ 不可改 | 主题 / 暗黑 / 侧栏样式核心；Tailwind v4 与 v3 语法差异巨大 |
-| `src/plugins/elementPlus.ts / echarts.ts` | ❌ 不可改 | 升级才动 |
-| `src/main.ts / App.vue / src/config/index.ts` | ❌ 不可改 | 入口与全局配置 |
-| `package.json / pnpm-lock.yaml` | ❌ 不可改 | 依赖变更走人类（见 §13.2.1） |
-| `vite.config.ts / build/** / tsconfig.json / eslint.config.js / stylelint.config.js / .prettierrc.js / .lintstagedrc / .husky/** / commitlint.config.js` | ❌ 不可改 | 工程级；底座改动必须单独 PR |
-| `.env / .env.development / .env.production / .env.staging` | ❌ AI 不得直接改 | 由人类改；AI 也不得在源码中硬编码 `VITE_*` 默认值绕过 |
-| `docs/pure-admin-max-ts-baseline.md` 与 `docs/pure-admin/**` | ✅ 由人类批准后更新 | 必须保留章节结构 |
+| 文件 / 目录                                                                                                                                              | AI 可改？                                           | 备注                                                                                                                      |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `src/views/<新业务模块>/`                                                                                                                                | ✅ 可自由新建                                       | 必须沿用 `01-project-map.md` §3.14 范式                                                                                   |
+| `src/api/<新业务模块>.ts`                                                                                                                                | ✅ 可自由新建                                       | 类型按后端 Swagger                                                                                                        |
+| `src/store/modules/<新业务模块>.ts`                                                                                                                      | ✅ 可自由新建                                       | **命名必须有业务前缀**（如 `srvfTeam.ts`、`uStudioApps.ts`），禁止用 `data.ts`、`state.ts` 等无意义命名；不可改既有 store |
+| `src/constants/<业务模块>.ts`、`src/types/business/` 等业务侧目录                                                                                        | ✅ 新建                                             | UI 临时占位常量必须 `*.demo.ts` 命名或文件头注 `TEMPORARY / DEMO`（裁决 6）                                               |
+| `src/views/welcome/index.vue`                                                                                                                            | ✅ 可改占位文案                                     | 不要改路由名                                                                                                              |
+| `src/router/modules/srvf-*.ts` / 业务静态路由                                                                                                            | ✅ 可新建                                           | meta.roles 用 NestJS 真实角色名                                                                                           |
+| `src/views/dict/* / tenant/* / schedule/* / permission/*`                                                                                                | ⚠️ 改前先评估                                       | Max-Ts 演示模块；裁决 1：源码保留为参考                                                                                   |
+| `src/router/modules/home.ts / error.ts / remaining.ts`                                                                                                   | ⚠️ 仅在新增"绝对静态路由"时追加                     | 不要改既有                                                                                                                |
+| `mock/**`                                                                                                                                                | ❌                                                  | 业务 mock 禁止新增；仅 `*.demo.ts` 临时占位、且 PR 描述明确"接真 API 后立即删除"时允许（裁决 4）                          |
+| `public/platform-config.json`                                                                                                                            | ⚠️ 改值可（guard 守）/ 增删字段不可                 | `guard.mjs` 动态判定：顶层字段不变=放行，增删字段=拒绝，存疑=询问；取代该文件的静态 ask（见 13-ai-harness §13A.7）        |
+| `src/components/Re*/`                                                                                                                                    | ❌ 不可改                                           | 底座组件，要扩展请 wrapper                                                                                                |
+| `src/layout/**`                                                                                                                                          | ❌ 不可改源码                                       | 改动等同破坏整套主题 / 多标签 / keep-alive；扩展用 mitt 事件 / 业务子组件                                                 |
+| `src/router/index.ts / utils.ts / asyncRoutes.ts`                                                                                                        | ❌ 不可改                                           | 影响登录、动态路由、白屏防护；asyncRoutes 第一阶段绝对禁用（裁决 2）                                                      |
+| `src/utils/http/**`                                                                                                                                      | ❌ 不可改（除接 NestJS 时的"一次性适配"由人类拍板） | 改动 = 全局副作用                                                                                                         |
+| `src/utils/auth.ts`                                                                                                                                      | ❌ 不可改（除 token 字段适配）                      | token 主流程                                                                                                              |
+| `src/store/modules/user.ts / permission.ts / multiTags.ts / app.ts / settings.ts / epTheme.ts`                                                           | ❌ 不可改                                           | 同上                                                                                                                      |
+| `src/style/**`                                                                                                                                           | ❌ 不可改                                           | 主题 / 暗黑 / 侧栏样式核心；Tailwind v4 与 v3 语法差异巨大                                                                |
+| `src/plugins/elementPlus.ts / echarts.ts`                                                                                                                | ❌ 不可改                                           | 升级才动                                                                                                                  |
+| `src/main.ts / App.vue / src/config/index.ts`                                                                                                            | ❌ 不可改                                           | 入口与全局配置                                                                                                            |
+| `package.json / pnpm-lock.yaml`                                                                                                                          | ❌ 不可改                                           | 依赖变更走人类（见 §13.2.1）                                                                                              |
+| `vite.config.ts / build/** / tsconfig.json / eslint.config.js / stylelint.config.js / .prettierrc.js / .lintstagedrc / .husky/** / commitlint.config.js` | ❌ 不可改                                           | 工程级；底座改动必须单独 PR                                                                                               |
+| `.env / .env.development / .env.production / .env.staging`                                                                                               | ❌ AI 不得直接改                                    | 由人类改；AI 也不得在源码中硬编码 `VITE_*` 默认值绕过                                                                     |
+| `docs/pure-admin-max-ts-baseline.md` 与 `docs/pure-admin/**`                                                                                             | ✅ 由人类批准后更新                                 | 必须保留章节结构                                                                                                          |
 
 ### 13.2 底座 / 工程文件改动规则
 
@@ -119,16 +119,16 @@
 
 AI 接到任意前端任务后，**第一件事**是按下面 8 步走，并在 PR / 对话中显式列出每步的结论。跳步等同违反硬规则。
 
-| Step | 动作 | 输出 |
-| --- | --- | --- |
+| Step  | 动作                                                                                                   | 输出                                                                                                            |
+| ----- | ------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------- |
 | **1** | 读主入口 §0 / §0.5、本文件 §13、`09-pr-roadmap.md`、§16 阅读清单（本文件下方），确认本任务不踩任何红线 | 列出"本任务涉及的红线编号 + 风险等级"；并明确写：本任务是否涉及后端字段 / 表 / API 路径定义？若涉及，逐项列出。 |
-| **2** | 用关键词在 `vue-pure-admin/src/views/` 全文搜索相似范式 | 给出参考路径清单（即使没找到也要写"未找到，原因是 X"） |
-| **3** | 在本仓库 `src/views/` 中找最相似的现有范式（dict/tenant/list/schedule/permission/login） | 给出参考路径 + 复用范式说明 |
-| **4** | 列出涉及的文件改动清单，每条标注 §13.1 矩阵中的 ✅ / ⚠️ / ❌ | 若含 ❌ → 触发 §13.2.2 单独 PR 流程；含 ⚠️ → 写风险评估 |
-| **5** | 列出复用的 `Re*` 组件、`@pureadmin/table`、`ReDialog` 等；列出**不**新增的依赖 | 若需要新依赖 → 暂停等人类批准（§13.2.1） |
-| **6** | 列出新增 `src/api/<模块>.ts` 的接口与类型，逐条对照 NestJS Swagger（缺则写"待后端确认"） | 显式说明 mock 边界（裁决 4） |
-| **7** | 执行 `pnpm lint && pnpm typecheck`，零错误零警告 | 贴执行结果 |
-| **8** | 执行 `pnpm build` 验证产物；若涉及路由 / 菜单 / 权限，跑一遍 `pnpm dev` 自查 | 贴构建结果 + 自查描述 |
+| **2** | 用关键词在 `vue-pure-admin/src/views/` 全文搜索相似范式                                                | 给出参考路径清单（即使没找到也要写"未找到，原因是 X"）                                                          |
+| **3** | 在本仓库 `src/views/` 中找最相似的现有范式（dict/tenant/list/schedule/permission/login）               | 给出参考路径 + 复用范式说明                                                                                     |
+| **4** | 列出涉及的文件改动清单，每条标注 §13.1 矩阵中的 ✅ / ⚠️ / ❌                                           | 若含 ❌ → 触发 §13.2.2 单独 PR 流程；含 ⚠️ → 写风险评估                                                         |
+| **5** | 列出复用的 `Re*` 组件、`@pureadmin/table`、`ReDialog` 等；列出**不**新增的依赖                         | 若需要新依赖 → 暂停等人类批准（§13.2.1）                                                                        |
+| **6** | 列出新增 `src/api/<模块>.ts` 的接口与类型，逐条对照 NestJS Swagger（缺则写"待后端确认"）               | 显式说明 mock 边界（裁决 4）                                                                                    |
+| **7** | 执行 `pnpm lint && pnpm typecheck`，零错误零警告                                                       | 贴执行结果                                                                                                      |
+| **8** | 执行 `pnpm build` 验证产物；若涉及路由 / 菜单 / 权限，跑一遍 `pnpm dev` 自查                           | 贴构建结果 + 自查描述                                                                                           |
 
 如果任务很小（如只改一个文案、一个图标），可在 PR 描述里一句话说明"Step 1~6 评估结论：无风险"，但 Step 7~8 仍必须执行。
 
@@ -149,15 +149,15 @@ AI 接到任意前端任务后，**第一件事**是按下面 8 步走，并在 
 
 ### 🟡 相关任务必读（按任务类型选取）
 
-| 任务类型 | 必读 |
-| --- | --- |
-| **改路由 / 菜单** | `03-router-menu.md`、`src/router/index.ts`、`src/router/utils.ts`、`src/router/modules/home.ts / remaining.ts / error.ts`（第一阶段**不读** `asyncRoutes.ts`，禁改） |
+| 任务类型                       | 必读                                                                                                                                                                                                                                                                     |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **改路由 / 菜单**              | `03-router-menu.md`、`src/router/index.ts`、`src/router/utils.ts`、`src/router/modules/home.ts / remaining.ts / error.ts`（第一阶段**不读** `asyncRoutes.ts`，禁改）                                                                                                     |
 | **改登录 / Token / 接 NestJS** | `04-auth-permission.md`、`05-http-api.md`、`08-starter-derivation.md`、`src/views/login/index.vue`、`src/api/user.ts`、`src/utils/auth.ts`、`src/utils/http/index.ts`、`src/utils/http/types.d.ts`、`src/store/modules/user.ts`、`mock/login.ts`、`mock/refreshToken.ts` |
-| **改权限 / 按钮显隐** | `04-auth-permission.md`、`src/store/modules/permission.ts`、`src/components/ReAuth/src/auth.tsx`、`src/components/RePerms/src/perms.tsx`、`src/directives/auth/index.ts`、`src/directives/perms/index.ts`、`src/utils/auth.ts:hasPerms` |
-| **新增业务列表 / 表单页** | `07-max-ts-modules.md` §9 范式表、`src/views/tenant/list/index.vue` + `utils/hook.tsx`、`src/views/dict/index.vue` + `utils/hook.tsx`、`src/components/ReDialog/index.vue`、`src/components/RePureTableBar/src/bar.tsx` |
-| **改 layout / 主题** | 谨慎触碰；先读 `01-project-map.md` §3.7 + 本文件 §13.1 矩阵 ❌ 行；如确需修改，先输出 §13.2.2 单独 PR 评估 |
-| **改 vite / 构建** | 同上，禁止 AI 自行动手；走 §13.2.1 + §13.2.2 流程 |
-| **同步上游** | `11-upstream-sync.md` 必读全文 |
+| **改权限 / 按钮显隐**          | `04-auth-permission.md`、`src/store/modules/permission.ts`、`src/components/ReAuth/src/auth.tsx`、`src/components/RePerms/src/perms.tsx`、`src/directives/auth/index.ts`、`src/directives/perms/index.ts`、`src/utils/auth.ts:hasPerms`                                  |
+| **新增业务列表 / 表单页**      | `07-max-ts-modules.md` §9 范式表、`src/views/tenant/list/index.vue` + `utils/hook.tsx`、`src/views/dict/index.vue` + `utils/hook.tsx`、`src/components/ReDialog/index.vue`、`src/components/RePureTableBar/src/bar.tsx`                                                  |
+| **改 layout / 主题**           | 谨慎触碰；先读 `01-project-map.md` §3.7 + 本文件 §13.1 矩阵 ❌ 行；如确需修改，先输出 §13.2.2 单独 PR 评估                                                                                                                                                               |
+| **改 vite / 构建**             | 同上，禁止 AI 自行动手；走 §13.2.1 + §13.2.2 流程                                                                                                                                                                                                                        |
+| **同步上游**                   | `11-upstream-sync.md` 必读全文                                                                                                                                                                                                                                           |
 
 ### 🟢 必要时参考（视情况查阅）
 
