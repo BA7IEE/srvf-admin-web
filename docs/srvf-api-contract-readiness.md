@@ -2,13 +2,21 @@
 
 ## 1. Current Decision
 
-PR-4 NestJS login integration is paused.
+> **UPDATE 2026-06-22 — PR-4 UNBLOCKED.** The §6 readiness checklist was frozen against backend
+> `srvf-nest-api v0.10.0`; the backend has since advanced to **v0.29.0** and now provides everything
+> the checklist was waiting for (refresh-token, stable RBAC permission API, stable login response).
+> All 10 checklist items are confirmed below (§6), and the maintainer explicitly approved restarting
+> PR-4 on 2026-06-22. See **[`srvf-api-integration-guide.md`](./srvf-api-integration-guide.md)** for the
+> verified contract + the concrete wiring spec (notably: login becomes a **3-call** flow because the
+> backend separates token / identity / permissions). The original pause record below is kept as history.
+
+PR-4 NestJS login integration was paused (now unblocked — see UPDATE above).
 
 The previous login integration attempt was preserved in:
 
 - `archive/pr-4-login-attempt-b81afec`
 
-The main branch reverted the PR-4 implementation because the backend API contract is not stable enough.
+The main branch reverted the PR-4 implementation because the backend API contract was not stable enough **at v0.10.0** (it is now stable at v0.29.0).
 
 ## 2. Kept
 
@@ -69,16 +77,18 @@ All backend-dependent fields, states, permissions, workflows, and enums must be 
 
 PR-4 may restart only after humans confirm:
 
-- [ ] backend decides whether refresh-token will exist;
-- [ ] if no refresh-token, frontend logout-on-expiry strategy is confirmed;
-- [ ] RBAC v2 permission API is confirmed as frontend permission source or explicitly postponed;
-- [ ] `/api/users/me` is confirmed as the only post-login user info source;
-- [ ] login response structure is stable;
-- [ ] `expiresIn` format is stable;
-- [ ] 401 / 429 / 10004 frontend behavior is confirmed;
-- [ ] Swagger/OpenAPI reflects the current auth contract;
-- [ ] at least one test account exists for frontend login verification;
-- [ ] humans explicitly approve restarting PR-4.
+> **All confirmed 2026-06-22 against backend `v0.29.0`** (details + wiring spec in [`srvf-api-integration-guide.md`](./srvf-api-integration-guide.md)).
+
+- [x] backend decides whether refresh-token will exist — **YES**, `POST /api/auth/v1/refresh` (rotation always + family revoke + absolute expiry).
+- [x] if no refresh-token, frontend logout-on-expiry strategy — N/A (refresh-token exists).
+- [x] RBAC v2 permission API is confirmed as frontend permission source — **YES**, `GET /api/system/v1/rbac/me/permissions` → `{permissions: string[], roles: [{code,displayName}]}` (155 codes, dot-format; SUPER_ADMIN = full set).
+- [x] post-login user info source — **`GET /api/admin/v1/me`** (Route B removed legacy `/api/users/me`).
+- [x] login response structure is stable — `LoginResponseDto` frozen 5 fields since P0-E (`accessToken, tokenType, expiresIn, refreshToken, refreshExpiresAt`).
+- [x] `expiresIn` format is stable — stable, but it is the JWT duration **string `"15m"`**, not a timestamp (frontend computes `expires = now + parse(expiresIn)`; see guide §4 gotcha B).
+- [x] 401 / 429 / 10004 frontend behavior — confirmed (guide §3): 10004=login fail (401, no auto-refresh), 40100=unauthorized (401, refresh→retry), 10007=refresh invalid (401, re-login), 30100=RBAC (403), 429=throttle (no Retry-After). Biz failures arrive as HTTP 4xx (axios reject) — read `err.response.data.{code,message}`.
+- [x] Swagger/OpenAPI reflects current auth contract — `/api/docs-json` 100% + contract-snapshot locked.
+- [x] at least one test account exists — seed default SUPER*ADMIN; dev default `admin` / `ChangeMe123456` (disabled in production; set `SUPER_ADMIN*\*` env).
+- [x] humans explicitly approve restarting PR-4 — **approved 2026-06-22**.
 
 ## 7. Decision Record
 
