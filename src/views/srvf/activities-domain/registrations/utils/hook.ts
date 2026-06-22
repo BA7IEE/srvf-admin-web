@@ -36,7 +36,11 @@ const STATUS_TAG_TYPE: Record<
   cancelled: "info"
 };
 
-export function useRegistrations() {
+/**
+ * @param externalActivityId 外部注入的活动 id（作战室 tab 用，来自路由参数）。
+ *   传入 → 固定该活动、不渲染/不加载页内活动下拉；不传 → 维持独立菜单页现状（页内下拉自选活动）。
+ */
+export function useRegistrations(externalActivityId?: string) {
   /** 读权限（后端真实 RBAC 码）；无权限不请求、不渲染 */
   const canRead = hasPerms("activity-registration.read.record");
   /**
@@ -55,8 +59,14 @@ export function useRegistrations() {
   dict.ensureTypes(["registration_status"]);
   const dataList = ref<RegistrationItem[]>([]);
   const loading = ref(false);
-  /** 报名隶属活动：先选活动，再查其报名 */
-  const activityId = ref<string>("");
+  /**
+   * 报名隶属活动 id。
+   * - 独立菜单页：留空，由页内活动下拉选定（现状）。
+   * - 作战室 tab：由外部（路由参数）注入并固定，不渲染/不加载活动下拉。
+   */
+  const activityId = ref<string>(externalActivityId ?? "");
+  /** 是否由外部注入活动（作战室嵌入）：true 时跳过页内活动下拉加载 */
+  const isExternalActivity = !!externalActivityId;
   const activityOptions = ref<Array<{ label: string; value: string }>>([]);
   const activityLoading = ref(false);
   /** 代报名队员下拉（懒加载;空数组 = 表单退化为文本输入 id） */
@@ -126,9 +136,9 @@ export function useRegistrations() {
     };
   }
 
-  /** 活动下拉（数据源 getActivities；首页 50 条 + filterable 检索） */
+  /** 活动下拉（数据源 getActivities；首页 50 条 + filterable 检索）。外部注入活动时无需下拉，直接跳过。 */
   async function loadActivities() {
-    if (!canRead) return;
+    if (isExternalActivity || !canRead) return;
     activityLoading.value = true;
     try {
       const { code, data } = await getActivities({ page: 1, pageSize: 50 });
@@ -379,6 +389,7 @@ export function useRegistrations() {
     columns,
     dataList,
     activityId,
+    isExternalActivity,
     activityOptions,
     activityLoading,
     pagination,

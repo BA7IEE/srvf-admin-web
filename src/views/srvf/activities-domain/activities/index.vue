@@ -25,6 +25,7 @@ const {
   statusMeta,
   onSearch,
   openDialog,
+  openCockpit,
   handleDelete,
   handlePublish,
   handleCancel,
@@ -81,6 +82,15 @@ onMounted(() => {
             </el-tag>
           </template>
           <template #operation="{ row }">
+            <el-button
+              class="reset-margin"
+              link
+              type="primary"
+              :size="size"
+              @click="openCockpit(row)"
+            >
+              管理
+            </el-button>
             <el-button
               v-if="canUpdate"
               class="reset-margin"

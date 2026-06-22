@@ -1,4 +1,5 @@
 import { h, ref, reactive } from "vue";
+import { useRouter } from "vue-router";
 import dayjs from "dayjs";
 import type { PaginationProps } from "@pureadmin/table";
 import { ElMessageBox } from "element-plus";
@@ -39,6 +40,7 @@ const STATUS_TAG_TYPE: Record<
 };
 
 export function useActivities() {
+  const router = useRouter();
   /** 共享字典标签解析器：活动类型 / 活动状态 code → 中文 */
   const dict = useSrvfDictStoreHook();
   dict.ensureTypes(["activity_type", "activity_status"]);
@@ -55,7 +57,8 @@ export function useActivities() {
   const canDelete = hasPerms("activity.delete.record");
   const canPublish = hasPerms("activity.publish.record");
   const canCancel = hasPerms("activity.cancel.record");
-  const hasAnyRowAction = canUpdate || canPublish || canCancel || canDelete;
+  // 「管理」(进作战室)对任何可见此列表的登录用户开放（作战室 [auth]-only,内部 tab 各自按码门）,
+  // 故操作列恒显;写操作仍按各自 RBAC 码做按钮级显隐。
 
   /** 下拉选项（懒加载；空数组 = 表单退化为文本输入） */
   const activityTypeOptions = ref<ActivityOption[]>([]);
@@ -94,16 +97,12 @@ export function useActivities() {
       minWidth: 100,
       slot: "isPublicRegistration"
     },
-    ...(hasAnyRowAction
-      ? [
-          {
-            label: "操作",
-            fixed: "right" as const,
-            width: 260,
-            slot: "operation"
-          }
-        ]
-      : [])
+    {
+      label: "操作",
+      fixed: "right" as const,
+      width: 300,
+      slot: "operation"
+    }
   ];
 
   /** 状态 code → 展示元数据：文案查 activity_status 字典，颜色按 code 给展示色（未知 → 原 code + info 灰） */
@@ -377,6 +376,11 @@ export function useActivities() {
       .catch(() => {});
   }
 
+  /** 进入活动作战室（实体详情页）：行内「管理」入口，router.push 带 activity id（非侧栏菜单） */
+  function openCockpit(row: ActivityItem) {
+    router.push(`/srvf/activities-domain/activities/${row.id}`);
+  }
+
   return {
     canCreate,
     canUpdate,
@@ -390,6 +394,7 @@ export function useActivities() {
     statusMeta,
     onSearch,
     openDialog,
+    openCockpit,
     handleDelete,
     handlePublish,
     handleCancel,

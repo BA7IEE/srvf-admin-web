@@ -51,6 +51,40 @@ export const getActivities = (params?: ActivityListQuery) =>
     params
   });
 
+/**
+ * 活动详情（后端 `ActivityResponseDto`，列表项的超集）。字段以 `/api/docs-json` 为准，勿前端臆造。
+ * 在列表项基础上多出：报名补充说明 + 发布/取消审计字段 + 报名表/相册/正文 Json（本轮头部仅用基础字段）。
+ */
+export type ActivityDetail = ActivityItem & {
+  /** 报名补充说明（可空；≤ 500） */
+  registrationNotes: string | null;
+  /** 发布人 User.id（发布前为 null） */
+  publishedBy: string | null;
+  /** 发布时间（发布前为 null） */
+  publishedAt: string | null;
+  /** 取消人 User.id（取消前为 null） */
+  cancelledBy: string | null;
+  /** 取消时间（取消前为 null） */
+  cancelledAt: string | null;
+  /** 取消原因（取消前为 null） */
+  cancelReason: string | null;
+  /** 报名表自定义字段 schema（Json；后端不做嵌套校验） */
+  registrationSchema: Record<string, unknown> | null;
+  /** 相册图片 URL 数组（Json） */
+  galleryImageUrls: string[] | null;
+  /** 正文内容（Json；前端约定结构，后端不解析） */
+  content: Record<string, unknown> | null;
+};
+export type ActivityDetailResult = Envelope<ActivityDetail>;
+
+/**
+ * 活动详情 `GET /api/admin/v1/activities/{id}`。
+ * 与列表同为 **`[auth]`-only（仅需登录，无 RBAC 读码）**;可见性由后端按角色强制
+ * （Q-A7：USER 仅可见 published/completed，其余 → 404）。前端不另设 hasPerms 码门。
+ */
+export const getActivity = (id: string) =>
+  http.request<ActivityDetailResult>("get", `/api/admin/v1/activities/${id}`);
+
 /* ----------------------------- 活动 写操作 ----------------------------- */
 
 /**
