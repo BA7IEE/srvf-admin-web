@@ -13,23 +13,20 @@
 
 ## 2. ⚠️ Current Critical Status
 
-### PR-4 NestJS login integration is **PAUSED**
+### PR-4 NestJS login integration is **LIVE** (上线 2026-06-22)
 
-- **Do not restart PR-4** until both of the following are confirmed:
-  1. `docs/srvf-api-contract-readiness.md` §6 Readiness Checklist is **fully confirmed** (all 10 items checked off);
-  2. Humans **explicitly approve** restarting PR-4.
+- PR-4 was restarted after `docs/srvf-api-contract-readiness.md` §6 Readiness Checklist was fully confirmed (10/10) and humans explicitly approved (2026-06-22), then shipped to `main` via PR #6.
+- Real login is the **3-call** flow: `POST /api/auth/v1/login` → `GET /api/admin/v1/me` + `GET /api/system/v1/rbac/me/permissions`. Verified live (SUPER_ADMIN · 155 permissions).
+- The auth files are now **active code** (see §4) — change them only through a separate human-reviewed PR (§13.2.2).
 
-### Where the previous PR-4 attempt is
+### Where the original PR-4 attempt is (historical)
 
-- Branch: **`archive/pr-4-login-attempt-b81afec`** (preserved locally + on remote `origin`)
-- Commit: `b81afec feat: integrate srvf nestjs login`
-- Status: code-complete attempt that was reverted from `main` because backend contract is not stable enough (refresh-token / RBAC / 401-429 UX / Swagger).
-- The revert commit on `main` is `6f046cc Revert "feat: integrate srvf nestjs login"`.
+- Branch: **`archive/pr-4-login-attempt-b81afec`** (preserved locally + on `origin`) — the _first_ attempt (commit `b81afec`), reverted at the time and later **superseded** by the shipped PR #6. Kept for history only.
 
-### What is NOT paused
+### Infrastructure
 
-- ✅ Vite proxy is configured: `/api → http://localhost:3000` (`vite.config.ts`).
-- ✅ Static UI work is allowed (see §5 below).
+- ✅ Vite proxy: `/api → http://localhost:3000` (`vite.config.ts`).
+- ✅ Data-driven SRVF pages are allowed (see §5).
 
 ## 3. Must Read First
 
@@ -38,7 +35,7 @@ Every AI task in this repository must read these documents first, in order:
 1. `docs/pure-admin-max-ts-baseline.md` (main entry inherited from starter · v0.3)
 2. `docs/pure-admin/02-ai-rules.md` (AI hard rules · §13.1 file matrix · §13.4 8-step checklist)
 3. **`docs/srvf-frontend-derivation.md`** (SRVF-specific derivation record · §1 starter base commit · §4 backend Q1~Q5 conclusions · §6 PR order table)
-4. **`docs/srvf-api-contract-readiness.md`** (PR-4 pause authoritative decree · §3 why paused · §4 blocked work · §5 allowed work · §6 readiness checklist)
+4. **`docs/srvf-api-contract-readiness.md`** (PR-4 readiness + decision record · §6 checklist 10/10 · §3–§5 historical pause context)
 5. `docs/pure-admin/12-official-docs-index.md` (Pure Admin official docs index with verified URLs)
 6. `docs/pure-admin/13-ai-harness.md` (AI harness · `.claude/` deny+ask rules and guard/verify hooks that mechanically enforce §13.1 / §13.3 · how a human grants an exception by editing `settings.json` — `deny` always beats `allow`)
 
@@ -50,13 +47,7 @@ For route / menu work also read:
 
 These apply to ALL AI tasks in this repository, no exceptions:
 
-- ⛔ **Do not restart PR-4** (see §2 above).
-- ⛔ **Do not modify login / token / user store / http auth handling**:
-  - `src/api/user.ts`
-  - `src/utils/auth.ts`
-  - `src/utils/http/index.ts`
-  - `src/store/modules/user.ts`
-  - `src/views/login/index.vue`
+- ✅ **PR-4 is shipped** (§2); it is no longer paused. The auth files (`src/api/user.ts`, `src/utils/auth.ts`, `src/utils/http/index.ts`, `src/store/modules/user.ts`, `src/views/login/index.vue`) are now **active code** — change them only via a separate human-reviewed PR (§13.2.2), never casually inside unrelated work.
 - ⛔ **Do not enable `asyncRoutes`** (`src/router/asyncRoutes.ts` · do not switch `src/views/login/index.vue` import).
 - ⛔ **Do not add or implement `getMenuList`** (intentionally absent · not a bug).
 - ⛔ **Do not treat mock as backend contract** (mock URLs, fields, role names like `admin / common / *:*:*` are demo-only).
@@ -69,19 +60,17 @@ These apply to ALL AI tasks in this repository, no exceptions:
 - ⛔ Do not hardcode `import.meta.env.VITE_*` fallbacks in source code.
 - ⛔ Do not flow business-specific changes back into starter (see `docs/pure-admin/11-upstream-sync.md` §11-2.4).
 
-## 5. Allowed Current Work
+## 5. Allowed Work
 
-Before API contract readiness, ONLY these are allowed (see `docs/srvf-api-contract-readiness.md` §5):
+API contract readiness is met (§2 · readiness §6 = 10/10) and PR-4 is shipped, so **real data-driven pages are now allowed**:
 
-- ✅ **PR-5 static menu skeleton** (new `src/router/modules/srvf-*.ts` + `src/views/srvf-*/` placeholder pages).
-- ✅ Placeholder pages (layout-only, no API calls).
-- ✅ Layout-only UI work.
-- ✅ Documentation updates (under `docs/`).
-- ✅ **PR-7** organization UI placeholder (per 裁决 8 · do not define backend org model).
-- ✅ **PR-8** activity calendar UI placeholder (per 裁决 7 · do not define backend Activity / Event / Attendance schema).
-- ✅ `pnpm dev / build / lint / typecheck / preview` (read-only commands).
+- ✅ **Real SRVF list / detail pages** wired to `/api/admin/v1/*` · `/api/system/v1/*` through `@/utils/http` (dev proxy `/api → :3000`), gated by **real RBAC codes** via `hasPerms("<code>")`. Reuse the `Re*` components + the 队员页 three-piece paradigm (`src/views/srvf/members-domain/members/` `index.vue` + `utils/hook.ts` + `src/api/srvf-member.ts`).
+- ✅ Static menu skeleton (`src/router/modules/srvf-*.ts`) and placeholder pages where the contract isn't ready yet.
+- ✅ Layout-only UI work and documentation updates (under `docs/`).
+- ✅ Organization / activity-domain UIs.
+- ✅ `pnpm dev / build / lint / typecheck / preview`.
 
-All backend-dependent **fields, flows, permissions, and states must be marked `placeholder`**. If you find yourself needing to "decide" a backend-side concern, STOP — that is the backend's job.
+Types come from live **`/api/docs-json`** (the single contract source). You still must **NOT** invent backend fields / enums / states / RBAC codes frontend-side (red lines 1–4); where the contract isn't ready, mark `placeholder` and STOP rather than "decide" a backend-side concern.
 
 ## 6. Before Modifying Files
 
@@ -91,7 +80,7 @@ Every AI task must state these BEFORE making any edit (see `02-ai-rules.md` §13
 - **documents read** (must include items from §3 above);
 - **allowed files** to modify (only files marked ✅ in `02-ai-rules.md` §13.1 file matrix);
 - **forbidden files** that this task could accidentally touch (must be empty diff at the end);
-- **PR-4 boundary**: does this task touch login / token / `/api/auth/login` / `/api/users/me` / refresh / role mapping? If yes → STOP, that is PR-4 territory and PR-4 is paused.
+- **PR-4 boundary**: does this task touch the auth mainline (login / token / `/api/auth/v1/login` / `/api/admin/v1/me` / refresh / role mapping)? If yes → that is PR-4 _maintenance_ — do it in a separate human-reviewed PR (§13.2.2), not inside unrelated work.
 - **backend impact**: does this task derive / define / require backend fields / tables / API paths? If yes → STOP, that violates red lines 1~4.
 - **whether dependencies are touched**; if yes → STOP, this is not allowed.
 - **rollback plan** (which commit / branch is the safe fallback).
@@ -121,7 +110,7 @@ When in doubt about a starter-level concern: go look at the starter repo (`/User
 - starter → srvf 同步：`git remote add starter ...` + `git fetch starter` + `git cherry-pick <sha>`（never merge）
 - srvf → starter 反向流：**禁止**（极少数无业务语义的修复才候选，见 `11-upstream-sync.md` §11-2.4）
 
-When in doubt: read `docs/srvf-api-contract-readiness.md` first — it is the single source of truth for "what is paused, what is allowed".
+When in doubt: read `docs/srvf-api-contract-readiness.md` first — it is the single source of truth for the PR-4 decision record and what is allowed.
 
 ## 9. Full Version Reference Rule
 
