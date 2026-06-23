@@ -3,6 +3,7 @@ import { onMounted } from "vue";
 import { PureTableBar } from "@/components/RePureTableBar";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
 import { useContents } from "./utils/hook";
+import ContentMedia from "./content-media.vue";
 
 import AddFill from "~icons/ri/add-circle-line";
 import Search from "~icons/ri/search-line";
@@ -25,11 +26,14 @@ const {
   dataList,
   pagination,
   statusMeta,
+  mediaVisible,
+  mediaContentId,
   onSearch,
   onFilterChange,
   openDialog,
   runStateAction,
   handleDelete,
+  openMedia,
   handleSizeChange,
   handleCurrentChange
 } = useContents();
@@ -113,6 +117,16 @@ onMounted(() => {
                 编辑
               </el-button>
               <el-button
+                v-if="canUpdate"
+                class="reset-margin"
+                link
+                type="primary"
+                :size="size"
+                @click="openMedia(row)"
+              >
+                封面/附件
+              </el-button>
+              <el-button
                 v-if="canPublish && row.statusCode === 'draft'"
                 class="reset-margin"
                 link
@@ -161,6 +175,9 @@ onMounted(() => {
       v-else
       description="您没有查看内容的权限（content.read.record）"
     />
+
+    <!-- 封面与附件管理 drawer（封面 + 附件上传/设封面/删；signed-URL 三步） -->
+    <ContentMedia v-model:visible="mediaVisible" :content-id="mediaContentId" />
   </div>
 </template>
 

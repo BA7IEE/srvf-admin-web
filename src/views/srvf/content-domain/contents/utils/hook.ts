@@ -42,6 +42,9 @@ export function useContents() {
   const statusFilter = ref<string>("");
   const keyword = ref<string>("");
   const formRef = ref();
+  /** 封面/附件管理 drawer（仅对已存在内容开放） */
+  const mediaVisible = ref(false);
+  const mediaContentId = ref<string>("");
   const pagination = reactive<PaginationProps>({
     total: 0,
     pageSize: 10,
@@ -346,6 +349,12 @@ export function useContents() {
       .catch(() => {});
   }
 
+  /** 打开某内容的封面/附件管理 drawer */
+  function openMedia(row: ContentListItem) {
+    mediaContentId.value = row.id;
+    mediaVisible.value = true;
+  }
+
   return {
     canRead,
     canCreate,
@@ -360,11 +369,14 @@ export function useContents() {
     dataList,
     pagination,
     statusMeta,
+    mediaVisible,
+    mediaContentId,
     onSearch,
     onFilterChange,
     openDialog,
     runStateAction,
     handleDelete,
+    openMedia,
     handleSizeChange,
     handleCurrentChange
   };

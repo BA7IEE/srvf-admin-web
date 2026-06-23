@@ -8,12 +8,14 @@ type PageResult<T> = {
   pageSize: number;
 };
 
-/** 内容附件（后端 `ContentAttachmentDto`；MVP 只读展示,上传走 signed-URL 链路后续接线）。 */
+/** 内容附件（后端 `ContentAttachmentDto`；详情内展示）。url = 过可见级的签名 URL（可空）。 */
 export type ContentAttachment = {
   id: string;
-  kind?: string;
-  url?: string | null;
-  fileName?: string | null;
+  kind: string;
+  mime: string;
+  originalName: string;
+  size: number;
+  url: string | null;
 };
 
 /** 内容列表项（后端 `ContentAdminListItemDto`）。字段以 `/api/docs-json` 为准。 */
@@ -156,3 +158,99 @@ export const VISIBILITY_OPTIONS: { value: ContentVisibility; label: string }[] =
     { value: "department", label: "指定部门可见" },
     { value: "management", label: "管理层可见" }
   ];
+
+/* ===================== 封面/附件上传(signed-URL 三步;需存储 provider 就绪) ===================== */
+
+export type ContentUploadUrlBody = {
+  kind: "image" | "file";
+  originalName: string;
+  mime: string;
+  sizeBytes: number;
+};
+export type ContentUploadUrl = {
+  key: string;
+  uploadUrl: string;
+  uploadHeaders: Record<string, string>;
+  uploadMethod: "PUT" | "POST";
+  expiresAt: string;
+  uploadToken: string;
+};
+/** 附件完整响应（后端 `AttachmentResponseDto`）。 */
+export type ContentAttachmentFull = {
+  id: string;
+  key: string;
+  originalName: string;
+  mime: string;
+  size: number;
+  ownerType: string;
+  ownerId: string;
+  accessUrl: string | null;
+};
+
+/** 取附件上传 URL `POST .../contents/{id}/attachments/upload-url`（rbac: `attachment.upload.*`）。 */
+export const getContentUploadUrl = (id: string, body: ContentUploadUrlBody) =>
+  http.request<Envelope<ContentUploadUrl>>(
+    "post",
+    `/api/admin/v1/contents/${id}/attachments/upload-url`,
+    { data: body }
+  );
+
+/** 确认附件上传 `POST .../contents/{id}/attachments/confirm`（`[auth]` + token）。 */
+export const confirmContentUpload = (
+  id: string,
+  body: { uploadToken: string; etag?: string; checksum?: string }
+) =>
+  http.request<Envelope<ContentAttachmentFull>>(
+    "post",
+    `/api/admin/v1/contents/${id}/attachments/confirm`,
+    { data: body }
+  );
+
+/** 删内容附件 `DELETE .../contents/{id}/attachments/{attachmentId}`（rbac: `attachment.delete.*`）。 */
+export const deleteContentAttachment = (id: string, attachmentId: string) =>
+  http.request<Envelope<unknown>>(
+    "delete",
+    `/api/admin/v1/contents/${id}/attachments/${attachmentId}`
+  );
+
+/** 设/清封面 `PUT .../contents/{id}/cover`（rbac: `content.update.record`；attachmentId=本文章 content-image 附件）。 */
+export const setContentCover = (id: string, attachmentId: string) =>
+  http.request<ContentDetailResult>(
+    "put",
+    `/api/admin/v1/contents/${id}/cover`,
+    { data: { attachmentId } }
+  );
+
+/**
+ * 附件上传编排(三步:upload-url → 直传存储 → confirm)。
+ * 存储直传用原生 `fetch`(presigned URL,不带 auth 头,故不走 @/utils/http)。
+ * 注:依赖存储 provider(LOCAL/COS)就绪 + 直传端 CORS;需联机验证。
+ */
+export async function uploadContentAttachment(
+  contentId: string,
+  file: File
+): Promise<ContentAttachmentFull> {
+  const kind: "image" | "file" = file.type.startsWith("image/")
+    ? "image"
+    : "file";
+  const { code, data } = await getContentUploadUrl(contentId, {
+    kind,
+    originalName: file.name,
+    mime: file.type || "application/octet-stream",
+    sizeBytes: file.size
+  });
+  if (code !== 0) throw new Error("获取上传地址失败");
+  const res = await fetch(data.uploadUrl, {
+    method: data.uploadMethod,
+    headers: data.uploadHeaders,
+    body: file
+  });
+  if (!res.ok) throw new Error(`直传存储失败(${res.status})`);
+  const etag = res.headers.get("etag") ?? undefined;
+  const confirmed = await confirmContentUpload(contentId, {
+    uploadToken: data.uploadToken,
+    ...(etag ? { etag } : {})
+  });
+  if (confirmed.code !== 0) throw new Error("确认上传失败");
+  return confirmed.data;
+}
