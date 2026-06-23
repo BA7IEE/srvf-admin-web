@@ -59,6 +59,16 @@ export default [
         }
       },
       {
+        path: "/srvf/members-domain/team-insurance",
+        name: "SrvfTeamInsurancePolicies",
+        component: () =>
+          import("@/views/srvf/members-domain/team-insurance/index.vue"),
+        meta: {
+          icon: "ri/shield-check-line",
+          title: "队保单"
+        }
+      },
+      {
         // 队员作战室（实体详情页）：由队员列表行「管理」router.push 进入，非侧栏菜单项。
         // showLink:false 不进侧栏；activePath 指回队员列表，停留时「队员列表」菜单保持高亮。
         path: "/srvf/members-domain/members/:id",
