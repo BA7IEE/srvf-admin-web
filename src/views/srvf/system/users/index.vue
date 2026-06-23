@@ -9,12 +9,22 @@ defineOptions({
 
 const {
   canRead,
+  canUpdateStatus,
+  canUpdateRole,
+  canClearPhone,
+  canClearWechat,
+  canDelete,
   loading,
   columns,
   dataList,
   pagination,
   roleMeta,
   onSearch,
+  handleToggleStatus,
+  openRoleDialog,
+  handleClearPhone,
+  handleClearWechat,
+  handleDelete,
   handleSizeChange,
   handleCurrentChange
 } = useUserAccounts();
@@ -61,6 +71,58 @@ onMounted(() => {
             <el-tag :type="row.status === 'ACTIVE' ? 'success' : 'danger'">
               {{ row.status === "ACTIVE" ? "正常" : "禁用" }}
             </el-tag>
+          </template>
+          <template #operation="{ row }">
+            <el-button
+              v-if="canUpdateStatus"
+              class="reset-margin"
+              link
+              :type="row.status === 'ACTIVE' ? 'warning' : 'success'"
+              :size="size"
+              @click="handleToggleStatus(row)"
+            >
+              {{ row.status === "ACTIVE" ? "禁用" : "启用" }}
+            </el-button>
+            <el-button
+              v-if="canUpdateRole"
+              class="reset-margin"
+              link
+              type="primary"
+              :size="size"
+              @click="openRoleDialog(row)"
+            >
+              改角色
+            </el-button>
+            <el-button
+              v-if="canClearPhone"
+              class="reset-margin"
+              link
+              type="primary"
+              :size="size"
+              @click="handleClearPhone(row)"
+            >
+              清手机
+            </el-button>
+            <el-button
+              v-if="canClearWechat"
+              class="reset-margin"
+              link
+              type="primary"
+              :size="size"
+              @click="handleClearWechat(row)"
+            >
+              清微信
+            </el-button>
+            <el-button
+              v-if="canDelete"
+              class="reset-margin"
+              link
+              type="danger"
+              :size="size"
+              @click="handleDelete(row)"
+            >
+              删除
+            </el-button>
           </template>
         </pure-table>
       </template>

@@ -31,3 +31,37 @@ export type UserAccountListResult = Envelope<PageResult<UserAccountItem>>;
 /** 用户账号分页列表 `GET /api/admin/v1/users`（rbac: `user.read.account`） */
 export const getUserAccounts = (params?: UserAccountListQuery) =>
   http.request<UserAccountListResult>("get", "/api/admin/v1/users", { params });
+
+/* ----------------------------- 用户生命周期写操作 ----------------------------- */
+
+export type UpdateUserStatusBody = { status: AccountStatus };
+export type UpdateUserRoleBody = { role: AccountRole };
+export type UserAccountMutationResult = Envelope<UserAccountItem>;
+
+/** 启用/禁用用户 `PATCH /api/admin/v1/users/{id}/status`（rbac: `user.update.status`；只改 status） */
+export const updateUserStatus = (id: string, body: UpdateUserStatusBody) =>
+  http.request<UserAccountMutationResult>(
+    "patch",
+    `/api/admin/v1/users/${id}/status`,
+    { data: body }
+  );
+
+/** 修改用户角色 `PATCH /api/admin/v1/users/{id}/role`（rbac: `user.update.role`；D1=A 仅 SUPER_ADMIN 短路可用） */
+export const updateUserRole = (id: string, body: UpdateUserRoleBody) =>
+  http.request<UserAccountMutationResult>(
+    "patch",
+    `/api/admin/v1/users/${id}/role`,
+    { data: body }
+  );
+
+/** 清除用户绑定手机号 `DELETE /api/admin/v1/users/{id}/phone`（rbac: `user.phone.clear`；幂等,审计掩码） */
+export const clearUserPhone = (id: string) =>
+  http.request<Envelope<null>>("delete", `/api/admin/v1/users/${id}/phone`);
+
+/** 清除用户绑定微信 openid `DELETE /api/admin/v1/users/{id}/wechat`（rbac: `user.wechat.clear`；幂等,审计掩码） */
+export const clearUserWechat = (id: string) =>
+  http.request<Envelope<null>>("delete", `/api/admin/v1/users/${id}/wechat`);
+
+/** 软删除用户 `DELETE /api/admin/v1/users/{id}`（rbac: `user.delete.account`；同时置 deletedAt + status=DISABLED） */
+export const deleteUserAccount = (id: string) =>
+  http.request<Envelope<null>>("delete", `/api/admin/v1/users/${id}`);
