@@ -2,6 +2,9 @@
 import { onMounted } from "vue";
 import { useRoles } from "./utils/hook";
 import { PureTableBar } from "@/components/RePureTableBar";
+import { useRenderIcon } from "@/components/ReIcon/src/hooks";
+
+import Refresh from "~icons/ri/refresh-line";
 
 defineOptions({
   name: "SrvfRbac"
@@ -9,11 +12,13 @@ defineOptions({
 
 const {
   canRead,
+  canReload,
   loading,
   columns,
   dataList,
   pagination,
   onSearch,
+  handleReload,
   handleSizeChange,
   handleCurrentChange
 } = useRoles();
@@ -31,6 +36,15 @@ onMounted(() => {
       :columns="columns"
       @refresh="onSearch"
     >
+      <template #buttons>
+        <el-button
+          v-if="canReload"
+          :icon="useRenderIcon(Refresh)"
+          @click="handleReload"
+        >
+          重载权限缓存
+        </el-button>
+      </template>
       <template v-slot="{ size, dynamicColumns }">
         <pure-table
           row-key="id"

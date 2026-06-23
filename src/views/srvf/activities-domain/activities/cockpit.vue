@@ -241,6 +241,16 @@ onMounted(() => {
           <el-descriptions-item label="公开报名">
             {{ detail.isPublicRegistration ? "公开" : "非公开" }}
           </el-descriptions-item>
+          <el-descriptions-item label="报名截止">
+            {{
+              detail.registrationDeadline
+                ? dayjs(detail.registrationDeadline).format("YYYY-MM-DD HH:mm")
+                : "—"
+            }}
+          </el-descriptions-item>
+          <el-descriptions-item label="需保险">
+            {{ detail.requiresInsurance ? "需要" : "不需要" }}
+          </el-descriptions-item>
         </el-descriptions>
       </template>
       <el-empty
