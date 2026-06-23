@@ -10,6 +10,7 @@ import { getMember, type MemberItem } from "@/api/srvf-member";
 import { useCertificates } from "../certificates/utils/hook";
 import { useMemberInsurances } from "../insurances/utils/hook";
 import { useEmergencyContacts } from "../emergency-contacts/utils/hook";
+import { useMemberDepartment } from "../department/utils/hook";
 
 import Delete from "~icons/ep/delete";
 import EditPen from "~icons/ep/edit-pen";
@@ -89,12 +90,26 @@ const {
   handleDelete: ecHandleDelete
 } = useEmergencyContacts(memberId);
 
+/* --------------- Tab：部门（单值子资源：读/设/清，memberId 由路由参数注入；无队员下拉） --------------- */
+const {
+  canRead: deptCanRead,
+  canSet: deptCanSet,
+  canClear: deptCanClear,
+  loading: deptLoading,
+  department: deptDepartment,
+  currentOrgName: deptCurrentOrgName,
+  onSearch: deptOnSearch,
+  handleSet: deptHandleSet,
+  handleClear: deptHandleClear
+} = useMemberDepartment(memberId);
+
 onMounted(() => {
   fetchDetail();
   // onSearch 自带 canRead + memberId 守卫；memberId 已由路由注入，有读码即加载对应子资源
   certOnSearch();
   insOnSearch();
   ecOnSearch();
+  deptOnSearch();
 });
 </script>
 
@@ -338,6 +353,48 @@ onMounted(() => {
           description="您没有查看紧急联系人的权限（emergency-contact.read.record）"
         />
       </el-tab-pane>
+
+      <!-- Tab：部门（单值子资源：读 + 设/清；组织名 + 选择器复用 srvf-organization） -->
+      <el-tab-pane label="部门" name="department">
+        <template v-if="deptCanRead">
+          <el-card v-loading="deptLoading" shadow="never">
+            <div class="dept-pane">
+              <div class="dept-pane__current">
+                <span class="dept-pane__label">当前归属部门：</span>
+                <el-tag v-if="deptDepartment" type="success">
+                  {{ deptCurrentOrgName }}
+                </el-tag>
+                <el-tag v-else type="info">未归属部门</el-tag>
+              </div>
+              <div
+                v-if="deptCanSet || (deptCanClear && deptDepartment)"
+                class="dept-pane__actions"
+              >
+                <el-button
+                  v-if="deptCanSet"
+                  type="primary"
+                  :icon="useRenderIcon(EditPen)"
+                  @click="deptHandleSet"
+                >
+                  {{ deptDepartment ? "变更部门" : "设置部门" }}
+                </el-button>
+                <el-button
+                  v-if="deptCanClear && deptDepartment"
+                  type="danger"
+                  :icon="useRenderIcon(Delete)"
+                  @click="deptHandleClear"
+                >
+                  清除归属
+                </el-button>
+              </div>
+            </div>
+          </el-card>
+        </template>
+        <el-empty
+          v-else
+          description="您没有查看部门归属的权限（member-department.read.current）"
+        />
+      </el-tab-pane>
     </el-tabs>
   </div>
 </template>
@@ -361,6 +418,29 @@ onMounted(() => {
   &__name {
     font-size: 18px;
     font-weight: 600;
+  }
+}
+
+.dept-pane {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
+
+  &__current {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  &__label {
+    font-weight: 500;
+  }
+
+  &__actions {
+    display: flex;
+    gap: 8px;
   }
 }
 </style>
