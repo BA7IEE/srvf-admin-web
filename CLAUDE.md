@@ -121,6 +121,8 @@ Local full-version reference path:
 
 This is the **open-source full version of vue-pure-admin**. It contains 60+ demo pages (table / form / editor / chart / flowchart / Excel / upload / dept / role / user / dict / log / etc.) that the Max-Ts starter does not ship. It exists purely as a **UI / component / page-pattern read-only reference**.
 
+> 📑 **Searchable complete index**: `docs/pure-admin/14-full-version-reference-index.md` — full enumeration of all 208 demo pages + 26 `Re*` components + a 「capability → path」 quick-search + a heavy-dependency list. Before building any new page, **search §14 by capability first**, then follow the Workflow below (copy interaction only; swap API / fields / roles / permission codes). `07-max-ts-modules.md` §12 is only a curated shortlist.
+
 ### Allowed use
 
 - ✅ **read-only reference** — never write to this directory;
@@ -146,7 +148,7 @@ This is the **open-source full version of vue-pure-admin**. It contains 60+ demo
 
 ### Workflow
 
-1. **Search first** in `vue-pure-admin/src/views/` for a similar pattern (e.g. `grep -r "el-tree"` for tree examples).
+1. **Search first** — check `docs/pure-admin/14-full-version-reference-index.md` (capability → path) to locate the pattern, then confirm in `vue-pure-admin/src/views/` (e.g. `grep -r "el-tree"` for tree examples).
 2. **Read** the matching file, understand the layout / composition / interaction.
 3. **Recreate** in the derived business project, but:
    - replace API calls with backend-aligned `src/api/<biz>-*.ts`;
@@ -155,4 +157,4 @@ This is the **open-source full version of vue-pure-admin**. It contains 60+ demo
    - reuse the starter-side `Re*` components when possible (do not import full-version-specific components).
 4. **Never** open a PR against the full-version repo; it is **not** ours.
 
-See `docs/pure-admin/07-max-ts-modules.md` §Full Version Reference Strategy for PR-5 ~ PR-8 specific guidance.
+See `docs/pure-admin/14-full-version-reference-index.md` for the complete searchable index, and `docs/pure-admin/07-max-ts-modules.md` §Full Version Reference Strategy for PR-5 ~ PR-8 specific guidance.
