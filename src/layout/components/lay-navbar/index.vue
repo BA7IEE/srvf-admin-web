@@ -11,6 +11,10 @@ import LaySidebarTopCollapse from "../lay-sidebar/components/SidebarTopCollapse.
 import LogoutCircleRLine from "~icons/ri/logout-circle-r-line";
 import Setting from "~icons/ri/settings-3-line";
 
+import { useRouter } from "vue-router";
+import UserLine from "~icons/ri/user-line";
+const router = useRouter();
+
 const {
   layout,
   device,
@@ -57,6 +61,10 @@ const {
         </span>
         <template #dropdown>
           <el-dropdown-menu class="logout">
+            <el-dropdown-item @click="router.push('/srvf/account/index')">
+              <IconifyIconOffline :icon="UserLine" style="margin: 5px" />
+              个人中心
+            </el-dropdown-item>
             <el-dropdown-item @click="logout">
               <IconifyIconOffline
                 :icon="LogoutCircleRLine"
