@@ -166,6 +166,16 @@ export default [
         }
       },
       {
+        path: "/srvf/system/attachment-config",
+        name: "SrvfAttachmentConfig",
+        component: () =>
+          import("@/views/srvf/system/attachment-config/index.vue"),
+        meta: {
+          icon: "ri/folder-settings-line",
+          title: "附件配置"
+        }
+      },
+      {
         path: "/srvf/system/settings",
         name: "SrvfSystemSettings",
         component: () => import("@/views/srvf/system/settings/index.vue"),
