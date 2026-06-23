@@ -7,8 +7,12 @@ import { message } from "@/utils/message";
 import { hasPerms } from "@/utils/auth";
 import { addDialog } from "@/components/ReDialog";
 import RoleForm, { type RoleFormModel } from "../role-form.vue";
+import UserForm, { type UserFormModel } from "../user-form.vue";
 import {
   getUserAccounts,
+  createUser,
+  updateUser,
+  resetUserPassword,
   updateUserStatus,
   updateUserRole,
   clearUserPhone,
@@ -37,6 +41,9 @@ export function useUserAccounts() {
   const formRef = ref();
   /** 读权限（后端真实 RBAC 码）；无权限不请求、不渲染表格 */
   const canRead = hasPerms("user.read.account");
+  const canCreate = hasPerms("user.create.account");
+  const canUpdateAccount = hasPerms("user.update.account");
+  const canResetPassword = hasPerms("user.reset.password");
   /** 生命周期写权限（行内按钮级显隐；role 仅 SUPER_ADMIN 短路可用） */
   const canUpdateStatus = hasPerms("user.update.status");
   const canUpdateRole = hasPerms("user.update.role");
@@ -44,6 +51,8 @@ export function useUserAccounts() {
   const canClearWechat = hasPerms("user.wechat.clear");
   const canDelete = hasPerms("user.delete.account");
   const hasAnyAction =
+    canUpdateAccount ||
+    canResetPassword ||
     canUpdateStatus ||
     canUpdateRole ||
     canClearPhone ||
@@ -129,6 +138,88 @@ export function useUserAccounts() {
   function handleCurrentChange(val: number) {
     pagination.currentPage = val;
     onSearch();
+  }
+
+  /** 新建 / 编辑用户（create:username/password/email/nickname/role；edit:仅 email/nickname） */
+  function openDialog(title: "新建" | "编辑", row?: UserAccountItem) {
+    const isEdit = title === "编辑";
+    addDialog({
+      title: `${title}用户`,
+      width: "42%",
+      draggable: true,
+      fullscreen: deviceDetection(),
+      closeOnClickModal: false,
+      sureBtnLoading: true,
+      props: {
+        formInline: {
+          isEdit,
+          username: row?.username ?? "",
+          password: "",
+          email: row?.email ?? "",
+          nickname: row?.nickname ?? "",
+          role: row?.role ?? "USER"
+        } as UserFormModel
+      },
+      contentRenderer: () => h(UserForm, { ref: formRef }),
+      beforeSure: (done, { options, closeLoading }) => {
+        const cur = options.props.formInline as UserFormModel;
+        formRef.value.getRef().validate(async (valid: boolean) => {
+          if (!valid) {
+            closeLoading();
+            return;
+          }
+          try {
+            if (isEdit && row) {
+              await updateUser(row.id, {
+                email: cur.email,
+                nickname: cur.nickname
+              });
+              message("修改成功", { type: "success" });
+            } else {
+              await createUser({
+                username: cur.username,
+                password: cur.password,
+                ...(cur.email ? { email: cur.email } : {}),
+                ...(cur.nickname ? { nickname: cur.nickname } : {}),
+                role: cur.role
+              });
+              message("新建成功", { type: "success" });
+            }
+            done();
+            onSearch();
+          } catch (error: any) {
+            message(error?.response?.data?.message ?? "保存失败", {
+              type: "error"
+            });
+            closeLoading();
+          }
+        });
+      }
+    });
+  }
+
+  /** 重置密码（PUT；prompt 输入新密码,长度等规则由后端裁决） */
+  function handleResetPassword(row: UserAccountItem) {
+    ElMessageBox.prompt(`为用户「${row.username}」设置新密码：`, "重置密码", {
+      confirmButtonText: "确定",
+      cancelButtonText: "取消",
+      inputType: "password",
+      inputValidator: (val: string) => {
+        if (!val || !val.trim()) return "请输入新密码";
+        return true;
+      }
+    })
+      .then(async ({ value }) => {
+        try {
+          await resetUserPassword(row.id, value);
+          message("密码已重置", { type: "success" });
+        } catch (error: any) {
+          message(error?.response?.data?.message ?? "重置失败", {
+            type: "error"
+          });
+        }
+      })
+      .catch(() => {});
   }
 
   /** 启用 / 禁用（status ACTIVE↔DISABLED；后端拒绝弹其 message） */
@@ -257,6 +348,9 @@ export function useUserAccounts() {
 
   return {
     canRead,
+    canCreate,
+    canUpdateAccount,
+    canResetPassword,
     canUpdateStatus,
     canUpdateRole,
     canClearPhone,
@@ -268,6 +362,8 @@ export function useUserAccounts() {
     pagination,
     roleMeta,
     onSearch,
+    openDialog,
+    handleResetPassword,
     handleToggleStatus,
     openRoleDialog,
     handleClearPhone,

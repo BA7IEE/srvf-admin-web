@@ -2,6 +2,9 @@
 import { onMounted } from "vue";
 import { useUserAccounts } from "./utils/hook";
 import { PureTableBar } from "@/components/RePureTableBar";
+import { useRenderIcon } from "@/components/ReIcon/src/hooks";
+
+import AddFill from "~icons/ri/add-circle-line";
 
 defineOptions({
   name: "SrvfUsers"
@@ -9,6 +12,9 @@ defineOptions({
 
 const {
   canRead,
+  canCreate,
+  canUpdateAccount,
+  canResetPassword,
   canUpdateStatus,
   canUpdateRole,
   canClearPhone,
@@ -20,6 +26,8 @@ const {
   pagination,
   roleMeta,
   onSearch,
+  openDialog,
+  handleResetPassword,
   handleToggleStatus,
   openRoleDialog,
   handleClearPhone,
@@ -42,6 +50,16 @@ onMounted(() => {
       :columns="columns"
       @refresh="onSearch"
     >
+      <template #buttons>
+        <el-button
+          v-if="canCreate"
+          type="primary"
+          :icon="useRenderIcon(AddFill)"
+          @click="openDialog('新建')"
+        >
+          新建用户
+        </el-button>
+      </template>
       <template v-slot="{ size, dynamicColumns }">
         <pure-table
           row-key="id"
@@ -73,6 +91,26 @@ onMounted(() => {
             </el-tag>
           </template>
           <template #operation="{ row }">
+            <el-button
+              v-if="canUpdateAccount"
+              class="reset-margin"
+              link
+              type="primary"
+              :size="size"
+              @click="openDialog('编辑', row)"
+            >
+              编辑
+            </el-button>
+            <el-button
+              v-if="canResetPassword"
+              class="reset-margin"
+              link
+              type="primary"
+              :size="size"
+              @click="handleResetPassword(row)"
+            >
+              重置密码
+            </el-button>
             <el-button
               v-if="canUpdateStatus"
               class="reset-margin"

@@ -65,3 +65,37 @@ export const clearUserWechat = (id: string) =>
 /** 软删除用户 `DELETE /api/admin/v1/users/{id}`（rbac: `user.delete.account`；同时置 deletedAt + status=DISABLED） */
 export const deleteUserAccount = (id: string) =>
   http.request<Envelope<null>>("delete", `/api/admin/v1/users/${id}`);
+
+/** 创建用户入参（`CreateUserDto`；SUPER_ADMIN 可建 ADMIN/USER,ADMIN 只能建 USER）。 */
+export type CreateUserBody = {
+  username: string;
+  password: string;
+  email?: string;
+  nickname?: string;
+  role?: AccountRole;
+};
+/** 改资料入参（`UpdateUserDto`；不含 username/密码/角色/状态——各有专用端点）。 */
+export type UpdateUserBody = {
+  email?: string;
+  nickname?: string;
+};
+
+/** 创建用户 `POST /api/admin/v1/users`（rbac: `user.create.account`）。 */
+export const createUser = (body: CreateUserBody) =>
+  http.request<UserAccountMutationResult>("post", "/api/admin/v1/users", {
+    data: body
+  });
+
+/** 修改用户资料 `PATCH /api/admin/v1/users/{id}`（rbac: `user.update.account`；仅 email/nickname/avatarKey）。 */
+export const updateUser = (id: string, body: UpdateUserBody) =>
+  http.request<UserAccountMutationResult>(
+    "patch",
+    `/api/admin/v1/users/${id}`,
+    { data: body }
+  );
+
+/** 重置用户密码 `PUT /api/admin/v1/users/{id}/password`（rbac: `user.reset.password`）。 */
+export const resetUserPassword = (id: string, newPassword: string) =>
+  http.request<Envelope<null>>("put", `/api/admin/v1/users/${id}/password`, {
+    data: { newPassword }
+  });
