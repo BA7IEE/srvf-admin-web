@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
 import { VISIBILITY_OPTIONS, type ContentVisibility } from "@/api/srvf-content";
+import MarkdownEditor from "./markdown-editor.vue";
 
 /** 内容编辑表单。可见性=department 时显示「可见部门」多选;tags 为可创建多选(回车添加)。 */
 export type ContentFormModel = {
@@ -20,6 +21,7 @@ const props = withDefaults(
     formInline?: ContentFormModel;
     typeOptions?: Option[];
     orgOptions?: Option[];
+    contentId?: string;
   }>(),
   {
     formInline: () => ({
@@ -33,7 +35,8 @@ const props = withDefaults(
       pinned: false
     }),
     typeOptions: () => [],
-    orgOptions: () => []
+    orgOptions: () => [],
+    contentId: ""
   }
 );
 const model = ref(props.formInline);
@@ -115,7 +118,7 @@ defineExpose({ getRef });
       />
     </el-form-item>
     <el-form-item label="正文" prop="body">
-      <el-input v-model="model.body" type="textarea" :rows="10" />
+      <MarkdownEditor v-model="model.body" :upload-content-id="contentId" />
     </el-form-item>
     <el-form-item label="标签">
       <el-select

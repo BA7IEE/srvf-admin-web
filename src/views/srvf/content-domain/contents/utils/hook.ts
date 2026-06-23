@@ -242,7 +242,8 @@ export function useContents() {
       props: {
         formInline: initial,
         typeOptions: typeOptions.value,
-        orgOptions: orgOptions.value
+        orgOptions: orgOptions.value,
+        contentId: isEdit && row ? row.id : ""
       },
       contentRenderer: () => h(ContentForm, { ref: formRef }),
       beforeSure: (done, { options, closeLoading }) => {
