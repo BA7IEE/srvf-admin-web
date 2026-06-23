@@ -11,6 +11,7 @@ import { useCertificates } from "../certificates/utils/hook";
 import { useMemberInsurances } from "../insurances/utils/hook";
 import { useEmergencyContacts } from "../emergency-contacts/utils/hook";
 import { useMemberDepartment } from "../department/utils/hook";
+import { useMemberProfile } from "../profile/utils/hook";
 
 import Delete from "~icons/ep/delete";
 import EditPen from "~icons/ep/edit-pen";
@@ -103,6 +104,18 @@ const {
   handleClear: deptHandleClear
 } = useMemberDepartment(memberId);
 
+/* --------------- Tab：档案（1:1 子资源：读 + 新建/编辑，memberId 由路由参数注入；无队员下拉） --------------- */
+const {
+  canRead: profileCanRead,
+  canCreate: profileCanCreate,
+  canUpdate: profileCanUpdate,
+  loading: profileLoading,
+  profile: profileData,
+  displayRows: profileDisplayRows,
+  onSearch: profileOnSearch,
+  openDialog: profileOpenDialog
+} = useMemberProfile(memberId);
+
 onMounted(() => {
   fetchDetail();
   // onSearch 自带 canRead + memberId 守卫；memberId 已由路由注入，有读码即加载对应子资源
@@ -110,6 +123,7 @@ onMounted(() => {
   insOnSearch();
   ecOnSearch();
   deptOnSearch();
+  profileOnSearch();
 });
 </script>
 
@@ -395,6 +409,52 @@ onMounted(() => {
           description="您没有查看部门归属的权限（member-department.read.current）"
         />
       </el-tab-pane>
+
+      <!-- Tab：档案（1:1 扩展档案，读 + 新建/编辑；字典字段已翻中文；无档案 → 空态 + 新建） -->
+      <el-tab-pane label="档案" name="profile">
+        <template v-if="profileCanRead">
+          <el-card v-loading="profileLoading" shadow="never">
+            <template v-if="profileData">
+              <div v-if="profileCanUpdate" class="profile-pane__actions">
+                <el-button
+                  type="primary"
+                  :icon="useRenderIcon(EditPen)"
+                  @click="profileOpenDialog('编辑', profileData)"
+                >
+                  编辑档案
+                </el-button>
+              </div>
+              <el-descriptions :column="2" border>
+                <el-descriptions-item
+                  v-for="row in profileDisplayRows"
+                  :key="row.label"
+                  :label="row.label"
+                  :span="row.span ?? 1"
+                >
+                  {{ row.value }}
+                </el-descriptions-item>
+              </el-descriptions>
+            </template>
+            <el-empty
+              v-else-if="!profileLoading"
+              description="该队员暂无扩展档案"
+            >
+              <el-button
+                v-if="profileCanCreate"
+                type="primary"
+                :icon="useRenderIcon(AddFill)"
+                @click="profileOpenDialog('新建')"
+              >
+                新建档案
+              </el-button>
+            </el-empty>
+          </el-card>
+        </template>
+        <el-empty
+          v-else
+          description="您没有查看队员档案的权限（member-profile.read.record）"
+        />
+      </el-tab-pane>
     </el-tabs>
   </div>
 </template>
@@ -419,6 +479,12 @@ onMounted(() => {
     font-size: 18px;
     font-weight: 600;
   }
+}
+
+.profile-pane__actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 16px;
 }
 
 .dept-pane {
