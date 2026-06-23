@@ -12,6 +12,11 @@ import { useMemberInsurances } from "../insurances/utils/hook";
 import { useEmergencyContacts } from "../emergency-contacts/utils/hook";
 import { useMemberDepartment } from "../department/utils/hook";
 import { useMemberProfile } from "../profile/utils/hook";
+import {
+  useMemberRegistrations,
+  useMemberAttendanceRecords,
+  useMemberContribution
+} from "../participation/utils/hook";
 
 import Delete from "~icons/ep/delete";
 import EditPen from "~icons/ep/edit-pen";
@@ -116,6 +121,42 @@ const {
   openDialog: profileOpenDialog
 } = useMemberProfile(memberId);
 
+/* --------------- Tab：活动履历（队员跨活动报名,只读;沿队员轴下钻,memberId 由路由参数注入） --------------- */
+const {
+  canRead: regCanRead,
+  loading: regLoading,
+  statusFilter: regStatusFilter,
+  statusOptions: regStatusOptions,
+  columns: regColumns,
+  dataList: regDataList,
+  pagination: regPagination,
+  statusMeta: regStatusMeta,
+  onSearch: regOnSearch,
+  onFilterChange: regOnFilterChange,
+  handleSizeChange: regHandleSizeChange,
+  handleCurrentChange: regHandleCurrentChange
+} = useMemberRegistrations(memberId);
+
+/* --------------- Tab：考勤记录（仅 approved sheet 内 records,只读） --------------- */
+const {
+  canRead: arecCanRead,
+  loading: arecLoading,
+  columns: arecColumns,
+  dataList: arecDataList,
+  pagination: arecPagination,
+  onSearch: arecOnSearch,
+  handleSizeChange: arecHandleSizeChange,
+  handleCurrentChange: arecHandleCurrentChange
+} = useMemberAttendanceRecords(memberId);
+
+/* --------------- Tab：贡献值（生涯累计 capped 总分,只读单值;直接展示别再算） --------------- */
+const {
+  canRead: contribCanRead,
+  loading: contribLoading,
+  summary: contribSummary,
+  onSearch: contribOnSearch
+} = useMemberContribution(memberId);
+
 onMounted(() => {
   fetchDetail();
   // onSearch 自带 canRead + memberId 守卫；memberId 已由路由注入，有读码即加载对应子资源
@@ -124,6 +165,9 @@ onMounted(() => {
   ecOnSearch();
   deptOnSearch();
   profileOnSearch();
+  regOnSearch();
+  arecOnSearch();
+  contribOnSearch();
 });
 </script>
 
@@ -455,6 +499,124 @@ onMounted(() => {
           description="您没有查看队员档案的权限（member-profile.read.record）"
         />
       </el-tab-pane>
+
+      <!-- Tab：活动履历（队员跨活动报名,只读;状态可过滤） -->
+      <el-tab-pane label="活动履历" name="registrations-history">
+        <template v-if="regCanRead">
+          <PureTableBar
+            title="活动履历"
+            :columns="regColumns"
+            @refresh="regOnSearch"
+          >
+            <template #buttons>
+              <el-select
+                v-model="regStatusFilter"
+                class="w-40!"
+                placeholder="按状态过滤"
+                @change="regOnFilterChange"
+              >
+                <el-option
+                  v-for="opt in regStatusOptions"
+                  :key="opt.value"
+                  :label="opt.label"
+                  :value="opt.value"
+                />
+              </el-select>
+            </template>
+            <template v-slot="{ size, dynamicColumns }">
+              <pure-table
+                row-key="id"
+                adaptive
+                :adaptiveConfig="{ offsetBottom: 108 }"
+                align-whole="center"
+                table-layout="auto"
+                :loading="regLoading"
+                :size="size"
+                :data="regDataList"
+                :columns="dynamicColumns"
+                :pagination="regPagination"
+                :paginationSmall="size === 'small' ? true : false"
+                :header-cell-style="{
+                  background: 'var(--el-fill-color-light)',
+                  color: 'var(--el-text-color-primary)'
+                }"
+                @page-size-change="regHandleSizeChange"
+                @page-current-change="regHandleCurrentChange"
+              >
+                <template #statusCode="{ row }">
+                  <el-tag :type="regStatusMeta(row.statusCode).type">
+                    {{ regStatusMeta(row.statusCode).text }}
+                  </el-tag>
+                </template>
+              </pure-table>
+            </template>
+          </PureTableBar>
+        </template>
+        <el-empty
+          v-else
+          description="您没有查看活动履历的权限（activity-registration.read.record）"
+        />
+      </el-tab-pane>
+
+      <!-- Tab：考勤记录（仅 approved sheet 内已生效 records,只读） -->
+      <el-tab-pane label="考勤记录" name="attendance-records">
+        <template v-if="arecCanRead">
+          <PureTableBar
+            title="考勤记录（仅已生效）"
+            :columns="arecColumns"
+            @refresh="arecOnSearch"
+          >
+            <template v-slot="{ size, dynamicColumns }">
+              <pure-table
+                row-key="id"
+                adaptive
+                :adaptiveConfig="{ offsetBottom: 108 }"
+                align-whole="center"
+                table-layout="auto"
+                :loading="arecLoading"
+                :size="size"
+                :data="arecDataList"
+                :columns="dynamicColumns"
+                :pagination="arecPagination"
+                :paginationSmall="size === 'small' ? true : false"
+                :header-cell-style="{
+                  background: 'var(--el-fill-color-light)',
+                  color: 'var(--el-text-color-primary)'
+                }"
+                @page-size-change="arecHandleSizeChange"
+                @page-current-change="arecHandleCurrentChange"
+              />
+            </template>
+          </PureTableBar>
+        </template>
+        <el-empty
+          v-else
+          description="您没有查看考勤记录的权限（attendance.read.sheet）"
+        />
+      </el-tab-pane>
+
+      <!-- Tab：贡献值（生涯累计 capped 总分,后端实时算,直接展示别再加） -->
+      <el-tab-pane label="贡献值" name="contribution">
+        <template v-if="contribCanRead">
+          <el-card v-loading="contribLoading" shadow="never">
+            <el-statistic
+              title="生涯累计贡献值"
+              :value="
+                contribSummary ? Number(contribSummary.contributionPoints) : 0
+              "
+              :precision="2"
+            />
+            <div class="contribution-hint">
+              后端实时算 capped 总分（approved 考勤 + 北京日封顶
+              1.5）,前端直接展示。
+            </div>
+          </el-card>
+        </template>
+        <el-empty
+          v-else
+          description="您没有查看贡献值的权限（attendance.read.sheet）"
+        />
+      </el-tab-pane>
     </el-tabs>
   </div>
 </template>
@@ -485,6 +647,12 @@ onMounted(() => {
   display: flex;
   justify-content: flex-end;
   margin-bottom: 16px;
+}
+
+.contribution-hint {
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--el-text-color-secondary);
 }
 
 .dept-pane {
