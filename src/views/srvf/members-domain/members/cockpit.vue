@@ -8,6 +8,8 @@ import { useRenderIcon } from "@/components/ReIcon/src/hooks";
 import { useSrvfDictStoreHook } from "@/store/modules/srvfDict";
 import { getMember, type MemberItem } from "@/api/srvf-member";
 import { useCertificates } from "../certificates/utils/hook";
+import { useMemberInsurances } from "../insurances/utils/hook";
+import { useEmergencyContacts } from "../emergency-contacts/utils/hook";
 
 import Delete from "~icons/ep/delete";
 import EditPen from "~icons/ep/edit-pen";
@@ -63,10 +65,36 @@ const {
   handleReject: certHandleReject
 } = useCertificates(memberId);
 
+/* --------------- Tab：保险（只读，复用 hook，memberId 由路由参数注入；无队员下拉） --------------- */
+const {
+  canRead: insCanRead,
+  loading: insLoading,
+  columns: insColumns,
+  dataList: insDataList,
+  isActive: insIsActive,
+  onSearch: insOnSearch
+} = useMemberInsurances(memberId);
+
+/* --------------- Tab：紧急联系人（CRUD，复用 hook，memberId 由路由参数注入；无队员下拉） --------------- */
+const {
+  canRead: ecCanRead,
+  canCreate: ecCanCreate,
+  canUpdate: ecCanUpdate,
+  canDelete: ecCanDelete,
+  loading: ecLoading,
+  columns: ecColumns,
+  dataList: ecDataList,
+  onSearch: ecOnSearch,
+  openDialog: ecOpenDialog,
+  handleDelete: ecHandleDelete
+} = useEmergencyContacts(memberId);
+
 onMounted(() => {
   fetchDetail();
-  // onSearch 自带 canRead + memberId 守卫；memberId 已由路由注入，有读码即加载该队员证书
+  // onSearch 自带 canRead + memberId 守卫；memberId 已由路由注入，有读码即加载对应子资源
   certOnSearch();
+  insOnSearch();
+  ecOnSearch();
 });
 </script>
 
@@ -201,6 +229,113 @@ onMounted(() => {
         <el-empty
           v-else
           description="您没有查看证书的权限（certificate.read.record）"
+        />
+      </el-tab-pane>
+
+      <!-- Tab：保险（只读；admin 侧契约仅 GET，无写操作） -->
+      <el-tab-pane label="保险" name="insurances">
+        <template v-if="insCanRead">
+          <PureTableBar
+            title="队员保险"
+            :columns="insColumns"
+            @refresh="insOnSearch"
+          >
+            <template v-slot="{ size, dynamicColumns }">
+              <pure-table
+                row-key="id"
+                adaptive
+                :adaptiveConfig="{ offsetBottom: 108 }"
+                align-whole="center"
+                table-layout="auto"
+                :loading="insLoading"
+                :size="size"
+                :data="insDataList"
+                :columns="dynamicColumns"
+                :header-cell-style="{
+                  background: 'var(--el-fill-color-light)',
+                  color: 'var(--el-text-color-primary)'
+                }"
+              >
+                <template #validity="{ row }">
+                  <el-tag :type="insIsActive(row) ? 'success' : 'info'">
+                    {{ insIsActive(row) ? "有效" : "已过期" }}
+                  </el-tag>
+                </template>
+              </pure-table>
+            </template>
+          </PureTableBar>
+        </template>
+        <el-empty
+          v-else
+          description="您没有查看保险的权限（member-insurance.read.other）"
+        />
+      </el-tab-pane>
+
+      <!-- Tab：紧急联系人（CRUD，复用 list hook，无需再选队员） -->
+      <el-tab-pane label="紧急联系人" name="emergency-contacts">
+        <template v-if="ecCanRead">
+          <PureTableBar
+            title="紧急联系人"
+            :columns="ecColumns"
+            @refresh="ecOnSearch"
+          >
+            <template #buttons>
+              <el-button
+                v-if="ecCanCreate"
+                type="primary"
+                :icon="useRenderIcon(AddFill)"
+                @click="ecOpenDialog('新建')"
+              >
+                新建
+              </el-button>
+            </template>
+            <template v-slot="{ size, dynamicColumns }">
+              <pure-table
+                row-key="id"
+                adaptive
+                :adaptiveConfig="{ offsetBottom: 108 }"
+                align-whole="center"
+                table-layout="auto"
+                :loading="ecLoading"
+                :size="size"
+                :data="ecDataList"
+                :columns="dynamicColumns"
+                :header-cell-style="{
+                  background: 'var(--el-fill-color-light)',
+                  color: 'var(--el-text-color-primary)'
+                }"
+              >
+                <template #operation="{ row }">
+                  <el-button
+                    v-if="ecCanUpdate"
+                    class="reset-margin"
+                    link
+                    type="primary"
+                    :size="size"
+                    :icon="useRenderIcon(EditPen)"
+                    @click="ecOpenDialog('编辑', row)"
+                  >
+                    编辑
+                  </el-button>
+                  <el-button
+                    v-if="ecCanDelete"
+                    class="reset-margin"
+                    link
+                    type="danger"
+                    :size="size"
+                    :icon="useRenderIcon(Delete)"
+                    @click="ecHandleDelete(row)"
+                  >
+                    删除
+                  </el-button>
+                </template>
+              </pure-table>
+            </template>
+          </PureTableBar>
+        </template>
+        <el-empty
+          v-else
+          description="您没有查看紧急联系人的权限（emergency-contact.read.record）"
         />
       </el-tab-pane>
     </el-tabs>
