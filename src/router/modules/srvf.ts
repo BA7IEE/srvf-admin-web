@@ -155,6 +155,24 @@ export default [
           title: "审计日志",
           roles: ["SUPER_ADMIN"]
         }
+      },
+      {
+        path: "/srvf/system/sms-logs",
+        name: "SrvfSmsLogs",
+        component: () => import("@/views/srvf/system/sms-logs/index.vue"),
+        meta: {
+          icon: "ri/message-2-line",
+          title: "短信日志"
+        }
+      },
+      {
+        path: "/srvf/system/settings",
+        name: "SrvfSystemSettings",
+        component: () => import("@/views/srvf/system/settings/index.vue"),
+        meta: {
+          icon: "ri/tools-line",
+          title: "系统设置"
+        }
       }
     ]
   }
