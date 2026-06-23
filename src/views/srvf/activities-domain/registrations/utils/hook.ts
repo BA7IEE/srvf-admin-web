@@ -17,7 +17,9 @@ import {
   rejectRegistration,
   cancelRegistration,
   createRegistration,
-  type RegistrationItem
+  exportRegistrations,
+  type RegistrationItem,
+  type RegistrationExportScope
 } from "@/api/srvf-registration";
 import { useSrvfDictStoreHook } from "@/store/modules/srvfDict";
 
@@ -344,6 +346,28 @@ export function useRegistrations(externalActivityId: string) {
     });
   }
 
+  /**
+   * 导出报名名单 CSV（rbac 同读码 activity-registration.read.record）。
+   * 默认 scope=pass（仅通过名单）；后端返 CSV blob,前端造下载。
+   */
+  async function handleExport(scope?: RegistrationExportScope) {
+    if (!activityId.value) return;
+    try {
+      const blob = await exportRegistrations(activityId.value, scope);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `registrations-${activityId.value}-${scope ?? "pass"}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      message("导出成功", { type: "success" });
+    } catch (error: any) {
+      message(error?.response?.data?.message ?? "导出失败", { type: "error" });
+    }
+  }
+
   return {
     canRead,
     canApprove,
@@ -360,6 +384,7 @@ export function useRegistrations(externalActivityId: string) {
     handleApprove,
     handleReject,
     handleCancel,
+    handleExport,
     handleSizeChange,
     handleCurrentChange
   };

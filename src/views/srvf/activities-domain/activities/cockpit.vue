@@ -16,6 +16,7 @@ import {
 } from "@/api/srvf-activity";
 import { useRegistrations } from "../registrations/utils/hook";
 import { useAttendances } from "../attendances/utils/hook";
+import ReviewDetail from "../attendances/review-detail.vue";
 
 import AddFill from "~icons/ri/add-circle-line";
 
@@ -145,6 +146,7 @@ const {
   handleApprove: regHandleApprove,
   handleReject: regHandleReject,
   handleCancel: regHandleCancel,
+  handleExport: regHandleExport,
   handleSizeChange: regHandleSizeChange,
   handleCurrentChange: regHandleCurrentChange
 } = useRegistrations(activityId);
@@ -167,6 +169,10 @@ const {
   handleFinalApprove: attHandleFinalApprove,
   handleFinalReject: attHandleFinalReject,
   handleDelete: attHandleDelete,
+  openReviewDetail: attOpenReviewDetail,
+  reviewDetailVisible: attReviewDetailVisible,
+  reviewDetailLoading: attReviewDetailLoading,
+  reviewDetailData: attReviewDetailData,
   handleSizeChange: attHandleSizeChange,
   handleCurrentChange: attHandleCurrentChange
 } = useAttendances(activityId);
@@ -260,6 +266,12 @@ onMounted(() => {
                 @click="regOpenCreateDialog"
               >
                 代报名
+              </el-button>
+              <el-button v-if="regCanRead" @click="regHandleExport('pass')">
+                导出通过名单
+              </el-button>
+              <el-button v-if="regCanRead" @click="regHandleExport('all')">
+                导出全部
               </el-button>
             </template>
             <template v-slot="{ size, dynamicColumns }">
@@ -367,6 +379,15 @@ onMounted(() => {
                 </template>
                 <template #operation="{ row }">
                   <el-button
+                    class="reset-margin"
+                    link
+                    type="primary"
+                    :size="size"
+                    @click="attOpenReviewDetail(row)"
+                  >
+                    查看明细
+                  </el-button>
+                  <el-button
                     v-if="attCanApprove && row.statusCode === 'pending'"
                     class="reset-margin"
                     link
@@ -433,6 +454,18 @@ onMounted(() => {
         />
       </el-tab-pane>
     </el-tabs>
+
+    <!-- 考勤审核明细 drawer（只读：活动摘要 + 单据 + records 含队员嵌套） -->
+    <el-drawer
+      v-model="attReviewDetailVisible"
+      title="考勤审核明细"
+      size="60%"
+      destroy-on-close
+    >
+      <div v-loading="attReviewDetailLoading">
+        <ReviewDetail :detail="attReviewDetailData" />
+      </div>
+    </el-drawer>
   </div>
 </template>
 
