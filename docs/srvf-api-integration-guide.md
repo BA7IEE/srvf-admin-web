@@ -1,10 +1,9 @@
-# SRVF API 对接说明(srvf-nest-api `v0.29.0` ↔ srvf-admin-web)
+# SRVF API 对接说明(srvf-nest-api `v0.32.0` ↔ srvf-admin-web)
 
-> **来源**:由 srvf-nest-api 维护方(后端会话)依**当前后端 v0.29.0 实况**核证后产出(2026-06-22)。
-> 本文是 [`srvf-api-contract-readiness.md`](./srvf-api-contract-readiness.md) §6 readiness 清单的**回答 + 接线规格**——
-> 该清单冻结在后端 v0.10.0,彼时缺的(refresh-token / 稳定 RBAC / 稳定登录)在 v0.29.0 **均已具备**。
-> **范围**:本文是 documentation,描述「PR-4 重启后该怎么接」;真正改 `login / token / user store / http`
-> 由前端会话在人工已批准重启 PR-4 后执行(本文不动那些文件)。
+> **来源**:由 srvf-nest-api 维护方核证;v0.29.0 首版(2026-06-22),**v0.32.0 复核(2026-06-28)**。
+> 本文是 [`srvf-api-contract-readiness.md`](./srvf-api-contract-readiness.md) §6 readiness 清单的**回答 + 接线规格**——清单冻结在后端 v0.10.0,彼时缺的(refresh-token / 稳定 RBAC / 稳定登录)早在 v0.29.0 **均已具备**。
+> **范围**:聚焦**登录 / 鉴权接线**。**PR-4 已上线(2026-06-22,PR #6)**,§4 的 3-call 登录是现行主流程;auth 主流程文件后续仅经**单独人审 PR** 改动。
+> **后台主开发现状(2026-06-28,PR #24 已合并 main)**:工作台 / 招募与入队 / 活动 / 队员 / 内容发布 / 系统管理 **六组任务式 IA 已落地并接真 API**;**仅「通知中心」(v0.32.0 统一通知)待建**。CMS 真实上传 / CORS 待后端 COS provider 配置后单独验收。
 >
 > 📍 **2026-06-23**:**任务→端点能力图 / 轴模型 / 踩坑 / 缺口台账**已收口到后端 canonical
 > `../srvf-nest-api/docs/handoff/admin-web.md`(改契约同 PR 更新、防漂)。本文聚焦**登录 / 鉴权接线**;
@@ -20,20 +19,20 @@
 
 ---
 
-## 1. readiness 清单(§6)逐条答 —— 核证于后端 v0.29.0(2026-06-22)
+## 1. readiness 清单(§6)逐条答 —— 核证于后端 v0.29.0(2026-06-22;v0.30→v0.32 登录 / 鉴权契约无变更)
 
-| 清单项                                           | 结论                                                                                                  |
-| ------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
-| backend decides whether refresh-token will exist | ✅ **存在** `POST /api/auth/v1/refresh`(rotation always + family revoke + reuse detection + 绝对过期) |
-| if no refresh-token, logout-on-expiry strategy   | N/A(已存在)                                                                                           |
-| RBAC v2 permission API 作为前端权限源            | ✅ **确认** `GET /api/system/v1/rbac/me/permissions`(Slow-4 后单轨稳定,155 权限码)                    |
-| `/api/users/me` 为登录后用户信息唯一源           | ✅ **已改为 `GET /api/admin/v1/me`**(Route B 删除了 `/api/users/me` legacy;9 字段身份,不内联权限)     |
-| login response structure stable                  | ✅ `LoginResponseDto` 自 P0-E 冻结 5 字段,「扩展后禁止再增字段」                                      |
-| `expiresIn` format stable                        | ⚠️ 稳定,但**是 JWT 配置时长字符串 `"15m"`、不是时间戳**(见 §4 gotcha B)                               |
-| 401 / 429 / 10004 frontend behavior              | ✅ 已明确(见 §4 错误表)                                                                               |
-| Swagger/OpenAPI reflects current auth contract   | ✅ `/api/docs-json`(+ `/api/docs-yaml`)100% + contract snapshot 锁定                                  |
-| at least one test account exists                 | ✅ seed 建默认 SUPER_ADMIN;dev 默认 `admin` / `ChangeMe123456`(见 §8)                                 |
-| humans explicitly approve restarting PR-4        | ✅ 维护者 2026-06-22 明确批准重启 PR-4                                                                |
+| 清单项                                           | 结论                                                                                                                                                          |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| backend decides whether refresh-token will exist | ✅ **存在** `POST /api/auth/v1/refresh`(rotation always + family revoke + reuse detection + 绝对过期)                                                         |
+| if no refresh-token, logout-on-expiry strategy   | N/A(已存在)                                                                                                                                                   |
+| RBAC v2 permission API 作为前端权限源            | ✅ **确认** `GET /api/system/v1/rbac/me/permissions`(Slow-4 后单轨稳定,**163** 权限码;较 v0.29 +8:招新敏感 `read.sensitive` +1、统一通知 `notification.*` +7) |
+| `/api/users/me` 为登录后用户信息唯一源           | ✅ **已改为 `GET /api/admin/v1/me`**(Route B 删除了 `/api/users/me` legacy;9 字段身份,不内联权限)                                                             |
+| login response structure stable                  | ✅ `LoginResponseDto` 自 P0-E 冻结 5 字段,「扩展后禁止再增字段」                                                                                              |
+| `expiresIn` format stable                        | ⚠️ 稳定,但**是 JWT 配置时长字符串 `"15m"`、不是时间戳**(见 §4 gotcha B)                                                                                       |
+| 401 / 429 / 10004 frontend behavior              | ✅ 已明确(见 §4 错误表)                                                                                                                                       |
+| Swagger/OpenAPI reflects current auth contract   | ✅ `/api/docs-json`(+ `/api/docs-yaml`)100% + contract snapshot 锁定                                                                                          |
+| at least one test account exists                 | ✅ seed 建默认 SUPER_ADMIN;dev 默认 `admin` / `ChangeMe123456`(见 §8)                                                                                         |
+| humans explicitly approve restarting PR-4        | ✅ 维护者 2026-06-22 明确批准重启 PR-4                                                                                                                        |
 
 > 即:§6 十项**技术前提全部满足**,人工批准已给。可重启 PR-4。
 
@@ -134,10 +133,12 @@ this.roles = perm.data.roles.map(r => r.code); // 业务角色 code[]
 
 ## 5. RBAC 映射(别用 mock 占位码)
 
-- `permissions[]` = `rbac/me/permissions` 的 `permissions`:**真实点格式**码(如 `recruitment-application.read.record`、`rbac.role.read`、`content.create.record`),共 **155** 个;**不是** mock 里的 `*:*:*` / `permission:btn:add`。
-- **SUPER_ADMIN 返回全集**(实体化全部 155 码,**不是** `["*"]` / 空数组);其它用户返回聚合并集。
+- `permissions[]` = `rbac/me/permissions` 的 `permissions`:**真实点格式**码(如 `recruitment-application.read.record`、`rbac.role.read`、`content.create.record`、`notification.publish.record`),共 **163** 个;**不是** mock 里的 `*:*:*` / `permission:btn:add`。
+- **SUPER_ADMIN 返回全集**(实体化全部 163 码,**不是** `["*"]` / 空数组);其它用户返回聚合并集。
 - `v-auth` / `hasPerms` 是纯字符串 `includes`,直接喂真实码即可;但页面里写的码**必须是后端真值**——逐个可从 `/api/docs-json` 端点 summary 的 `[rbac: <code>]` 后缀查到,或读后端 `prisma/seed.ts` 的 `*_PERMISSION_SEED`。
-- **菜单/页面可见性建议用权限码驱动**(155 细粒度);`roles[]`(业务角色摘要 code,如 `ops-admin`/`apd-chief`)用于粗粒度;系统三档身份(`admin/me.role`)仅展示。
+- **菜单/页面可见性建议用权限码驱动**(163 细粒度);`roles[]`(业务角色摘要 code,如 `ops-admin`/`apd-chief`)用于粗粒度;系统三档身份(`admin/me.role`)仅展示。
+- **招新报名「敏感字段分级」(后端 GAP-006 S3,已发 v0.31.0)**:`recruitment-application.read.record` 现为**普通查看**(脱敏列表/脱敏详情/公示名单/工作台 stats);新增 `recruitment-application.read.sensitive` = **敏感查看**(报名详情明文证件号/手机 + 取证件照 signed-URL)。前端据此**分级渲染**:报名详情页**字段集不变**,但「明文证件号/手机」与「取证件照」按钮应 `v-auth="'recruitment-application.read.sensitive'"` 门控——无该码时详情自动返脱敏值、取证件照端点返 `30100`。当前内置 `biz-admin` 同持两码(行为与改前一致);分级仅在将来细分子角色时生效。
+- **统一通知模块(后端 GAP-005,**S1–S5 全切片已发 v0.32.0**)— 阶段 4「通知中心」接线**:新增 **7 码**(全绑 `biz-admin`)= S1 站内信 `notification.{read,create,update,delete,publish}.record`(5)+ S2 `notification.update.template`(微信模板配置)+ S5 `notification.send.sms`(短信兜底)。**通知管理页**(`admin/v1/notifications`,镜像 content「撰写/发布」):列表/详情 `notification.read.record`、新建 `create`、编辑 `update`、软删 `delete`、发布/撤回/归档(状态机 draft→published→archived)`publish`;可见档 **4 选 1**(member/formal_member/department/management,**去 public**;department 档须填活跃部门 orgId 数组,否则 31012);类型 ∈ `notification_type` 字典(activity-reminder/recruitment/emergency/general);非法跃迁 31030。**渠道勾选** `channels`(in-app 恒发 / wechat / sms):勾 wechat → publish 时后端向已订阅会员推送;勾 sms 仅声明可兜底,**短信永不随 publish 自动发**,须在详情页显式「发送短信」→ `POST …/notifications/{id}/send-sms`(`confirmed:false` 预览 recipientCount → `true` 真发,**计费二次确认**;未声明 sms/未发布 → 31013)。**微信模板配置**:`admin/v1/notification-wechat-templates`(各类型 templateId + 启用)。**producer 系统定向**(发号/入队/报名审批/活动取消/考勤终审)由后端业务事务外自动触发,**admin 面无新操作**。**会员侧站内信**(`app/v1/notifications` feed / 未读红点 / 标记已读)是小程序面,**后台不调**。
 - **后端没有菜单树端点**(无 `/get-async-routes` 同类):本仓 `getMenuList` 现为空是预期。**菜单仍由前端静态定义**(见 `docs/srvf-static-menu-skeleton-plan.md`)+ **用 `permissions[]` 过滤**;不要等后端给菜单树(本期没有)。`src/router/asyncRoutes.ts` 的 P0 禁令不受影响。
 
 ---
