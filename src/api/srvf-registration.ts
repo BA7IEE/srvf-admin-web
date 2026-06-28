@@ -143,3 +143,24 @@ export const createRegistration = (
     `/api/admin/v1/activities/${activityId}/registrations`,
     { data: body }
   );
+
+/* ------------------------------- 报名名单 CSV 导出 ------------------------------- */
+
+/** 导出范围（后端 Q-A6：默认 `pass`,可选 `all`；XLSX 不支持 → 后端 400）。 */
+export type RegistrationExportScope = "pass" | "all";
+
+/**
+ * 报名名单 CSV 导出 `GET /api/admin/v1/activities/{activityId}/registrations/export`
+ * （rbac: `activity-registration.read.record`）。
+ * 返 CSV 文本(`responseType: blob`,响应拦截透传 `response.data` 为 Blob,不触 auth http 主线)。
+ * 省略 scope = 后端默认 pass（仅通过名单）；scope=all = 全部状态。
+ */
+export const exportRegistrations = (
+  activityId: string,
+  scope?: RegistrationExportScope
+) =>
+  http.request<Blob>(
+    "get",
+    `/api/admin/v1/activities/${activityId}/registrations/export`,
+    { params: scope ? { scope } : {}, responseType: "blob" }
+  );

@@ -1,9 +1,25 @@
 import dayjs from "dayjs";
-import { ref, reactive } from "vue";
+import { h, ref, reactive } from "vue";
 import type { PaginationProps } from "@pureadmin/table";
+import { ElMessageBox } from "element-plus";
+import { deviceDetection } from "@pureadmin/utils";
 import { message } from "@/utils/message";
 import { hasPerms } from "@/utils/auth";
-import { getUserAccounts, type UserAccountItem } from "@/api/srvf-user";
+import { addDialog } from "@/components/ReDialog";
+import RoleForm, { type RoleFormModel } from "../role-form.vue";
+import UserForm, { type UserFormModel } from "../user-form.vue";
+import {
+  getUserAccounts,
+  createUser,
+  updateUser,
+  resetUserPassword,
+  updateUserStatus,
+  updateUserRole,
+  clearUserPhone,
+  clearUserWechat,
+  deleteUserAccount,
+  type UserAccountItem
+} from "@/api/srvf-user";
 
 /**
  * 系统角色 code → 中文展示 + tag 颜色。
@@ -22,8 +38,26 @@ const ROLE_META: Record<
 export function useUserAccounts() {
   const dataList = ref<UserAccountItem[]>([]);
   const loading = ref(false);
+  const formRef = ref();
   /** 读权限（后端真实 RBAC 码）；无权限不请求、不渲染表格 */
   const canRead = hasPerms("user.read.account");
+  const canCreate = hasPerms("user.create.account");
+  const canUpdateAccount = hasPerms("user.update.account");
+  const canResetPassword = hasPerms("user.reset.password");
+  /** 生命周期写权限（行内按钮级显隐；role 仅 SUPER_ADMIN 短路可用） */
+  const canUpdateStatus = hasPerms("user.update.status");
+  const canUpdateRole = hasPerms("user.update.role");
+  const canClearPhone = hasPerms("user.phone.clear");
+  const canClearWechat = hasPerms("user.wechat.clear");
+  const canDelete = hasPerms("user.delete.account");
+  const hasAnyAction =
+    canUpdateAccount ||
+    canResetPassword ||
+    canUpdateStatus ||
+    canUpdateRole ||
+    canClearPhone ||
+    canClearWechat ||
+    canDelete;
 
   const pagination = reactive<PaginationProps>({
     total: 0,
@@ -55,7 +89,17 @@ export function useUserAccounts() {
       minWidth: 170,
       formatter: ({ createdAt }) =>
         dayjs(createdAt).format("YYYY-MM-DD HH:mm:ss")
-    }
+    },
+    ...(hasAnyAction
+      ? [
+          {
+            label: "操作",
+            fixed: "right" as const,
+            width: 320,
+            slot: "operation"
+          }
+        ]
+      : [])
   ];
 
   /** 系统角色 code → 展示元数据（中文 + 颜色；未知 → 原 code + info 灰） */
@@ -96,14 +140,235 @@ export function useUserAccounts() {
     onSearch();
   }
 
+  /** 新建 / 编辑用户（create:username/password/email/nickname/role；edit:仅 email/nickname） */
+  function openDialog(title: "新建" | "编辑", row?: UserAccountItem) {
+    const isEdit = title === "编辑";
+    addDialog({
+      title: `${title}用户`,
+      width: "42%",
+      draggable: true,
+      fullscreen: deviceDetection(),
+      closeOnClickModal: false,
+      sureBtnLoading: true,
+      props: {
+        formInline: {
+          isEdit,
+          username: row?.username ?? "",
+          password: "",
+          email: row?.email ?? "",
+          nickname: row?.nickname ?? "",
+          role: row?.role ?? "USER"
+        } as UserFormModel
+      },
+      contentRenderer: () => h(UserForm, { ref: formRef }),
+      beforeSure: (done, { options, closeLoading }) => {
+        const cur = options.props.formInline as UserFormModel;
+        formRef.value.getRef().validate(async (valid: boolean) => {
+          if (!valid) {
+            closeLoading();
+            return;
+          }
+          try {
+            if (isEdit && row) {
+              await updateUser(row.id, {
+                email: cur.email,
+                nickname: cur.nickname
+              });
+              message("修改成功", { type: "success" });
+            } else {
+              await createUser({
+                username: cur.username,
+                password: cur.password,
+                ...(cur.email ? { email: cur.email } : {}),
+                ...(cur.nickname ? { nickname: cur.nickname } : {}),
+                role: cur.role
+              });
+              message("新建成功", { type: "success" });
+            }
+            done();
+            onSearch();
+          } catch (error: any) {
+            message(error?.response?.data?.message ?? "保存失败", {
+              type: "error"
+            });
+            closeLoading();
+          }
+        });
+      }
+    });
+  }
+
+  /** 重置密码（PUT；prompt 输入新密码,长度等规则由后端裁决） */
+  function handleResetPassword(row: UserAccountItem) {
+    ElMessageBox.prompt(`为用户「${row.username}」设置新密码：`, "重置密码", {
+      confirmButtonText: "确定",
+      cancelButtonText: "取消",
+      inputType: "password",
+      inputValidator: (val: string) => {
+        if (!val || !val.trim()) return "请输入新密码";
+        return true;
+      }
+    })
+      .then(async ({ value }) => {
+        try {
+          await resetUserPassword(row.id, value);
+          message("密码已重置", { type: "success" });
+        } catch (error: any) {
+          message(error?.response?.data?.message ?? "重置失败", {
+            type: "error"
+          });
+        }
+      })
+      .catch(() => {});
+  }
+
+  /** 启用 / 禁用（status ACTIVE↔DISABLED；后端拒绝弹其 message） */
+  function handleToggleStatus(row: UserAccountItem) {
+    const next = row.status === "ACTIVE" ? "DISABLED" : "ACTIVE";
+    const action = next === "ACTIVE" ? "启用" : "禁用";
+    ElMessageBox.confirm(
+      `确定要${action}用户「${row.username}」吗？`,
+      "系统提示",
+      {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning"
+      }
+    )
+      .then(async () => {
+        try {
+          await updateUserStatus(row.id, { status: next });
+          message(`${action}成功`, { type: "success" });
+          onSearch();
+        } catch (error: any) {
+          message(error?.response?.data?.message ?? `${action}失败`, {
+            type: "error"
+          });
+        }
+      })
+      .catch(() => {});
+  }
+
+  /** 改角色（弹单选；仅 SUPER_ADMIN 可用,他者后端拒绝弹 message） */
+  function openRoleDialog(row: UserAccountItem) {
+    addDialog({
+      title: `修改「${row.username}」的角色`,
+      width: "32%",
+      draggable: true,
+      fullscreen: deviceDetection(),
+      closeOnClickModal: false,
+      sureBtnLoading: true,
+      props: { formInline: { role: row.role } as RoleFormModel },
+      contentRenderer: () => h(RoleForm, { ref: formRef }),
+      beforeSure: (done, { options, closeLoading }) => {
+        const curData = options.props.formInline as RoleFormModel;
+        (async () => {
+          try {
+            await updateUserRole(row.id, { role: curData.role });
+            message("角色已更新", { type: "success" });
+            done();
+            onSearch();
+          } catch (error: any) {
+            message(error?.response?.data?.message ?? "角色更新失败", {
+              type: "error"
+            });
+            closeLoading();
+          }
+        })();
+      }
+    });
+  }
+
+  /** 清手机（幂等）；后端拒绝弹其 message */
+  function handleClearPhone(row: UserAccountItem) {
+    ElMessageBox.confirm(
+      `确定清除用户「${row.username}」绑定的手机号吗？`,
+      "清除手机号",
+      { confirmButtonText: "确定", cancelButtonText: "取消", type: "warning" }
+    )
+      .then(async () => {
+        try {
+          await clearUserPhone(row.id);
+          message("已清除", { type: "success" });
+          onSearch();
+        } catch (error: any) {
+          message(error?.response?.data?.message ?? "清除失败", {
+            type: "error"
+          });
+        }
+      })
+      .catch(() => {});
+  }
+
+  /** 清微信（幂等） */
+  function handleClearWechat(row: UserAccountItem) {
+    ElMessageBox.confirm(
+      `确定清除用户「${row.username}」绑定的微信吗？`,
+      "清除微信",
+      { confirmButtonText: "确定", cancelButtonText: "取消", type: "warning" }
+    )
+      .then(async () => {
+        try {
+          await clearUserWechat(row.id);
+          message("已清除", { type: "success" });
+          onSearch();
+        } catch (error: any) {
+          message(error?.response?.data?.message ?? "清除失败", {
+            type: "error"
+          });
+        }
+      })
+      .catch(() => {});
+  }
+
+  /** 软删用户（同时禁用） */
+  function handleDelete(row: UserAccountItem) {
+    ElMessageBox.confirm(
+      `确定删除用户「${row.username}」吗？将软删并禁用该账号。`,
+      "删除用户",
+      {
+        confirmButtonText: "确定删除",
+        cancelButtonText: "取消",
+        type: "warning"
+      }
+    )
+      .then(async () => {
+        try {
+          await deleteUserAccount(row.id);
+          message("删除成功", { type: "success" });
+          onSearch();
+        } catch (error: any) {
+          message(error?.response?.data?.message ?? "删除失败", {
+            type: "error"
+          });
+        }
+      })
+      .catch(() => {});
+  }
+
   return {
     canRead,
+    canCreate,
+    canUpdateAccount,
+    canResetPassword,
+    canUpdateStatus,
+    canUpdateRole,
+    canClearPhone,
+    canClearWechat,
+    canDelete,
     loading,
     columns,
     dataList,
     pagination,
     roleMeta,
     onSearch,
+    openDialog,
+    handleResetPassword,
+    handleToggleStatus,
+    openRoleDialog,
+    handleClearPhone,
+    handleClearWechat,
+    handleDelete,
     handleSizeChange,
     handleCurrentChange
   };

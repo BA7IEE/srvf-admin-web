@@ -11,7 +11,9 @@ import {
   finalApproveAttendanceSheet,
   finalRejectAttendanceSheet,
   deleteAttendanceSheet,
-  type AttendanceSheetItem
+  getAttendanceSheetReviewDetail,
+  type AttendanceSheetItem,
+  type AttendanceSheetReviewDetail
 } from "@/api/srvf-attendance";
 import { useSrvfDictStoreHook } from "@/store/modules/srvfDict";
 
@@ -47,13 +49,15 @@ export function useAttendances(externalActivityId: string) {
   const canFinalApprove = hasPerms("attendance.final-approve.sheet");
   const canFinalReject = hasPerms("attendance.final-reject.sheet");
   const canDelete = hasPerms("attendance.delete.sheet");
-  const hasAnyRowAction =
-    canApprove || canReject || canFinalApprove || canFinalReject || canDelete;
   /** 共享字典标签解析器：考勤审核状态 code → 中文（attendance_sheet_status 字典） */
   const dict = useSrvfDictStoreHook();
   dict.ensureTypes(["attendance_sheet_status"]);
   const dataList = ref<AttendanceSheetItem[]>([]);
   const loading = ref(false);
+  /** 审核明细 drawer 状态（查看明细：活动摘要 + 单据 + records，只读） */
+  const reviewDetailVisible = ref(false);
+  const reviewDetailLoading = ref(false);
+  const reviewDetailData = ref<AttendanceSheetReviewDetail | null>(null);
   /** 考勤隶属活动 id：由作战室经路由参数注入并固定。保留 ref 形态，列表加载仍走 activityId.value 不改。 */
   const activityId = ref<string>(externalActivityId);
   const pagination = reactive<PaginationProps>({
@@ -88,16 +92,13 @@ export function useAttendances(externalActivityId: string) {
       formatter: ({ createdAt }) =>
         createdAt ? dayjs(createdAt).format("YYYY-MM-DD HH:mm:ss") : "—"
     },
-    ...(hasAnyRowAction
-      ? [
-          {
-            label: "操作",
-            fixed: "right" as const,
-            width: 240,
-            slot: "operation"
-          }
-        ]
-      : [])
+    // 操作列恒显：查看明细对任何有读码者开放（本 tab 已 canRead 门控）；写操作仍按各自码 v-if 显隐
+    {
+      label: "操作",
+      fixed: "right" as const,
+      width: 320,
+      slot: "operation"
+    }
   ];
 
   /** 状态 code → 展示元数据：文案查 attendance_sheet_status 字典，颜色按 code 给展示色（未知 → 原 code + info 灰） */
@@ -306,6 +307,23 @@ export function useAttendances(externalActivityId: string) {
       .catch(() => {});
   }
 
+  /** 查看审核明细（drawer 内只读展示活动摘要 + 单据 + records）；canRead 同读码门 */
+  async function openReviewDetail(row: AttendanceSheetItem) {
+    reviewDetailVisible.value = true;
+    reviewDetailLoading.value = true;
+    reviewDetailData.value = null;
+    try {
+      const { code, data } = await getAttendanceSheetReviewDetail(row.id);
+      if (code === 0) reviewDetailData.value = data;
+    } catch (error: any) {
+      message(error?.response?.data?.message ?? "加载审核明细失败", {
+        type: "error"
+      });
+    } finally {
+      reviewDetailLoading.value = false;
+    }
+  }
+
   return {
     canRead,
     canApprove,
@@ -324,6 +342,10 @@ export function useAttendances(externalActivityId: string) {
     handleFinalApprove,
     handleFinalReject,
     handleDelete,
+    openReviewDetail,
+    reviewDetailVisible,
+    reviewDetailLoading,
+    reviewDetailData,
     handleSizeChange,
     handleCurrentChange
   };

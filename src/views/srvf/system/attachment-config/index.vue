@@ -1,0 +1,260 @@
+<script setup lang="ts">
+import { onMounted } from "vue";
+import { PureTableBar } from "@/components/RePureTableBar";
+import { useRenderIcon } from "@/components/ReIcon/src/hooks";
+import { useAttachmentConfigs } from "./utils/hook";
+
+import AddFill from "~icons/ri/add-circle-line";
+
+defineOptions({
+  name: "SrvfAttachmentConfig"
+});
+
+const {
+  canReadType,
+  canCreateType,
+  canUpdateType,
+  canDeleteType,
+  canReadMime,
+  canCreateMime,
+  canUpdateMime,
+  canDeleteMime,
+  canReadSize,
+  canCreateSize,
+  canUpdateSize,
+  canDeleteSize,
+  typeList,
+  mimeList,
+  sizeList,
+  typeLoading,
+  mimeLoading,
+  sizeLoading,
+  typePager,
+  mimePager,
+  sizePager,
+  typeColumns,
+  mimeColumns,
+  sizeColumns,
+  init,
+  onSearchType,
+  onSearchMime,
+  onSearchSize,
+  typeSizeChange,
+  typeCurrentChange,
+  mimeSizeChange,
+  mimeCurrentChange,
+  sizeSizeChange,
+  sizeCurrentChange,
+  openTypeDialog,
+  handleTypeStatus,
+  handleTypeDelete,
+  openMimeDialog,
+  handleMimeStatus,
+  handleMimeDelete,
+  openSizeDialog,
+  handleSizeDelete
+} = useAttachmentConfigs();
+
+onMounted(() => {
+  init();
+});
+
+const anyRead = canReadType || canReadMime || canReadSize;
+</script>
+
+<template>
+  <div class="main">
+    <el-tabs v-if="anyRead" class="ac-tabs">
+      <!-- 类型配置 -->
+      <el-tab-pane v-if="canReadType" label="类型配置" name="type">
+        <PureTableBar
+          title="附件类型配置"
+          :columns="typeColumns"
+          @refresh="onSearchType"
+        >
+          <template #buttons>
+            <el-button
+              v-if="canCreateType"
+              type="primary"
+              :icon="useRenderIcon(AddFill)"
+              @click="openTypeDialog('新建')"
+            >
+              新建类型
+            </el-button>
+          </template>
+          <template v-slot="{ size, dynamicColumns }">
+            <pure-table
+              row-key="id"
+              align-whole="center"
+              table-layout="auto"
+              :loading="typeLoading"
+              :size="size"
+              :data="typeList"
+              :columns="dynamicColumns"
+              :pagination="typePager"
+              @page-size-change="typeSizeChange"
+              @page-current-change="typeCurrentChange"
+            >
+              <template #status="{ row }">
+                <el-tag :type="row.status === 'ACTIVE' ? 'success' : 'info'">
+                  {{ row.status === "ACTIVE" ? "启用" : "停用" }}
+                </el-tag>
+              </template>
+              <template #operation="{ row }">
+                <el-button
+                  v-if="canUpdateType"
+                  link
+                  type="primary"
+                  :size="size"
+                  @click="openTypeDialog('编辑', row)"
+                >
+                  编辑
+                </el-button>
+                <el-button
+                  v-if="canUpdateType"
+                  link
+                  :type="row.status === 'ACTIVE' ? 'warning' : 'success'"
+                  :size="size"
+                  @click="handleTypeStatus(row)"
+                >
+                  {{ row.status === "ACTIVE" ? "停用" : "启用" }}
+                </el-button>
+                <el-button
+                  v-if="canDeleteType"
+                  link
+                  type="danger"
+                  :size="size"
+                  @click="handleTypeDelete(row)"
+                >
+                  删除
+                </el-button>
+              </template>
+            </pure-table>
+          </template>
+        </PureTableBar>
+      </el-tab-pane>
+
+      <!-- MIME 配置 -->
+      <el-tab-pane v-if="canReadMime" label="MIME 配置" name="mime">
+        <PureTableBar
+          title="附件 MIME 配置"
+          :columns="mimeColumns"
+          @refresh="onSearchMime"
+        >
+          <template #buttons>
+            <el-button
+              v-if="canCreateMime"
+              type="primary"
+              :icon="useRenderIcon(AddFill)"
+              @click="openMimeDialog"
+            >
+              新建 MIME
+            </el-button>
+          </template>
+          <template v-slot="{ size, dynamicColumns }">
+            <pure-table
+              row-key="id"
+              align-whole="center"
+              table-layout="auto"
+              :loading="mimeLoading"
+              :size="size"
+              :data="mimeList"
+              :columns="dynamicColumns"
+              :pagination="mimePager"
+              @page-size-change="mimeSizeChange"
+              @page-current-change="mimeCurrentChange"
+            >
+              <template #status="{ row }">
+                <el-tag :type="row.status === 'ACTIVE' ? 'success' : 'info'">
+                  {{ row.status === "ACTIVE" ? "启用" : "停用" }}
+                </el-tag>
+              </template>
+              <template #operation="{ row }">
+                <el-button
+                  v-if="canUpdateMime"
+                  link
+                  :type="row.status === 'ACTIVE' ? 'warning' : 'success'"
+                  :size="size"
+                  @click="handleMimeStatus(row)"
+                >
+                  {{ row.status === "ACTIVE" ? "停用" : "启用" }}
+                </el-button>
+                <el-button
+                  v-if="canDeleteMime"
+                  link
+                  type="danger"
+                  :size="size"
+                  @click="handleMimeDelete(row)"
+                >
+                  删除
+                </el-button>
+              </template>
+            </pure-table>
+          </template>
+        </PureTableBar>
+      </el-tab-pane>
+
+      <!-- 尺寸限制 -->
+      <el-tab-pane v-if="canReadSize" label="尺寸限制" name="size">
+        <PureTableBar
+          title="附件尺寸限制配置"
+          :columns="sizeColumns"
+          @refresh="onSearchSize"
+        >
+          <template #buttons>
+            <el-button
+              v-if="canCreateSize"
+              type="primary"
+              :icon="useRenderIcon(AddFill)"
+              @click="openSizeDialog('新建')"
+            >
+              新建限制
+            </el-button>
+          </template>
+          <template v-slot="{ size, dynamicColumns }">
+            <pure-table
+              row-key="id"
+              align-whole="center"
+              table-layout="auto"
+              :loading="sizeLoading"
+              :size="size"
+              :data="sizeList"
+              :columns="dynamicColumns"
+              :pagination="sizePager"
+              @page-size-change="sizeSizeChange"
+              @page-current-change="sizeCurrentChange"
+            >
+              <template #operation="{ row }">
+                <el-button
+                  v-if="canUpdateSize"
+                  link
+                  type="primary"
+                  :size="size"
+                  @click="openSizeDialog('编辑', row)"
+                >
+                  编辑
+                </el-button>
+                <el-button
+                  v-if="canDeleteSize"
+                  link
+                  type="danger"
+                  :size="size"
+                  @click="handleSizeDelete(row)"
+                >
+                  删除
+                </el-button>
+              </template>
+            </pure-table>
+          </template>
+        </PureTableBar>
+      </el-tab-pane>
+    </el-tabs>
+    <el-empty v-else description="您没有查看附件配置的权限" />
+  </div>
+</template>
+
+<style scoped lang="scss">
+.main {
+  margin: 24px 24px 0 !important;
+}
+</style>

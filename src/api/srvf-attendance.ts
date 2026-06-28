@@ -148,3 +148,80 @@ export const deleteAttendanceSheet = (id: string) =>
     "delete",
     `/api/admin/v1/attendance-sheets/${id}`
   );
+
+/* ----------------------- 考勤审核完整视图（review-detail） ----------------------- */
+/* 为审核页量身做：活动摘要 + 单据详情 + records[含 member 嵌套]。字段以 /api/docs-json 为准。 */
+
+/** 活动摘要（后端 `AttendanceSheetActivitySummaryDto`）。 */
+export type AttendanceReviewActivitySummary = {
+  id: string;
+  title: string;
+  activityTypeCode: string;
+  organizationId: string;
+  startAt: string;
+  endAt: string;
+  location: string;
+  statusCode: string;
+};
+
+/** 单据详情（后端 `AttendanceSheetResponseDto`；比列表项多两级审核留痕字段）。 */
+export type AttendanceSheetResponse = {
+  id: string;
+  activityId: string;
+  submitterUserId: string;
+  submittedAt: string;
+  statusCode: string;
+  reviewerUserId: string | null;
+  reviewedAt: string | null;
+  reviewNote: string | null;
+  finalReviewerUserId: string | null;
+  finalReviewedAt: string | null;
+  finalReviewNote: string | null;
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
+/** 记录内嵌队员摘要（后端 inline object,字段未在 schema 显式声明,按展示需要松类型 + 防御取值）。 */
+export type AttendanceReviewMember = {
+  id?: string;
+  memberNo?: string | null;
+  displayName?: string | null;
+} | null;
+
+/** 考勤记录（后端 `AttendanceRecordResponseDto`；含 member 嵌套）。 */
+export type AttendanceReviewRecord = {
+  id: string;
+  sheetId: string;
+  memberId: string;
+  member: AttendanceReviewMember;
+  roleCode: string;
+  checkInAt: string;
+  checkOutAt: string;
+  serviceHours: string;
+  attendanceStatusCode: string;
+  note: string | null;
+  registrationId: string | null;
+  contributionPoints: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+/** 审核完整视图（后端 `AttendanceSheetReviewDetailDto`）。 */
+export type AttendanceSheetReviewDetail = {
+  activity: AttendanceReviewActivitySummary;
+  sheet: AttendanceSheetResponse;
+  records: AttendanceReviewRecord[];
+};
+export type AttendanceSheetReviewDetailResult =
+  Envelope<AttendanceSheetReviewDetail>;
+
+/**
+ * 考勤单据审核完整视图 `GET /api/admin/v1/attendance-sheets/{id}/review-detail`
+ * （rbac: `attendance.read.sheet`）。审核前看清单据内 records（队员/角色/时长/贡献值）再裁决。
+ */
+export const getAttendanceSheetReviewDetail = (id: string) =>
+  http.request<AttendanceSheetReviewDetailResult>(
+    "get",
+    `/api/admin/v1/attendance-sheets/${id}/review-detail`
+  );

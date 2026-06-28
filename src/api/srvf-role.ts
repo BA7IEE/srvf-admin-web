@@ -24,3 +24,12 @@ export type RoleListResult = Envelope<PageResult<RoleItem>>;
 /** 角色分页列表 `GET /api/system/v1/roles`（rbac: `rbac.role.read`） */
 export const getRoles = (params?: RoleListQuery) =>
   http.request<RoleListResult>("get", "/api/system/v1/roles", { params });
+
+/**
+ * 重载 RBAC 缓存 `POST /api/system/v1/rbac/reload`（rbac: `rbac.config.reload`）。
+ * 改完角色/权限绑定后需触发缓存失效,否则不即时生效。scope 默认 all(全量)。
+ */
+export const reloadRbac = (scope: "all" | "user" | "role" = "all") =>
+  http.request<Envelope<unknown>>("post", "/api/system/v1/rbac/reload", {
+    data: { scope }
+  });

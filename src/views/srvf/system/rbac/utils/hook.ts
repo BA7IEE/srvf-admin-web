@@ -1,15 +1,18 @@
 import dayjs from "dayjs";
 import { ref, reactive } from "vue";
 import type { PaginationProps } from "@pureadmin/table";
+import { ElMessageBox } from "element-plus";
 import { message } from "@/utils/message";
 import { hasPerms } from "@/utils/auth";
-import { getRoles, type RoleItem } from "@/api/srvf-role";
+import { getRoles, reloadRbac, type RoleItem } from "@/api/srvf-role";
 
 export function useRoles() {
   const dataList = ref<RoleItem[]>([]);
   const loading = ref(false);
   /** 读权限（后端真实 RBAC 码）；无权限不请求、不渲染表格 */
   const canRead = hasPerms("rbac.role.read");
+  /** 重载缓存权限（改完角色/权限绑定后触发,否则不即时生效） */
+  const canReload = hasPerms("rbac.config.reload");
 
   const pagination = reactive<PaginationProps>({
     total: 0,
@@ -69,13 +72,39 @@ export function useRoles() {
     onSearch();
   }
 
+  /** 重载 RBAC 缓存(全量;改完绑定后即时生效) */
+  function handleReload() {
+    ElMessageBox.confirm(
+      "确定重载 RBAC 权限缓存吗？改完角色/权限绑定后需重载才即时生效。",
+      "重载权限缓存",
+      {
+        confirmButtonText: "确定重载",
+        cancelButtonText: "取消",
+        type: "warning"
+      }
+    )
+      .then(async () => {
+        try {
+          await reloadRbac("all");
+          message("缓存已重载", { type: "success" });
+        } catch (error: any) {
+          message(error?.response?.data?.message ?? "重载失败", {
+            type: "error"
+          });
+        }
+      })
+      .catch(() => {});
+  }
+
   return {
     canRead,
+    canReload,
     loading,
     columns,
     dataList,
     pagination,
     onSearch,
+    handleReload,
     handleSizeChange,
     handleCurrentChange
   };
