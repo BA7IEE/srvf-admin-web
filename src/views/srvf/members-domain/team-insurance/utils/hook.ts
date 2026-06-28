@@ -253,7 +253,7 @@ export function useTeamInsurancePolicies() {
     try {
       const { code, data } = await getMembers({
         status: "ACTIVE",
-        pageSize: 200
+        pageSize: 100
       });
       if (code === 0) {
         memberOptions.value = data.items.map(m => ({

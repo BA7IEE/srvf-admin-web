@@ -181,7 +181,7 @@ export function useContents() {
     try {
       const { code, data } = await getOrganizations({
         status: "ACTIVE",
-        pageSize: 200
+        pageSize: 100
       });
       if (code === 0) {
         orgOptions.value = data.items.map(o => ({

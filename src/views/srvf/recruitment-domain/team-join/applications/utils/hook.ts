@@ -280,7 +280,7 @@ export function useTeamJoinApplications(cycleId: string) {
     try {
       const { code, data } = await getOrganizations({
         status: "ACTIVE",
-        pageSize: 200
+        pageSize: 100
       });
       if (code === 0) {
         const nameMap = new Map(data.items.map(o => [o.id, o.name]));

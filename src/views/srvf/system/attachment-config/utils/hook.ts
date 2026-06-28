@@ -81,7 +81,7 @@ export function useAttachmentConfigs() {
     try {
       const { code, data } = await getTypeConfigs({
         status: "ACTIVE",
-        pageSize: 200
+        pageSize: 100
       });
       if (code === 0) {
         typeOptions.value = data.items.map(t => ({
