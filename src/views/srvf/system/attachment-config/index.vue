@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted } from "vue";
+import { onMounted, ref } from "vue";
 import { PureTableBar } from "@/components/RePureTableBar";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
 import { useAttachmentConfigs } from "./utils/hook";
@@ -60,11 +60,20 @@ onMounted(() => {
 });
 
 const anyRead = canReadType || canReadMime || canReadSize;
+
+/**
+ * 显式锚定默认激活 tab：EP el-tabs 无 v-model/default-value 时 currentName 默认 "0"，
+ * 与所有具名 tab-pane 都不匹配 → 首屏所有 pane 被 v-show 隐藏（只剩 tab 头），点一下才显示。
+ * 这里初始化为第一个「有读权限」的 pane（pane 由 v-if=canRead* 决定渲染），保证首屏即落到一个可见 pane。
+ */
+const activeTab = ref(
+  canReadType ? "type" : canReadMime ? "mime" : canReadSize ? "size" : ""
+);
 </script>
 
 <template>
   <div class="main">
-    <el-tabs v-if="anyRead" class="ac-tabs">
+    <el-tabs v-if="anyRead" v-model="activeTab" class="ac-tabs">
       <!-- 类型配置 -->
       <el-tab-pane v-if="canReadType" label="类型配置" name="type">
         <PureTableBar

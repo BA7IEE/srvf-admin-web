@@ -34,6 +34,23 @@ const memberId = route.params.id as string;
 const dict = useSrvfDictStoreHook();
 dict.ensureTypes(["member_grade"]);
 
+/**
+ * 显式锚定默认激活 tab：EP el-tabs 无 v-model/default-value 时 currentName 默认 "0"，
+ * 与所有具名 tab-pane 都不匹配 → 首屏所有 pane 被 v-show 隐藏，点一下才显示。
+ * 本页 tab-pane 恒渲染（权限门在 pane 内部 template v-if 上，无权时退化为空态提示），
+ * 故初始化为第一个 tab「证书」即可稳定落屏。
+ */
+const activeTab = ref<
+  | "certificates"
+  | "insurances"
+  | "emergency-contacts"
+  | "department"
+  | "profile"
+  | "registrations-history"
+  | "attendance-records"
+  | "contribution"
+>("certificates");
+
 /* ----------------------------- 头部：队员基本信息 ----------------------------- */
 const detail = ref<MemberItem | null>(null);
 const detailLoading = ref(false);
@@ -207,7 +224,7 @@ onMounted(() => {
     </el-card>
 
     <!-- Tab：证书（复用证书 list hook，无需再选队员） -->
-    <el-tabs class="cockpit-tabs">
+    <el-tabs v-model="activeTab" class="cockpit-tabs">
       <el-tab-pane label="证书" name="certificates">
         <template v-if="certCanRead">
           <PureTableBar

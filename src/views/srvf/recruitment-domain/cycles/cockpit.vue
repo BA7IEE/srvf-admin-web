@@ -182,6 +182,10 @@ async function openPublicity() {
 }
 
 /* --------------- Tab：报名审核（按 cycleId 过滤，无轮次下拉） --------------- */
+// 显式锚定默认激活 tab：EP el-tabs 无 v-model/default-value 时 currentName 默认 "0"，
+// 与具名 tab-pane 不匹配 → 首屏 pane 被 v-show 隐藏；锚到唯一 tab「applications」即稳定落屏。
+const activeTab = ref<"applications">("applications");
+
 const {
   canRead: appCanRead,
   loading: appLoading,
@@ -274,7 +278,7 @@ onMounted(() => {
     </el-card>
 
     <!-- Tab：报名审核 -->
-    <el-tabs class="cockpit-tabs">
+    <el-tabs v-model="activeTab" class="cockpit-tabs">
       <el-tab-pane label="报名审核" name="applications">
         <template v-if="appCanRead">
           <PureTableBar
