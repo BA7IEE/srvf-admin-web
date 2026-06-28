@@ -92,7 +92,7 @@ export default [
     meta: {
       icon: "ri/settings-3-line",
       title: "系统管理",
-      rank: 6
+      rank: 7
     },
     children: [
       {
