@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted } from "vue";
+import { onMounted, ref } from "vue";
 import { useSystemSettings } from "./utils/hook";
 
 defineOptions({
@@ -38,12 +38,29 @@ onMounted(() => {
 
 const anyRead =
   canReadStorage || canReadSms || canReadWechat || canReadRealname;
+
+/**
+ * 显式锚定默认激活 tab：EP el-tabs 无 v-model/default-value 时 currentName 默认 "0"，
+ * 与所有具名 tab-pane 都不匹配 → 首屏所有 pane 被 v-show 隐藏（只剩 tab 头），点一下才显示。
+ * 这里初始化为第一个「有读权限」的 pane（pane 由 v-if=canRead* 决定渲染），保证首屏即落到一个可见 pane。
+ */
+const activeTab = ref(
+  canReadStorage
+    ? "storage"
+    : canReadSms
+      ? "sms"
+      : canReadWechat
+        ? "wechat"
+        : canReadRealname
+          ? "realname"
+          : ""
+);
 </script>
 
 <template>
   <div class="main">
     <el-card v-if="anyRead" v-loading="loading" shadow="never">
-      <el-tabs>
+      <el-tabs v-model="activeTab">
         <!-- 存储 -->
         <el-tab-pane v-if="canReadStorage" label="存储" name="storage">
           <el-form
