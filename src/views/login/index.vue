@@ -190,14 +190,7 @@ useEventListener(document, "keydown", ({ code }) => {
     <div
       class="w-full flex-c absolute bottom-3 text-sm text-[rgba(0,0,0,0.6)] dark:text-[rgba(220,220,242,0.8)]"
     >
-      Copyright © 2020-present
-      <a
-        class="hover:text-primary!"
-        href="https://github.com/pure-admin"
-        target="_blank"
-      >
-        &nbsp;{{ title }}
-      </a>
+      Copyright © 2008-2026 SRVF. All Rights Reserved. 技术支持：23074 邓旺
     </div>
   </div>
 </template>
