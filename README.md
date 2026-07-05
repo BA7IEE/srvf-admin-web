@@ -11,7 +11,7 @@ This repository is the SRVF-specific admin frontend derived from the private `u-
 - The upstream starter baseline is `u-admin-web-starter`.
 - Backend API contracts, roles, permissions, business rules, and data models are defined by `srvf-nest-api`.
 - Do not derive backend schemas from Pure Admin / Max-Ts demo pages, mock data, tenant features, or asyncRoutes.
-- Do not enable asyncRoutes in phase one.
+- Do not enable asyncRoutes.
 - Do not restore tenant management menu entries from the starter.
 - 业务派生记录见 `docs/srvf-frontend-derivation.md`；底座规则继承自 starter 的 `docs/pure-admin-max-ts-baseline.md` 主入口及 `docs/pure-admin/01~11-*.md` 11 份专题文档。
 
@@ -19,45 +19,61 @@ This repository is the SRVF-specific admin frontend derived from the private `u-
 
 ## ⚠️ 当前状态
 
-- ✅ **PR-2.1 Vite proxy 已完成**：`/api → http://localhost:3000`（见 `vite.config.ts`）。
-- ⛔ **PR-4 NestJS 登录对接暂停**。
-- 🗂 **PR-4 尝试代码已归档**：分支 `archive/pr-4-login-attempt-b81afec`（本地 + `origin` 远端），commit `b81afec`。
-- ♻️ **main 已 revert PR-4 登录对接代码**：revert commit `6f046cc`。
-- 🔒 **不得重启 PR-4**，直到 `docs/srvf-api-contract-readiness.md` §6 Readiness Checklist **全部 10 项确认 + 人类显式批准**。
+> 更新：2026-07-05。本 README 原先保留了“PR-4 NestJS 登录对接暂停 / 禁止真实 API”的旧口径。该口径已废弃，原文已归档到 `docs/archive/old_docs/README_before_handoff_20260705.md`。
+
+- ✅ **PR-4 NestJS 登录集成已上线**：真实登录主链为 `POST /api/auth/v1/login` → `GET /api/admin/v1/me` + `GET /api/system/v1/rbac/me/permissions`。
+- ✅ **Vite proxy 已配置**：`/api → http://localhost:3000`，不 rewrite。
+- ✅ **真实 SRVF 数据页允许开发**：通过 `@/utils/http` 调 `/api/admin/v1/*` 与 `/api/system/v1/*`，并用真实 RBAC 权限码门控。
+- ✅ **P0 路由补丁已本地验证通过**：`src/router/utils.ts` 已改为静态菜单初始化，不再请求 `/get-async-routes`；`src/api/routes.ts` 已删除。用户本地已通过 `pnpm typecheck`、`pnpm build`、`pnpm dev` 和真实后端登录/刷新验证。
+- ✅ **P1.1 meta-workbench 已本地验证通过**：新增 `src/api/srvf-meta.ts`，工作台接 `GET /api/admin/v1/meta/dashboard-summary` 并按后端返回 block 动态显示摘要卡片；预置 `POST /api/admin/v1/meta/resolve-labels` 封装。用户本地 `typecheck/build/dev/真实后端登录/Network/工作台摘要` 验证通过。
+- ⚠️ **后端权威版本**：以真实后端仓库 `BA7IEE/srvf-nest-api` 的 `docs/current-state.md`、`docs/handoff/admin-web.md` 和 live `/api/docs-json` 为准；2026-07-05 当前后端记录为 v0.37.0。
+- ✅ **登录页旧预填密码已清空并验证**：本地端测仍使用 `admin / ChangeMe123456`，页面不再预填旧密码 `admin123`。
 
 ## 当前允许工作
 
-允许（不依赖后端契约，见 `docs/srvf-api-contract-readiness.md` §5）：
+允许：
 
-- ✅ PR-5 静态菜单骨架（`src/router/modules/srvf-*.ts` + `src/views/srvf-*/` 占位页）；
-- ✅ 占位页面（layout-only，不调 API）；
-- ✅ 布局型 UI；
-- ✅ 文档；
-- ✅ PR-7 组织架构 UI 占位（裁决 8：不定义后端组织模型）；
-- ✅ PR-8 活动日历 UI 占位（裁决 7：不定义活动 schema / 状态机）；
-- ✅ 不依赖后端契约的静态原型。
+- ✅ 修复真实登录、token、路由守卫、权限过滤等主链问题，但必须声明涉及文件和影响范围；
+- ✅ 真实 SRVF list / detail 页面接线；
+- ✅ 静态菜单、占位页、布局型 UI、文档更新；
+- ✅ 后端契约已确认的组织、活动、成员、通知、内容、系统页；
+- ✅ `pnpm dev / typecheck / build / preview`。
 
 禁止：
 
-- ⛔ 接 NestJS 登录 / 真实业务 API；
-- ⛔ 改 `src/api/user.ts` / `src/utils/auth.ts` / `src/utils/http/index.ts` / `src/store/modules/user.ts` / `src/views/login/index.vue`（属 PR-4 范畴）；
-- ⛔ 启用 `asyncRoutes` / 新增 `getMenuList`；
-- ⛔ 定义后端字段、权限、状态机；
-- ⛔ 新增依赖（禁止 `pnpm add/remove/update/clean:cache`，禁止改 `package.json` 依赖字段）；
-- ⛔ 恢复 `tenantManagementRouter` 到菜单数组；
-- ⛔ 把仓库公开。
+- ⛔ 启用 `src/router/asyncRoutes.ts`；
+- ⛔ 新增或实现 `getMenuList`；
+- ⛔ 把 `/get-async-routes` 当成真实后端接口；
+- ⛔ 从 Pure Admin demo / mock / tenant 反推 SRVF 后端字段、权限码、状态机；
+- ⛔ 未授权修改依赖或公开仓库；
+- ⛔ 写入真实 `.env`、密钥、私钥、证书或用户隐私数据。
+
+## 长期 handoff 入口
+
+新聊天或新 Agent 接手时，必须先读：
+
+1. `docs/handoff/00_new_chat_start.md`
+2. `project_state.json`
+3. `docs/handoff/01_current_state.md`
+4. `docs/handoff/23_package_lineage.md`
+5. `docs/handoff/29_doc_conflict_map.md`
+6. `docs/handoff/30_handoff_self_check.md`
 
 ## AI 开发前必读
 
-| #   | 文件                                        | 用途                                                                                  |
-| --- | ------------------------------------------- | ------------------------------------------------------------------------------------- |
-| 1   | `CLAUDE.md`                                 | Claude Code 标准入口（身份 / PR-4 暂停 / 必读 / 禁止 / 允许）                         |
-| 2   | `AGENTS.md`                                 | 非 Claude AI agent（Cursor / Codex / Copilot）的对应入口                              |
-| 3   | `docs/pure-admin-max-ts-baseline.md`        | 主入口认知文档 v0.3（继承自 starter）                                                 |
-| 4   | `docs/pure-admin/02-ai-rules.md`            | AI 硬规则（§13.1 文件矩阵 + §13.4 8 步 Checklist）                                    |
-| 5   | **`docs/srvf-frontend-derivation.md`**      | SRVF 派生记录（§1 starter base commit + §4 后端 Q1~Q5 调研结论 + §6 PR 顺序表）       |
-| 6   | **`docs/srvf-api-contract-readiness.md`**   | PR-4 暂停权威决议（§3 暂停原因 + §4 阻塞清单 + §5 允许工作 + §6 readiness checklist） |
-| 7   | `docs/pure-admin/12-official-docs-index.md` | Pure Admin 官方文档真实链接索引                                                       |
+| #   | 文件                                      | 用途                                                                                 |
+| --- | ----------------------------------------- | ------------------------------------------------------------------------------------ |
+| 0   | `docs/handoff/00_new_chat_start.md`       | 新聊天 / 新 Agent 接手入口，先判断版本血缘、当前状态、冲突与下一步                   |
+| 1   | `project_state.json`                      | 机器可读当前状态、包血缘和下一步任务                                                 |
+| 2   | `CLAUDE.md`                               | Claude Code 标准入口（PR-4 已上线、auth 主链高风险声明、禁止项）                     |
+| 3   | `AGENTS.md`                               | 非 Claude AI agent（ChatGPT / Codex / Cursor / Copilot）的对应入口                   |
+| 4   | `docs/pure-admin-max-ts-baseline.md`      | 主入口认知文档 v0.3（继承自 starter）                                                |
+| 5   | `docs/pure-admin/02-ai-rules.md`          | AI 硬规则（§13.1 文件矩阵 + §13.4 8 步 Checklist）                                   |
+| 6   | `docs/pure-admin/03-router-menu.md`       | 路由 / 菜单规则，尤其 asyncRoutes P0 禁令                                            |
+| 7   | **`docs/srvf-frontend-derivation.md`**    | SRVF 派生记录（starter base、后端调研、PR 顺序）                                     |
+| 8   | **`docs/srvf-api-contract-readiness.md`** | PR-4 从历史暂停到已上线的决策记录                                                    |
+| 9   | **`docs/srvf-api-integration-guide.md`**  | 登录 / 鉴权接线说明；精确接口数量以后端 v0.37 current-state 和 `/api/docs-json` 为准 |
+| 10  | `docs/handoff/29_doc_conflict_map.md`     | 旧文档冲突地图，避免被 README / 历史权限数量误导                                     |
 
 ## 派生来源
 

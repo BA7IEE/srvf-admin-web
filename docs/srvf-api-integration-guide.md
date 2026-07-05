@@ -1,5 +1,7 @@
 # SRVF API 对接说明(srvf-nest-api `v0.32.0` ↔ srvf-admin-web)
 
+> **2026-07-05 状态提示**：真实后端当前权威状态以 `srvf-nest-api/docs/current-state.md` 与 live `/api/docs-json` 为准。后端 current-state 已滚动到 v0.37.0，记录 320 条预期路由、195 个权限码、35 个模块。本文件保留 auth/RBAC 接线流程参考价值，但文中历史权限码数量如 155 / 163 只能视为当时快照，不能作为当前精确值。
+
 > **来源**:由 srvf-nest-api 维护方核证;v0.29.0 首版(2026-06-22),**v0.32.0 复核(2026-06-28)**。
 > 本文是 [`srvf-api-contract-readiness.md`](./srvf-api-contract-readiness.md) §6 readiness 清单的**回答 + 接线规格**——清单冻结在后端 v0.10.0,彼时缺的(refresh-token / 稳定 RBAC / 稳定登录)早在 v0.29.0 **均已具备**。
 > **范围**:聚焦**登录 / 鉴权接线**。**PR-4 已上线(2026-06-22,PR #6)**,§4 的 3-call 登录是现行主流程;auth 主流程文件后续仅经**单独人审 PR** 改动。
@@ -139,7 +141,7 @@ this.roles = perm.data.roles.map(r => r.code); // 业务角色 code[]
 - **菜单/页面可见性建议用权限码驱动**(163 细粒度);`roles[]`(业务角色摘要 code,如 `ops-admin`/`apd-chief`)用于粗粒度;系统三档身份(`admin/me.role`)仅展示。
 - **招新报名「敏感字段分级」(后端 GAP-006 S3,已发 v0.31.0)**:`recruitment-application.read.record` 现为**普通查看**(脱敏列表/脱敏详情/公示名单/工作台 stats);新增 `recruitment-application.read.sensitive` = **敏感查看**(报名详情明文证件号/手机 + 取证件照 signed-URL)。前端据此**分级渲染**:报名详情页**字段集不变**,但「明文证件号/手机」与「取证件照」按钮应 `v-auth="'recruitment-application.read.sensitive'"` 门控——无该码时详情自动返脱敏值、取证件照端点返 `30100`。当前内置 `biz-admin` 同持两码(行为与改前一致);分级仅在将来细分子角色时生效。
 - **统一通知模块(后端 GAP-005,**S1–S5 全切片已发 v0.32.0**)— 阶段 4「通知中心」接线**:新增 **7 码**(全绑 `biz-admin`)= S1 站内信 `notification.{read,create,update,delete,publish}.record`(5)+ S2 `notification.update.template`(微信模板配置)+ S5 `notification.send.sms`(短信兜底)。**通知管理页**(`admin/v1/notifications`,镜像 content「撰写/发布」):列表/详情 `notification.read.record`、新建 `create`、编辑 `update`、软删 `delete`、发布/撤回/归档(状态机 draft→published→archived)`publish`;可见档 **4 选 1**(member/formal_member/department/management,**去 public**;department 档须填活跃部门 orgId 数组,否则 31012);类型 ∈ `notification_type` 字典(activity-reminder/recruitment/emergency/general);非法跃迁 31030。**渠道勾选** `channels`(in-app 恒发 / wechat / sms):勾 wechat → publish 时后端向已订阅会员推送;勾 sms 仅声明可兜底,**短信永不随 publish 自动发**,须在详情页显式「发送短信」→ `POST …/notifications/{id}/send-sms`(`confirmed:false` 预览 recipientCount → `true` 真发,**计费二次确认**;未声明 sms/未发布 → 31013)。**微信模板配置**:`admin/v1/notification-wechat-templates`(各类型 templateId + 启用)。**producer 系统定向**(发号/入队/报名审批/活动取消/考勤终审)由后端业务事务外自动触发,**admin 面无新操作**。**会员侧站内信**(`app/v1/notifications` feed / 未读红点 / 标记已读)是小程序面,**后台不调**。
-- **后端没有菜单树端点**(无 `/get-async-routes` 同类):本仓 `getMenuList` 现为空是预期。**菜单仍由前端静态定义**(见 `docs/srvf-static-menu-skeleton-plan.md`)+ **用 `permissions[]` 过滤**;不要等后端给菜单树(本期没有)。`src/router/asyncRoutes.ts` 的 P0 禁令不受影响。
+- **后端没有菜单树端点**(无 `/get-async-routes` 同类):本仓 `getMenuList` 现为空是预期。**菜单仍由前端静态定义**(见 `docs/srvf-static-menu-skeleton-plan.md`)+ **用 `permissions[]` / `roles[]` 过滤**;不要等后端给菜单树(本期没有)。`src/router/asyncRoutes.ts` 的 P0 禁令不受影响。`7.0.1-p0.routes` 已移除生产主链对 `/get-async-routes` 的调用。
 
 ---
 
