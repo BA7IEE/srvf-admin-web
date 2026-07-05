@@ -198,5 +198,29 @@ export default [
         }
       }
     ]
+  },
+  {
+    // 一次性运维工具组：后端 handoff（announcement-import,PR11）明确「平时不用,不建议加进导航树」，
+    // 整组 showLink:false——不进侧栏、无菜单高亮，只能靠直接 URL 访问。
+    path: "/srvf/tools",
+    name: "SrvfTools",
+    component: Layout,
+    redirect: "/srvf/tools/announcement-import",
+    meta: {
+      title: "运维工具",
+      showLink: false
+    },
+    children: [
+      {
+        path: "/srvf/tools/announcement-import",
+        name: "SrvfAnnouncementImport",
+        component: () =>
+          import("@/views/srvf/tools/announcement-import/index.vue"),
+        meta: {
+          title: "公告导入（一次性工具）",
+          showLink: false
+        }
+      }
+    ]
   }
 ] satisfies Array<RouteConfigsTable>;
