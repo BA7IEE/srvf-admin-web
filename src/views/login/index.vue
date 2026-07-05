@@ -41,7 +41,7 @@ const { VITE_ENABLE_TENANT } = import.meta.env;
 const ruleForm = reactive({
   tenant: "pure-admin",
   username: "admin",
-  password: "admin123"
+  password: ""
 });
 
 const onLogin = async (formEl: FormInstance | undefined) => {

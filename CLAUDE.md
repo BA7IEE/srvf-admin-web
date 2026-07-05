@@ -16,7 +16,7 @@
 ### PR-4 NestJS login integration is **LIVE** (上线 2026-06-22)
 
 - PR-4 was restarted after `docs/srvf-api-contract-readiness.md` §6 Readiness Checklist was fully confirmed (10/10) and humans explicitly approved (2026-06-22), then shipped to `main` via PR #6.
-- Real login is the **3-call** flow: `POST /api/auth/v1/login` → `GET /api/admin/v1/me` + `GET /api/system/v1/rbac/me/permissions`. Verified live (SUPER_ADMIN · 155 permissions).
+- Real login is the **3-call** flow: `POST /api/auth/v1/login` → `GET /api/admin/v1/me` + `GET /api/system/v1/rbac/me/permissions`. Verified live at ship time; re-verify against current `/api/docs-json` before relying on exact counts. Backend current-state on 2026-07-05 records v0.37.0 / 195 permission codes.
 - The auth files are now **active code** (see §4). As of 2026-07-05 they are **no longer limited to a mandatory separate PR** — changes are allowed inside a business PR as long as the changed files / what changed / impact area are explicitly declared (see §4). The harness (`.claude/settings.json`) still hard-blocks edits to these 5 files until a human manually flips them from `deny`; this wording change does not itself unblock the hook.
 
 ### Where the original PR-4 attempt is (historical)

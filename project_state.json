@@ -1,0 +1,140 @@
+{
+  "schema_version": "3.0",
+  "project_name": "srvf-admin-web",
+  "project_type": "Vue 3 + Vite + TypeScript + Pinia + Element Plus admin frontend",
+  "current_version": "7.1.0-p1.meta-workbench",
+  "frontend_package_json_version": "7.0.0",
+  "backend_authority": {
+    "repository": "https://github.com/BA7IEE/srvf-nest-api",
+    "current_backend_version": "v0.37.0",
+    "authority_docs": [
+      "srvf-nest-api/docs/current-state.md",
+      "srvf-nest-api/docs/handoff/admin-web.md",
+      "live http://localhost:3000/api/docs-json"
+    ],
+    "known_backend_counts_2026_07_05": {
+      "expected_routes": 320,
+      "permission_codes": 195,
+      "modules": 35,
+      "migrations": 39
+    }
+  },
+  "current_status": "LOCAL_TEST_PASS",
+  "latest_full_package": {
+    "filename": "srvf-admin-web_v7.1.0-p1.meta-workbench_validated_full_20260705.zip",
+    "sha256": "pending_external_manifest",
+    "package_type": "validation_docs_full",
+    "validation_status": "LOCAL_TEST_PASS_BY_USER_MESSAGE",
+    "created_at": "2026-07-05 P1 meta-workbench validation docs sync",
+    "based_on": "srvf-admin-web_v7.1.0-p1.meta-workbench_full_20260705.zip",
+    "based_on_sha256": "67a4ba7c3d18b283aa3381acf627b7dd037c5199230076a8335abfc9bbdd8b45",
+    "source_code_same_as": "srvf-admin-web_v7.1.0-p1.meta-workbench_full_20260705.zip",
+    "self_hash_note": "包内无法稳定写入自身 SHA256；以外部 release_manifest 和 sha256 文件为准。",
+    "notes": "仅同步用户本地验证结果与 handoff 状态；src/、依赖、配置均未修改。"
+  },
+  "latest_delta_package": {
+    "filename": "srvf-admin-web_v7.1.0-p1.meta-workbench_validated_delta_20260705.zip",
+    "sha256": "pending_external_manifest",
+    "package_type": "validation_docs_delta",
+    "validation_status": "LOCAL_TEST_PASS_BY_USER_MESSAGE",
+    "created_at": "2026-07-05 P1 meta-workbench validation docs sync",
+    "based_on": "srvf-admin-web_v7.1.0-p1.meta-workbench_full_20260705.zip",
+    "based_on_sha256": "67a4ba7c3d18b283aa3381acf627b7dd037c5199230076a8335abfc9bbdd8b45",
+    "source_code_same_as": "srvf-admin-web_v7.1.0-p1.meta-workbench_full_20260705.zip",
+    "self_hash_note": "以外部 release_manifest 和 sha256 文件为准。",
+    "notes": "仅包含本次验证状态同步相关文档增量。"
+  },
+  "last_user_confirmed_code_package": {
+    "filename": "srvf-admin-web_v7.1.0-p1.meta-workbench_full_20260705.zip",
+    "sha256": "67a4ba7c3d18b283aa3381acf627b7dd037c5199230076a8335abfc9bbdd8b45",
+    "confirmed_at": "2026-07-05 user local validation report for P1.1 meta-workbench",
+    "validation_status": "LOCAL_TEST_PASS_BY_USER_MESSAGE",
+    "validated_commands": ["pnpm typecheck", "pnpm build", "pnpm dev"],
+    "validated_browser": [
+      "login page password field is empty and no longer prefilled with admin123",
+      "real backend login admin / ChangeMe123456 succeeded",
+      "GET /api/admin/v1/meta/dashboard-summary returned 200",
+      "Network did not show /get-async-routes",
+      "workbench summary rendered: 待审报名 0, 考勤待一级审核 1, 考勤待终审 2, 进行中活动 0",
+      "dashboard-summary rendered only backend returned blocks: registrations / attendanceSheets / activities; no missing permission block was rendered as 0",
+      "报名审批 loaded empty state; 考勤审批 loaded 1 record",
+      "console had no error/warn/issue"
+    ],
+    "notes": "用户说明本地验证通过，dev 服务验证后已停止，未改代码。"
+  },
+  "current_uploaded_baseline": {
+    "filename": "srvf-admin-web_git-main_c2001c9_20260705.zip",
+    "sha256": "e23f33b63137913104901512d94498a6a3a1a454a3f0dbf1cabe8de88efd5492",
+    "validation_status": "STATIC_ANALYSIS_ONLY",
+    "notes": "本轮真实前端基准。只做静态分析与文档补齐，未运行 typecheck/build/dev。"
+  },
+  "reference_package": {
+    "filename": "SRVF-web-admin参考.zip",
+    "usage": "pure-admin / vue-pure-admin UI 参考包，只读参考，不作为业务基准，不得覆盖当前仓库。"
+  },
+  "change_flags": {
+    "business_code_changed": false,
+    "database_changed": false,
+    "frontend_source_changed": false,
+    "mobile_changed": false,
+    "docker_changed": false,
+    "deployment_changed": false,
+    "docs_only": true,
+    "requires_retest": false,
+    "auth_route_main_chain_changed": false,
+    "dependency_changed": false,
+    "validation_status_sync_only": true,
+    "workbench_meta_changed": false,
+    "login_default_password_cleared": false
+  },
+  "status_levels": [
+    "DRAFT",
+    "CODE_DONE",
+    "BUILD_PASS",
+    "LOCAL_TEST_PASS",
+    "DEPLOY_PASS",
+    "USER_CONFIRMED"
+  ],
+  "package_types": [
+    "code",
+    "docs_only",
+    "config_only",
+    "deploy_only",
+    "database_only",
+    "mixed"
+  ],
+  "must_read_docs": [
+    "docs/handoff/00_new_chat_start.md",
+    "docs/handoff/01_current_state.md",
+    "docs/handoff/02_development_rules.md",
+    "docs/handoff/11_decision_log.md",
+    "docs/handoff/12_task_board.md",
+    "docs/handoff/13_code_map.md",
+    "docs/handoff/19_ai_workflow_protocol.md",
+    "docs/handoff/23_package_lineage.md",
+    "docs/handoff/24_validation_matrix.md",
+    "docs/handoff/29_doc_conflict_map.md",
+    "docs/handoff/30_handoff_self_check.md"
+  ],
+  "known_p0_risks": [
+    "P0 /get-async-routes 生产主链依赖已在 7.0.1-p0.routes 中移除，并已由用户本地验证通过；本轮 7.1.0 未恢复该依赖。",
+    "当前上传基准与用户前序确认 v7.8.0 scoped-authz 浏览器冒烟包之间的血缘仍未证实；如要合并历史测试能力，需单独核对。"
+  ],
+  "next_task": "以 7.1.0-p1.meta-workbench_validated_full 作为下一轮开发基准。建议下一步先做 P1.2 memberships-read 开发前分析：队员详情新增 memberships 只读组织归属，不删除旧 department。",
+  "last_updated_at": "2026-07-05 P1 meta-workbench local validation recorded",
+  "current_code_baseline": {
+    "version": "7.1.0-p1.meta-workbench",
+    "full_package": "srvf-admin-web_v7.1.0-p1.meta-workbench_validated_full_20260705.zip",
+    "full_package_sha256": "pending_external_manifest",
+    "source_code_same_as": "srvf-admin-web_v7.1.0-p1.meta-workbench_full_20260705.zip",
+    "source_code_package_sha256": "67a4ba7c3d18b283aa3381acf627b7dd037c5199230076a8335abfc9bbdd8b45",
+    "delta_package": "srvf-admin-web_v7.1.0-p1.meta-workbench_validated_delta_20260705.zip",
+    "delta_package_sha256": "pending_external_manifest",
+    "code_change_summary": "P1.1 meta-workbench：新增 src/api/srvf-meta.ts；工作台接 GET /api/admin/v1/meta/dashboard-summary 并按实际 block 渲染摘要卡片；预置 resolve-labels 封装；登录页清空旧密码 admin123。",
+    "validation_status": "LOCAL_TEST_PASS_BY_USER_MESSAGE"
+  },
+  "known_non_p0_followups": [
+    "当前前端未完整对齐后端 v0.37.0 scoped-authz / memberships / positions / role-bindings / action-state batch 能力。",
+    "下一轮建议优先做 memberships-read 小切片：队员详情新增组织归属 Tab，只读接 memberships；不删除旧 department。"
+  ]
+}
