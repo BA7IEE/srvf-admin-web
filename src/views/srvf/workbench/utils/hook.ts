@@ -20,7 +20,8 @@ import {
   approveAttendanceSheet,
   rejectAttendanceSheet,
   finalApproveAttendanceSheet,
-  finalRejectAttendanceSheet
+  finalRejectAttendanceSheet,
+  finalReviewErrorMessage
 } from "@/api/srvf-attendance";
 import { useSrvfDictStoreHook } from "@/store/modules/srvfDict";
 
@@ -74,6 +75,8 @@ export function useApprovalRegistrations() {
   const loading = ref(false);
   /** statusCode 横扫过滤（默认 pending = 待审；空串 = 全部状态） */
   const statusFilter = ref<string>("pending");
+  /** q 综合关键词（契约 F2；空串不传参） */
+  const keyword = ref<string>("");
   const pagination = reactive<PaginationProps>({
     total: 0,
     pageSize: 10,
@@ -139,7 +142,8 @@ export function useApprovalRegistrations() {
       const { code, data } = await getAllRegistrations({
         page: pagination.currentPage,
         pageSize: pagination.pageSize,
-        ...(statusFilter.value ? { statusCode: statusFilter.value } : {})
+        ...(statusFilter.value ? { statusCode: statusFilter.value } : {}),
+        ...(keyword.value.trim() ? { q: keyword.value.trim() } : {})
       });
       if (code === 0) {
         dataList.value = data.items;
@@ -291,6 +295,7 @@ export function useApprovalRegistrations() {
     canCancel,
     loading,
     statusFilter,
+    keyword,
     statusOptions,
     columns,
     dataList,
@@ -326,6 +331,8 @@ export function useApprovalAttendance() {
   const loading = ref(false);
   /** statusCode 横扫过滤（默认 pending = 待一级审；可切 pending_final_review = 待终审） */
   const statusFilter = ref<string>("pending");
+  /** q 综合关键词（契约 F2；空串不传参） */
+  const keyword = ref<string>("");
   const pagination = reactive<PaginationProps>({
     total: 0,
     pageSize: 10,
@@ -378,7 +385,8 @@ export function useApprovalAttendance() {
       const { code, data } = await getAllAttendanceSheets({
         page: pagination.currentPage,
         pageSize: pagination.pageSize,
-        ...(statusFilter.value ? { statusCode: statusFilter.value } : {})
+        ...(statusFilter.value ? { statusCode: statusFilter.value } : {}),
+        ...(keyword.value.trim() ? { q: keyword.value.trim() } : {})
       });
       if (code === 0) {
         dataList.value = data.items;
@@ -500,7 +508,7 @@ export function useApprovalAttendance() {
           message("已终审通过", { type: "success" });
           onSearch();
         } catch (error: any) {
-          message(error?.response?.data?.message ?? "终审通过失败", {
+          message(finalReviewErrorMessage(error, "终审通过失败"), {
             type: "error"
           });
         }
@@ -532,7 +540,7 @@ export function useApprovalAttendance() {
           message("已终审驳回", { type: "success" });
           onSearch();
         } catch (error: any) {
-          message(error?.response?.data?.message ?? "终审驳回失败", {
+          message(finalReviewErrorMessage(error, "终审驳回失败"), {
             type: "error"
           });
         }
@@ -553,6 +561,7 @@ export function useApprovalAttendance() {
     canFinalReject,
     loading,
     statusFilter,
+    keyword,
     statusOptions,
     columns,
     dataList,

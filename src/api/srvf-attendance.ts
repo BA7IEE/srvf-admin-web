@@ -225,3 +225,29 @@ export const getAttendanceSheetReviewDetail = (id: string) =>
     "get",
     `/api/admin/v1/attendance-sheets/${id}/review-detail`
   );
+
+/**
+ * 考勤终审失败的专用文案（后端 handoff 踩坑 #8：22074/22075 必须独立提示，
+ * 不得混入通用"权限不足"）。码源 = 后端 BizCode（v0.35 摘码微刀落地）：
+ * - 22074 自审拒：提交人 == 终审人（SUPER_ADMIN 也拒）
+ * - 22075 同人拒：一级审核人 == 终审人（后端 env `ATTENDANCE_ALLOW_SAME_REVIEWER` 可放开）
+ * - 30100 判权失败：2026-07-03 起 biz-admin 不再天然持终审权，仅 SUPER_ADMIN 或
+ *   「考勤终审员」scoped 角色绑定可终审
+ * 其余码回落后端 message，再回落调用方兜底文案。
+ */
+export function finalReviewErrorMessage(
+  error: unknown,
+  fallback: string
+): string {
+  const data = (
+    error as { response?: { data?: { code?: unknown; message?: string } } }
+  )?.response?.data;
+  const code = Number(data?.code);
+  if (code === 22074)
+    return "不能终审自己提交的考勤单（自审限制 22074），请转交其他有终审权的人处理";
+  if (code === 22075)
+    return "一级审核人与终审人不能是同一人（22075），请由另一位终审人处理";
+  if (code === 30100)
+    return "当前账号没有考勤终审权（30100）：终审权仅来自 SUPER_ADMIN 或「考勤终审员」角色绑定";
+  return data?.message ?? fallback;
+}
