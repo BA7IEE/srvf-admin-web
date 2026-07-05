@@ -65,10 +65,6 @@ export function useRecruitmentTools(cycleId: string) {
     }
   }
 
-  function thresholdItemLabel(code: string) {
-    return THRESHOLD_LABEL[code] ?? code;
-  }
-
   /* -------------------- 一键发号预检 -------------------- */
   const precheckVisible = ref(false);
   const precheckLoading = ref(false);
@@ -220,7 +216,6 @@ export function useRecruitmentTools(cycleId: string) {
     stats,
     statsLoading,
     loadStats,
-    thresholdItemLabel,
     precheckVisible,
     precheckLoading,
     precheckData,

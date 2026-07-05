@@ -237,8 +237,10 @@ export type RecruitmentStatsPending = {
   pendingEvaluation: number;
   pendingIssuance: number;
 };
+/** 门槛完成分布单项（后端 `RecruitmentStatsThresholdItemDto`；name 是后端已给的中文展示名,不需前端二次查表）。 */
 export type RecruitmentStatsThresholdItem = {
-  thresholdCode: string;
+  code: string;
+  name: string;
   completedCount: number;
 };
 export type RecruitmentStatsThreshold = {

@@ -141,7 +141,6 @@ const {
   stats,
   statsLoading,
   loadStats,
-  thresholdItemLabel,
   precheckVisible,
   precheckLoading,
   precheckData,
@@ -327,11 +326,10 @@ onMounted(() => {
             <div class="stats-group__row">
               <span
                 v-for="item in stats.threshold.byThreshold"
-                :key="item.thresholdCode"
+                :key="item.code"
                 class="stats-group__pill"
               >
-                {{ thresholdItemLabel(item.thresholdCode) }}
-                {{ item.completedCount }}
+                {{ item.name }} {{ item.completedCount }}
               </span>
             </div>
           </div>
