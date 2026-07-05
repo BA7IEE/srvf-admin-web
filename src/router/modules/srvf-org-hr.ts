@@ -61,6 +61,18 @@ export default [
           title: "任职总表",
           auths: ["position-assignment.read.record"]
         }
+      },
+      {
+        // P1-D 角色绑定(自 7.11.0 fork 移植 + 补 v0.36 分页/preview/batch;
+        // 与「系统管理/角色权限」(角色→权限码静态定义)是两个不同心智,见蓝图 §7)
+        path: "/srvf/org-hr/role-bindings",
+        name: "SrvfRoleBindings",
+        component: () => import("@/views/srvf/org-hr/role-bindings/index.vue"),
+        meta: {
+          icon: "ri/user-follow-line",
+          title: "角色绑定",
+          auths: ["role-binding.read.record"]
+        }
       }
     ]
   }
