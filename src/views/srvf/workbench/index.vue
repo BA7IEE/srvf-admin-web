@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { computed, ref, onMounted } from "vue";
 import { PureTableBar } from "@/components/RePureTableBar";
+import { getDashboardSummary, type DashboardSummary } from "@/api/srvf-meta";
 import { useApprovalRegistrations, useApprovalAttendance } from "./utils/hook";
 
 defineOptions({
@@ -9,9 +10,83 @@ defineOptions({
 
 /**
  * 审批工作台 = 跨轴横扫"待我处理"（脱离 :activityId,按 statusCode 横扫报名/考勤）。
- * 作为工作台落地页兜底（后端暂无聚合 stats 端点）。沿轴下钻请点行内「前往作战室」。
+ * 作为工作台落地页：顶部 dashboard-summary 做聚合摘要，下面保留横扫列表。
  */
 const activeTab = ref<"registrations" | "attendances">("registrations");
+
+const summary = ref<DashboardSummary | null>(null);
+const summaryLoading = ref(false);
+const summaryError = ref("");
+
+type SummaryCard = {
+  key: string;
+  title: string;
+  value: number;
+  desc: string;
+};
+
+const summaryCards = computed<SummaryCard[]>(() => {
+  const current = summary.value;
+  if (!current) return [];
+
+  const cards: SummaryCard[] = [];
+
+  if (current.registrations) {
+    cards.push({
+      key: "registrations.pending",
+      title: "待审报名",
+      value: current.registrations.pending,
+      desc: "registration_status = pending"
+    });
+  }
+
+  if (current.attendanceSheets) {
+    cards.push({
+      key: "attendanceSheets.pending",
+      title: "考勤待一级审核",
+      value: current.attendanceSheets.pending,
+      desc: "attendance_sheet_status = pending"
+    });
+    cards.push({
+      key: "attendanceSheets.pendingFinalReview",
+      title: "考勤待终审",
+      value: current.attendanceSheets.pendingFinalReview,
+      desc: "attendance_sheet_status = pending_final_review"
+    });
+  }
+
+  if (current.activities) {
+    cards.push({
+      key: "activities.published",
+      title: "进行中活动",
+      value: current.activities.published,
+      desc: "activity_status = published"
+    });
+  }
+
+  return cards;
+});
+
+async function loadDashboardSummary() {
+  summaryLoading.value = true;
+  summaryError.value = "";
+  try {
+    const { code, data } = await getDashboardSummary();
+    if (code === 0) {
+      summary.value = data;
+      return;
+    }
+    summary.value = null;
+    summaryError.value = "工作台摘要暂不可用，下方审批列表不受影响";
+  } catch (error: any) {
+    summary.value = null;
+    summaryError.value =
+      error?.response?.data?.message ??
+      "工作台摘要加载失败，下方审批列表不受影响";
+  } finally {
+    summaryLoading.value = false;
+  }
+}
 
 const {
   canRead: regCanRead,
@@ -60,6 +135,7 @@ const {
 } = useApprovalAttendance();
 
 onMounted(() => {
+  loadDashboardSummary();
   // onSearch 自带 canRead 守卫；有读码即按默认 statusFilter=pending 横扫
   regOnSearch();
   attOnSearch();
@@ -68,6 +144,44 @@ onMounted(() => {
 
 <template>
   <div class="main">
+    <el-card shadow="never" class="summary-card">
+      <template #header>
+        <div class="summary-header">
+          <div>
+            <div class="summary-title">工作台摘要</div>
+            <div class="summary-subtitle">
+              摘要块由后端按权限裁剪，缺权限的块不会显示为 0
+            </div>
+          </div>
+          <el-button
+            link
+            type="primary"
+            :loading="summaryLoading"
+            @click="loadDashboardSummary"
+          >
+            刷新摘要
+          </el-button>
+        </div>
+      </template>
+
+      <el-skeleton v-if="summaryLoading && !summary" animated :rows="2" />
+      <el-alert
+        v-else-if="summaryError"
+        :title="summaryError"
+        type="warning"
+        show-icon
+        :closable="false"
+      />
+      <div v-else-if="summaryCards.length" class="summary-grid">
+        <div v-for="card in summaryCards" :key="card.key" class="summary-item">
+          <div class="summary-item-title">{{ card.title }}</div>
+          <div class="summary-item-value">{{ card.value }}</div>
+          <div class="summary-item-desc">{{ card.desc }}</div>
+        </div>
+      </div>
+      <el-empty v-else description="当前账号暂无可展示的工作台摘要块" />
+    </el-card>
+
     <el-tabs v-model="activeTab" class="workbench-tabs">
       <!-- 报名审批：跨所有活动横扫 -->
       <el-tab-pane label="报名审批" name="registrations">
@@ -293,5 +407,60 @@ onMounted(() => {
 <style scoped lang="scss">
 .main {
   margin: 24px 24px 0 !important;
+}
+
+.summary-card {
+  margin-bottom: 16px;
+}
+
+.summary-header {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.summary-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--el-text-color-primary);
+}
+
+.summary-subtitle {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.summary-item {
+  padding: 16px;
+  background: var(--el-fill-color-lighter);
+  border: 1px solid var(--el-border-color-light);
+  border-radius: 8px;
+}
+
+.summary-item-title {
+  font-size: 13px;
+  color: var(--el-text-color-secondary);
+}
+
+.summary-item-value {
+  margin-top: 8px;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--el-text-color-primary);
+}
+
+.summary-item-desc {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--el-text-color-placeholder);
 }
 </style>
