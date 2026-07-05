@@ -4,6 +4,7 @@ import { useOrganizations } from "./utils/hook";
 import { PureTableBar } from "@/components/RePureTableBar";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
 import MembersDrawer from "./members-drawer.vue";
+import AssignmentsDrawer from "./assignments-drawer.vue";
 import type { OrgTreeNode } from "@/api/srvf-organization";
 
 import Delete from "~icons/ep/delete";
@@ -22,12 +23,21 @@ function openMembers(row: OrgTreeNode) {
   membersVisible.value = true;
 }
 
+/** 在任职务面板（组织轴 position-assignments drawer） */
+const assignmentsVisible = ref(false);
+const assignmentsOrg = ref<{ id: string; name: string }>({ id: "", name: "" });
+function openAssignments(row: OrgTreeNode) {
+  assignmentsOrg.value = { id: row.id, name: row.name };
+  assignmentsVisible.value = true;
+}
+
 const {
   canRead,
   canCreate,
   canUpdate,
   canDelete,
   canMembers,
+  canAssignments,
   loading,
   columns,
   dataList,
@@ -97,6 +107,16 @@ onMounted(() => {
               成员
             </el-button>
             <el-button
+              v-if="canAssignments"
+              class="reset-margin"
+              link
+              type="primary"
+              :size="size"
+              @click="openAssignments(row)"
+            >
+              在任职务
+            </el-button>
+            <el-button
               v-if="canUpdate"
               class="reset-margin"
               link
@@ -148,6 +168,11 @@ onMounted(() => {
       v-model="membersVisible"
       :org-id="membersOrg.id"
       :org-name="membersOrg.name"
+    />
+    <AssignmentsDrawer
+      v-model="assignmentsVisible"
+      :org-id="assignmentsOrg.id"
+      :org-name="assignmentsOrg.name"
     />
   </div>
 </template>

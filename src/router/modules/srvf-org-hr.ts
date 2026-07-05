@@ -49,6 +49,18 @@ export default [
           title: "归属体检",
           auths: ["membership.list.record"]
         }
+      },
+      {
+        // P1-C 任职总表(全新建,fork 亦无;任命创建入口在组织架构页「在任职务」面板)
+        path: "/srvf/org-hr/position-assignments",
+        name: "SrvfPositionAssignments",
+        component: () =>
+          import("@/views/srvf/org-hr/position-assignments/index.vue"),
+        meta: {
+          icon: "ri/user-star-line",
+          title: "任职总表",
+          auths: ["position-assignment.read.record"]
+        }
       }
     ]
   }

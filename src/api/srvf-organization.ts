@@ -111,3 +111,28 @@ export const updateOrganizationStatus = (id: string, status: OrgStatus) =>
     `/api/admin/v1/organizations/${id}/status`,
     { data: { status } }
   );
+
+/** 选择器项（后端 `OrgOptionItemDto`）。 */
+export type OrgOptionItem = {
+  id: string;
+  label: string;
+  code: string | null;
+  nodeTypeCode: string;
+  parentId: string | null;
+};
+
+/**
+ * 组织选择器投影 `GET /api/admin/v1/organizations/options`（rbac: `org.read.node`）。
+ * q 模糊命中 name+code；limit ≤100（后端硬校验,超出 400,同 members/options/positions/options）。
+ */
+export const getOrgOptions = (params?: {
+  q?: string;
+  nodeTypeCode?: string;
+  status?: OrgStatus;
+  limit?: number;
+}) =>
+  http.request<Envelope<{ items: OrgOptionItem[] }>>(
+    "get",
+    "/api/admin/v1/organizations/options",
+    { params }
+  );

@@ -12,6 +12,7 @@ import { useMemberInsurances } from "../insurances/utils/hook";
 import { useEmergencyContacts } from "../emergency-contacts/utils/hook";
 import { useMemberDepartment } from "../department/utils/hook";
 import { useMemberMemberships } from "../memberships/utils/hook";
+import { useMemberPositionAssignments } from "../position-assignments/utils/hook";
 import { useMemberProfile } from "../profile/utils/hook";
 import {
   useMemberRegistrations,
@@ -47,6 +48,7 @@ const activeTab = ref<
   | "emergency-contacts"
   | "department"
   | "memberships"
+  | "position-assignments"
   | "profile"
   | "registrations-history"
   | "attendance-records"
@@ -140,6 +142,18 @@ const {
   onSearch: msOnSearch
 } = useMemberMemberships(memberId);
 
+/* --------------- Tab：任职（队员轴,双轴子资源只读端;任命/撤销在组织架构页「在任职务」面板） --------------- */
+const {
+  canRead: paCanRead,
+  loading: paLoading,
+  columns: paColumns,
+  dataList: paDataList,
+  positionLabel: paPositionLabel,
+  orgLabel: paOrgLabel,
+  statusMeta: paStatusMeta,
+  onSearch: paOnSearch
+} = useMemberPositionAssignments(memberId);
+
 /* --------------- Tab：档案（1:1 子资源：读 + 新建/编辑，memberId 由路由参数注入；无队员下拉） --------------- */
 const {
   canRead: profileCanRead,
@@ -196,6 +210,7 @@ onMounted(() => {
   ecOnSearch();
   deptOnSearch();
   msOnSearch();
+  paOnSearch();
   profileOnSearch();
   regOnSearch();
   arecOnSearch();
@@ -534,6 +549,56 @@ onMounted(() => {
         <el-empty
           v-else
           description="您没有查看组织归属的权限（membership.list.record）"
+        />
+      </el-tab-pane>
+
+      <!-- Tab：任职（队员轴,只读全历史;任命/撤销在组织架构页「在任职务」面板） -->
+      <el-tab-pane label="任职" name="position-assignments">
+        <template v-if="paCanRead">
+          <PureTableBar
+            title="任职历史（ACTIVE/ENDED/REVOKED 全量）"
+            :columns="paColumns"
+            @refresh="paOnSearch"
+          >
+            <template v-slot="{ size, dynamicColumns }">
+              <pure-table
+                row-key="id"
+                adaptive
+                :adaptiveConfig="{ offsetBottom: 108 }"
+                align-whole="center"
+                table-layout="auto"
+                :loading="paLoading"
+                :size="size"
+                :data="paDataList"
+                :columns="dynamicColumns"
+                :header-cell-style="{
+                  background: 'var(--el-fill-color-light)',
+                  color: 'var(--el-text-color-primary)'
+                }"
+              >
+                <template #position="{ row }">
+                  {{ paPositionLabel(row.positionId) }}
+                </template>
+                <template #organization="{ row }">
+                  {{ paOrgLabel(row.organizationId) }}
+                </template>
+                <template #status="{ row }">
+                  <el-tag :type="paStatusMeta(row.status).type">
+                    {{ paStatusMeta(row.status).text }}
+                  </el-tag>
+                </template>
+                <template #isConcurrent="{ row }">
+                  <el-tag :type="row.isConcurrent ? 'warning' : 'info'">
+                    {{ row.isConcurrent ? "是" : "否" }}
+                  </el-tag>
+                </template>
+              </pure-table>
+            </template>
+          </PureTableBar>
+        </template>
+        <el-empty
+          v-else
+          description="您没有查看任职的权限（position-assignment.read.record）"
         />
       </el-tab-pane>
 
