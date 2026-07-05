@@ -1,5 +1,7 @@
 # SRVF Static Menu Skeleton Plan
 
+> **📦 SUPERSEDED（2026-07-06 标注）**：本方案是后端 v0.10.0 时代的 PR-5-A 产物，已被实际落地超越——7 组任务式 IA 于 2026-06-28 起上线并全部接真 API，§1 前提中「PR-4 暂停 / 只做占位 / 契约未就绪」均已失效。现行 IA 与下一步见 `docs/srvf-admin-vnext-blueprint.md` §5。本文仅作历史参考。
+
 > **版本**：v0.2（基于 srvf-admin-web HEAD `39056fc` + srvf-nest-api HEAD `fc8241d` 的只读调研重写）
 > 本文档为 **PR-5-A**（方案）成果，后续 **PR-5-B**（落地实现）必须严格以本文档为边界。
 > 本轮**只写方案、不写代码**；调研结论以"当前事实"为准，不预判任何尚未确认的后端契约。

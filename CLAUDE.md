@@ -28,6 +28,12 @@
 - ✅ Vite proxy: `/api → http://localhost:3000` (`vite.config.ts`).
 - ✅ Data-driven SRVF pages are allowed (see §5).
 
+### Alignment vs backend v0.37.0 (2026-07-06 重估)
+
+- 后端已演进至 **v0.37.0**（232 paths / 320 operations / 195 权限码 · handoff gap-ledger 全关）。
+- 结构级对账（2026-07-06 · live `/api/docs-json`）：前端现有 SRVF 业务调用 **105/105 命中现行契约**——已接页面不存在"接口过时"；差距是**覆盖面**（admin/system 面 67 条路径未消费，集中在组织·职务·任职·分管·角色绑定·分域授权 + 附件链 + 权限治理）。
+- 差距矩阵、IA v2 与 Phase 0~3 路线图见 **`docs/srvf-admin-vnext-blueprint.md`**（当前开发路线单一来源）。
+
 ## 3. Must Read First
 
 Every AI task in this repository must read these documents first, in order:
@@ -39,6 +45,8 @@ Every AI task in this repository must read these documents first, in order:
 5. `docs/pure-admin/12-official-docs-index.md` (Pure Admin official docs index with verified URLs)
 6. `docs/pure-admin/13-ai-harness.md` (AI harness · `.claude/` deny+ask rules and guard/verify hooks that mechanically enforce §13.1 / §13.3 · how a human grants an exception by editing `settings.json` — `deny` always beats `allow`)
 7. **后端交接能力图**:`../srvf-nest-api/docs/handoff/admin-web.md`(对接前必读 — **按任务设计页面,不是按资源**:任务→端点图 / 轴模型 / 踩坑 / 缺口;字段真相 = 后端 live `/api/docs-json`。缺接口在该文件 gap-ledger 登记)
+
+8. **`docs/srvf-admin-vnext-blueprint.md`**（v0.37.0 重估蓝图 · 差距矩阵 · IA v2 · Phase 0~3 路线图——新业务页动工前先在此定位）
 
 For route / menu work also read:
 
@@ -74,12 +82,12 @@ These apply to ALL AI tasks in this repository, no exceptions:
 API contract readiness is met (§2 · readiness §6 = 10/10) and PR-4 is shipped, so **real data-driven pages are now allowed**:
 
 - ✅ **Real SRVF list / detail pages** wired to `/api/admin/v1/*` · `/api/system/v1/*` through `@/utils/http` (dev proxy `/api → :3000`), gated by **real RBAC codes** via `hasPerms("<code>")`. Reuse the `Re*` components + the 队员页 three-piece paradigm (`src/views/srvf/members-domain/members/` `index.vue` + `utils/hook.ts` + `src/api/srvf-member.ts`).
-- ✅ Static menu skeleton (`src/router/modules/srvf-*.ts`) and placeholder pages where the contract isn't ready yet.
+- ✅ Static menu skeleton (`src/router/modules/srvf-*.ts`). Placeholder pages are **no longer the default** — the v0.37.0 contract is fully shipped (backend gap-ledger closed); a placeholder is acceptable only for a genuinely missing backend capability that has first been registered in the backend gap-ledger.
 - ✅ Layout-only UI work and documentation updates (under `docs/`).
 - ✅ Organization / activity-domain UIs.
 - ✅ `pnpm dev / build / lint / typecheck / preview`.
 
-Types come from live **`/api/docs-json`** (the single contract source). You still must **NOT** invent backend fields / enums / states / RBAC codes frontend-side (red lines 1–4); where the contract isn't ready, mark `placeholder` and STOP rather than "decide" a backend-side concern.
+Types come from live **`/api/docs-json`** (the single contract source). You still must **NOT** invent backend fields / enums / states / RBAC codes frontend-side (red lines 1–4); if a needed endpoint genuinely doesn't exist, register it in the backend gap-ledger (`../srvf-nest-api/docs/handoff/admin-web.md`) and STOP rather than "decide" a backend-side concern frontend-side. Roadmap & priorities: `docs/srvf-admin-vnext-blueprint.md`.
 
 ## 6. Before Modifying Files
 
@@ -119,7 +127,7 @@ When in doubt about a starter-level concern: go look at the starter repo (`/User
 - starter → srvf 同步：`git remote add starter ...` + `git fetch starter` + `git cherry-pick <sha>`（never merge）
 - srvf → starter 反向流：**禁止**（极少数无业务语义的修复才候选，见 `11-upstream-sync.md` §11-2.4）
 
-When in doubt: read `docs/srvf-api-contract-readiness.md` first — it is the single source of truth for the PR-4 decision record and what is allowed.
+When in doubt: `docs/srvf-api-contract-readiness.md` is the historical single source of truth for the **PR-4 decision record**; for what is allowed **now**, read §5 + `docs/srvf-admin-vnext-blueprint.md`.
 
 ## 9. Full Version Reference Rule
 

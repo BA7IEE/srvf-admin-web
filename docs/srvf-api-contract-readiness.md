@@ -1,5 +1,7 @@
 # SRVF API Contract Readiness
 
+> **📦 HISTORICAL（2026-07-06 归档标注）**：本文件是 PR-4「暂停 → 重启」决策的历史记录，使命已完成（PR-4 于 2026-06-22 上线）。请勿再以本文判断"当前允许做什么"——现状与路线以 `CLAUDE.md` §2/§5 与 `docs/srvf-admin-vnext-blueprint.md` 为准。
+
 ## 1. Current Decision
 
 > **UPDATE 2026-06-22 — PR-4 UNBLOCKED.** The §6 readiness checklist was frozen against backend

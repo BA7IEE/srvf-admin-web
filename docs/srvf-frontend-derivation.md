@@ -1,5 +1,7 @@
 # SRVF Frontend Derivation Record
 
+> **📌 2026-07-06 状态横幅**：本文件是派生期历史记录。§4（Q1~Q5）与 §5（PR-2.1 / PR-4 方案）是后端 **v0.10.0 时代**的调研快照——其中「无 refresh-token」「`/api/auth/login`」「`/api/users/me`」等结论已被后端演进推翻，现行契约见 `srvf-api-integration-guide.md` §2 与 live `/api/docs-json`。§6 表的状态列见其上方的实况刷新框。当前差距与路线：**`docs/srvf-admin-vnext-blueprint.md`**。
+
 ## 1. Source
 
 - Starter repository: `BA7IEE/u-admin-web-starter`（Private）
@@ -111,6 +113,8 @@ DoD（沿 starter `docs/pure-admin/09-pr-roadmap.md` PR-4 节）：
 
 ## 6. 后续 PR 顺序（与 starter `09-pr-roadmap.md` 对齐）
 
+> **⚠️ 2026-07-06 实况刷新**：下表为派生期规划原文，状态列已过时，仅存历史。实际发生：PR-2.1 ✅ 完成（见文末记录）；PR-4 ✅ 已上线（2026-06-22 · PR #6 · 3-call 登录）；PR-5 ✅ 已上线（2026-06-28 · PR #24 起 7 组任务式 IA，后续扩展至 30+ 真实页面）；PR-6 字典 ✅ 已上线（基础数据·字典管理真实接后端）；PR-7 组织架构 ✅ 已上线（基础数据·组织架构真实接后端）；PR-8 活动日历 ⏸ 未做（并入 `srvf-admin-vnext-blueprint.md` Phase 3 体验层）。当前差距与路线以蓝图为准。
+
 | PR                               | 范围                                                                                                                             | 状态                                                                                                             |
 | -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
 | PR-1 派生身份调整                | `package.json` + `README.md` + 本文件                                                                                            | **本轮完成**                                                                                                     |
@@ -173,6 +177,8 @@ DoD（沿 starter `docs/pure-admin/09-pr-roadmap.md` PR-4 节）：
 - `src/utils/http/index.ts` 仍无 `baseURL`，依赖前端代码自行写完整路径——也是 PR-4 范畴。
 
 ## PR-4 Status Update
+
+> **✅ RESOLVED（2026-07-06 标注）**：下述"暂停"记录已成历史——PR-4 于 2026-06-22 经 PR #6 上线（3-call 登录），接线规格见 `srvf-api-integration-guide.md`。以下原文仅作历史保留。
 
 PR-4 NestJS login integration is paused.
 
