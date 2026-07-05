@@ -51,6 +51,31 @@ export const getActivities = (params?: ActivityListQuery) =>
     params
   });
 
+/** 选择器项（后端 `ActivityOptionItemDto`）。 */
+export type ActivityOptionItem = {
+  id: string;
+  label: string;
+  startAt: string;
+  statusCode: string;
+};
+
+/**
+ * 活动选择器投影 `GET /api/admin/v1/activities/options`（`[auth]`-only,USER 强制只见
+ * published/completed）。q 模糊命中 title；limit ≤100（后端硬校验,同 members/positions/organizations
+ * 的 options 端点）。
+ */
+export const getActivityOptions = (params?: {
+  q?: string;
+  statusCode?: string;
+  organizationId?: string;
+  limit?: number;
+}) =>
+  http.request<Envelope<{ items: ActivityOptionItem[] }>>(
+    "get",
+    "/api/admin/v1/activities/options",
+    { params }
+  );
+
 /**
  * 活动详情（后端 `ActivityResponseDto`，列表项的超集）。字段以 `/api/docs-json` 为准，勿前端臆造。
  * 在列表项基础上多出：报名补充说明 + 发布/取消审计字段 + 报名表/相册/正文 Json（本轮头部仅用基础字段）。
