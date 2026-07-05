@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { onMounted } from "vue";
+import { onMounted, ref } from "vue";
 import { useOrganizations } from "./utils/hook";
 import { PureTableBar } from "@/components/RePureTableBar";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
+import MembersDrawer from "./members-drawer.vue";
+import type { OrgTreeNode } from "@/api/srvf-organization";
 
 import Delete from "~icons/ep/delete";
 import EditPen from "~icons/ep/edit-pen";
@@ -12,11 +14,20 @@ defineOptions({
   name: "SrvfOrganizations"
 });
 
+/** 成员面板（组织轴 memberships drawer;默认仅在册,踩坑 #9 见 drawer 内注释） */
+const membersVisible = ref(false);
+const membersOrg = ref<{ id: string; name: string }>({ id: "", name: "" });
+function openMembers(row: OrgTreeNode) {
+  membersOrg.value = { id: row.id, name: row.name };
+  membersVisible.value = true;
+}
+
 const {
   canRead,
   canCreate,
   canUpdate,
   canDelete,
+  canMembers,
   loading,
   columns,
   dataList,
@@ -76,6 +87,16 @@ onMounted(() => {
           </template>
           <template #operation="{ row }">
             <el-button
+              v-if="canMembers"
+              class="reset-margin"
+              link
+              type="primary"
+              :size="size"
+              @click="openMembers(row)"
+            >
+              成员
+            </el-button>
+            <el-button
               v-if="canUpdate"
               class="reset-margin"
               link
@@ -123,6 +144,11 @@ onMounted(() => {
       </template>
     </PureTableBar>
     <el-empty v-else description="您没有查看组织架构的权限（org.read.node）" />
+    <MembersDrawer
+      v-model="membersVisible"
+      :org-id="membersOrg.id"
+      :org-name="membersOrg.name"
+    />
   </div>
 </template>
 

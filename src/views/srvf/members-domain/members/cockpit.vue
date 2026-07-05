@@ -11,6 +11,7 @@ import { useCertificates } from "../certificates/utils/hook";
 import { useMemberInsurances } from "../insurances/utils/hook";
 import { useEmergencyContacts } from "../emergency-contacts/utils/hook";
 import { useMemberDepartment } from "../department/utils/hook";
+import { useMemberMemberships } from "../memberships/utils/hook";
 import { useMemberProfile } from "../profile/utils/hook";
 import {
   useMemberRegistrations,
@@ -45,6 +46,7 @@ const activeTab = ref<
   | "insurances"
   | "emergency-contacts"
   | "department"
+  | "memberships"
   | "profile"
   | "registrations-history"
   | "attendance-records"
@@ -126,6 +128,18 @@ const {
   handleClear: deptHandleClear
 } = useMemberDepartment(memberId);
 
+/* --------------- Tab：组织归属（memberships 多归属只读;旧「部门」tab 为 deprecated 单值端点,替换留待写切片） --------------- */
+const {
+  canRead: msCanRead,
+  loading: msLoading,
+  columns: msColumns,
+  dataList: msDataList,
+  orgLabel: msOrgLabel,
+  typeLabel: msTypeLabel,
+  statusMeta: msStatusMeta,
+  onSearch: msOnSearch
+} = useMemberMemberships(memberId);
+
 /* --------------- Tab：档案（1:1 子资源：读 + 新建/编辑，memberId 由路由参数注入；无队员下拉） --------------- */
 const {
   canRead: profileCanRead,
@@ -181,6 +195,7 @@ onMounted(() => {
   insOnSearch();
   ecOnSearch();
   deptOnSearch();
+  msOnSearch();
   profileOnSearch();
   regOnSearch();
   arecOnSearch();
@@ -468,6 +483,57 @@ onMounted(() => {
         <el-empty
           v-else
           description="您没有查看部门归属的权限（member-department.read.current）"
+        />
+      </el-tab-pane>
+
+      <!-- Tab：组织归属（memberships 多归属,只读;组织名经 resolveLabels 解析） -->
+      <el-tab-pane label="组织归属" name="memberships">
+        <template v-if="msCanRead">
+          <PureTableBar
+            title="组织归属（多归属）"
+            :columns="msColumns"
+            @refresh="msOnSearch"
+          >
+            <template v-slot="{ size, dynamicColumns }">
+              <pure-table
+                row-key="id"
+                adaptive
+                :adaptiveConfig="{ offsetBottom: 108 }"
+                align-whole="center"
+                table-layout="auto"
+                :loading="msLoading"
+                :size="size"
+                :data="msDataList"
+                :columns="dynamicColumns"
+                :header-cell-style="{
+                  background: 'var(--el-fill-color-light)',
+                  color: 'var(--el-text-color-primary)'
+                }"
+              >
+                <template #organization="{ row }">
+                  {{ msOrgLabel(row.organizationId) }}
+                </template>
+                <template #membershipType="{ row }">
+                  <el-tag
+                    :type="
+                      row.membershipType === 'PRIMARY' ? 'primary' : 'info'
+                    "
+                  >
+                    {{ msTypeLabel(row.membershipType) }}
+                  </el-tag>
+                </template>
+                <template #status="{ row }">
+                  <el-tag :type="msStatusMeta(row.status).type">
+                    {{ msStatusMeta(row.status).text }}
+                  </el-tag>
+                </template>
+              </pure-table>
+            </template>
+          </PureTableBar>
+        </template>
+        <el-empty
+          v-else
+          description="您没有查看组织归属的权限（membership.list.record）"
         />
       </el-tab-pane>
 

@@ -9,7 +9,7 @@ export default [
     meta: {
       icon: "ri/user-add-line",
       title: "招募与入队",
-      rank: 4
+      rank: 5
     },
     children: [
       {
