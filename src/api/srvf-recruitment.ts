@@ -222,6 +222,192 @@ export const getIdCardImageUrl = (id: string) =>
     `/api/admin/v1/recruitment/applications/${id}/id-card-image-url`
   );
 
+/* ===================== 工作台聚合 / 发号预检 / 批量标门槛 / 导出 ===================== */
+
+export type RecruitmentStatsToday = {
+  newApplications: number;
+  tempNoIssued: number;
+  manualProcessed: number;
+};
+export type RecruitmentStatsPending = {
+  manualTotal: number;
+  manualNormal: number;
+  manualHigh: number;
+  manualSystem: number;
+  pendingEvaluation: number;
+  pendingIssuance: number;
+};
+export type RecruitmentStatsThresholdItem = {
+  thresholdCode: string;
+  completedCount: number;
+};
+export type RecruitmentStatsThreshold = {
+  tracking: number;
+  byThreshold: RecruitmentStatsThresholdItem[];
+};
+export type RecruitmentStatsEvaluation = {
+  pending: number;
+  passed: number;
+  eliminated: number;
+};
+export type RecruitmentStatsIssuance = {
+  inPublicity: number;
+  oneClickIssuable: number;
+  needManualBuild: number;
+  promoted: number;
+};
+
+/** 招新工作台聚合 stats（后端 `RecruitmentCycleStatsDto`；纯读零写,五组同源业务态计数）。 */
+export type RecruitmentCycleStats = {
+  cycleId: string;
+  cycleYear: number;
+  today: RecruitmentStatsToday;
+  pending: RecruitmentStatsPending;
+  threshold: RecruitmentStatsThreshold;
+  evaluation: RecruitmentStatsEvaluation;
+  issuance: RecruitmentStatsIssuance;
+};
+
+/** 工作台聚合 stats `GET .../cycles/{id}/stats`（rbac: `recruitment-application.read.record`）。 */
+export const getCycleStats = (cycleId: string) =>
+  http.request<Envelope<RecruitmentCycleStats>>(
+    "get",
+    `/api/admin/v1/recruitment/cycles/${cycleId}/stats`
+  );
+
+/** 六类跳过原因（后端 §8.2；与 `PromotePrecheckRowDto.skipReason` 同源）。 */
+export const PROMOTE_SKIP_REASON_LABEL: Record<string, string> = {
+  "foreign-manual-build": "外籍需手动建档",
+  "openid-already-bound": "openid 已被既有账号占用",
+  "missing-openid": "缺 openid,无法建账号",
+  "duplicate-openid-in-batch": "openid 本批重复",
+  "missing-derived-fields": "缺派生字段(生日/性别等)",
+  "special-document": "特殊证件类型需手动建档"
+};
+
+export type PromotePrecheckRow = {
+  applicationId: string;
+  realName: string | null;
+  willIssue: boolean;
+  skipReason: string | null;
+  proposedMemberNo: string | null;
+  isForeigner: boolean;
+  documentTypeCode: string;
+  missingOpenid: boolean;
+  openidAlreadyBound: boolean;
+  duplicateOpenidInBatch: boolean;
+  missingPhone: boolean;
+  missingBirthDate: boolean;
+  missingGender: boolean;
+};
+
+/** 一键发号前预检结果（后端 `PromotePrecheckResultDto`；纯读,与实发结构性同源）。 */
+export type PromotePrecheckResult = {
+  cycleId: string;
+  cycleYear: number;
+  rows: PromotePrecheckRow[];
+  promotableCount: number;
+  skipCount: number;
+  total: number;
+};
+
+/**
+ * 一键发号前预检 `GET .../cycles/{id}/promote-precheck`（rbac: `recruitment-application.promote.member`）。
+ * 纯读零写,「预检=实发」结构性保证——UI 应在真正调 `promoteRecruitmentCycle` 前
+ * 先调此端点展示逐行可发/跳过原因,而非直接弹通用确认框。
+ */
+export const getPromotePrecheck = (cycleId: string) =>
+  http.request<Envelope<PromotePrecheckResult>>(
+    "get",
+    `/api/admin/v1/recruitment/cycles/${cycleId}/promote-precheck`
+  );
+
+/** 批量标门槛匹配项（后端 `BatchMarkThresholdMatchDto`；tempNo 最精确,或 phone+realName 组合）。 */
+export type BatchMarkThresholdMatch = {
+  tempNo?: string;
+  phone?: string;
+  realName?: string;
+};
+
+/** 批量标门槛入参（后端 `BatchMarkThresholdDto`）。 */
+export type BatchMarkThresholdBody = {
+  /** 强烈建议限定轮次去歧义;缺省跨全部未软删报名匹配 */
+  cycleId?: string;
+  thresholdCode: "patrol1" | "patrol2" | "training" | "redCross" | "bsafe";
+  completed: boolean;
+  matches: BatchMarkThresholdMatch[];
+};
+
+export type BatchMarkThresholdRowResult = {
+  index: number;
+  status: "marked" | "unmatched" | "failed";
+  applicationId: string | null;
+  matchedBy: string | null;
+  unmatchedReason: "no-match" | "ambiguous" | "insufficient-key" | null;
+  errorCode: number | null;
+  statusCode: string | null;
+  thresholdsComplete: boolean | null;
+};
+
+export type BatchMarkThresholdResult = {
+  results: BatchMarkThresholdRowResult[];
+  total: number;
+  marked: number;
+  unmatched: number;
+  failed: number;
+  autoAdvanced: number;
+};
+
+/**
+ * 批量标门槛 `POST /api/admin/v1/recruitment/applications/batch-mark-threshold`
+ * （rbac: `recruitment-application.mark.threshold`）。逐行复用单行 markThreshold,
+ * 逐行幂等 + 逐行容错(某行匹配不上/状态非法不整批回滚)。
+ */
+export const batchMarkThreshold = (body: BatchMarkThresholdBody) =>
+  http.request<Envelope<BatchMarkThresholdResult>>(
+    "post",
+    "/api/admin/v1/recruitment/applications/batch-mark-threshold",
+    { data: body }
+  );
+
+export type ExportApplicationsFilter =
+  | "all"
+  | "manual"
+  | "verified"
+  | "threshold-incomplete"
+  | "pending-evaluation"
+  | "publicity"
+  | "promoted"
+  | "rejected";
+
+export const EXPORT_FILTER_LABEL: Record<ExportApplicationsFilter, string> = {
+  all: "全部",
+  manual: "待人工",
+  verified: "已初审",
+  "threshold-incomplete": "门槛未完成",
+  "pending-evaluation": "待评定",
+  publicity: "公示中",
+  promoted: "已发号",
+  rejected: "已淘汰"
+};
+
+/**
+ * 批量导出 CSV `POST /api/admin/v1/recruitment/applications/export`
+ * （rbac: `recruitment-application.read.record`；持 `read.sensitive` 出明文列,
+ * 否则脱敏列;读操作记审计）。响应是 `text/csv` 文件流,非 JSON envelope,
+ * 故走 `responseType: "blob"`,调用方负责触发浏览器下载。
+ */
+export const exportApplications = (body: {
+  cycleId?: string;
+  filter?: ExportApplicationsFilter;
+}) =>
+  http.request<Blob>(
+    "post",
+    "/api/admin/v1/recruitment/applications/export",
+    { data: body },
+    { responseType: "blob" }
+  );
+
 /* ===================== 展示常量(镜像后端 recruitment.constants;状态非字典驱动) ===================== */
 
 /** 轮次状态码 → 中文（后端 CYCLE_STATUS_*）。 */
