@@ -92,7 +92,7 @@ export default [
     meta: {
       icon: "ri/settings-3-line",
       title: "系统管理",
-      rank: 7
+      rank: 8
     },
     children: [
       {
@@ -127,16 +127,7 @@ export default [
         }
       },
       {
-        path: "/srvf/base-data/organizations",
-        name: "SrvfOrganizations",
-        component: () =>
-          import("@/views/srvf/base-data/organizations/index.vue"),
-        meta: {
-          icon: "ri/organization-chart",
-          title: "组织架构"
-        }
-      },
-      {
+        // 组织架构已迁入「组织与人事」组（srvf-org-hr.ts;路径与组件不变）
         path: "/srvf/base-data/contribution-rules",
         name: "SrvfContributionRules",
         component: () =>

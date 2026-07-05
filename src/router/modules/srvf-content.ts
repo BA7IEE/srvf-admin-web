@@ -9,7 +9,7 @@ export default [
     meta: {
       icon: "ri/article-line",
       title: "内容发布",
-      rank: 5
+      rank: 6
     },
     children: [
       {

@@ -1,7 +1,7 @@
 const Layout = () => import("@/layout/index.vue");
 
 // 通知中心(后端 v0.32.0 统一通知:站内信 CRUD + 状态机 + 渠道勾选 + 短信兜底计费确认 + 微信模板配置)。
-// 顶级任务组,排在「内容发布」(rank 5)之后;系统管理顺延为 rank 7。
+// 顶级任务组,排在「内容发布」(rank 6)之后;系统管理顺延为 rank 8(P1-A 插入「组织与人事」rank 4 后整体顺移)。
 export default [
   {
     path: "/srvf/notification-domain",
@@ -11,7 +11,7 @@ export default [
     meta: {
       icon: "ri/notification-3-line",
       title: "通知中心",
-      rank: 6
+      rank: 7
     },
     children: [
       {
