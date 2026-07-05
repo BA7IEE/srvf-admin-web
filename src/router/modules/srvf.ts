@@ -127,6 +127,28 @@ export default [
         }
       },
       {
+        // 职务定义（P1-B 自 7.11.0 fork 移植;基础数据配置,与字典/贡献值并列——后端 handoff PR3 归位）
+        path: "/srvf/base-data/positions",
+        name: "SrvfPositions",
+        component: () => import("@/views/srvf/base-data/positions/index.vue"),
+        meta: {
+          icon: "ri/shield-star-line",
+          title: "职务定义",
+          auths: ["position.read.definition"]
+        }
+      },
+      {
+        path: "/srvf/base-data/position-rules",
+        name: "SrvfPositionRules",
+        component: () =>
+          import("@/views/srvf/base-data/position-rules/index.vue"),
+        meta: {
+          icon: "ri/list-settings-line",
+          title: "职务规则",
+          auths: ["position-rule.read.record"]
+        }
+      },
+      {
         // 组织架构已迁入「组织与人事」组（srvf-org-hr.ts;路径与组件不变）
         path: "/srvf/base-data/contribution-rules",
         name: "SrvfContributionRules",
