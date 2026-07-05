@@ -63,7 +63,7 @@ export default [
         }
       },
       {
-        // P1-D 角色绑定(自 7.11.0 fork 移植 + 补 v0.36 分页/preview/batch;
+        // P1-D(1/3) 角色绑定(自 7.11.0 fork 移植 + 补 v0.36 分页/preview/batch;
         // 与「系统管理/角色权限」(角色→权限码静态定义)是两个不同心智,见蓝图 §7)
         path: "/srvf/org-hr/role-bindings",
         name: "SrvfRoleBindings",
@@ -72,6 +72,19 @@ export default [
           icon: "ri/user-follow-line",
           title: "角色绑定",
           auths: ["role-binding.read.record"]
+        }
+      },
+      {
+        // P1-D(2/3) 督导/分管(自 7.11.0 fork 移植 + 补 v0.36 分页/coverage-preview;
+        // 与职务正交,不要求分管人持职务)
+        path: "/srvf/org-hr/supervision-assignments",
+        name: "SrvfSupervisionAssignments",
+        component: () =>
+          import("@/views/srvf/org-hr/supervision-assignments/index.vue"),
+        meta: {
+          icon: "ri/eye-line",
+          title: "督导总表",
+          auths: ["supervision-assignment.read.record"]
         }
       }
     ]

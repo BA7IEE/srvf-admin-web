@@ -13,6 +13,7 @@ import { useEmergencyContacts } from "../emergency-contacts/utils/hook";
 import { useMemberDepartment } from "../department/utils/hook";
 import { useMemberMemberships } from "../memberships/utils/hook";
 import { useMemberPositionAssignments } from "../position-assignments/utils/hook";
+import { useMemberSupervisionScope } from "../supervision-scope/utils/hook";
 import { useMemberProfile } from "../profile/utils/hook";
 import {
   useMemberRegistrations,
@@ -49,6 +50,7 @@ const activeTab = ref<
   | "department"
   | "memberships"
   | "position-assignments"
+  | "supervision-scope"
   | "profile"
   | "registrations-history"
   | "attendance-records"
@@ -154,6 +156,17 @@ const {
   onSearch: paOnSearch
 } = useMemberPositionAssignments(memberId);
 
+/* --------------- Tab：分管范围（该队员若是分管人,只读展示;新建/撤销在督导总表页） --------------- */
+const {
+  canRead: ssCanRead,
+  loading: ssLoading,
+  columns: ssColumns,
+  dataList: ssDataList,
+  scopeModeLabel: ssScopeModeLabel,
+  expandedLabels: ssExpandedLabels,
+  onSearch: ssOnSearch
+} = useMemberSupervisionScope(memberId);
+
 /* --------------- Tab：档案（1:1 子资源：读 + 新建/编辑，memberId 由路由参数注入；无队员下拉） --------------- */
 const {
   canRead: profileCanRead,
@@ -211,6 +224,7 @@ onMounted(() => {
   deptOnSearch();
   msOnSearch();
   paOnSearch();
+  ssOnSearch();
   profileOnSearch();
   regOnSearch();
   arecOnSearch();
@@ -599,6 +613,54 @@ onMounted(() => {
         <el-empty
           v-else
           description="您没有查看任职的权限（position-assignment.read.record）"
+        />
+      </el-tab-pane>
+
+      <!-- Tab：分管范围（该队员若是分管人,只读;新建/撤销在督导总表页） -->
+      <el-tab-pane label="分管范围" name="supervision-scope">
+        <template v-if="ssCanRead">
+          <PureTableBar
+            title="分管范围（若无记录,说明该队员当前无分管职责）"
+            :columns="ssColumns"
+            @refresh="ssOnSearch"
+          >
+            <template v-slot="{ size, dynamicColumns }">
+              <pure-table
+                row-key="supervisionAssignmentId"
+                adaptive
+                :adaptiveConfig="{ offsetBottom: 108 }"
+                align-whole="center"
+                table-layout="auto"
+                :loading="ssLoading"
+                :size="size"
+                :data="ssDataList"
+                :columns="dynamicColumns"
+                :header-cell-style="{
+                  background: 'var(--el-fill-color-light)',
+                  color: 'var(--el-text-color-primary)'
+                }"
+              >
+                <template #scopeMode="{ row }">
+                  <el-tag :type="row.scopeMode === 'TREE' ? 'primary' : 'info'">
+                    {{ ssScopeModeLabel(row.scopeMode) }}
+                  </el-tag>
+                </template>
+              </pure-table>
+              <p v-if="ssDataList.length" class="ss-expanded-hint">
+                <template
+                  v-for="(row, i) in ssDataList"
+                  :key="row.supervisionAssignmentId"
+                >
+                  展开覆盖：{{ ssExpandedLabels(row)
+                  }}<template v-if="i < ssDataList.length - 1"><br /></template>
+                </template>
+              </p>
+            </template>
+          </PureTableBar>
+        </template>
+        <el-empty
+          v-else
+          description="您没有查看分管范围的权限（supervision-assignment.read.record）"
         />
       </el-tab-pane>
 

@@ -5,6 +5,7 @@ import { PureTableBar } from "@/components/RePureTableBar";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
 import MembersDrawer from "./members-drawer.vue";
 import AssignmentsDrawer from "./assignments-drawer.vue";
+import SupervisorsDrawer from "./supervisors-drawer.vue";
 import type { OrgTreeNode } from "@/api/srvf-organization";
 
 import Delete from "~icons/ep/delete";
@@ -31,6 +32,14 @@ function openAssignments(row: OrgTreeNode) {
   assignmentsVisible.value = true;
 }
 
+/** 被谁分管面板（组织轴 supervision-assignments drawer,只读） */
+const supervisorsVisible = ref(false);
+const supervisorsOrg = ref<{ id: string; name: string }>({ id: "", name: "" });
+function openSupervisors(row: OrgTreeNode) {
+  supervisorsOrg.value = { id: row.id, name: row.name };
+  supervisorsVisible.value = true;
+}
+
 const {
   canRead,
   canCreate,
@@ -38,6 +47,7 @@ const {
   canDelete,
   canMembers,
   canAssignments,
+  canSupervisors,
   loading,
   columns,
   dataList,
@@ -117,6 +127,16 @@ onMounted(() => {
               在任职务
             </el-button>
             <el-button
+              v-if="canSupervisors"
+              class="reset-margin"
+              link
+              type="primary"
+              :size="size"
+              @click="openSupervisors(row)"
+            >
+              被谁分管
+            </el-button>
+            <el-button
               v-if="canUpdate"
               class="reset-margin"
               link
@@ -173,6 +193,11 @@ onMounted(() => {
       v-model="assignmentsVisible"
       :org-id="assignmentsOrg.id"
       :org-name="assignmentsOrg.name"
+    />
+    <SupervisorsDrawer
+      v-model="supervisorsVisible"
+      :org-id="supervisorsOrg.id"
+      :org-name="supervisorsOrg.name"
     />
   </div>
 </template>
