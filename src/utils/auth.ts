@@ -107,22 +107,16 @@ export function setToken(data: DataInfo<Date | number>) {
       permissions: data?.permissions ?? []
     });
   } else {
-    const avatar =
-      storageLocal().getItem<DataInfo<number>>(userKey)?.avatar ?? "";
-    const username =
-      storageLocal().getItem<DataInfo<number>>(userKey)?.username ?? "";
-    const nickname =
-      storageLocal().getItem<DataInfo<number>>(userKey)?.nickname ?? "";
-    const roles =
-      storageLocal().getItem<DataInfo<number>>(userKey)?.roles ?? [];
-    const permissions =
-      storageLocal().getItem<DataInfo<number>>(userKey)?.permissions ?? [];
+    const existing = storageLocal().getItem<DataInfo<number>>(userKey);
+    // 登录第一段只拿到 token，身份/权限还没取回；existing 为空说明是全新会话，
+    // 不要写入一份空壳 user-info，否则权限接口失败时会残留"已登录但 permissions 为空"的幽灵状态。
+    if (!existing?.username) return;
     setUserKey({
-      avatar,
-      username,
-      nickname,
-      roles,
-      permissions
+      avatar: existing?.avatar ?? "",
+      username: existing.username,
+      nickname: existing?.nickname ?? "",
+      roles: existing?.roles ?? [],
+      permissions: existing?.permissions ?? []
     });
   }
 }

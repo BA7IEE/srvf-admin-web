@@ -17,7 +17,7 @@
 
 - PR-4 was restarted after `docs/srvf-api-contract-readiness.md` §6 Readiness Checklist was fully confirmed (10/10) and humans explicitly approved (2026-06-22), then shipped to `main` via PR #6.
 - Real login is the **3-call** flow: `POST /api/auth/v1/login` → `GET /api/admin/v1/me` + `GET /api/system/v1/rbac/me/permissions`. Verified live (SUPER_ADMIN · 155 permissions).
-- The auth files are now **active code** (see §4) — change them only through a separate human-reviewed PR (§13.2.2).
+- The auth files are now **active code** (see §4). As of 2026-07-05 they are **no longer limited to a mandatory separate PR** — changes are allowed inside a business PR as long as the changed files / what changed / impact area are explicitly declared (see §4). The harness (`.claude/settings.json`) still hard-blocks edits to these 5 files until a human manually flips them from `deny`; this wording change does not itself unblock the hook.
 
 ### Where the original PR-4 attempt is (historical)
 
@@ -48,7 +48,15 @@ For route / menu work also read:
 
 These apply to ALL AI tasks in this repository, no exceptions:
 
-- ✅ **PR-4 is shipped** (§2); it is no longer paused. The auth files (`src/api/user.ts`, `src/utils/auth.ts`, `src/utils/http/index.ts`, `src/store/modules/user.ts`, `src/views/login/index.vue`) are now **active code** — change them only via a separate human-reviewed PR (§13.2.2), never casually inside unrelated work.
+- ✅ **PR-4 is shipped** (§2); it is no longer paused. The auth files (`src/api/user.ts`, `src/utils/auth.ts`, `src/utils/http/index.ts`, `src/store/modules/user.ts`, `src/views/login/index.vue`) are now **active code**. **(松绑 2026-07-05)** They are no longer restricted to a mandatory separate PR — changes are allowed inside a business PR, but every such change must explicitly declare, in the task statement and PR description:
+  1. which of these files changed;
+  2. what changed (e.g. login-state cleanup on failure / token-refresh interceptor logic / error-message surfacing);
+  3. the impact area (does it affect login state, token lifecycle, or route guards).
+
+  Undeclared / unstated changes to these files are still not allowed — this is a documentation-level softening, not a green light to touch them silently. Aligns with the ZIP-track `AGENTS.md` wording: "no longer permanently unchangeable, but requires explicit user authorization and a separate statement of impact."
+
+  ⚠️ This wording change does **not** touch `.claude/settings.json` — the guard hook still hard-blocks (`deny`) edits to these 5 files. A human must manually flip the relevant rule to `ask` before Claude can actually write to them; until then, treat this bullet as "the human-review policy has relaxed" rather than "the tool-level block is lifted."
+
 - ⛔ **Do not enable `asyncRoutes`** (`src/router/asyncRoutes.ts` · do not switch `src/views/login/index.vue` import).
 - ⛔ **Do not add or implement `getMenuList`** (intentionally absent · not a bug).
 - ⛔ **Do not treat mock as backend contract** (mock URLs, fields, role names like `admin / common / *:*:*` are demo-only).
@@ -81,7 +89,7 @@ Every AI task must state these BEFORE making any edit (see `02-ai-rules.md` §13
 - **documents read** (must include items from §3 above);
 - **allowed files** to modify (only files marked ✅ in `02-ai-rules.md` §13.1 file matrix);
 - **forbidden files** that this task could accidentally touch (must be empty diff at the end);
-- **PR-4 boundary**: does this task touch the auth mainline (login / token / `/api/auth/v1/login` / `/api/admin/v1/me` / refresh / role mapping)? If yes → that is PR-4 _maintenance_ — do it in a separate human-reviewed PR (§13.2.2), not inside unrelated work.
+- **PR-4 boundary**: does this task touch the auth mainline (login / token / `/api/auth/v1/login` / `/api/admin/v1/me` / refresh / role mapping)? If yes → it may be bundled into the current PR (§4, 松绑 2026-07-05), but you must explicitly state which auth files changed, what changed, and the impact area. `.claude/settings.json` still hard-blocks these 5 files until a human flips them from `deny` — don't attempt to work around that block.
 - **backend impact**: does this task derive / define / require backend fields / tables / API paths? If yes → STOP, that violates red lines 1~4.
 - **whether dependencies are touched**; if yes → STOP, this is not allowed.
 - **rollback plan** (which commit / branch is the safe fallback).

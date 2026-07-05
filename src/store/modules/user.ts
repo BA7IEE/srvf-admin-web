@@ -117,6 +117,14 @@ export const useUserStore = defineStore("pure-user", {
         });
         return res;
       } catch (error: any) {
+        // 登录后续任一步（/me、/permissions）失败都要清理已经落盘的半截 token，
+        // 否则会残留"cookie 里 token 有效、但 username/roles/permissions 为空"的幽灵登录态。
+        this.username = "";
+        this.nickname = "";
+        this.avatar = "";
+        this.roles = [];
+        this.permissions = [];
+        removeToken();
         // gotcha A：业务体在 err.response.data.{code,message}
         return Promise.reject(
           error?.response?.data?.message ?? error?.message ?? error
