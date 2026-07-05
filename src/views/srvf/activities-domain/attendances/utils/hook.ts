@@ -12,6 +12,7 @@ import {
   finalRejectAttendanceSheet,
   deleteAttendanceSheet,
   getAttendanceSheetReviewDetail,
+  finalReviewErrorMessage,
   type AttendanceSheetItem,
   type AttendanceSheetReviewDetail
 } from "@/api/srvf-attendance";
@@ -242,7 +243,7 @@ export function useAttendances(externalActivityId: string) {
           message("已终审通过", { type: "success" });
           onSearch();
         } catch (error: any) {
-          message(error?.response?.data?.message ?? "终审通过失败", {
+          message(finalReviewErrorMessage(error, "终审通过失败"), {
             type: "error"
           });
         }
@@ -274,7 +275,7 @@ export function useAttendances(externalActivityId: string) {
           message("已终审驳回", { type: "success" });
           onSearch();
         } catch (error: any) {
-          message(error?.response?.data?.message ?? "终审驳回失败", {
+          message(finalReviewErrorMessage(error, "终审驳回失败"), {
             type: "error"
           });
         }

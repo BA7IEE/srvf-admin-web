@@ -73,28 +73,28 @@
 - **认证**：auth/v1 共 11 端点（账密/OTP 短信/微信登录三路 + refresh + logout/logout-all + 找回密码 + 微信绑定）。accessToken 15min；refreshToken 90 天绝对死期 + family rotation。前端已实现主动预刷新；`logout(-all)` 未接、40100 被动刷新重试未实现（→ Auth 专线）。
 - **统计端点**：只有 `GET /admin/v1/meta/dashboard-summary`（按权限出块）与 `GET /recruitment/cycles/:id/stats`；没有通用 /stats——仪表盘想要更多聚合须先登 gap-ledger，禁止前端拼 N 个列表凑数。
 - **工作台扁平端点**（`/admin/v1/registrations`、`/admin/v1/attendance-sheets`）目前 **GLOBAL-only**：纯 scoped 持有者调用会得 30100，页面要优雅降级。
-- **内容附件有专用子资源**：`POST /contents/{id}/attachments/upload-url|confirm`、`DELETE /contents/{id}/attachments/{attachmentId}`——内容封面/插图走这套，不走通用 attachments。
+- **内容附件有专用子资源**：`POST /contents/{id}/attachments/upload-url|confirm`、`DELETE /contents/{id}/attachments/{attachmentId}`——内容封面/插图走这套，不走通用 attachments。**前端已实现**（`src/api/srvf-content.ts` + 内容页封面/附件 drawer `content-media.vue`；2026-07-06 Phase 0 审计确认）。
 
 ## 3. 差距矩阵（后端域 × 前端 × 行动）
 
-| 后端域                                                | 前端现状                                          | 行动                                                                         | 阶段          |
-| ----------------------------------------------------- | ------------------------------------------------- | ---------------------------------------------------------------------------- | ------------- |
-| 活动/报名/考勤                                        | ✅ 作战室已接                                     | 校准：终审 22074/22075 文案、扁平列表增强参数、代报名/导出 CSV 补动作        | P0            |
-| 通知 / 内容                                           | ✅ 已接主流程                                     | 补 unpublish/archive；内容封面接附件子资源                                   | P0 / P2       |
-| 队员 360 六子资源                                     | ✅ 已接                                           | 校准 + 贡献值 capped 展示                                                    | P0            |
-| **memberships 多归属**                                | ❌ 无（仍用已废弃单部门 `/department`）           | 新建（先只读切片）                                                           | P1-A          |
-| **职务 / 职务规则**                                   | ❌ 无                                             | 移植 fork 两页                                                               | P1-B          |
-| **任职 position-assignments**                         | ❌ 无（fork 也没有）                              | 新建（preview→任命、revoke、history、双轴视图）                              | P1-C          |
-| **督导 supervision**                                  | ❌ 无                                             | 移植 fork + 补 coverage-preview / page                                       | P1-D          |
-| **角色绑定 role-bindings**                            | ❌ 无（现有 `system/rbac` 页只是角色→码静态只读） | 移植 fork + 补 /page、preview、batch                                         | P1-D          |
-| **authz 诊断**                                        | ❌ 无                                             | 移植 fork 的 explain 抽屉 + scoped-authz util；action-state/batch 按钮态按需 | P1-D          |
-| 组织架构增强                                          | ⚠️ 仅基础 CRUD                                    | 升级：tree-with-summary、move、右侧三面板（成员 ACTIVE/在任职务/被谁分管）   | P1-A/C        |
-| **附件域**                                            | ❌ 仅附件配置页                                   | 新建三步上传链 util + 附件库页                                               | P2            |
-| 招新工作台件                                          | ⚠️ 部分                                           | 补 cycles/:id/stats 卡、promote-precheck 弹窗、batch-mark-threshold、export  | P2            |
-| 公告导入                                              | ❌ 无                                             | 一次性工具页（preview→execute）                                              | P2            |
-| RBAC 管理面（roles/permissions 写操作、user-roles）   | ⚠️ 只读 roles + reload                            | 谨慎评估：默认保持只读+reload；若要开放 assign 走单独决策                    | P2 评估       |
-| 选择器族（`*/options`、tree-options、resolve-labels） | ⚠️ 零散                                           | 统一薄封装，表单选人/选活动/选组织一律用后端选择器端点                       | P0 起随用随建 |
-| Mobile-\* / Open-\* / health                          | 不属于本后台                                      | 忽略（小程序面见后端 `docs/handoff/miniapp.md`）                             | —             |
+| 后端域                                                | 前端现状                                                   | 行动                                                                         | 阶段          |
+| ----------------------------------------------------- | ---------------------------------------------------------- | ---------------------------------------------------------------------------- | ------------- |
+| 活动/报名/考勤                                        | ✅ 作战室已接                                              | 校准：终审 22074/22075 文案、扁平列表增强参数、代报名/导出 CSV 补动作        | P0            |
+| 通知 / 内容                                           | ✅ 全生命周期已接（发布/撤回/归档 + 内容封面附件链）       | 无——Phase 0 审计（2026-07-06）确认已完成                                     | —             |
+| 队员 360 六子资源                                     | ✅ 已接                                                    | 校准 + 贡献值 capped 展示                                                    | P0            |
+| **memberships 多归属**                                | ❌ 无（仍用已废弃单部门 `/department`）                    | 新建（先只读切片）                                                           | P1-A          |
+| **职务 / 职务规则**                                   | ❌ 无                                                      | 移植 fork 两页                                                               | P1-B          |
+| **任职 position-assignments**                         | ❌ 无（fork 也没有）                                       | 新建（preview→任命、revoke、history、双轴视图）                              | P1-C          |
+| **督导 supervision**                                  | ❌ 无                                                      | 移植 fork + 补 coverage-preview / page                                       | P1-D          |
+| **角色绑定 role-bindings**                            | ❌ 无（现有 `system/rbac` 页只是角色→码静态只读）          | 移植 fork + 补 /page、preview、batch                                         | P1-D          |
+| **authz 诊断**                                        | ❌ 无                                                      | 移植 fork 的 explain 抽屉 + scoped-authz util；action-state/batch 按钮态按需 | P1-D          |
+| 组织架构增强                                          | ⚠️ 仅基础 CRUD                                             | 升级：tree-with-summary、move、右侧三面板（成员 ACTIVE/在任职务/被谁分管）   | P1-A/C        |
+| **附件域（通用 attachments）**                        | ⚠️ 附件配置页 + 内容子资源链已接；通用附件库（5 路径）未接 | 新建通用附件库页（by-owner / upload-url / confirm-upload）                   | P2            |
+| 招新工作台件                                          | ⚠️ 部分                                                    | 补 cycles/:id/stats 卡、promote-precheck 弹窗、batch-mark-threshold、export  | P2            |
+| 公告导入                                              | ❌ 无                                                      | 一次性工具页（preview→execute）                                              | P2            |
+| RBAC 管理面（roles/permissions 写操作、user-roles）   | ⚠️ 只读 roles + reload                                     | 谨慎评估：默认保持只读+reload；若要开放 assign 走单独决策                    | P2 评估       |
+| 选择器族（`*/options`、tree-options、resolve-labels） | ⚠️ 零散                                                    | 统一薄封装，表单选人/选活动/选组织一律用后端选择器端点                       | P0 起随用随建 |
+| Mobile-\* / Open-\* / health                          | 不属于本后台                                               | 忽略（小程序面见后端 `docs/handoff/miniapp.md`）                             | —             |
 
 ## 4. 按角色的任务流（"真正实用"的验收视角）
 
@@ -119,7 +119,7 @@
 组织与人事 ★新支柱  组织架构(升级: 计数树/move/三面板) · 会籍总表+迁移+冲突体检 · 任职总表
 招募与入队        [已有→校准] 招新/入队作战室 + P2 工作台件
 内容与公告        [已有→扩展] 内容(全生命周期+封面) · 公告导入 · 附件库
-通知中心          [已有→校准] 通知(补撤回/归档) · 微信模板
+通知中心          [已有] 通知(全生命周期) · 微信模板
 系统管理          [已有→扩展] 用户 · 角色与权限(静态只读) · ★角色绑定 · ★权限诊断 · 审计/短信日志 · 附件配置 · 四单例设置
 基础数据          [已有→扩展] 字典 · 贡献值规则 · ★职务定义 · ★职务规则
 ```
@@ -129,16 +129,19 @@
 
 ## 6. 路线图
 
-### Phase 0 · 行为校准与生命周期补全（1~2 个小 PR）
+### Phase 0 · 行为校准（2026-07-06 审计后收敛为 0-a 落地 + 0-b 待办）
 
-1. 扁平列表参数语义核准（`statusCode` 等）+ 增强参数（q/expand/organizationId）按需消费；
-2. 考勤终审 UX：22074/22075 专用文案 + 终审权来源提示；
-3. 通知/内容补 unpublish/archive 动作与状态展示；
-4. 工作台三卡下钻到预置筛选的扁平列表；`resolve-labels` 薄封装；
-5. 选择器族薄封装（activities/members/organizations options）；
-6. 遗留清理：`src/api/system.ts` 7 条 demo URL 与 `mock/` 确认无引用后归档。
+> 审计结论：v1.0 原清单第 3 项（通知/内容 unpublish/archive）与"内容封面附件链"在 #24~#34 期间**已实现**——蓝图曾基于盘点摘要高估缺口，本节按实况收敛。`statusCode`、作战室跳转、`resolve-labels` 封装亦已在位。
 
-**DoD**：对账表保持全绿；上述行为项逐条人工点验；`pnpm lint/typecheck/build` 全绿。
+**Phase 0-a（本轮落地）**：
+
+1. 考勤终审专用文案：22074（自审拒）/ 22075（同人拒）/ 30100（终审权来源提示）——`finalReviewErrorMessage`（`src/api/srvf-attendance.ts`），作战室与工作台两处终审 catch 接入；
+2. 工作台摘要卡可点下钻：切 tab + 预置 `statusCode` 重查（"进行中活动"卡跳活动列表）；
+3. 横扫列表消费 `q` 关键词（契约 F2；memberQ/activityQ/organizationId/expand 等留待有场景再消费）。
+
+**Phase 0-b（待办，涉及 ask-gated 文件，需人工在场）**：`src/api/system.ts` 7 条 demo URL、`mock/` 与 starter 遗留 views（dict/tenant/schedule/permission）确认无引用后一并归档。
+
+**DoD**：对账保持全绿；0-a 三项真后端点验；`pnpm lint/typecheck/build` 全绿。
 
 ### Phase 1 · 组织人事支柱（3~4 个 PR，大头）
 
@@ -151,7 +154,7 @@
 
 ### Phase 2 · 附件链与内容闭环（1~2 个 PR）
 
-三步上传链 util + 附件库页（by-owner）+ 内容封面（走 contents/{id}/attachments 子资源）+ 招新工作台件（stats/precheck/批量门槛/export）+ 公告导入工具页。导出一律用后端 CSV，**不为 xlsx 加依赖**。
+通用附件库页（by-owner + upload-url/confirm-upload 三步链）+ 招新工作台件（stats/precheck/批量门槛/export）+ 公告导入工具页。内容封面已实现（contents 子资源链，见 §2.5），不在本阶段。导出一律用后端 CSV，**不为 xlsx 加依赖**。
 
 **DoD**：上传→引用→signed-URL 过期重取全链路演示；招募负责人闭环含批量件。
 
@@ -213,7 +216,7 @@ SRVF 品牌 tokens（设计稿 `srvf-tokens.css`：救援红 #C4001B / 盾蓝 #1
 
 ## 附录 B · 后端 admin/system 面前端未消费路径（67 条 · 2026-07-06 快照）
 
-### 组织人事与授权（38）
+### 组织人事与授权（41）
 
 - positions (3)：`GET,POST /api/admin/v1/positions` · `DELETE,GET,PATCH /api/admin/v1/positions/{id}` · `GET /api/admin/v1/positions/options`
 - position-rules (2)：`GET,POST /api/admin/v1/position-rules` · `DELETE,PATCH /api/admin/v1/position-rules/{id}`
@@ -225,10 +228,11 @@ SRVF 品牌 tokens（设计稿 `srvf-tokens.css`：救援红 #C4001B / 盾蓝 #1
 - members 子资源 (6)：`GET,POST /api/admin/v1/members/{memberId}/memberships` · `DELETE,PATCH .../memberships/{id}` · `GET .../position-assignments` · `GET .../supervision-scope` · `GET .../certificates/qualification-flag` · `GET /api/admin/v1/members/options`
 - organizations 增强 (8)：`GET /api/admin/v1/organizations/options` · `GET .../tree-options` · `GET .../tree-with-summary` · `GET .../{orgId}/members/options` · `GET .../{orgId}/memberships` · `GET .../{orgId}/supervisors` · `GET,POST .../{orgId}/position-assignments` · `POST .../{id}/move`
 
-### 附件与内容（8）
+### 附件（通用 attachments，5）
 
 - attachments (5)：`GET,POST /api/admin/v1/attachments` · `DELETE,GET,PATCH .../{id}` · `GET .../by-owner` · `POST .../upload-url` · `POST .../confirm-upload`
-- contents 附件子资源 (3)：`POST /api/admin/v1/contents/{id}/attachments/upload-url` · `POST .../attachments/confirm` · `DELETE .../attachments/{attachmentId}`
+
+> 勘误（2026-07-06 Phase 0 审计）：v1.0 曾把 `contents/{id}/attachments/*` 3 条误列为未消费——实际前端已接（`srvf-content.ts` + `content-media.vue`），已移除；组织人事类合计相应由 38 更正为 41，总数 67 不变。
 
 ### 招新与公告（6）
 
@@ -248,4 +252,4 @@ SRVF 品牌 tokens（设计稿 `srvf-tokens.css`：救援红 #C4001B / 盾蓝 #1
 - dict-items (1)：`GET /api/system/v1/dict-items/tree`
 - health (3，基础设施非业务)：`GET /api/system/v1/health` · `.../live` · `.../ready`
 
-> 归类合计：组织人事与授权 38 + 附件内容 8 + 招新公告 6 + RBAC/用户 9 + 零星 6 = 67。
+> 归类合计：组织人事与授权 41 + 附件 5 + 招新公告 6 + RBAC/用户 9 + 零星 6 = 67。

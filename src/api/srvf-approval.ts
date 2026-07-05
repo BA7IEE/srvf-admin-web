@@ -30,13 +30,16 @@ export type AdminAttendanceSheetItem = AttendanceSheetItem & {
 };
 
 /**
- * 横扫查询入参：分页 + 可选 `statusCode`（沿既有嵌套列表口径,**非草拟期 `status`**）。
- * 省略 `statusCode` = 全部状态。
+ * 横扫查询入参：分页 + 可选 `statusCode`（沿既有嵌套列表口径,**非草拟期 `status`**）
+ * + 可选 `q` 综合关键词（契约 F2 增强参数,两个扁平端点均支持）。
+ * 省略 `statusCode` = 全部状态。契约还有 memberQ/activityQ/organizationId/
+ * includeDescendants/dateFrom/dateTo/expand 等更细参数,本轮仅消费 q,其余待有场景再接。
  */
 export type CrossAxisQuery = {
   page?: number;
   pageSize?: number;
   statusCode?: string;
+  q?: string;
 };
 
 export type AdminRegistrationListResult = Envelope<

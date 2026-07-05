@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, onMounted } from "vue";
+import { useRouter } from "vue-router";
 import { PureTableBar } from "@/components/RePureTableBar";
 import { getDashboardSummary, type DashboardSummary } from "@/api/srvf-meta";
 import { useApprovalRegistrations, useApprovalAttendance } from "./utils/hook";
@@ -13,6 +14,7 @@ defineOptions({
  * 作为工作台落地页：顶部 dashboard-summary 做聚合摘要，下面保留横扫列表。
  */
 const activeTab = ref<"registrations" | "attendances">("registrations");
+const router = useRouter();
 
 const summary = ref<DashboardSummary | null>(null);
 const summaryLoading = ref(false);
@@ -95,6 +97,7 @@ const {
   canCancel: regCanCancel,
   loading: regLoading,
   statusFilter: regStatusFilter,
+  keyword: regKeyword,
   statusOptions: regStatusOptions,
   columns: regColumns,
   dataList: regDataList,
@@ -118,6 +121,7 @@ const {
   canFinalReject: attCanFinalReject,
   loading: attLoading,
   statusFilter: attStatusFilter,
+  keyword: attKeyword,
   statusOptions: attStatusOptions,
   columns: attColumns,
   dataList: attDataList,
@@ -133,6 +137,34 @@ const {
   handleSizeChange: attHandleSizeChange,
   handleCurrentChange: attHandleCurrentChange
 } = useApprovalAttendance();
+
+/**
+ * 摘要卡下钻：点卡片 → 切到对应 tab 并预置 statusCode 重查；
+ * "进行中活动"卡跳活动列表（工作台无活动 tab）。
+ * key 与 dashboard-summary 的块结构一一对应（后端按权限裁剪出块）。
+ */
+function onCardClick(key: string) {
+  switch (key) {
+    case "registrations.pending":
+      activeTab.value = "registrations";
+      regStatusFilter.value = "pending";
+      regOnFilterChange();
+      break;
+    case "attendanceSheets.pending":
+      activeTab.value = "attendances";
+      attStatusFilter.value = "pending";
+      attOnFilterChange();
+      break;
+    case "attendanceSheets.pendingFinalReview":
+      activeTab.value = "attendances";
+      attStatusFilter.value = "pending_final_review";
+      attOnFilterChange();
+      break;
+    case "activities.published":
+      router.push("/srvf/activities-domain/activities");
+      break;
+  }
+}
 
 onMounted(() => {
   loadDashboardSummary();
@@ -173,7 +205,13 @@ onMounted(() => {
         :closable="false"
       />
       <div v-else-if="summaryCards.length" class="summary-grid">
-        <div v-for="card in summaryCards" :key="card.key" class="summary-item">
+        <div
+          v-for="card in summaryCards"
+          :key="card.key"
+          class="summary-item summary-item-clickable"
+          title="点击查看对应列表"
+          @click="onCardClick(card.key)"
+        >
           <div class="summary-item-title">{{ card.title }}</div>
           <div class="summary-item-value">{{ card.value }}</div>
           <div class="summary-item-desc">{{ card.desc }}</div>
@@ -192,6 +230,14 @@ onMounted(() => {
             @refresh="regOnSearch"
           >
             <template #buttons>
+              <el-input
+                v-model="regKeyword"
+                class="w-48! mr-2!"
+                placeholder="关键词搜索（回车）"
+                clearable
+                @keyup.enter="regOnFilterChange"
+                @clear="regOnFilterChange"
+              />
               <el-select
                 v-model="regStatusFilter"
                 class="w-40!"
@@ -295,6 +341,14 @@ onMounted(() => {
             @refresh="attOnSearch"
           >
             <template #buttons>
+              <el-input
+                v-model="attKeyword"
+                class="w-48! mr-2!"
+                placeholder="关键词搜索（回车）"
+                clearable
+                @keyup.enter="attOnFilterChange"
+                @clear="attOnFilterChange"
+              />
               <el-select
                 v-model="attStatusFilter"
                 class="w-40!"
@@ -443,6 +497,18 @@ onMounted(() => {
   background: var(--el-fill-color-lighter);
   border: 1px solid var(--el-border-color-light);
   border-radius: 8px;
+}
+
+.summary-item-clickable {
+  cursor: pointer;
+  transition:
+    box-shadow 0.2s,
+    transform 0.2s;
+}
+
+.summary-item-clickable:hover {
+  box-shadow: var(--el-box-shadow-light);
+  transform: translateY(-1px);
 }
 
 .summary-item-title {
