@@ -33,6 +33,8 @@ export function useOrganizations() {
   const canMembers = hasPerms("membership.list.record");
   /** 在任职务面板读权限（组织轴 position-assignments;仅决定「在任职务」按钮显隐） */
   const canAssignments = hasPerms("position-assignment.read.record");
+  /** 被谁分管面板读权限（组织轴 supervision-assignments;仅决定「被谁分管」按钮显隐） */
+  const canSupervisors = hasPerms("supervision-assignment.read.record");
 
   const columns: TableColumnList = [
     { label: "节点名", prop: "name", align: "left", minWidth: 200 },
@@ -50,7 +52,12 @@ export function useOrganizations() {
     },
     { label: "排序", prop: "sortOrder", minWidth: 70 },
     { label: "状态", prop: "status", minWidth: 90, slot: "status" },
-    ...(canUpdate || canDelete || canCreate || canMembers || canAssignments
+    ...(canUpdate ||
+    canDelete ||
+    canCreate ||
+    canMembers ||
+    canAssignments ||
+    canSupervisors
       ? [
           {
             label: "操作",
@@ -214,6 +221,7 @@ export function useOrganizations() {
     canDelete,
     canMembers,
     canAssignments,
+    canSupervisors,
     loading,
     columns,
     dataList,
