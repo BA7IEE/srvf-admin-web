@@ -1,16 +1,23 @@
 <script setup lang="ts">
-import { onMounted } from "vue";
+import { onMounted, ref } from "vue";
 import { PureTableBar } from "@/components/RePureTableBar";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
+import { hasPerms } from "@/utils/auth";
 import { useRoleBindings } from "./utils/hook";
+import AuthzExplainDrawer from "./authz-explain-drawer.vue";
 
 import EditPen from "~icons/ep/edit-pen";
 import AddFill from "~icons/ri/add-circle-line";
 import Delete from "~icons/ep/delete";
+import Guide from "~icons/ri/compass-3-line";
 
 defineOptions({
   name: "SrvfRoleBindings"
 });
+
+/** 权限诊断入口（蓝图 §7：诊断是排查工具,入口放本页） */
+const canExplain = hasPerms("authz.explain.decision");
+const explainVisible = ref(false);
 
 const {
   canRead,
@@ -110,6 +117,13 @@ onMounted(() => {
           含历史
         </el-checkbox>
         <el-button
+          v-if="canExplain"
+          :icon="useRenderIcon(Guide)"
+          @click="explainVisible = true"
+        >
+          权限诊断
+        </el-button>
+        <el-button
           v-if="canCreate"
           type="primary"
           :icon="useRenderIcon(AddFill)"
@@ -187,6 +201,7 @@ onMounted(() => {
       v-else
       description="您没有查看角色绑定的权限（role-binding.read.record）"
     />
+    <AuthzExplainDrawer v-model="explainVisible" />
   </div>
 </template>
 
