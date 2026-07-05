@@ -31,6 +31,8 @@ export function useOrganizations() {
   const canDelete = hasPerms("org.delete.node");
   /** 成员面板读权限（组织轴 memberships;仅决定「成员」按钮显隐） */
   const canMembers = hasPerms("membership.list.record");
+  /** 在任职务面板读权限（组织轴 position-assignments;仅决定「在任职务」按钮显隐） */
+  const canAssignments = hasPerms("position-assignment.read.record");
 
   const columns: TableColumnList = [
     { label: "节点名", prop: "name", align: "left", minWidth: 200 },
@@ -48,7 +50,7 @@ export function useOrganizations() {
     },
     { label: "排序", prop: "sortOrder", minWidth: 70 },
     { label: "状态", prop: "status", minWidth: 90, slot: "status" },
-    ...(canUpdate || canDelete || canCreate || canMembers
+    ...(canUpdate || canDelete || canCreate || canMembers || canAssignments
       ? [
           {
             label: "操作",
@@ -211,6 +213,7 @@ export function useOrganizations() {
     canUpdate,
     canDelete,
     canMembers,
+    canAssignments,
     loading,
     columns,
     dataList,
