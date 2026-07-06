@@ -4,7 +4,7 @@ import type { FormInstance, FormRules } from "element-plus";
 import { message } from "@/utils/message";
 import { hasPerms } from "@/utils/auth";
 import { getAdminMe } from "@/api/user";
-import { getUserAccounts, type UserAccountItem } from "@/api/srvf-user";
+import { getUserOptions, type UserOptionItem } from "@/api/srvf-user";
 import {
   explainAuthz,
   AUTHZ_REASON_LABEL,
@@ -28,7 +28,7 @@ const canExplain = hasPerms("authz.explain.decision");
 const canReadUsers = hasPerms("user.read.account");
 const loading = ref(false);
 const usersLoading = ref(false);
-const userOptions = ref<UserAccountItem[]>([]);
+const userOptions = ref<UserOptionItem[]>([]);
 const result = ref<ExplainAuthzResult | null>(null);
 const formRef = ref<FormInstance>();
 
@@ -87,8 +87,10 @@ const reasonLabel = computed(() => {
   return r ? (AUTHZ_REASON_LABEL[r] ?? r) : "—";
 });
 
-function userLabel(user: UserAccountItem) {
-  return `${user.username}${user.nickname ? ` / ${user.nickname}` : ""}（${user.role}）`;
+function userLabel(user: UserOptionItem) {
+  return user.label === user.username
+    ? user.label
+    : `${user.label}（${user.username}）`;
 }
 
 function applyInitial() {
@@ -109,7 +111,7 @@ async function loadUserOptions() {
   if (!canReadUsers || userOptions.value.length > 0) return;
   usersLoading.value = true;
   try {
-    const { code, data } = await getUserAccounts({ page: 1, pageSize: 100 });
+    const { code, data } = await getUserOptions({ limit: 100 });
     if (code === 0) userOptions.value = data.items;
   } catch {
     // 无用户列表权限或接口失败时退化为 userId 手填

@@ -2,7 +2,7 @@
 import { computed, ref } from "vue";
 import type { FormRules } from "element-plus";
 import type { RoleItem } from "@/api/srvf-role";
-import type { UserAccountItem } from "@/api/srvf-user";
+import type { UserOptionItem } from "@/api/srvf-user";
 import type { MemberOptionItem } from "@/api/srvf-position-assignment";
 import type { OrgOptionItem } from "@/api/srvf-organization";
 import type { ActivityOptionItem } from "@/api/srvf-activity";
@@ -49,7 +49,7 @@ const props = withDefaults(
   defineProps<{
     formInline?: RoleBindingFormModel;
     roleOptions?: RoleItem[];
-    userOptions?: UserAccountItem[];
+    userOptions?: UserOptionItem[];
     memberOptions?: MemberOptionItem[];
     positionAssignmentOptions?: Array<{ id: string; label: string }>;
     orgOptions?: OrgOptionItem[];
@@ -223,7 +223,11 @@ defineExpose({ getRef });
             <el-option
               v-for="opt in props.userOptions"
               :key="opt.id"
-              :label="`${opt.username}${opt.nickname ? `（${opt.nickname}）` : ''}`"
+              :label="
+                opt.label === opt.username
+                  ? opt.label
+                  : `${opt.label}（${opt.username}）`
+              "
               :value="opt.id"
             />
           </el-select>

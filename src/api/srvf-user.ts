@@ -32,6 +32,26 @@ export type UserAccountListResult = Envelope<PageResult<UserAccountItem>>;
 export const getUserAccounts = (params?: UserAccountListQuery) =>
   http.request<UserAccountListResult>("get", "/api/admin/v1/users", { params });
 
+/** 用户选择器投影项（后端 `UserOptionItemDto`）。label = nickname || username。 */
+export type UserOptionItem = {
+  id: string;
+  label: string;
+  username: string;
+};
+
+/**
+ * 用户选择器投影 `GET /api/admin/v1/users/options`（rbac: `user.read.account`，与用户列表同码）。
+ * q 模糊命中 username+nickname+email+phone；limit 默认 20 上限 100（同 members/organizations/options 选择器族）。
+ * 供表单"选用户"下拉用，别再拿分页列表 `getUserAccounts({pageSize:100})` 当选择器使——
+ * 超过 100 个账号时列表分页会静默漏选后面的账号。
+ */
+export const getUserOptions = (params?: { q?: string; limit?: number }) =>
+  http.request<Envelope<{ items: UserOptionItem[] }>>(
+    "get",
+    "/api/admin/v1/users/options",
+    { params }
+  );
+
 /* ----------------------------- 用户生命周期写操作 ----------------------------- */
 
 export type UpdateUserStatusBody = { status: AccountStatus };
