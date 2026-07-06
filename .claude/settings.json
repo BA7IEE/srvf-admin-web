@@ -1,10 +1,6 @@
 {
   "permissions": {
     "deny": [
-      "Edit(./src/api/user.ts)",
-      "Write(./src/api/user.ts)",
-      "Edit(./src/utils/http/**)",
-      "Write(./src/utils/http/**)",
       "Edit(./src/store/modules/permission.ts)",
       "Write(./src/store/modules/permission.ts)",
       "Edit(./src/store/modules/multiTags.ts)",
@@ -79,6 +75,10 @@
       "Write(./src/utils/auth.ts)",
       "Edit(./src/store/modules/user.ts)",
       "Write(./src/store/modules/user.ts)",
+      "Edit(./src/api/user.ts)",
+      "Write(./src/api/user.ts)",
+      "Edit(./src/utils/http/**)",
+      "Write(./src/utils/http/**)",
       "Edit(./src/views/login/**)",
       "Write(./src/views/login/**)",
       "Edit(./src/router/utils.ts)",

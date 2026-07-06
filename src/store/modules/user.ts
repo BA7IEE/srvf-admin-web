@@ -12,11 +12,13 @@ import {
   getLogin,
   refreshTokenApi,
   getAdminMe,
-  getMyPermissions
+  getMyPermissions,
+  logoutApi
 } from "@/api/user";
 import { useMultiTagsStoreHook } from "./multiTags";
 import {
   type DataInfo,
+  getToken,
   setToken,
   removeToken,
   userKey,
@@ -131,8 +133,16 @@ export const useUserStore = defineStore("pure-user", {
         );
       }
     },
-    /** 前端登出（不调用接口） */
+    /**
+     * 登出：先尽力撤销后端 `refreshToken`（`POST /api/auth/v1/logout`，
+     * 幂等且 best-effort——失败/超时也不阻塞前端清理，否则网络问题会让用户卡在退不出去），
+     * 再清本地态。不 await：调用方（导航栏 / http 拦截器 401 兜底）历来把它当同步函数用。
+     */
     logOut() {
+      const data = getToken();
+      if (data?.refreshToken) {
+        logoutApi({ refreshToken: data.refreshToken }).catch(() => {});
+      }
       this.username = "";
       this.roles = [];
       this.permissions = [];

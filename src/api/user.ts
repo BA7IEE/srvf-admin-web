@@ -78,3 +78,19 @@ export const getMyPermissions = () => {
     "/api/system/v1/rbac/me/permissions"
   );
 };
+
+/** 注销（后端幂等：refreshToken 不存在/已撤销/已过期均 200） */
+export type LogoutResult = ApiEnvelope<null>;
+
+/** 注销全部（撤销当前用户名下所有 refresh token family） */
+export type LogoutAllResult = ApiEnvelope<{ revokedCount: number }>;
+
+/** 登出当前会话：撤销这一条 `refreshToken`（guide §2） */
+export const logoutApi = (data: { refreshToken: string }) => {
+  return http.request<LogoutResult>("post", "/api/auth/v1/logout", { data });
+};
+
+/** 登出全部会话：撤销当前用户名下所有 refresh token family（guide §2） */
+export const logoutAllApi = () => {
+  return http.request<LogoutAllResult>("post", "/api/auth/v1/logout-all");
+};

@@ -142,6 +142,55 @@ class PureHttp {
         const $error = error;
         $error.isCancelRequest = Axios.isCancel($error);
         // 所有的响应异常 区分来源为取消请求/非取消请求
+        if ($error.isCancelRequest) {
+          return Promise.reject($error);
+        }
+
+        // 40100：access 已失效但前端预判未过期时发出（时钟偏移 / 服务端主动吊销等）——
+        // 被动触发 refresh→重放原请求；与请求拦截器共用 isRefreshing/requests 队列，
+        // 避免同一时刻两路刷新并发（rotation always 下第二路会撞 refreshToken 复用检测）。
+        // 必须排除 login/refresh 自身的 401（那是凭证失败，去刷新只会死循环，同 guide §3 gotcha A）。
+        const config = $error.config as PureHttpRequestConfig | undefined;
+        const bizCode = ($error.response?.data as { code?: number } | undefined)
+          ?.code;
+        const whiteList = ["/api/auth/v1/login", "/api/auth/v1/refresh"];
+        const isWhitelisted = whiteList.some(url => config?.url?.endsWith(url));
+        if (
+          $error.response?.status === 401 &&
+          bizCode === 40100 &&
+          config &&
+          !isWhitelisted
+        ) {
+          const stored = getToken();
+          if (!stored?.refreshToken) {
+            useUserStoreHook().logOut();
+            return Promise.reject($error);
+          }
+          if (!PureHttp.isRefreshing) {
+            PureHttp.isRefreshing = true;
+            useUserStoreHook()
+              .handRefreshToken({ refreshToken: stored.refreshToken })
+              .then(res => {
+                const token = res.data.accessToken;
+                PureHttp.requests.forEach(cb => cb(token));
+                PureHttp.requests = [];
+              })
+              .catch(_err => {
+                PureHttp.requests = [];
+                useUserStoreHook().logOut();
+                message("登录已过期，请重新登录", {
+                  type: "warning"
+                });
+              })
+              .finally(() => {
+                PureHttp.isRefreshing = false;
+              });
+          }
+          return PureHttp.retryOriginalRequest(config).then(cfg =>
+            PureHttp.axiosInstance.request(cfg as PureHttpRequestConfig)
+          );
+        }
+
         return Promise.reject($error);
       }
     );
