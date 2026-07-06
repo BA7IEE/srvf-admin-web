@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import { h, ref } from "vue";
+import { h, ref, watch } from "vue";
 import { ElMessageBox } from "element-plus";
 import { deviceDetection } from "@pureadmin/utils";
 import { message } from "@/utils/message";
@@ -52,6 +52,10 @@ export function useCertificates(externalMemberId: string) {
     certTypeCode: string;
     qualified: boolean;
   } | null>(null);
+  /** 切换证书大类后旧判定已不对应当前选择,清空避免误读成当前选中类型的结果 */
+  watch(qualCheckCertType, () => {
+    qualCheckResult.value = null;
+  });
 
   const columns: TableColumnList = [
     {

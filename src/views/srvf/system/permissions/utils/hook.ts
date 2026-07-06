@@ -103,6 +103,12 @@ export function usePermissions() {
     onSearch();
   }
 
+  /** 应用新筛选条件时回到第 1 页——否则停留在旧页码，筛选后结果页数变少时表格会误显示"暂无数据"。 */
+  function handleFilterSearch() {
+    pagination.currentPage = 1;
+    onSearch();
+  }
+
   function handleSizeChange(val: number) {
     pagination.pageSize = val;
     onSearch();
@@ -207,6 +213,7 @@ export function usePermissions() {
     filterForm,
     onSearch,
     handleFilterReset,
+    handleFilterSearch,
     handleSizeChange,
     handleCurrentChange,
     openDialog,

@@ -40,6 +40,8 @@ const router = useRouter();
 const canAdd = hasPerms("membership.set.record");
 const addFormRef = ref();
 const memberOptionsCache = ref<{ label: string; value: string }[]>([]);
+/** 抽屉是父页单实例、orgId 随行切换复用——缓存必须按 orgId 失效，不能只判空 */
+let memberOptionsCacheOrgId: string | null = null;
 
 const dataList = ref<MembershipItem[]>([]);
 const loading = ref(false);
@@ -110,21 +112,24 @@ function goMember(row: MembershipItem) {
   router.push(`/srvf/members-domain/members/${row.memberId}`);
 }
 
-/** 添加成员（组织轴入口）：懒加载本组织队员下拉，弹窗提交后刷新列表 */
+/** 添加成员（组织轴入口）：懒加载本组织队员下拉，按 orgId 缓存复用，弹窗提交后刷新列表 */
 async function openAddMemberDialog() {
   if (!props.orgId) return;
-  try {
-    const { code, data } = await getOrgScopedMemberOptions(props.orgId, {
-      limit: 100
-    });
-    if (code === 0) {
-      memberOptionsCache.value = data.items.map(m => ({
-        label: `${m.label}（${m.memberNo}）`,
-        value: m.id
-      }));
+  if (memberOptionsCacheOrgId !== props.orgId) {
+    memberOptionsCacheOrgId = props.orgId;
+    try {
+      const { code, data } = await getOrgScopedMemberOptions(props.orgId, {
+        limit: 100
+      });
+      if (code === 0) {
+        memberOptionsCache.value = data.items.map(m => ({
+          label: `${m.label}（${m.memberNo}）`,
+          value: m.id
+        }));
+      }
+    } catch {
+      // 拉取失败时下拉为空，不阻塞弹窗打开
     }
-  } catch {
-    // 拉取失败时下拉为空，不阻塞弹窗打开
   }
   addDialog({
     title: `添加成员 — ${props.orgName}`,

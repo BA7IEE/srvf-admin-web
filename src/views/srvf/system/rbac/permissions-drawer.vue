@@ -72,11 +72,15 @@ async function loadData() {
   }
 }
 
+/**
+ * 已分配一侧（targetKeys 内）只能撤销、未分配一侧只能新增——按 canAssign/canRevoke
+ * 分别禁用对应方向,而不是等保存时才静默丢弃对应半边改动。
+ */
 const transferData = computed(() =>
   allPermissions.value.map(p => ({
     key: p.id,
     label: p.code,
-    disabled: false
+    disabled: targetKeys.value.includes(p.id) ? !canRevoke : !canAssign
   }))
 );
 
@@ -97,6 +101,7 @@ async function handleSave() {
     return;
   }
   saving.value = true;
+  let revokeFailures = 0;
   try {
     const byId = new Map(allPermissions.value.map(p => [p.id, p.code]));
     if (added.length > 0 && canAssign) {
@@ -106,13 +111,22 @@ async function handleSave() {
       }
     }
     if (removed.length > 0 && canRevoke) {
-      await Promise.all(
+      // allSettled：单条撤销失败(如并发编辑导致关系已不存在)不应吞掉其余已成功的撤销
+      const results = await Promise.allSettled(
         removed.map(id => revokeRolePermission(props.role!.id, id))
       );
+      revokeFailures = results.filter(r => r.status === "rejected").length;
     }
-    message("权限点已更新；如需立即生效请到列表页「重载权限缓存」", {
-      type: "success"
-    });
+    if (revokeFailures > 0) {
+      message(
+        `已保存，但 ${revokeFailures}/${removed.length} 个权限点撤销失败，请重新打开核对`,
+        { type: "warning" }
+      );
+    } else {
+      message("权限点已更新；如需立即生效请到列表页「重载权限缓存」", {
+        type: "success"
+      });
+    }
     emit("saved");
     visible.value = false;
   } catch (error: any) {

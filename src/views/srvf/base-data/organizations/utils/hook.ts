@@ -125,23 +125,21 @@ export function useOrganizations() {
     if (!canRead) return;
     loading.value = true;
     try {
-      const { code, data } = await getOrgTree();
+      // 两个端点互相独立(计数是纯展示态叠加)，并发拉取而非串行等待。
+      const [treeRes, summaryRes] = await Promise.allSettled([
+        getOrgTree(),
+        getOrgTreeWithSummary()
+      ]);
+      if (treeRes.status === "rejected") throw treeRes.reason;
+      const { code, data } = treeRes.value;
       if (code === 0) {
         dataList.value = data;
         // 归属计数是独立端点（tree-with-summary，DTO 与 tree 不同不能直接换）；
         // 失败不阻塞主树展示，计数列退化显示"—"。
-        try {
-          const summaryRes = await getOrgTreeWithSummary();
-          if (summaryRes.code === 0) {
-            const counts = new Map<
-              string,
-              { direct: number; subtree: number }
-            >();
-            flattenSummaryCounts(summaryRes.data, counts);
-            applySummaryCounts(dataList.value, counts);
-          }
-        } catch {
-          // 计数拉取失败不影响主树的增删改查功能
+        if (summaryRes.status === "fulfilled" && summaryRes.value.code === 0) {
+          const counts = new Map<string, { direct: number; subtree: number }>();
+          flattenSummaryCounts(summaryRes.value.data, counts);
+          applySummaryCounts(dataList.value, counts);
         }
       }
     } catch (error: any) {
@@ -215,6 +213,8 @@ export function useOrganizations() {
               message("新建成功", { type: "success" });
             }
             done();
+            // 树结构/节点名变了，「移动」弹窗的目标父级下拉缓存需失效重拉
+            treeOptionsCache.value = [];
             onSearch();
           } catch (error: any) {
             message(error?.response?.data?.message ?? "保存失败", {
@@ -280,6 +280,7 @@ export function useOrganizations() {
             await moveOrganization(row.id, { parentId: cur.parentId });
             message("移动成功", { type: "success" });
             done();
+            treeOptionsCache.value = [];
             onSearch();
           } catch (error: any) {
             message(error?.response?.data?.message ?? "移动失败", {
@@ -326,6 +327,7 @@ export function useOrganizations() {
         try {
           await deleteOrganization(row.id);
           message("删除成功", { type: "success" });
+          treeOptionsCache.value = [];
           onSearch();
         } catch (error: any) {
           message(error?.response?.data?.message ?? "删除失败", {
