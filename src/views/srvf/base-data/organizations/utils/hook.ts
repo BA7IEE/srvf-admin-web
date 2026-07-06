@@ -5,15 +5,49 @@ import { message } from "@/utils/message";
 import { hasPerms } from "@/utils/auth";
 import { addDialog } from "@/components/ReDialog";
 import OrgForm, { type OrgFormModel } from "../form.vue";
+import MoveForm, { type MoveFormModel } from "../move-form.vue";
 import {
   getOrgTree,
+  getOrgTreeWithSummary,
+  getOrgTreeOptions,
   createOrganization,
   updateOrganization,
   deleteOrganization,
   updateOrganizationStatus,
-  type OrgTreeNode
+  moveOrganization,
+  type OrgTreeNode,
+  type OrgTreeSummaryNode,
+  type OrgTreeOptionItem
 } from "@/api/srvf-organization";
 import { useSrvfDictStoreHook } from "@/store/modules/srvfDict";
+
+/** 递归拍平 tree-with-summary 结果为 id → 计数 的映射，供合并进主树展示。 */
+function flattenSummaryCounts(
+  nodes: OrgTreeSummaryNode[],
+  out: Map<string, { direct: number; subtree: number }>
+) {
+  for (const n of nodes) {
+    out.set(n.id, {
+      direct: n.directMembershipCount,
+      subtree: n.subtreeMembershipCount
+    });
+    if (n.children?.length) flattenSummaryCounts(n.children, out);
+  }
+}
+/** 递归把计数映射按 id 回填进主树节点（原地修改，不改变树形状）。 */
+function applySummaryCounts(
+  nodes: OrgTreeNode[],
+  counts: Map<string, { direct: number; subtree: number }>
+) {
+  for (const n of nodes) {
+    const hit = counts.get(n.id);
+    if (hit) {
+      n.directMembershipCount = hit.direct;
+      n.subtreeMembershipCount = hit.subtree;
+    }
+    if (n.children?.length) applySummaryCounts(n.children, counts);
+  }
+}
 
 export function useOrganizations() {
   /** 共享字典标签解析器：节点类别 code → 中文（node_type 字典） */
@@ -35,6 +69,11 @@ export function useOrganizations() {
   const canAssignments = hasPerms("position-assignment.read.record");
   /** 被谁分管面板读权限（组织轴 supervision-assignments;仅决定「被谁分管」按钮显隐） */
   const canSupervisors = hasPerms("supervision-assignment.read.record");
+  /** 移动（重挂父级）写权限 */
+  const canMove = hasPerms("org.move.node");
+  /** 移动弹窗的目标父级下拉（getOrgTreeOptions；懒加载一次,同页内复用缓存） */
+  const treeOptionsCache = ref<OrgTreeOptionItem[]>([]);
+  const moveFormRef = ref();
 
   const columns: TableColumnList = [
     { label: "节点名", prop: "name", align: "left", minWidth: 200 },
@@ -51,18 +90,31 @@ export function useOrganizations() {
       formatter: ({ nodeTypeCode }) => dict.label("node_type", nodeTypeCode)
     },
     { label: "排序", prop: "sortOrder", minWidth: 70 },
+    {
+      label: "直属人数",
+      prop: "directMembershipCount",
+      minWidth: 90,
+      formatter: ({ directMembershipCount }) => directMembershipCount ?? "—"
+    },
+    {
+      label: "含下级人数",
+      prop: "subtreeMembershipCount",
+      minWidth: 100,
+      formatter: ({ subtreeMembershipCount }) => subtreeMembershipCount ?? "—"
+    },
     { label: "状态", prop: "status", minWidth: 90, slot: "status" },
     ...(canUpdate ||
     canDelete ||
     canCreate ||
     canMembers ||
     canAssignments ||
-    canSupervisors
+    canSupervisors ||
+    canMove
       ? [
           {
             label: "操作",
             fixed: "right" as const,
-            width: 300,
+            width: 360,
             slot: "operation"
           }
         ]
@@ -76,6 +128,21 @@ export function useOrganizations() {
       const { code, data } = await getOrgTree();
       if (code === 0) {
         dataList.value = data;
+        // 归属计数是独立端点（tree-with-summary，DTO 与 tree 不同不能直接换）；
+        // 失败不阻塞主树展示，计数列退化显示"—"。
+        try {
+          const summaryRes = await getOrgTreeWithSummary();
+          if (summaryRes.code === 0) {
+            const counts = new Map<
+              string,
+              { direct: number; subtree: number }
+            >();
+            flattenSummaryCounts(summaryRes.data, counts);
+            applySummaryCounts(dataList.value, counts);
+          }
+        } catch {
+          // 计数拉取失败不影响主树的增删改查功能
+        }
       }
     } catch (error: any) {
       message(error?.response?.data?.message ?? "加载组织树失败", {
@@ -170,6 +237,61 @@ export function useOrganizations() {
     openOrgDialog({ isEdit: true, row, parentId: row.parentId });
   }
 
+  /** 懒加载移动弹窗的目标父级树（首次打开时拉一次，同页内复用缓存） */
+  async function ensureTreeOptions() {
+    if (treeOptionsCache.value.length) return;
+    try {
+      const { code, data } = await getOrgTreeOptions();
+      if (code === 0) treeOptionsCache.value = data;
+    } catch {
+      // 拉取失败时移动弹窗的下拉为空，不阻塞弹窗本身打开
+    }
+  }
+
+  /**
+   * 移动（重挂父级）。目标父级=自身或自身后代会成环，后端拒绝弹其 message
+   * （不前端预判——组织树可能很深，前端复刻环检测意义不大，交后端裁决）。
+   */
+  async function openMoveDialog(row: OrgTreeNode) {
+    await ensureTreeOptions();
+    addDialog({
+      title: `移动组织节点 — ${row.name}`,
+      width: "38%",
+      draggable: true,
+      fullscreen: deviceDetection(),
+      closeOnClickModal: false,
+      sureBtnLoading: true,
+      props: {
+        formInline: {
+          currentLabel: `${row.name}${row.code ? `（${row.code}）` : ""}`,
+          parentId: ""
+        } as MoveFormModel,
+        treeOptions: treeOptionsCache.value
+      },
+      contentRenderer: () => h(MoveForm, { ref: moveFormRef }),
+      beforeSure: (done, { options, closeLoading }) => {
+        const cur = options.props.formInline as MoveFormModel;
+        moveFormRef.value.getRef().validate(async (valid: boolean) => {
+          if (!valid) {
+            closeLoading();
+            return;
+          }
+          try {
+            await moveOrganization(row.id, { parentId: cur.parentId });
+            message("移动成功", { type: "success" });
+            done();
+            onSearch();
+          } catch (error: any) {
+            message(error?.response?.data?.message ?? "移动失败", {
+              type: "error"
+            });
+            closeLoading();
+          }
+        });
+      }
+    });
+  }
+
   /** 启停（专用 status 端点；后端拒绝停用唯一活跃根 → LAST_ROOT_PROTECTED，前端只弹后端 message） */
   function handleToggleStatus(row: OrgTreeNode) {
     const next = row.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
@@ -222,6 +344,7 @@ export function useOrganizations() {
     canMembers,
     canAssignments,
     canSupervisors,
+    canMove,
     loading,
     columns,
     dataList,
@@ -230,6 +353,7 @@ export function useOrganizations() {
     openCreateChild,
     openEdit,
     handleToggleStatus,
-    handleDelete
+    handleDelete,
+    openMoveDialog
   };
 }
