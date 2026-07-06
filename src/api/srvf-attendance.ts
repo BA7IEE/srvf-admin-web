@@ -42,6 +42,67 @@ export const getActivityAttendanceSheets = (
     { params }
   );
 
+/* --------------------------- 考勤单据 提交 / 编辑 --------------------------- */
+
+/** 单条考勤记录入参（后端 `AttendanceRecordInputDto`）。 */
+export type AttendanceRecordInputBody = {
+  memberId: string;
+  /** 考勤角色字典 code（typeCode=attendance_role；7 项闭集） */
+  roleCode: string;
+  checkInAt: string;
+  /** 必须晚于 checkInAt */
+  checkOutAt: string;
+  /** 服务时长(小时)；不传由后端按签退-签到自动算 */
+  serviceHours?: number;
+  /** 考勤明细状态字典 code（typeCode=attendance_status） */
+  attendanceStatusCode: string;
+  note?: string;
+  /** 关联报名 ActivityRegistration.id（可空） */
+  registrationId?: string;
+  /** 贡献值；不传由后端按 ContributionRule 预填。approve 前所有 records 必填（R31） */
+  contributionPoints?: number;
+};
+
+/** 提交考勤单据入参（后端 `CreateAttendanceSheetDto`）。 */
+export type CreateAttendanceSheetBody = {
+  records: AttendanceRecordInputBody[];
+};
+
+/** 编辑 pending 单据入参（后端 `UpdateAttendanceSheetDto`；传则整组替换旧 records）。 */
+export type UpdateAttendanceSheetBody = {
+  records: AttendanceRecordInputBody[];
+};
+
+/**
+ * 提交考勤单据 `POST /api/admin/v1/activities/{activityId}/attendance-sheets`
+ * （rbac: `attendance.create.sheet`）。事务内一次性 create Sheet + N records；
+ * 初始 statusCode=pending，version=1；活动 cancelled 时后端拒绝。
+ */
+export const submitAttendanceSheet = (
+  activityId: string,
+  body: CreateAttendanceSheetBody
+) =>
+  http.request<AttendanceSheetMutationResult>(
+    "post",
+    `/api/admin/v1/activities/${activityId}/attendance-sheets`,
+    { data: body }
+  );
+
+/**
+ * 编辑 pending 单据 `PATCH /api/admin/v1/attendance-sheets/{id}`
+ * （rbac: `attendance.update.sheet`）。后端生成 previousSnapshot + version+1；
+ * 旧 records 软删 + 新 records 创建；非 pending 状态后端拒绝 → 弹其 message。
+ */
+export const updateAttendanceSheet = (
+  id: string,
+  body: UpdateAttendanceSheetBody
+) =>
+  http.request<AttendanceSheetMutationResult>(
+    "patch",
+    `/api/admin/v1/attendance-sheets/${id}`,
+    { data: body }
+  );
+
 /* --------------------- 考勤单据 两级审批 + 删除 写操作 --------------------- */
 /* 写/删端点为扁平 `/api/admin/v1/attendance-sheets/{id}/...`（非活动嵌套）;     */
 /* 路径 / DTO / RBAC 逐项以 `/api/docs-json` 为准（goal 的 `note` 系示意,实测   */
