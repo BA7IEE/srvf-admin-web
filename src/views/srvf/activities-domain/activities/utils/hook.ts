@@ -7,6 +7,7 @@ import { deviceDetection } from "@pureadmin/utils";
 import { message } from "@/utils/message";
 import { hasPerms } from "@/utils/auth";
 import { addDialog } from "@/components/ReDialog";
+import { useMultiTagsStoreHook } from "@/store/modules/multiTags";
 import ActivityForm, {
   type ActivityFormModel,
   type ActivityOption
@@ -376,8 +377,15 @@ export function useActivities() {
       .catch(() => {});
   }
 
-  /** 进入活动作战室（实体详情页）：行内「管理」入口，router.push 带 activity id（非侧栏菜单） */
+  /** 进入活动作战室（实体详情页）：行内「管理」入口，router.push 带 activity id（非侧栏菜单）。
+   *  页签标题带活动名（动态 params 路由需显式 push 页签，pure-admin 范式）。 */
   function openCockpit(row: ActivityItem) {
+    useMultiTagsStoreHook().handleTags("push", {
+      path: "/srvf/activities-domain/activities/:id",
+      name: "SrvfActivityCockpit",
+      params: { id: row.id },
+      meta: { title: `活动 · ${row.title}` }
+    });
     router.push(`/srvf/activities-domain/activities/${row.id}`);
   }
 

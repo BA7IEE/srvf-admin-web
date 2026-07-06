@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
 import { h, ref, onMounted } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { ElMessageBox } from "element-plus";
 import { deviceDetection } from "@pureadmin/utils";
 import { message } from "@/utils/message";
@@ -25,12 +25,14 @@ import { useRecruitmentTools } from "./utils/tools-hook";
 import EditPen from "~icons/ep/edit-pen";
 import DownloadLine from "~icons/ri/download-2-line";
 import CheckboxMultiple from "~icons/ri/checkbox-multiple-line";
+import ArrowLeftLine from "~icons/ri/arrow-left-line";
 
 defineOptions({
   name: "SrvfRecruitmentCycleCockpit"
 });
 
 const route = useRoute();
+const router = useRouter();
 const cycleId = route.params.id as string;
 
 /* ----------------------------- 头部：轮次信息 + 动作 ----------------------------- */
@@ -236,6 +238,14 @@ onMounted(() => {
   <div class="main">
     <!-- 头部：轮次信息 + 动作 -->
     <el-card v-loading="cycleLoading" shadow="never" class="mb-2">
+      <el-button
+        link
+        class="mb-2!"
+        :icon="useRenderIcon(ArrowLeftLine)"
+        @click="router.push('/srvf/recruitment-domain/cycles')"
+      >
+        返回招新轮次
+      </el-button>
       <template v-if="cycle">
         <div class="cockpit-header">
           <div class="cockpit-header__title">

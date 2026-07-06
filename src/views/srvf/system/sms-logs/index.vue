@@ -19,6 +19,7 @@ const {
   dataList,
   pagination,
   statusTag,
+  statusLabel,
   onSearch,
   onFilterChange,
   handleSizeChange,
@@ -67,7 +68,9 @@ onMounted(() => {
             @page-current-change="handleCurrentChange"
           >
             <template #status="{ row }">
-              <el-tag :type="statusTag(row.status)">{{ row.status }}</el-tag>
+              <el-tag :type="statusTag(row.status)">
+                {{ statusLabel(row.status) }}
+              </el-tag>
             </template>
           </pure-table>
         </template>

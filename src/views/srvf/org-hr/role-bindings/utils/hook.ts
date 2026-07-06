@@ -72,7 +72,7 @@ export function useRoleBindings() {
     }))
   ];
   const scopeTypeOptions = [
-    { value: "", label: "全部 scope" },
+    { value: "", label: "全部范围" },
     ...Object.keys(SCOPE_TYPE_LABEL).map(code => ({
       value: code,
       label: SCOPE_TYPE_LABEL[code]
@@ -166,7 +166,7 @@ export function useRoleBindings() {
       minWidth: 130,
       formatter: ({ role, roleId }) => role?.displayName ?? roleId
     },
-    { label: "Scope", prop: "scopeType", minWidth: 110, slot: "scopeType" },
+    { label: "生效范围", prop: "scopeType", minWidth: 110, slot: "scopeType" },
     { label: "状态", prop: "status", minWidth: 90, slot: "status" },
     {
       label: "起始",

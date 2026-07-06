@@ -7,6 +7,7 @@ import { useRenderIcon } from "@/components/ReIcon/src/hooks";
 import RbacRolesDrawer from "./rbac-roles-drawer.vue";
 
 import AddFill from "~icons/ri/add-circle-line";
+import More from "~icons/ep/more-filled";
 
 defineOptions({
   name: "SrvfUsers"
@@ -42,6 +43,15 @@ const {
   handleCurrentChange,
   openRbacRolesDrawer
 } = useUserAccounts();
+
+/** 低频行操作收进「更多」下拉（操作列只保留 编辑 / 启停 两个主操作） */
+const canMoreOps =
+  canResetPassword ||
+  canUpdateRole ||
+  canRbacRoleManage ||
+  canClearPhone ||
+  canClearWechat ||
+  canDelete;
 
 onMounted(() => {
   onSearch();
@@ -108,16 +118,6 @@ onMounted(() => {
               编辑
             </el-button>
             <el-button
-              v-if="canResetPassword"
-              class="reset-margin"
-              link
-              type="primary"
-              :size="size"
-              @click="handleResetPassword(row)"
-            >
-              重置密码
-            </el-button>
-            <el-button
               v-if="canUpdateStatus"
               class="reset-margin"
               link
@@ -127,56 +127,85 @@ onMounted(() => {
             >
               {{ row.status === "ACTIVE" ? "禁用" : "启用" }}
             </el-button>
-            <el-button
-              v-if="canUpdateRole"
-              class="reset-margin"
-              link
-              type="primary"
-              :size="size"
-              @click="openRoleDialog(row)"
-            >
-              改角色
-            </el-button>
-            <el-button
-              v-if="canRbacRoleManage"
-              class="reset-margin"
-              link
-              type="primary"
-              :size="size"
-              @click="openRbacRolesDrawer(row)"
-            >
-              RBAC角色
-            </el-button>
-            <el-button
-              v-if="canClearPhone"
-              class="reset-margin"
-              link
-              type="primary"
-              :size="size"
-              @click="handleClearPhone(row)"
-            >
-              清手机
-            </el-button>
-            <el-button
-              v-if="canClearWechat"
-              class="reset-margin"
-              link
-              type="primary"
-              :size="size"
-              @click="handleClearWechat(row)"
-            >
-              清微信
-            </el-button>
-            <el-button
-              v-if="canDelete"
-              class="reset-margin"
-              link
-              type="danger"
-              :size="size"
-              @click="handleDelete(row)"
-            >
-              删除
-            </el-button>
+            <el-dropdown v-if="canMoreOps" trigger="click">
+              <el-button
+                class="ml-3! mt-0.5!"
+                link
+                type="primary"
+                :size="size"
+                :icon="useRenderIcon(More)"
+              />
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item v-if="canUpdateRole">
+                    <el-button
+                      class="reset-margin!"
+                      link
+                      type="primary"
+                      :size="size"
+                      @click="openRoleDialog(row)"
+                    >
+                      改系统角色
+                    </el-button>
+                  </el-dropdown-item>
+                  <el-dropdown-item v-if="canRbacRoleManage">
+                    <el-button
+                      class="reset-margin!"
+                      link
+                      type="primary"
+                      :size="size"
+                      @click="openRbacRolesDrawer(row)"
+                    >
+                      业务角色绑定
+                    </el-button>
+                  </el-dropdown-item>
+                  <el-dropdown-item v-if="canResetPassword" divided>
+                    <el-button
+                      class="reset-margin!"
+                      link
+                      type="warning"
+                      :size="size"
+                      @click="handleResetPassword(row)"
+                    >
+                      重置密码
+                    </el-button>
+                  </el-dropdown-item>
+                  <el-dropdown-item v-if="canClearPhone">
+                    <el-button
+                      class="reset-margin!"
+                      link
+                      type="warning"
+                      :size="size"
+                      @click="handleClearPhone(row)"
+                    >
+                      清除手机绑定
+                    </el-button>
+                  </el-dropdown-item>
+                  <el-dropdown-item v-if="canClearWechat">
+                    <el-button
+                      class="reset-margin!"
+                      link
+                      type="warning"
+                      :size="size"
+                      @click="handleClearWechat(row)"
+                    >
+                      清除微信绑定
+                    </el-button>
+                  </el-dropdown-item>
+                  <el-dropdown-item v-if="canDelete" divided>
+                    <el-button
+                      class="reset-margin!"
+                      link
+                      type="danger"
+                      :size="size"
+                      @click="handleDelete(row)"
+                    >
+                      删除
+                    </el-button>
+                  </el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
           </template>
         </pure-table>
       </template>

@@ -12,6 +12,7 @@ import type { OrgTreeNode } from "@/api/srvf-organization";
 import Delete from "~icons/ep/delete";
 import EditPen from "~icons/ep/edit-pen";
 import AddFill from "~icons/ri/add-circle-line";
+import More from "~icons/ep/more-filled";
 
 defineOptions({
   name: "SrvfOrganizations"
@@ -61,6 +62,15 @@ const {
   handleDelete,
   openMoveDialog
 } = useOrganizations();
+
+/** 低频行操作收进「更多」下拉（操作列只保留 成员 / 编辑 两个主操作） */
+const canMoreOps =
+  canAssignments ||
+  canSupervisors ||
+  canCreate ||
+  canMove ||
+  canUpdate ||
+  canDelete;
 
 onMounted(() => {
   onSearch();
@@ -120,26 +130,6 @@ onMounted(() => {
               成员
             </el-button>
             <el-button
-              v-if="canAssignments"
-              class="reset-margin"
-              link
-              type="primary"
-              :size="size"
-              @click="openAssignments(row)"
-            >
-              在任职务
-            </el-button>
-            <el-button
-              v-if="canSupervisors"
-              class="reset-margin"
-              link
-              type="primary"
-              :size="size"
-              @click="openSupervisors(row)"
-            >
-              被谁分管
-            </el-button>
-            <el-button
               v-if="canUpdate"
               class="reset-margin"
               link
@@ -150,48 +140,87 @@ onMounted(() => {
             >
               编辑
             </el-button>
-            <el-button
-              v-if="canCreate"
-              class="reset-margin"
-              link
-              type="primary"
-              :size="size"
-              :icon="useRenderIcon(AddFill)"
-              @click="openCreateChild(row)"
-            >
-              新增子节点
-            </el-button>
-            <el-button
-              v-if="canMove && row.parentId"
-              class="reset-margin"
-              link
-              type="warning"
-              :size="size"
-              @click="openMoveDialog(row)"
-            >
-              移动
-            </el-button>
-            <el-button
-              v-if="canUpdate"
-              class="reset-margin"
-              link
-              :type="row.status === 'ACTIVE' ? 'warning' : 'success'"
-              :size="size"
-              @click="handleToggleStatus(row)"
-            >
-              {{ row.status === "ACTIVE" ? "停用" : "启用" }}
-            </el-button>
-            <el-button
-              v-if="canDelete"
-              class="reset-margin"
-              link
-              type="danger"
-              :size="size"
-              :icon="useRenderIcon(Delete)"
-              @click="handleDelete(row)"
-            >
-              删除
-            </el-button>
+            <el-dropdown v-if="canMoreOps" trigger="click">
+              <el-button
+                class="ml-3! mt-0.5!"
+                link
+                type="primary"
+                :size="size"
+                :icon="useRenderIcon(More)"
+              />
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item v-if="canAssignments">
+                    <el-button
+                      class="reset-margin!"
+                      link
+                      type="primary"
+                      :size="size"
+                      @click="openAssignments(row)"
+                    >
+                      在任职务
+                    </el-button>
+                  </el-dropdown-item>
+                  <el-dropdown-item v-if="canSupervisors">
+                    <el-button
+                      class="reset-margin!"
+                      link
+                      type="primary"
+                      :size="size"
+                      @click="openSupervisors(row)"
+                    >
+                      被谁分管
+                    </el-button>
+                  </el-dropdown-item>
+                  <el-dropdown-item v-if="canCreate">
+                    <el-button
+                      class="reset-margin!"
+                      link
+                      type="primary"
+                      :size="size"
+                      :icon="useRenderIcon(AddFill)"
+                      @click="openCreateChild(row)"
+                    >
+                      新增子节点
+                    </el-button>
+                  </el-dropdown-item>
+                  <el-dropdown-item v-if="canMove && row.parentId">
+                    <el-button
+                      class="reset-margin!"
+                      link
+                      type="warning"
+                      :size="size"
+                      @click="openMoveDialog(row)"
+                    >
+                      移动
+                    </el-button>
+                  </el-dropdown-item>
+                  <el-dropdown-item v-if="canUpdate" divided>
+                    <el-button
+                      class="reset-margin!"
+                      link
+                      :type="row.status === 'ACTIVE' ? 'warning' : 'success'"
+                      :size="size"
+                      @click="handleToggleStatus(row)"
+                    >
+                      {{ row.status === "ACTIVE" ? "停用" : "启用" }}
+                    </el-button>
+                  </el-dropdown-item>
+                  <el-dropdown-item v-if="canDelete">
+                    <el-button
+                      class="reset-margin!"
+                      link
+                      type="danger"
+                      :size="size"
+                      :icon="useRenderIcon(Delete)"
+                      @click="handleDelete(row)"
+                    >
+                      删除
+                    </el-button>
+                  </el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
           </template>
         </pure-table>
       </template>

@@ -3,7 +3,7 @@ import { ref } from "vue";
 import ReCol from "@/components/ReCol";
 import type { FormRules } from "element-plus";
 
-/** 下拉选项（字典 / 组织共用；为空数组 = 退化为文本输入） */
+/** 下拉选项（字典 / 组织共用；为空数组 = 数据源不可用，选择器禁用） */
 export type ActivityOption = { label: string; value: string };
 
 /**
@@ -80,7 +80,23 @@ const rules: FormRules = {
     { required: true, message: "请选择 / 输入承办组织", trigger: "change" }
   ],
   startAt: [{ required: true, message: "请选择开始时间", trigger: "change" }],
-  endAt: [{ required: true, message: "请选择结束时间", trigger: "change" }],
+  endAt: [
+    { required: true, message: "请选择结束时间", trigger: "change" },
+    {
+      validator: (_rule, value: string, callback) => {
+        if (
+          value &&
+          newFormInline.value.startAt &&
+          value <= newFormInline.value.startAt
+        ) {
+          callback(new Error("结束时间须晚于开始时间"));
+          return;
+        }
+        callback();
+      },
+      trigger: "change"
+    }
+  ],
   location: [{ required: true, message: "请输入活动地点", trigger: "blur" }]
 };
 
@@ -130,9 +146,8 @@ defineExpose({ getRef });
           <el-input
             v-else
             v-model="newFormInline.activityTypeCode"
-            clearable
-            maxlength="64"
-            placeholder="活动类型字典 code（type=activity_type）"
+            disabled
+            placeholder="活动类型选项不可用（需字典读取权限），请联系管理员"
           />
         </el-form-item>
       </re-col>
@@ -157,9 +172,8 @@ defineExpose({ getRef });
           <el-input
             v-else
             v-model="newFormInline.organizationId"
-            clearable
-            maxlength="64"
-            placeholder="承办组织节点 id（不允许根节点）"
+            disabled
+            placeholder="组织选项不可用（需组织读取权限），请联系管理员"
           />
         </el-form-item>
       </re-col>
@@ -231,9 +245,8 @@ defineExpose({ getRef });
           <el-input
             v-else
             v-model="newFormInline.genderRequirementCode"
-            clearable
-            maxlength="64"
-            placeholder="性别限制字典 code（可空；type=gender_requirement）"
+            disabled
+            placeholder="性别限制选项不可用（需字典读取权限）"
           />
         </el-form-item>
       </re-col>

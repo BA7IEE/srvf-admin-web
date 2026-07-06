@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
 import { h, ref, onMounted } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { ElMessageBox } from "element-plus";
 import { deviceDetection } from "@pureadmin/utils";
 import { message } from "@/utils/message";
@@ -20,12 +20,14 @@ import { useTeamJoinApplications } from "../applications/utils/hook";
 import TjApplicationDetail from "../applications/detail.vue";
 
 import EditPen from "~icons/ep/edit-pen";
+import ArrowLeftLine from "~icons/ri/arrow-left-line";
 
 defineOptions({
   name: "SrvfTeamJoinCycleCockpit"
 });
 
 const route = useRoute();
+const router = useRouter();
 const cycleId = route.params.id as string;
 
 /* ----------------------------- 头部：入队轮信息 + 动作 ----------------------------- */
@@ -159,6 +161,14 @@ onMounted(() => {
   <div class="main">
     <!-- 头部：入队轮信息 + 动作 -->
     <el-card v-loading="cycleLoading" shadow="never" class="mb-2">
+      <el-button
+        link
+        class="mb-2!"
+        :icon="useRenderIcon(ArrowLeftLine)"
+        @click="router.push('/srvf/recruitment-domain/team-join')"
+      >
+        返回入队轮次
+      </el-button>
       <template v-if="cycle">
         <div class="cockpit-header">
           <div class="cockpit-header__title">

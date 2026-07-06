@@ -7,6 +7,7 @@ import { deviceDetection } from "@pureadmin/utils";
 import { message } from "@/utils/message";
 import { hasPerms } from "@/utils/auth";
 import { addDialog } from "@/components/ReDialog";
+import { useMultiTagsStoreHook } from "@/store/modules/multiTags";
 import CycleForm, { type CycleFormModel } from "../form.vue";
 import {
   getRecruitmentCycles,
@@ -183,8 +184,14 @@ export function useRecruitmentCycles() {
       .catch(() => {});
   }
 
-  /** 进入招新作战室（cycle 详情页：报名审核 tab） */
+  /** 进入招新作战室（cycle 详情页：报名审核 tab）；页签标题带轮次名 */
   function openCockpit(row: RecruitmentCycle) {
+    useMultiTagsStoreHook().handleTags("push", {
+      path: "/srvf/recruitment-domain/cycles/:id",
+      name: "SrvfRecruitmentCycleCockpit",
+      params: { id: row.id },
+      meta: { title: `招新 · ${row.name}` }
+    });
     router.push(`/srvf/recruitment-domain/cycles/${row.id}`);
   }
 

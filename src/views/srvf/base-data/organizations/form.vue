@@ -16,14 +16,22 @@ export type OrgFormModel = {
   sortOrder: number;
 };
 
-const props = withDefaults(defineProps<{ formInline?: OrgFormModel }>(), {
-  formInline: () => ({
-    name: "",
-    code: "",
-    nodeTypeCode: "",
-    sortOrder: 0
-  })
-});
+const props = withDefaults(
+  defineProps<{
+    formInline?: OrgFormModel;
+    /** 节点类别下拉（node_type 字典；空 = 字典不可用，选择器禁用） */
+    nodeTypeOptions?: Array<{ label: string; value: string }>;
+  }>(),
+  {
+    formInline: () => ({
+      name: "",
+      code: "",
+      nodeTypeCode: "",
+      sortOrder: 0
+    }),
+    nodeTypeOptions: () => []
+  }
+);
 
 const ruleFormRef = ref();
 const newFormInline = ref(props.formInline);
@@ -38,7 +46,7 @@ const rules: FormRules = {
     }
   ],
   nodeTypeCode: [
-    { required: true, message: "请输入节点类别字典 code", trigger: "blur" }
+    { required: true, message: "请选择节点类别", trigger: "change" }
   ]
 };
 
@@ -77,10 +85,26 @@ defineExpose({ getRef });
       </re-col>
       <re-col>
         <el-form-item label="节点类别" prop="nodeTypeCode">
-          <el-input
+          <el-select
+            v-if="nodeTypeOptions.length"
             v-model="newFormInline.nodeTypeCode"
+            class="w-full!"
             clearable
-            placeholder="节点类别字典 code（type=node_type）"
+            filterable
+            placeholder="选择节点类别（队 / 部 / 组…）"
+          >
+            <el-option
+              v-for="opt in nodeTypeOptions"
+              :key="opt.value"
+              :label="opt.label"
+              :value="opt.value"
+            />
+          </el-select>
+          <el-input
+            v-else
+            v-model="newFormInline.nodeTypeCode"
+            disabled
+            placeholder="节点类别选项不可用（需字典读取权限），请联系管理员"
           />
         </el-form-item>
       </re-col>

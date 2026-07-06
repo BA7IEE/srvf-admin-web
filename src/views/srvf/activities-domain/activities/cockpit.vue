@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
 import { ref, onMounted } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import dayjs from "dayjs";
 import { ElMessageBox } from "element-plus";
 import { message } from "@/utils/message";
@@ -20,6 +20,7 @@ import { useAttendances } from "../attendances/utils/hook";
 import ReviewDetail from "../attendances/review-detail.vue";
 
 import AddFill from "~icons/ri/add-circle-line";
+import ArrowLeftLine from "~icons/ri/arrow-left-line";
 
 defineOptions({
   name: "SrvfActivityCockpit"
@@ -27,6 +28,7 @@ defineOptions({
 
 /** 实体 id 来自路由参数（该路由不入 keepAlive → 每次进来重新挂载，setup 取一次即可靠） */
 const route = useRoute();
+const router = useRouter();
 const activityId = route.params.id as string;
 
 /** 共享字典：活动类型 / 活动状态 code → 中文 */
@@ -194,6 +196,14 @@ onMounted(() => {
   <div class="main">
     <!-- 头部：活动信息 + 发布/取消 -->
     <el-card v-loading="detailLoading" shadow="never" class="mb-2">
+      <el-button
+        link
+        class="mb-2!"
+        :icon="useRenderIcon(ArrowLeftLine)"
+        @click="router.push('/srvf/activities-domain/activities')"
+      >
+        返回活动列表
+      </el-button>
       <template v-if="detail">
         <div class="cockpit-header">
           <div class="cockpit-header__title">

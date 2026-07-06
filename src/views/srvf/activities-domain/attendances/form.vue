@@ -422,9 +422,8 @@ defineExpose({ getRef });
             <el-input
               v-else
               v-model="record.memberId"
-              clearable
-              maxlength="64"
-              placeholder="Member.id（必填；8-64）"
+              disabled
+              placeholder="队员选项不可用，可用「导入已通过报名」带入"
             />
             <div class="attendance-form__field-tip">
               可按姓名/编号搜索已加载队员；手输时必须填写 Member.id。

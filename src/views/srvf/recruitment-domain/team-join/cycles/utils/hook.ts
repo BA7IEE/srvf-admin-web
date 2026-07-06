@@ -7,6 +7,7 @@ import { deviceDetection } from "@pureadmin/utils";
 import { message } from "@/utils/message";
 import { hasPerms } from "@/utils/auth";
 import { addDialog } from "@/components/ReDialog";
+import { useMultiTagsStoreHook } from "@/store/modules/multiTags";
 import TjCycleForm, { type TjCycleFormModel } from "../form.vue";
 import {
   getTeamJoinCycles,
@@ -162,8 +163,14 @@ export function useTeamJoinCycles() {
       .catch(() => {});
   }
 
-  /** 进入入队作战室（cycle 详情页：入队申请审核 tab） */
+  /** 进入入队作战室（cycle 详情页：入队申请审核 tab）；页签标题带轮次名 */
   function openCockpit(row: TeamJoinCycle) {
+    useMultiTagsStoreHook().handleTags("push", {
+      path: "/srvf/recruitment-domain/team-join/:id",
+      name: "SrvfTeamJoinCycleCockpit",
+      params: { id: row.id },
+      meta: { title: `入队 · ${row.name}` }
+    });
     router.push(`/srvf/recruitment-domain/team-join/${row.id}`);
   }
 

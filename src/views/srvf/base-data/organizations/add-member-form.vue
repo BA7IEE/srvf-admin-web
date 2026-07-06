@@ -33,7 +33,7 @@ const ruleFormRef = ref();
 const newFormInline = ref(props.formInline);
 
 const membershipTypeOptions = Object.entries(MEMBERSHIP_TYPE_LABEL).map(
-  ([value, label]) => ({ value, label: `${label} (${value})` })
+  ([value, label]) => ({ value, label })
 );
 
 const rules: FormRules = {

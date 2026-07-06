@@ -5,7 +5,7 @@ import { message } from "@/utils/message";
 import { hasPerms } from "@/utils/auth";
 import { getSmsSendLogs, type SmsSendLog } from "@/api/srvf-system-settings";
 
-/** 发送状态 code → tag 展示色(status 文案直接显示原码,枚举未在契约固化,不臆造) */
+/** 发送状态 code → tag 展示色(冗余键做历史数据兜底,未知码回退 info) */
 const STATUS_TAG: Record<
   string,
   "primary" | "success" | "info" | "warning" | "danger"
@@ -14,6 +14,14 @@ const STATUS_TAG: Record<
   SUCCESS: "success",
   FAILED: "danger",
   PENDING: "warning"
+};
+
+/** 发送状态 → 中文(契约 v0.37.0 已固化 enum ['SENT','FAILED'];未知码回退原文) */
+const STATUS_LABEL: Record<string, string> = {
+  SENT: "已发送",
+  SUCCESS: "已发送",
+  FAILED: "发送失败",
+  PENDING: "发送中"
 };
 
 export function useSmsLogs() {
@@ -50,6 +58,10 @@ export function useSmsLogs() {
 
   function statusTag(code: string) {
     return STATUS_TAG[code] ?? ("info" as const);
+  }
+
+  function statusLabel(code: string) {
+    return STATUS_LABEL[code] ?? code;
   }
 
   async function onSearch() {
@@ -100,6 +112,7 @@ export function useSmsLogs() {
     dataList,
     pagination,
     statusTag,
+    statusLabel,
     onSearch,
     onFilterChange,
     handleSizeChange,
