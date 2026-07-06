@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
 import { onMounted } from "vue";
 import { PureTableBar } from "@/components/RePureTableBar";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
@@ -171,10 +172,7 @@ onMounted(() => {
         </template>
       </PureTableBar>
     </template>
-    <el-empty
-      v-else
-      description="您没有查看内容的权限（content.read.record）"
-    />
+    <SrvfPermEmpty v-else action="查看内容" code="content.read.record" />
 
     <!-- 封面与附件管理 drawer（封面 + 附件上传/设封面/删；signed-URL 三步） -->
     <ContentMedia v-model:visible="mediaVisible" :content-id="mediaContentId" />

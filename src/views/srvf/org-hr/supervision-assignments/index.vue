@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
 import { onMounted } from "vue";
 import { PureTableBar } from "@/components/RePureTableBar";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
@@ -145,9 +146,10 @@ onMounted(() => {
         </pure-table>
       </template>
     </PureTableBar>
-    <el-empty
+    <SrvfPermEmpty
       v-else
-      description="您没有查看督导的权限（supervision-assignment.read.record）"
+      action="查看督导"
+      code="supervision-assignment.read.record"
     />
   </div>
 </template>

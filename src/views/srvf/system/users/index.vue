@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
 import { onMounted } from "vue";
 import { useUserAccounts } from "./utils/hook";
 import { PureTableBar } from "@/components/RePureTableBar";
@@ -180,7 +181,7 @@ onMounted(() => {
         </pure-table>
       </template>
     </PureTableBar>
-    <el-empty v-else description="您没有查看用户的权限（user.read.account）" />
+    <SrvfPermEmpty v-else action="查看用户" code="user.read.account" />
 
     <RbacRolesDrawer v-model="rbacRolesDrawerVisible" :user="activeUser" />
   </div>

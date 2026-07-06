@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
 import { onMounted } from "vue";
 import { PureTableBar } from "@/components/RePureTableBar";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
@@ -72,10 +73,7 @@ onMounted(() => {
         </template>
       </PureTableBar>
     </template>
-    <el-empty
-      v-else
-      description="您没有查看短信日志的权限（sms-send-log.read.list）"
-    />
+    <SrvfPermEmpty v-else action="查看短信日志" code="sms-send-log.read.list" />
   </div>
 </template>
 

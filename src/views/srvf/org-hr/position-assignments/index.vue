@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
 import { onMounted } from "vue";
 import { PureTableBar } from "@/components/RePureTableBar";
 import { usePositionAssignmentList } from "./utils/hook";
@@ -171,9 +172,10 @@ onMounted(() => {
         </pure-table>
       </template>
     </PureTableBar>
-    <el-empty
+    <SrvfPermEmpty
       v-else
-      description="您没有查看任职的权限（position-assignment.read.record）"
+      action="查看任职"
+      code="position-assignment.read.record"
     />
   </div>
 </template>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
 import dayjs from "dayjs";
 import { h, ref, watch } from "vue";
 import { ElMessageBox } from "element-plus";
@@ -358,9 +359,10 @@ watch(visible, v => {
         </el-button>
       </template>
     </pure-table>
-    <el-empty
+    <SrvfPermEmpty
       v-else
-      description="您没有查看在任职务的权限（position-assignment.read.record）"
+      action="查看在任职务"
+      code="position-assignment.read.record"
     />
   </el-drawer>
 </template>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
 import { onMounted, ref } from "vue";
 import { PureTableBar } from "@/components/RePureTableBar";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
@@ -258,7 +259,7 @@ const activeTab = ref(
         </PureTableBar>
       </el-tab-pane>
     </el-tabs>
-    <el-empty v-else description="您没有查看附件配置的权限" />
+    <SrvfPermEmpty v-else action="查看附件配置" />
   </div>
 </template>
 

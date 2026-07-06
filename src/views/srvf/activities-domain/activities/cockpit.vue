@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
 import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import dayjs from "dayjs";
@@ -353,9 +354,10 @@ onMounted(() => {
             </template>
           </PureTableBar>
         </template>
-        <el-empty
+        <SrvfPermEmpty
           v-else
-          description="您没有查看报名记录的权限（activity-registration.read.record）"
+          action="查看报名记录"
+          code="activity-registration.read.record"
         />
       </el-tab-pane>
 
@@ -477,10 +479,7 @@ onMounted(() => {
             </template>
           </PureTableBar>
         </template>
-        <el-empty
-          v-else
-          description="您没有查看考勤的权限（attendance.read.sheet）"
-        />
+        <SrvfPermEmpty v-else action="查看考勤" code="attendance.read.sheet" />
       </el-tab-pane>
     </el-tabs>
 

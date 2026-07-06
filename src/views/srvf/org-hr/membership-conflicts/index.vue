@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
 import { onMounted } from "vue";
 import { PureTableBar } from "@/components/RePureTableBar";
 import { useMembershipConflicts } from "./utils/hook";
@@ -76,10 +77,7 @@ onMounted(() => {
         </template>
       </PureTableBar>
     </template>
-    <el-empty
-      v-else
-      description="您没有查看会籍的权限（membership.list.record）"
-    />
+    <SrvfPermEmpty v-else action="查看会籍" code="membership.list.record" />
   </div>
 </template>
 

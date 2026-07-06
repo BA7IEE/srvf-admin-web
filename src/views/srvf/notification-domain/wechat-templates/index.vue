@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
 import { onMounted } from "vue";
 import { PureTableBar } from "@/components/RePureTableBar";
 import { useWechatTemplates } from "./utils/hook";
@@ -67,9 +68,10 @@ onMounted(() => {
         </template>
       </PureTableBar>
     </template>
-    <el-empty
+    <SrvfPermEmpty
       v-else
-      description="您没有查看微信模板配置的权限（notification.read.record）"
+      action="查看微信模板配置"
+      code="notification.read.record"
     />
   </div>
 </template>

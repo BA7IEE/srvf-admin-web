@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
 import { computed, ref, watch, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { dayjs } from "element-plus";
@@ -66,7 +67,7 @@ const summaryCards = computed<SummaryCard[]>(() => {
       key: "registrations.pending",
       title: "待审报名",
       value: current.registrations.pending,
-      desc: "registration_status = pending"
+      desc: "等待审核的活动报名，点击处理"
     });
   }
 
@@ -75,13 +76,13 @@ const summaryCards = computed<SummaryCard[]>(() => {
       key: "attendanceSheets.pending",
       title: "考勤待一级审核",
       value: current.attendanceSheets.pending,
-      desc: "attendance_sheet_status = pending"
+      desc: "等待一级审核的考勤单，点击处理"
     });
     cards.push({
       key: "attendanceSheets.pendingFinalReview",
       title: "考勤待终审",
       value: current.attendanceSheets.pendingFinalReview,
-      desc: "attendance_sheet_status = pending_final_review"
+      desc: "等待终审的考勤单，点击处理"
     });
   }
 
@@ -90,7 +91,7 @@ const summaryCards = computed<SummaryCard[]>(() => {
       key: "activities.published",
       title: "进行中活动",
       value: current.activities.published,
-      desc: "activity_status = published"
+      desc: "已发布、进行中的活动，点击查看"
     });
   }
 
@@ -210,7 +211,7 @@ onMounted(() => {
           <div>
             <div class="summary-title">工作台摘要</div>
             <div class="summary-subtitle">
-              摘要块由后端按权限裁剪，缺权限的块不会显示为 0
+              只显示您有权查看的数据，数字卡片可点击直达处理
             </div>
           </div>
           <el-button
@@ -238,14 +239,14 @@ onMounted(() => {
           <div class="summary-item-value">
             {{ memberTotal ?? "—" }}
           </div>
-          <div class="summary-item-desc">member.status = ACTIVE</div>
+          <div class="summary-item-desc">当前在队的队员总数</div>
         </div>
         <div class="summary-item">
           <div class="summary-item-title">本月活动</div>
           <div class="summary-item-value">
             {{ monthActivityTotal ?? "—" }}
           </div>
-          <div class="summary-item-desc">activities.startAt 落在本月</div>
+          <div class="summary-item-desc">开始时间在本月内的活动数</div>
         </div>
         <div
           v-for="card in summaryCards"
@@ -412,9 +413,10 @@ onMounted(() => {
             </template>
           </PureTableBar>
         </template>
-        <el-empty
+        <SrvfPermEmpty
           v-else
-          description="您没有查看报名的权限（activity-registration.read.record）"
+          action="查看报名"
+          code="activity-registration.read.record"
         />
       </el-tab-pane>
 
@@ -535,10 +537,7 @@ onMounted(() => {
             </template>
           </PureTableBar>
         </template>
-        <el-empty
-          v-else
-          description="您没有查看考勤的权限（attendance.read.sheet）"
-        />
+        <SrvfPermEmpty v-else action="查看考勤" code="attendance.read.sheet" />
       </el-tab-pane>
     </el-tabs>
   </div>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
 import { onMounted } from "vue";
 import { useAuditLogs } from "./utils/hook";
 import { PureTableBar } from "@/components/RePureTableBar";
@@ -74,10 +75,7 @@ onMounted(() => {
         </pure-table>
       </template>
     </PureTableBar>
-    <el-empty
-      v-else
-      description="您没有查看审计日志的权限（audit-log.read.entry）"
-    />
+    <SrvfPermEmpty v-else action="查看审计日志" code="audit-log.read.entry" />
     <DetailDrawer :id="detailId" v-model="detailVisible" />
   </div>
 </template>

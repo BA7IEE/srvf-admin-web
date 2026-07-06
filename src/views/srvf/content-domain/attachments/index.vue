@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
 import { onMounted } from "vue";
 import { PureTableBar } from "@/components/RePureTableBar";
 import { useAttachments, canViewAttachmentLibrary } from "./utils/hook";
@@ -160,7 +161,7 @@ onMounted(() => {
         </template>
       </PureTableBar>
     </template>
-    <el-empty v-else description="您没有查看附件库的权限" />
+    <SrvfPermEmpty v-else action="查看附件库" />
 
     <el-dialog
       v-model="uploadVisible"

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
 import { onMounted } from "vue";
 import { useRoles } from "./utils/hook";
 import { PureTableBar } from "@/components/RePureTableBar";
@@ -125,7 +126,7 @@ onMounted(() => {
         </pure-table>
       </template>
     </PureTableBar>
-    <el-empty v-else description="您没有查看角色的权限（rbac.role.read）" />
+    <SrvfPermEmpty v-else action="查看角色" code="rbac.role.read" />
 
     <PermissionsDrawer
       v-model="permissionsDrawerVisible"

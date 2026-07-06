@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
 import { onMounted } from "vue";
 import { PureTableBar } from "@/components/RePureTableBar";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
@@ -160,9 +161,10 @@ onMounted(() => {
         </pure-table>
       </template>
     </PureTableBar>
-    <el-empty
+    <SrvfPermEmpty
       v-else
-      description="您没有查看职务定义的权限（position.read.definition）"
+      action="查看职务定义"
+      code="position.read.definition"
     />
   </div>
 </template>

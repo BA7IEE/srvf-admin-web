@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
 import { onMounted } from "vue";
 import { PureTableBar } from "@/components/RePureTableBar";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
@@ -106,9 +107,10 @@ onMounted(() => {
         </template>
       </PureTableBar>
     </template>
-    <el-empty
+    <SrvfPermEmpty
       v-else
-      description="您没有查看入队轮的权限（team-join-cycle.read.record）"
+      action="查看入队轮"
+      code="team-join-cycle.read.record"
     />
   </div>
 </template>

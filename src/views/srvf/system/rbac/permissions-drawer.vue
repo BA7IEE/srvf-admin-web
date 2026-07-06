@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
 import { computed, ref, watch } from "vue";
 import { message } from "@/utils/message";
 import { hasPerms } from "@/utils/auth";
@@ -172,9 +173,10 @@ watch(visible, open => {
         </el-button>
       </div>
     </template>
-    <el-empty
+    <SrvfPermEmpty
       v-else
-      description="您没有分配权限点的权限（rbac.role-permission.create / .delete）"
+      action="分配权限点"
+      code="rbac.role-permission.create / .delete"
     />
   </el-drawer>
 </template>

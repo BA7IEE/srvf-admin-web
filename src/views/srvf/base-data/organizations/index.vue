@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
 import { onMounted, ref } from "vue";
 import { useOrganizations } from "./utils/hook";
 import { PureTableBar } from "@/components/RePureTableBar";
@@ -195,7 +196,7 @@ onMounted(() => {
         </pure-table>
       </template>
     </PureTableBar>
-    <el-empty v-else description="您没有查看组织架构的权限（org.read.node）" />
+    <SrvfPermEmpty v-else action="查看组织架构" code="org.read.node" />
     <MembersDrawer
       v-model="membersVisible"
       :org-id="membersOrg.id"

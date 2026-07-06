@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
 import { h, ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import { ElMessageBox } from "element-plus";
@@ -306,9 +307,10 @@ onMounted(() => {
             </template>
           </PureTableBar>
         </template>
-        <el-empty
+        <SrvfPermEmpty
           v-else
-          description="您没有查看入队申请的权限（team-join-application.read.record）"
+          action="查看入队申请"
+          code="team-join-application.read.record"
         />
       </el-tab-pane>
     </el-tabs>

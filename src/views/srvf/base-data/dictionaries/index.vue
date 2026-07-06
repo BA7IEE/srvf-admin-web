@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
 import { onMounted } from "vue";
 import { useDictTypes } from "./utils/hook";
 import { deviceDetection } from "@pureadmin/utils";
@@ -152,9 +153,10 @@ onMounted(() => {
           </el-button>
         </template>
         <template v-slot="{ size, dynamicColumns }">
-          <el-empty
+          <SrvfPermEmpty
             v-if="!canReadItem"
-            description="您没有查看字典条目的权限（dict.read.item）"
+            action="查看字典条目"
+            code="dict.read.item"
           />
           <el-empty
             v-else-if="!selectedType"
@@ -225,7 +227,7 @@ onMounted(() => {
     </div>
   </div>
   <div v-else class="main">
-    <el-empty description="您没有查看字典的权限（dict.read.type）" />
+    <SrvfPermEmpty action="查看字典" code="dict.read.type" />
   </div>
 </template>
 

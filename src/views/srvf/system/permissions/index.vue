@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
 import { onMounted } from "vue";
 import { usePermissions } from "./utils/hook";
 import { PureTableBar } from "@/components/RePureTableBar";
@@ -125,10 +126,7 @@ onMounted(() => {
         </template>
       </PureTableBar>
     </template>
-    <el-empty
-      v-else
-      description="您没有查看权限点的权限（rbac.permission.read）"
-    />
+    <SrvfPermEmpty v-else action="查看权限点" code="rbac.permission.read" />
   </div>
 </template>
 
