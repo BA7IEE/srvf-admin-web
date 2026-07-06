@@ -6,7 +6,7 @@ import { deviceDetection } from "@pureadmin/utils";
 import { message } from "@/utils/message";
 import { hasPerms } from "@/utils/auth";
 import { addDialog } from "@/components/ReDialog";
-import { getRoles, type RoleItem } from "@/api/srvf-role";
+import { getRoleOptions, type RoleOptionItem } from "@/api/srvf-role";
 import { getUserOptions, type UserOptionItem } from "@/api/srvf-user";
 import {
   getMemberOptions,
@@ -87,7 +87,7 @@ export function useRoleBindings() {
   ];
 
   /** 表单用下拉候选（各自懒加载一次;失败则对应选择器为空,不阻塞页面其余功能） */
-  const roleOptions = ref<RoleItem[]>([]);
+  const roleOptions = ref<RoleOptionItem[]>([]);
   const userOptions = ref<UserOptionItem[]>([]);
   const memberOptions = ref<MemberOptionItem[]>([]);
   const positionAssignmentOptions = ref<PositionAssignmentOption[]>([]);
@@ -99,7 +99,7 @@ export function useRoleBindings() {
     if (formOptionsResolved) return;
     formOptionsResolved = true;
     const tasks: Array<Promise<void>> = [
-      getRoles({ pageSize: 100 })
+      getRoleOptions({ limit: 100 })
         .then(({ code, data }) => {
           if (code === 0) roleOptions.value = data.items;
         })

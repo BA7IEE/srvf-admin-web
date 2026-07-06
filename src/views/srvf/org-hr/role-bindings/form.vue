@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import type { FormRules } from "element-plus";
-import type { RoleItem } from "@/api/srvf-role";
+import type { RoleOptionItem } from "@/api/srvf-role";
 import type { UserOptionItem } from "@/api/srvf-user";
 import type { MemberOptionItem } from "@/api/srvf-position-assignment";
 import type { OrgOptionItem } from "@/api/srvf-organization";
@@ -48,7 +48,7 @@ const RESOURCE_TYPE_OPTIONS = [
 const props = withDefaults(
   defineProps<{
     formInline?: RoleBindingFormModel;
-    roleOptions?: RoleItem[];
+    roleOptions?: RoleOptionItem[];
     userOptions?: UserOptionItem[];
     memberOptions?: MemberOptionItem[];
     positionAssignmentOptions?: Array<{ id: string; label: string }>;
@@ -258,7 +258,7 @@ defineExpose({ getRef });
             <el-option
               v-for="opt in props.roleOptions"
               :key="opt.id"
-              :label="`${opt.displayName}（${opt.code}）`"
+              :label="`${opt.label}（${opt.code}）`"
               :value="opt.id"
             />
           </el-select>

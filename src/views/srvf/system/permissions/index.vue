@@ -24,6 +24,7 @@ const {
   filterForm,
   onSearch,
   handleFilterReset,
+  handleFilterSearch,
   handleSizeChange,
   handleCurrentChange,
   openDialog,
@@ -45,8 +46,8 @@ onMounted(() => {
             clearable
             placeholder="精确匹配，如 attachment"
             class="w-50!"
-            @keyup.enter="onSearch"
-            @clear="onSearch"
+            @keyup.enter="handleFilterSearch"
+            @clear="handleFilterSearch"
           />
         </el-form-item>
         <el-form-item label="资源类型">
@@ -55,12 +56,12 @@ onMounted(() => {
             clearable
             placeholder="精确匹配，如 cert"
             class="w-50!"
-            @keyup.enter="onSearch"
-            @clear="onSearch"
+            @keyup.enter="handleFilterSearch"
+            @clear="handleFilterSearch"
           />
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="onSearch">搜索</el-button>
+          <el-button type="primary" @click="handleFilterSearch">搜索</el-button>
           <el-button @click="handleFilterReset">重置</el-button>
         </el-form-item>
       </el-form>
