@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { bizErrorMessage } from "@/api/srvf-error";
 import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
 import { computed, ref, watch, onMounted } from "vue";
 import { useRouter } from "vue-router";
@@ -111,9 +112,10 @@ async function loadDashboardSummary() {
     summaryError.value = "工作台摘要暂不可用，下方审批列表不受影响";
   } catch (error: any) {
     summary.value = null;
-    summaryError.value =
-      error?.response?.data?.message ??
-      "工作台摘要加载失败，下方审批列表不受影响";
+    summaryError.value = bizErrorMessage(
+      error,
+      "工作台摘要加载失败，下方审批列表不受影响"
+    );
   } finally {
     summaryLoading.value = false;
   }

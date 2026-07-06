@@ -1,3 +1,4 @@
+import { bizErrorMessage } from "@/api/srvf-error";
 import { h, ref, reactive } from "vue";
 import type { PaginationProps } from "@pureadmin/table";
 import { ElMessageBox } from "element-plus";
@@ -127,7 +128,7 @@ export function useAttachmentConfigs() {
         typePager.currentPage = data.page;
       }
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "加载类型配置失败", {
+      message(bizErrorMessage(error, "加载类型配置失败"), {
         type: "error"
       });
     } finally {
@@ -199,7 +200,7 @@ export function useAttachmentConfigs() {
             done();
             onSearchType();
           } catch (error: any) {
-            message(error?.response?.data?.message ?? "保存失败", {
+            message(bizErrorMessage(error, "保存失败"), {
               type: "error"
             });
             closeLoading();
@@ -259,7 +260,7 @@ export function useAttachmentConfigs() {
         mimePager.currentPage = data.page;
       }
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "加载 MIME 配置失败", {
+      message(bizErrorMessage(error, "加载 MIME 配置失败"), {
         type: "error"
       });
     } finally {
@@ -305,7 +306,7 @@ export function useAttachmentConfigs() {
             done();
             onSearchMime();
           } catch (error: any) {
-            message(error?.response?.data?.message ?? "保存失败", {
+            message(bizErrorMessage(error, "保存失败"), {
               type: "error"
             });
             closeLoading();
@@ -363,7 +364,7 @@ export function useAttachmentConfigs() {
         sizePager.currentPage = data.page;
       }
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "加载尺寸限制配置失败", {
+      message(bizErrorMessage(error, "加载尺寸限制配置失败"), {
         type: "error"
       });
     } finally {
@@ -428,7 +429,7 @@ export function useAttachmentConfigs() {
             done();
             onSearchSize();
           } catch (error: any) {
-            message(error?.response?.data?.message ?? "保存失败", {
+            message(bizErrorMessage(error, "保存失败"), {
               type: "error"
             });
             closeLoading();
@@ -462,7 +463,7 @@ export function useAttachmentConfigs() {
           message("操作成功", { type: "success" });
           refresh();
         } catch (error: any) {
-          message(error?.response?.data?.message ?? "操作失败", {
+          message(bizErrorMessage(error, "操作失败"), {
             type: "error"
           });
         }

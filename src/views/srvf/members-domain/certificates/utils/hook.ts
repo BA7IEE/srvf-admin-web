@@ -1,3 +1,4 @@
+import { bizErrorMessage } from "@/api/srvf-error";
 import dayjs from "dayjs";
 import { h, ref, watch } from "vue";
 import { ElMessageBox } from "element-plus";
@@ -126,7 +127,7 @@ export function useCertificates(externalMemberId: string) {
       const { code, data } = await getMemberCertificates(memberId.value);
       if (code === 0) dataList.value = data;
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "加载证书失败", {
+      message(bizErrorMessage(error, "加载证书失败"), {
         type: "error"
       });
     } finally {
@@ -214,7 +215,7 @@ export function useCertificates(externalMemberId: string) {
             done();
             onSearch();
           } catch (error: any) {
-            message(error?.response?.data?.message ?? "保存失败", {
+            message(bizErrorMessage(error, "保存失败"), {
               type: "error"
             });
             closeLoading();
@@ -247,7 +248,7 @@ export function useCertificates(externalMemberId: string) {
           message("删除成功", { type: "success" });
           onSearch();
         } catch (error: any) {
-          message(error?.response?.data?.message ?? "删除失败", {
+          message(bizErrorMessage(error, "删除失败"), {
             type: "error"
           });
         }
@@ -283,7 +284,7 @@ export function useCertificates(externalMemberId: string) {
           message("已核验通过", { type: "success" });
           onSearch();
         } catch (error: any) {
-          message(error?.response?.data?.message ?? "核验通过失败", {
+          message(bizErrorMessage(error, "核验通过失败"), {
             type: "error"
           });
         }
@@ -318,7 +319,7 @@ export function useCertificates(externalMemberId: string) {
           message("已驳回", { type: "success" });
           onSearch();
         } catch (error: any) {
-          message(error?.response?.data?.message ?? "核验驳回失败", {
+          message(bizErrorMessage(error, "核验驳回失败"), {
             type: "error"
           });
         }
@@ -346,7 +347,7 @@ export function useCertificates(externalMemberId: string) {
         };
       }
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "资质核验查询失败", {
+      message(bizErrorMessage(error, "资质核验查询失败"), {
         type: "error"
       });
     } finally {

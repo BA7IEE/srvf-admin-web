@@ -1,3 +1,4 @@
+import { bizErrorMessage } from "@/api/srvf-error";
 import dayjs from "dayjs";
 import { ref } from "vue";
 import { message } from "@/utils/message";
@@ -102,7 +103,7 @@ export function useMemberPositionAssignments(externalMemberId: string) {
         }
       }
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "加载任职历史失败", {
+      message(bizErrorMessage(error, "加载任职历史失败"), {
         type: "error"
       });
     } finally {

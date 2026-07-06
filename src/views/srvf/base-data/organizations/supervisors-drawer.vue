@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { bizErrorMessage } from "@/api/srvf-error";
 import dayjs from "dayjs";
 import { ref, watch } from "vue";
 import { message } from "@/utils/message";
@@ -72,7 +73,7 @@ async function onSearch() {
       }
     }
   } catch (error: any) {
-    message(error?.response?.data?.message ?? "加载被谁分管失败", {
+    message(bizErrorMessage(error, "加载被谁分管失败"), {
       type: "error"
     });
   } finally {

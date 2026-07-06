@@ -1,3 +1,4 @@
+import { bizErrorMessage } from "@/api/srvf-error";
 import dayjs from "dayjs";
 import { ref, reactive, computed } from "vue";
 import type { PaginationProps } from "@pureadmin/table";
@@ -101,7 +102,7 @@ export function useMemberRegistrations(memberId: string) {
         pagination.currentPage = data.page;
       }
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "加载活动履历失败", {
+      message(bizErrorMessage(error, "加载活动履历失败"), {
         type: "error"
       });
     } finally {
@@ -217,7 +218,7 @@ export function useMemberAttendanceRecords(memberId: string) {
         pagination.currentPage = data.page;
       }
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "加载考勤记录失败", {
+      message(bizErrorMessage(error, "加载考勤记录失败"), {
         type: "error"
       });
     } finally {
@@ -264,7 +265,7 @@ export function useMemberContribution(memberId: string) {
       const { code, data } = await getMemberContributionSummary(memberId);
       if (code === 0) summary.value = data;
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "加载贡献值失败", {
+      message(bizErrorMessage(error, "加载贡献值失败"), {
         type: "error"
       });
     } finally {

@@ -1,3 +1,4 @@
+import { bizErrorMessage } from "@/api/srvf-error";
 import { h, ref, reactive } from "vue";
 import dayjs from "dayjs";
 import type { PaginationProps } from "@pureadmin/table";
@@ -127,7 +128,7 @@ export function useContents() {
         pagination.currentPage = data.page;
       }
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "加载内容列表失败", {
+      message(bizErrorMessage(error, "加载内容列表失败"), {
         type: "error"
       });
     } finally {
@@ -225,7 +226,7 @@ export function useContents() {
           };
         }
       } catch (error: any) {
-        message(error?.response?.data?.message ?? "加载内容详情失败", {
+        message(bizErrorMessage(error, "加载内容详情失败"), {
           type: "error"
         });
         return;
@@ -279,7 +280,7 @@ export function useContents() {
             done();
             onSearch();
           } catch (error: any) {
-            message(error?.response?.data?.message ?? "保存失败", {
+            message(bizErrorMessage(error, "保存失败"), {
               type: "error"
             });
             closeLoading();
@@ -322,7 +323,7 @@ export function useContents() {
           message(`${meta.label}成功`, { type: "success" });
           onSearch();
         } catch (error: any) {
-          message(error?.response?.data?.message ?? `${meta.label}失败`, {
+          message(bizErrorMessage(error, `${meta.label}失败`), {
             type: "error"
           });
         }
@@ -342,7 +343,7 @@ export function useContents() {
           message("删除成功", { type: "success" });
           onSearch();
         } catch (error: any) {
-          message(error?.response?.data?.message ?? "删除失败", {
+          message(bizErrorMessage(error, "删除失败"), {
             type: "error"
           });
         }

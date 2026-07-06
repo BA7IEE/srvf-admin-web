@@ -1,3 +1,4 @@
+import { bizErrorMessage } from "@/api/srvf-error";
 import dayjs from "dayjs";
 import { h, ref, reactive } from "vue";
 import type { PaginationProps } from "@pureadmin/table";
@@ -87,7 +88,7 @@ export function useRoles() {
         pagination.currentPage = data.page;
       }
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "加载角色列表失败", {
+      message(bizErrorMessage(error, "加载角色列表失败"), {
         type: "error"
       });
     } finally {
@@ -121,7 +122,7 @@ export function useRoles() {
           await reloadRbac("all");
           message("缓存已重载", { type: "success" });
         } catch (error: any) {
-          message(error?.response?.data?.message ?? "重载失败", {
+          message(bizErrorMessage(error, "重载失败"), {
             type: "error"
           });
         }

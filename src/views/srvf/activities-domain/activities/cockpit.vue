@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { bizErrorMessage } from "@/api/srvf-error";
 import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
 import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
@@ -68,7 +69,7 @@ async function fetchDetail() {
     const { code, data } = await getActivity(activityId);
     if (code === 0) detail.value = data;
   } catch (error: any) {
-    message(error?.response?.data?.message ?? "加载活动详情失败", {
+    message(bizErrorMessage(error, "加载活动详情失败"), {
       type: "error"
     });
   } finally {
@@ -90,7 +91,7 @@ function handlePublish() {
         message("发布成功", { type: "success" });
         fetchDetail();
       } catch (error: any) {
-        message(error?.response?.data?.message ?? "发布失败", {
+        message(bizErrorMessage(error, "发布失败"), {
           type: "error"
         });
       }
@@ -122,7 +123,7 @@ function handleCancel() {
         message("取消成功", { type: "success" });
         fetchDetail();
       } catch (error: any) {
-        message(error?.response?.data?.message ?? "取消失败", {
+        message(bizErrorMessage(error, "取消失败"), {
           type: "error"
         });
       }

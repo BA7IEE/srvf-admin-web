@@ -1,3 +1,4 @@
+import { bizErrorMessage } from "@/api/srvf-error";
 import dayjs from "dayjs";
 import { h, ref, reactive } from "vue";
 import type { PaginationProps } from "@pureadmin/table";
@@ -156,7 +157,7 @@ export function useAttendances(externalActivityId: string) {
         pagination.currentPage = data.page;
       }
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "加载考勤单据失败", {
+      message(bizErrorMessage(error, "加载考勤单据失败"), {
         type: "error"
       });
     } finally {
@@ -253,11 +254,9 @@ export function useAttendances(externalActivityId: string) {
       );
       return false;
     } catch (error: any) {
-      message(
-        error?.response?.data?.message ??
-          "贡献值预检查失败，将继续交由后端裁决",
-        { type: "warning" }
-      );
+      message(bizErrorMessage(error, "贡献值预检查失败，将继续交由后端裁决"), {
+        type: "warning"
+      });
       return true;
     }
   }
@@ -511,7 +510,7 @@ export function useAttendances(externalActivityId: string) {
                 message(
                   error?.message && !error?.response
                     ? error.message
-                    : (error?.response?.data?.message ?? "提交考勤失败"),
+                    : bizErrorMessage(error, "提交考勤失败"),
                   { type: "error" }
                 );
                 closeLoading();
@@ -576,7 +575,7 @@ export function useAttendances(externalActivityId: string) {
               message(
                 error?.message && !error?.response
                   ? error.message
-                  : (error?.response?.data?.message ?? "编辑考勤失败"),
+                  : bizErrorMessage(error, "编辑考勤失败"),
                 { type: "error" }
               );
               closeLoading();
@@ -585,7 +584,7 @@ export function useAttendances(externalActivityId: string) {
         }
       });
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "打开编辑表单失败", {
+      message(bizErrorMessage(error, "打开编辑表单失败"), {
         type: "error"
       });
     }
@@ -619,7 +618,7 @@ export function useAttendances(externalActivityId: string) {
           message("已一级通过", { type: "success" });
           onSearch();
         } catch (error: any) {
-          message(error?.response?.data?.message ?? "一级通过失败", {
+          message(bizErrorMessage(error, "一级通过失败"), {
             type: "error"
           });
         }
@@ -651,7 +650,7 @@ export function useAttendances(externalActivityId: string) {
           message("已一级驳回", { type: "success" });
           onSearch();
         } catch (error: any) {
-          message(error?.response?.data?.message ?? "一级驳回失败", {
+          message(bizErrorMessage(error, "一级驳回失败"), {
             type: "error"
           });
         }
@@ -742,7 +741,7 @@ export function useAttendances(externalActivityId: string) {
           message("已删除", { type: "success" });
           onSearch();
         } catch (error: any) {
-          message(error?.response?.data?.message ?? "删除失败", {
+          message(bizErrorMessage(error, "删除失败"), {
             type: "error"
           });
         }
@@ -759,7 +758,7 @@ export function useAttendances(externalActivityId: string) {
       const { code, data } = await getAttendanceSheetReviewDetail(row.id);
       if (code === 0) reviewDetailData.value = data;
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "加载审核明细失败", {
+      message(bizErrorMessage(error, "加载审核明细失败"), {
         type: "error"
       });
     } finally {

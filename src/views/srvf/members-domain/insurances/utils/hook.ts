@@ -1,3 +1,4 @@
+import { bizErrorMessage } from "@/api/srvf-error";
 import dayjs from "dayjs";
 import { ref } from "vue";
 import { message } from "@/utils/message";
@@ -64,7 +65,7 @@ export function useMemberInsurances(externalMemberId: string) {
       const { code, data } = await getMemberInsurances(memberId.value);
       if (code === 0) dataList.value = data;
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "加载保险失败", {
+      message(bizErrorMessage(error, "加载保险失败"), {
         type: "error"
       });
     } finally {

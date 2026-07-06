@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { bizErrorMessage } from "@/api/srvf-error";
 import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
 import dayjs from "dayjs";
 import { h, ref, watch } from "vue";
@@ -130,7 +131,7 @@ async function onSearch() {
       }
     }
   } catch (error: any) {
-    message(error?.response?.data?.message ?? "加载在任职务失败", {
+    message(bizErrorMessage(error, "加载在任职务失败"), {
       type: "error"
     });
   } finally {
@@ -195,7 +196,7 @@ async function openAssignDialog() {
             return;
           }
         } catch (error: any) {
-          message(error?.response?.data?.message ?? "预检失败", {
+          message(bizErrorMessage(error, "预检失败"), {
             type: "error"
           });
           closeLoading();
@@ -207,7 +208,7 @@ async function openAssignDialog() {
           done();
           onSearch();
         } catch (error: any) {
-          message(error?.response?.data?.message ?? "任命失败", {
+          message(bizErrorMessage(error, "任命失败"), {
             type: "error"
           });
           closeLoading();
@@ -234,7 +235,7 @@ function handleRevoke(row: PositionAssignmentItem) {
         message("撤销成功", { type: "success" });
         onSearch();
       } catch (error: any) {
-        message(error?.response?.data?.message ?? "撤销失败", {
+        message(bizErrorMessage(error, "撤销失败"), {
           type: "error"
         });
       }
@@ -262,7 +263,7 @@ function openHistory(row: PositionAssignmentItem) {
       if (code === 0) historyItems.value = data;
     })
     .catch((error: any) => {
-      message(error?.response?.data?.message ?? "加载历史失败", {
+      message(bizErrorMessage(error, "加载历史失败"), {
         type: "error"
       });
     })

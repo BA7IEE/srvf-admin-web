@@ -1,3 +1,4 @@
+import { bizErrorMessage } from "@/api/srvf-error";
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { message } from "@/utils/message";
@@ -99,7 +100,7 @@ export function useMembershipConflicts() {
       }
       dataList.value = rows;
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "加载归属体检失败", {
+      message(bizErrorMessage(error, "加载归属体检失败"), {
         type: "error"
       });
     } finally {

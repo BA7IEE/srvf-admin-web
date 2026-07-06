@@ -1,3 +1,4 @@
+import { bizErrorMessage } from "@/api/srvf-error";
 import dayjs from "dayjs";
 import { h, ref, reactive } from "vue";
 import type { PaginationProps } from "@pureadmin/table";
@@ -147,7 +148,7 @@ export function useRegistrations(externalActivityId: string) {
         pagination.currentPage = data.page;
       }
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "加载报名记录失败", {
+      message(bizErrorMessage(error, "加载报名记录失败"), {
         type: "error"
       });
     } finally {
@@ -198,7 +199,7 @@ export function useRegistrations(externalActivityId: string) {
           message("已通过", { type: "success" });
           onSearch();
         } catch (error: any) {
-          message(error?.response?.data?.message ?? "审核通过失败", {
+          message(bizErrorMessage(error, "审核通过失败"), {
             type: "error"
           });
         }
@@ -233,7 +234,7 @@ export function useRegistrations(externalActivityId: string) {
           message("已拒绝", { type: "success" });
           onSearch();
         } catch (error: any) {
-          message(error?.response?.data?.message ?? "审核拒绝失败", {
+          message(bizErrorMessage(error, "审核拒绝失败"), {
             type: "error"
           });
         }
@@ -269,7 +270,7 @@ export function useRegistrations(externalActivityId: string) {
           message("已取消", { type: "success" });
           onSearch();
         } catch (error: any) {
-          message(error?.response?.data?.message ?? "取消失败", {
+          message(bizErrorMessage(error, "取消失败"), {
             type: "error"
           });
         }
@@ -336,7 +337,7 @@ export function useRegistrations(externalActivityId: string) {
             done();
             onSearch();
           } catch (error: any) {
-            message(error?.response?.data?.message ?? "代报名失败", {
+            message(bizErrorMessage(error, "代报名失败"), {
               type: "error"
             });
             closeLoading();
@@ -364,7 +365,7 @@ export function useRegistrations(externalActivityId: string) {
       URL.revokeObjectURL(url);
       message("导出成功", { type: "success" });
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "导出失败", { type: "error" });
+      message(bizErrorMessage(error, "导出失败"), { type: "error" });
     }
   }
 

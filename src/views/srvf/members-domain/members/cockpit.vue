@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { bizErrorMessage } from "@/api/srvf-error";
 import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
 import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
@@ -71,7 +72,7 @@ async function fetchDetail() {
     const { code, data } = await getMember(memberId);
     if (code === 0) detail.value = data;
   } catch (error: any) {
-    message(error?.response?.data?.message ?? "加载队员详情失败", {
+    message(bizErrorMessage(error, "加载队员详情失败"), {
       type: "error"
     });
   } finally {

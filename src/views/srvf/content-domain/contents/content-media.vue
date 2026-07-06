@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { bizErrorMessage } from "@/api/srvf-error";
 import { ref, watch } from "vue";
 import { ElMessageBox, type UploadRequestOptions } from "element-plus";
 import { message } from "@/utils/message";
@@ -28,7 +29,7 @@ async function load() {
     const { code, data } = await getContent(props.contentId);
     if (code === 0) detail.value = data;
   } catch (error: any) {
-    message(error?.response?.data?.message ?? "加载内容失败", {
+    message(bizErrorMessage(error, "加载内容失败"), {
       type: "error"
     });
   } finally {
@@ -65,7 +66,7 @@ async function onSetCover(a: ContentAttachment) {
       message("已设为封面", { type: "success" });
     }
   } catch (error: any) {
-    message(error?.response?.data?.message ?? "设置封面失败", {
+    message(bizErrorMessage(error, "设置封面失败"), {
       type: "error"
     });
   }
@@ -83,7 +84,7 @@ function onDelete(a: ContentAttachment) {
         message("已删除", { type: "success" });
         load();
       } catch (error: any) {
-        message(error?.response?.data?.message ?? "删除失败", {
+        message(bizErrorMessage(error, "删除失败"), {
           type: "error"
         });
       }

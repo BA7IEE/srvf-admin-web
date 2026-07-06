@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { bizErrorMessage } from "@/api/srvf-error";
 import { ref, watch } from "vue";
 import dayjs from "dayjs";
 import { message } from "@/utils/message";
@@ -28,7 +29,7 @@ async function load() {
     const { code, data } = await getAuditLogDetail(props.id);
     if (code === 0) detail.value = data;
   } catch (error: any) {
-    message(error?.response?.data?.message ?? "查看审计记录详情失败", {
+    message(bizErrorMessage(error, "查看审计记录详情失败"), {
       type: "error"
     });
   } finally {

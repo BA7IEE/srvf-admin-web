@@ -1,3 +1,4 @@
+import { bizErrorMessage } from "@/api/srvf-error";
 import { h, ref, reactive } from "vue";
 import dayjs from "dayjs";
 import type { PaginationProps } from "@pureadmin/table";
@@ -137,7 +138,7 @@ export function useNotifications() {
         pagination.currentPage = data.page;
       }
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "加载通知列表失败", {
+      message(bizErrorMessage(error, "加载通知列表失败"), {
         type: "error"
       });
     } finally {
@@ -238,7 +239,7 @@ export function useNotifications() {
           };
         }
       } catch (error: any) {
-        message(error?.response?.data?.message ?? "加载通知详情失败", {
+        message(bizErrorMessage(error, "加载通知详情失败"), {
           type: "error"
         });
         return;
@@ -295,7 +296,7 @@ export function useNotifications() {
             done();
             onSearch();
           } catch (error: any) {
-            message(error?.response?.data?.message ?? "保存失败", {
+            message(bizErrorMessage(error, "保存失败"), {
               type: "error"
             });
             closeLoading();
@@ -342,7 +343,7 @@ export function useNotifications() {
           message(`${meta.label}成功`, { type: "success" });
           onSearch();
         } catch (error: any) {
-          message(error?.response?.data?.message ?? `${meta.label}失败`, {
+          message(bizErrorMessage(error, `${meta.label}失败`), {
             type: "error"
           });
         }
@@ -361,7 +362,7 @@ export function useNotifications() {
       if (code !== 0) return;
       recipientCount = data.recipientCount;
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "短信预览失败", {
+      message(bizErrorMessage(error, "短信预览失败"), {
         type: "error"
       });
       return;
@@ -390,7 +391,7 @@ export function useNotifications() {
             onSearch();
           }
         } catch (error: any) {
-          message(error?.response?.data?.message ?? "短信发送失败", {
+          message(bizErrorMessage(error, "短信发送失败"), {
             type: "error"
           });
         }
@@ -410,7 +411,7 @@ export function useNotifications() {
           message("删除成功", { type: "success" });
           onSearch();
         } catch (error: any) {
-          message(error?.response?.data?.message ?? "删除失败", {
+          message(bizErrorMessage(error, "删除失败"), {
             type: "error"
           });
         }

@@ -1,3 +1,4 @@
+import { bizErrorMessage } from "@/api/srvf-error";
 import dayjs from "dayjs";
 import { h, ref } from "vue";
 import { ElMessageBox } from "element-plus";
@@ -136,7 +137,7 @@ export function useMemberMemberships(externalMemberId: string) {
         }
       }
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "加载组织归属失败", {
+      message(bizErrorMessage(error, "加载组织归属失败"), {
         type: "error"
       });
     } finally {

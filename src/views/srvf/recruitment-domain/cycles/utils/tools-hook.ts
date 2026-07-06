@@ -1,3 +1,4 @@
+import { bizErrorMessage } from "@/api/srvf-error";
 import { ref } from "vue";
 import { ElMessageBox } from "element-plus";
 import { message } from "@/utils/message";
@@ -57,7 +58,7 @@ export function useRecruitmentTools(cycleId: string) {
       const { code, data } = await getCycleStats(cycleId);
       if (code === 0) stats.value = data;
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "加载工作台数据失败", {
+      message(bizErrorMessage(error, "加载工作台数据失败"), {
         type: "error"
       });
     } finally {
@@ -79,7 +80,7 @@ export function useRecruitmentTools(cycleId: string) {
       const { code, data } = await getPromotePrecheck(cycleId);
       if (code === 0) precheckData.value = data;
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "加载发号预检失败", {
+      message(bizErrorMessage(error, "加载发号预检失败"), {
         type: "error"
       });
     } finally {
@@ -107,7 +108,7 @@ export function useRecruitmentTools(cycleId: string) {
         onDone();
       }
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "一键发号失败", {
+      message(bizErrorMessage(error, "一键发号失败"), {
         type: "error"
       });
     }
@@ -173,7 +174,7 @@ export function useRecruitmentTools(cycleId: string) {
         );
       }
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "批量标门槛失败", {
+      message(bizErrorMessage(error, "批量标门槛失败"), {
         type: "error"
       });
     } finally {

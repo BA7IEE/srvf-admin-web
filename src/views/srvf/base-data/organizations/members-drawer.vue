@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { bizErrorMessage } from "@/api/srvf-error";
 import dayjs from "dayjs";
 import { h, ref, reactive, watch } from "vue";
 import { useRouter } from "vue-router";
@@ -86,7 +87,7 @@ async function onSearch() {
       pagination.currentPage = data.page;
     }
   } catch (error: any) {
-    message(error?.response?.data?.message ?? "加载组织成员失败", {
+    message(bizErrorMessage(error, "加载组织成员失败"), {
       type: "error"
     });
   } finally {

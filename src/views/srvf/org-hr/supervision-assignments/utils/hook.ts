@@ -1,3 +1,4 @@
+import { bizErrorMessage } from "@/api/srvf-error";
 import dayjs from "dayjs";
 import { h, ref, reactive } from "vue";
 import { useRouter } from "vue-router";
@@ -151,7 +152,7 @@ export function useSupervisionAssignments() {
         pagination.currentPage = data.page;
       }
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "加载督导总表失败", {
+      message(bizErrorMessage(error, "加载督导总表失败"), {
         type: "error"
       });
     } finally {
@@ -252,7 +253,7 @@ export function useSupervisionAssignments() {
             done();
             onSearch();
           } catch (error: any) {
-            message(error?.response?.data?.message ?? "新建失败", {
+            message(bizErrorMessage(error, "新建失败"), {
               type: "error"
             });
             closeLoading();
@@ -287,7 +288,7 @@ export function useSupervisionAssignments() {
           message("撤销成功", { type: "success" });
           onSearch();
         } catch (error: any) {
-          message(error?.response?.data?.message ?? "撤销失败", {
+          message(bizErrorMessage(error, "撤销失败"), {
             type: "error"
           });
         }

@@ -1,3 +1,4 @@
+import { bizErrorMessage } from "@/api/srvf-error";
 import dayjs from "dayjs";
 import { h, ref, reactive } from "vue";
 import type { PaginationProps } from "@pureadmin/table";
@@ -132,7 +133,7 @@ export function useUserAccounts() {
         pagination.currentPage = data.page;
       }
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "加载用户列表失败", {
+      message(bizErrorMessage(error, "加载用户列表失败"), {
         type: "error"
       });
     } finally {
@@ -198,7 +199,7 @@ export function useUserAccounts() {
             done();
             onSearch();
           } catch (error: any) {
-            message(error?.response?.data?.message ?? "保存失败", {
+            message(bizErrorMessage(error, "保存失败"), {
               type: "error"
             });
             closeLoading();
@@ -224,7 +225,7 @@ export function useUserAccounts() {
           await resetUserPassword(row.id, value);
           message("密码已重置", { type: "success" });
         } catch (error: any) {
-          message(error?.response?.data?.message ?? "重置失败", {
+          message(bizErrorMessage(error, "重置失败"), {
             type: "error"
           });
         }
@@ -251,7 +252,7 @@ export function useUserAccounts() {
           message(`${action}成功`, { type: "success" });
           onSearch();
         } catch (error: any) {
-          message(error?.response?.data?.message ?? `${action}失败`, {
+          message(bizErrorMessage(error, `${action}失败`), {
             type: "error"
           });
         }
@@ -279,7 +280,7 @@ export function useUserAccounts() {
             done();
             onSearch();
           } catch (error: any) {
-            message(error?.response?.data?.message ?? "角色更新失败", {
+            message(bizErrorMessage(error, "角色更新失败"), {
               type: "error"
             });
             closeLoading();
@@ -302,7 +303,7 @@ export function useUserAccounts() {
           message("已清除", { type: "success" });
           onSearch();
         } catch (error: any) {
-          message(error?.response?.data?.message ?? "清除失败", {
+          message(bizErrorMessage(error, "清除失败"), {
             type: "error"
           });
         }
@@ -323,7 +324,7 @@ export function useUserAccounts() {
           message("已清除", { type: "success" });
           onSearch();
         } catch (error: any) {
-          message(error?.response?.data?.message ?? "清除失败", {
+          message(bizErrorMessage(error, "清除失败"), {
             type: "error"
           });
         }
@@ -348,7 +349,7 @@ export function useUserAccounts() {
           message("删除成功", { type: "success" });
           onSearch();
         } catch (error: any) {
-          message(error?.response?.data?.message ?? "删除失败", {
+          message(bizErrorMessage(error, "删除失败"), {
             type: "error"
           });
         }

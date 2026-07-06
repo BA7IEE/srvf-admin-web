@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { bizErrorMessage } from "@/api/srvf-error";
 import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
 import { computed, ref, watch } from "vue";
 import { message } from "@/utils/message";
@@ -65,7 +66,7 @@ async function loadData() {
       originalKeys.value = keys;
     }
   } catch (error: any) {
-    message(error?.response?.data?.message ?? "加载权限点数据失败", {
+    message(bizErrorMessage(error, "加载权限点数据失败"), {
       type: "error"
     });
   } finally {

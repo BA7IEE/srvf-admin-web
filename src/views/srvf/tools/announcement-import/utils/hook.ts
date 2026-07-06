@@ -1,3 +1,4 @@
+import { bizErrorMessage } from "@/api/srvf-error";
 import { ref, computed } from "vue";
 import { message } from "@/utils/message";
 import { hasPerms } from "@/utils/auth";
@@ -93,7 +94,7 @@ export function useAnnouncementImport() {
         message("预览完成，请核对逐行状态后再执行", { type: "success" });
       }
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "预览失败", { type: "error" });
+      message(bizErrorMessage(error, "预览失败"), { type: "error" });
     } finally {
       previewing.value = false;
     }
@@ -115,7 +116,7 @@ export function useAnnouncementImport() {
         );
       }
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "执行失败", { type: "error" });
+      message(bizErrorMessage(error, "执行失败"), { type: "error" });
     } finally {
       executing.value = false;
     }

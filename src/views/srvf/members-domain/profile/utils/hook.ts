@@ -1,3 +1,4 @@
+import { bizErrorMessage } from "@/api/srvf-error";
 import { ref, computed, h } from "vue";
 import dayjs from "dayjs";
 import { deviceDetection } from "@pureadmin/utils";
@@ -312,7 +313,7 @@ export function useMemberProfile(externalMemberId: string) {
             done();
             onSearch();
           } catch (error: any) {
-            message(error?.response?.data?.message ?? "保存失败", {
+            message(bizErrorMessage(error, "保存失败"), {
               type: "error"
             });
             closeLoading();
@@ -333,7 +334,7 @@ export function useMemberProfile(externalMemberId: string) {
       const { code, data } = await getMemberProfile(memberId.value);
       if (code === 0) profile.value = data;
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "加载队员档案失败", {
+      message(bizErrorMessage(error, "加载队员档案失败"), {
         type: "error"
       });
     } finally {

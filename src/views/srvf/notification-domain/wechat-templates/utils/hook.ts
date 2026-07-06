@@ -1,3 +1,4 @@
+import { bizErrorMessage } from "@/api/srvf-error";
 import { h, ref } from "vue";
 import dayjs from "dayjs";
 import { deviceDetection } from "@pureadmin/utils";
@@ -128,7 +129,7 @@ export function useWechatTemplates() {
       });
       dataList.value = rows;
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "加载微信模板配置失败", {
+      message(bizErrorMessage(error, "加载微信模板配置失败"), {
         type: "error"
       });
     } finally {
@@ -166,7 +167,7 @@ export function useWechatTemplates() {
             done();
             onSearch();
           } catch (error: any) {
-            message(error?.response?.data?.message ?? "配置失败", {
+            message(bizErrorMessage(error, "配置失败"), {
               type: "error"
             });
             closeLoading();

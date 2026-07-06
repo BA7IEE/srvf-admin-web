@@ -1,3 +1,4 @@
+import { bizErrorMessage } from "@/api/srvf-error";
 import { h, ref } from "vue";
 import { message } from "@/utils/message";
 import { hasPerms } from "@/utils/auth";
@@ -176,7 +177,7 @@ export function useSystemSettings() {
         }
       }
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "加载系统设置失败", {
+      message(bizErrorMessage(error, "加载系统设置失败"), {
         type: "error"
       });
     } finally {
@@ -192,7 +193,7 @@ export function useSystemSettings() {
         message("存储设置已保存", { type: "success" });
       }
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "保存失败", { type: "error" });
+      message(bizErrorMessage(error, "保存失败"), { type: "error" });
     }
   }
   async function saveSms() {
@@ -203,7 +204,7 @@ export function useSystemSettings() {
         message("短信设置已保存", { type: "success" });
       }
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "保存失败", { type: "error" });
+      message(bizErrorMessage(error, "保存失败"), { type: "error" });
     }
   }
   async function saveWechat() {
@@ -214,7 +215,7 @@ export function useSystemSettings() {
         message("微信设置已保存", { type: "success" });
       }
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "保存失败", { type: "error" });
+      message(bizErrorMessage(error, "保存失败"), { type: "error" });
     }
   }
   async function saveRealname() {
@@ -225,7 +226,7 @@ export function useSystemSettings() {
         message("实名核验设置已保存", { type: "success" });
       }
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "保存失败", { type: "error" });
+      message(bizErrorMessage(error, "保存失败"), { type: "error" });
     }
   }
 
@@ -267,7 +268,7 @@ export function useSystemSettings() {
             done();
             loadAll();
           } catch (error: any) {
-            message(error?.response?.data?.message ?? "重置失败", {
+            message(bizErrorMessage(error, "重置失败"), {
               type: "error"
             });
             closeLoading();
