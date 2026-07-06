@@ -3,8 +3,13 @@ import { onMounted } from "vue";
 import { useRoles } from "./utils/hook";
 import { PureTableBar } from "@/components/RePureTableBar";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
+import PermissionsDrawer from "./permissions-drawer.vue";
 
 import Refresh from "~icons/ri/refresh-line";
+import AddFill from "~icons/ri/add-circle-line";
+import EditPen from "~icons/ep/edit-pen";
+import Delete from "~icons/ep/delete";
+import KeyLine from "~icons/ri/key-2-line";
 
 defineOptions({
   name: "SrvfRbac"
@@ -13,14 +18,23 @@ defineOptions({
 const {
   canRead,
   canReload,
+  canCreate,
+  canUpdate,
+  canDelete,
+  canManagePermissions,
   loading,
   columns,
   dataList,
   pagination,
+  permissionsDrawerVisible,
+  activeRole,
   onSearch,
   handleReload,
   handleSizeChange,
-  handleCurrentChange
+  handleCurrentChange,
+  openDialog,
+  handleDelete,
+  openPermissionsDrawer
 } = useRoles();
 
 onMounted(() => {
@@ -37,6 +51,14 @@ onMounted(() => {
       @refresh="onSearch"
     >
       <template #buttons>
+        <el-button
+          v-if="canCreate"
+          type="primary"
+          :icon="useRenderIcon(AddFill)"
+          @click="openDialog('新建')"
+        >
+          新建角色
+        </el-button>
         <el-button
           v-if="canReload"
           :icon="useRenderIcon(Refresh)"
@@ -64,10 +86,52 @@ onMounted(() => {
           }"
           @page-size-change="handleSizeChange"
           @page-current-change="handleCurrentChange"
-        />
+        >
+          <template #operation="{ row }">
+            <el-button
+              v-if="canManagePermissions"
+              class="reset-margin"
+              link
+              type="primary"
+              :size="size"
+              :icon="useRenderIcon(KeyLine)"
+              @click="openPermissionsDrawer(row)"
+            >
+              权限点
+            </el-button>
+            <el-button
+              v-if="canUpdate"
+              class="reset-margin"
+              link
+              type="primary"
+              :size="size"
+              :icon="useRenderIcon(EditPen)"
+              @click="openDialog('编辑', row)"
+            >
+              编辑
+            </el-button>
+            <el-button
+              v-if="canDelete"
+              class="reset-margin"
+              link
+              type="danger"
+              :size="size"
+              :icon="useRenderIcon(Delete)"
+              @click="handleDelete(row)"
+            >
+              删除
+            </el-button>
+          </template>
+        </pure-table>
       </template>
     </PureTableBar>
     <el-empty v-else description="您没有查看角色的权限（rbac.role.read）" />
+
+    <PermissionsDrawer
+      v-model="permissionsDrawerVisible"
+      :role="activeRole"
+      @saved="onSearch"
+    />
   </div>
 </template>
 
