@@ -7,7 +7,7 @@ import { message } from "@/utils/message";
 import { hasPerms } from "@/utils/auth";
 import { addDialog } from "@/components/ReDialog";
 import { getRoles, type RoleItem } from "@/api/srvf-role";
-import { getUserAccounts, type UserAccountItem } from "@/api/srvf-user";
+import { getUserOptions, type UserOptionItem } from "@/api/srvf-user";
 import {
   getMemberOptions,
   getPositionAssignments,
@@ -88,7 +88,7 @@ export function useRoleBindings() {
 
   /** 表单用下拉候选（各自懒加载一次;失败则对应选择器为空,不阻塞页面其余功能） */
   const roleOptions = ref<RoleItem[]>([]);
-  const userOptions = ref<UserAccountItem[]>([]);
+  const userOptions = ref<UserOptionItem[]>([]);
   const memberOptions = ref<MemberOptionItem[]>([]);
   const positionAssignmentOptions = ref<PositionAssignmentOption[]>([]);
   const orgOptions = ref<OrgOptionItem[]>([]);
@@ -104,7 +104,7 @@ export function useRoleBindings() {
           if (code === 0) roleOptions.value = data.items;
         })
         .catch(() => {}),
-      getUserAccounts({ pageSize: 100 })
+      getUserOptions({ limit: 100 })
         .then(({ code, data }) => {
           if (code === 0) userOptions.value = data.items;
         })
