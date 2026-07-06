@@ -136,3 +136,26 @@ export const getOrgOptions = (params?: {
     "/api/admin/v1/organizations/options",
     { params }
   );
+
+/** 组织轴队员选择器投影项（后端 `MemberOptionItemDto`；同 members/options 复用同一投影）。 */
+export type OrgScopedMemberOptionItem = {
+  id: string;
+  label: string;
+  memberNo: string;
+  gradeCode: string | null;
+};
+
+/**
+ * 组织轴队员下拉 `GET /api/admin/v1/organizations/{orgId}/members/options`
+ * （rbac: `member.read.record`）。该组织 ±（可选）后代范围内的可选队员；
+ * 组织不存在后端拒绝弹 11001。用于"从组织侧给某组织添加成员"场景。
+ */
+export const getOrgScopedMemberOptions = (
+  orgId: string,
+  params?: { q?: string; includeDescendants?: boolean; limit?: number }
+) =>
+  http.request<Envelope<{ items: OrgScopedMemberOptionItem[] }>>(
+    "get",
+    `/api/admin/v1/organizations/${orgId}/members/options`,
+    { params }
+  );
