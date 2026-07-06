@@ -1,20 +1,48 @@
 <script setup lang="ts">
-import { computed, ref, onMounted } from "vue";
+import { computed, ref, watch, onMounted } from "vue";
 import { useRouter } from "vue-router";
+import { dayjs } from "element-plus";
 import { PureTableBar } from "@/components/RePureTableBar";
 import { getDashboardSummary, type DashboardSummary } from "@/api/srvf-meta";
 import { useApprovalRegistrations, useApprovalAttendance } from "./utils/hook";
+import { useWorkbenchDashboard } from "./utils/dashboard-hook";
+import AttendanceTrendChart from "./attendance-trend-chart.vue";
 
 defineOptions({
   name: "SrvfWorkbench"
 });
 
+// 与 src/views/schedule/index.vue 同一处理：el-calendar 内部用 dayjs 的 locale 周起点，
+// 全局设为周一开始（幂等调用，和既有 schedule 页不冲突）。
+// https://github.com/element-plus/element-plus/issues/8007#issuecomment-2229946178
+dayjs.locale("zh-cn", { weekStart: 1 });
+
 /**
  * 审批工作台 = 跨轴横扫"待我处理"（脱离 :activityId,按 statusCode 横扫报名/考勤）。
- * 作为工作台落地页：顶部 dashboard-summary 做聚合摘要，下面保留横扫列表。
+ * 作为工作台落地页：顶部 dashboard-summary 做聚合摘要 + KPI 卡 + 出勤趋势 + 活动日历
+ * （Phase 3 按设计稿升级新增），下面保留横扫列表。
  */
 const activeTab = ref<"registrations" | "attendances">("registrations");
 const router = useRouter();
+
+const {
+  canReadMembers,
+  memberTotal,
+  monthActivityTotal,
+  trendLoading,
+  trendWeeks,
+  trendSeries,
+  calendarLoading,
+  activitiesOnDate,
+  loadCalendarMonth
+} = useWorkbenchDashboard();
+
+const calendarDate = ref(new Date());
+watch(calendarDate, val => loadCalendarMonth(val));
+
+function calendarDayLabel(day: string) {
+  return day.split("-").slice(2).join("");
+}
 
 const summary = ref<DashboardSummary | null>(null);
 const summaryLoading = ref(false);
@@ -204,7 +232,21 @@ onMounted(() => {
         show-icon
         :closable="false"
       />
-      <div v-else-if="summaryCards.length" class="summary-grid">
+      <div v-if="summaryCards.length || canReadMembers" class="summary-grid">
+        <div v-if="canReadMembers" class="summary-item">
+          <div class="summary-item-title">在册队员</div>
+          <div class="summary-item-value">
+            {{ memberTotal ?? "—" }}
+          </div>
+          <div class="summary-item-desc">member.status = ACTIVE</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-item-title">本月活动</div>
+          <div class="summary-item-value">
+            {{ monthActivityTotal ?? "—" }}
+          </div>
+          <div class="summary-item-desc">activities.startAt 落在本月</div>
+        </div>
         <div
           v-for="card in summaryCards"
           :key="card.key"
@@ -217,8 +259,52 @@ onMounted(() => {
           <div class="summary-item-desc">{{ card.desc }}</div>
         </div>
       </div>
-      <el-empty v-else description="当前账号暂无可展示的工作台摘要块" />
+      <el-empty
+        v-else-if="!summaryLoading"
+        description="当前账号暂无可展示的工作台摘要块"
+      />
     </el-card>
+
+    <div class="dashboard-row">
+      <el-card shadow="never" class="dashboard-col-main">
+        <template #header>
+          <div class="summary-title">出勤趋势 · 近 12 周</div>
+        </template>
+        <AttendanceTrendChart
+          :weeks="trendWeeks"
+          :series="trendSeries"
+          :loading="trendLoading"
+        />
+      </el-card>
+
+      <el-card shadow="never" class="dashboard-col-side">
+        <template #header>
+          <div class="summary-title">活动日历</div>
+        </template>
+        <el-calendar v-model="calendarDate" v-loading="calendarLoading">
+          <template #date-cell="{ data }">
+            <div class="cal-cell">
+              <div class="cal-day">{{ calendarDayLabel(data.day) }}</div>
+              <div
+                v-if="activitiesOnDate(data.day).length"
+                class="cal-dots"
+                :title="
+                  activitiesOnDate(data.day)
+                    .map(a => a.title)
+                    .join('、')
+                "
+              >
+                <span
+                  v-for="a in activitiesOnDate(data.day).slice(0, 3)"
+                  :key="a.id"
+                  class="cal-dot"
+                />
+              </div>
+            </div>
+          </template>
+        </el-calendar>
+      </el-card>
+    </div>
 
     <el-tabs v-model="activeTab" class="workbench-tabs">
       <!-- 报名审批：跨所有活动横扫 -->
@@ -528,5 +614,57 @@ onMounted(() => {
   margin-top: 8px;
   font-size: 12px;
   color: var(--el-text-color-placeholder);
+}
+
+.dashboard-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+@media (width <= 992px) {
+  .dashboard-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.dashboard-col-main,
+.dashboard-col-side {
+  min-width: 0;
+}
+
+.cal-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  padding: 2px 0;
+}
+
+.cal-day {
+  font-size: 12px;
+}
+
+.cal-dots {
+  display: flex;
+  gap: 2px;
+  margin-top: 2px;
+}
+
+.cal-dot {
+  width: 4px;
+  height: 4px;
+  background: var(--srvf-red, var(--el-color-primary));
+  border-radius: 50%;
+}
+
+:deep(.el-calendar__header) {
+  padding: 8px 0;
+}
+
+:deep(.el-calendar-table .el-calendar-day) {
+  height: 48px;
+  padding: 2px;
 }
 </style>

@@ -29,6 +29,10 @@ export type ActivityItem = {
   locationLatitude: string | null;
   createdAt: string;
   updatedAt: string;
+  /** 报名人数（仅 includeStats=true 时返回） */
+  registrationCount?: number;
+  /** 考勤单数（仅 includeStats=true 时返回） */
+  attendanceSheetCount?: number;
 };
 
 export type ActivityListQuery = {
@@ -38,6 +42,14 @@ export type ActivityListQuery = {
   activityTypeCode?: string;
   organizationId?: string;
   isPublicRegistration?: boolean;
+  q?: string;
+  /** 起始时间过滤（ISO 8601，含） */
+  dateFrom?: string;
+  /** 截止时间过滤（ISO 8601，含） */
+  dateTo?: string;
+  includeDescendants?: boolean;
+  /** true 时列表项附带 registrationCount / attendanceSheetCount */
+  includeStats?: boolean;
 };
 export type ActivityListResult = Envelope<PageResult<ActivityItem>>;
 
