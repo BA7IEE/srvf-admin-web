@@ -3,7 +3,8 @@ export default {
   redirect: "/error/403",
   meta: {
     icon: "ri/information-line",
-    // showLink: false,
+    // demo 异常页不进生产侧栏（403/404/500 仍可由守卫/直链到达）
+    showLink: false,
     title: "异常页面",
     rank: 9
   },

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
 import { onMounted } from "vue";
 import { PureTableBar } from "@/components/RePureTableBar";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
@@ -114,9 +115,10 @@ onMounted(() => {
         </template>
       </PureTableBar>
     </template>
-    <el-empty
+    <SrvfPermEmpty
       v-else
-      description="您没有查看队保单的权限（team-insurance-policy.read.record）"
+      action="查看队保单"
+      code="team-insurance-policy.read.record"
     />
 
     <!-- 覆盖名单 drawer：某保单的覆盖队员 + 单加/全体一键加/移除 -->

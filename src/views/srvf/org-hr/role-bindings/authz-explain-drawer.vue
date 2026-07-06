@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
 import { computed, nextTick, reactive, ref, watch } from "vue";
 import type { FormInstance, FormRules } from "element-plus";
 import { message } from "@/utils/message";
@@ -341,10 +342,7 @@ watch(visible, async open => {
       </el-card>
     </template>
 
-    <el-empty
-      v-else
-      description="您没有权限使用权限诊断（authz.explain.decision）"
-    />
+    <SrvfPermEmpty v-else action="使用权限诊断" code="authz.explain.decision" />
   </el-drawer>
 </template>
 

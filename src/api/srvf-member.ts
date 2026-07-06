@@ -36,6 +36,8 @@ export type MemberListQuery = {
   memberNo?: string;
   gradeCode?: string;
   status?: MemberStatus;
+  /** 模糊搜索（契约：跨字段命中 displayName + memberNo，contains + insensitive） */
+  q?: string;
 };
 
 export type MemberListResult = Envelope<PageResult<MemberItem>>;

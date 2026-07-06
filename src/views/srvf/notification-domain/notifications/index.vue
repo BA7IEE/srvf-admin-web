@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
 import { onMounted } from "vue";
 import { PureTableBar } from "@/components/RePureTableBar";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
@@ -180,10 +181,7 @@ onMounted(() => {
         </template>
       </PureTableBar>
     </template>
-    <el-empty
-      v-else
-      description="您没有查看通知的权限（notification.read.record）"
-    />
+    <SrvfPermEmpty v-else action="查看通知" code="notification.read.record" />
   </div>
 </template>
 

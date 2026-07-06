@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
 import { onMounted, ref } from "vue";
 import { useSystemSettings } from "./utils/hook";
 
@@ -245,7 +246,7 @@ const activeTab = ref(
         </el-tab-pane>
       </el-tabs>
     </el-card>
-    <el-empty v-else description="您没有查看系统设置的权限" />
+    <SrvfPermEmpty v-else action="查看系统设置" />
   </div>
 </template>
 

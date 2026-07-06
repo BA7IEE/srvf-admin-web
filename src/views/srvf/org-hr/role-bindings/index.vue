@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
 import { onMounted, ref } from "vue";
 import { PureTableBar } from "@/components/RePureTableBar";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
@@ -197,9 +198,10 @@ onMounted(() => {
         </pure-table>
       </template>
     </PureTableBar>
-    <el-empty
+    <SrvfPermEmpty
       v-else
-      description="您没有查看角色绑定的权限（role-binding.read.record）"
+      action="查看角色绑定"
+      code="role-binding.read.record"
     />
     <AuthzExplainDrawer v-model="explainVisible" />
   </div>

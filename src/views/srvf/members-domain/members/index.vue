@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
 import { onMounted } from "vue";
 import { useMembers } from "./utils/hook";
 import { PureTableBar } from "@/components/RePureTableBar";
@@ -22,7 +23,11 @@ const {
   columns,
   dataList,
   pagination,
+  searchForm,
+  gradeOptions,
+  ensureGradeOptions,
   onSearch,
+  onFilterChange,
   openDialog,
   openCockpit,
   handleDelete,
@@ -33,6 +38,8 @@ const {
 
 onMounted(() => {
   onSearch();
+  // 等级筛选下拉的数据源（member_grade 字典；无权限/失败时静默为空）
+  ensureGradeOptions();
 });
 </script>
 
@@ -45,6 +52,38 @@ onMounted(() => {
       @refresh="onSearch"
     >
       <template #buttons>
+        <el-input
+          v-model="searchForm.q"
+          class="w-48! mr-2!"
+          placeholder="搜编号 / 称呼（回车）"
+          clearable
+          @keyup.enter="onFilterChange"
+          @clear="onFilterChange"
+        />
+        <el-select
+          v-model="searchForm.gradeCode"
+          class="w-36! mr-2!"
+          placeholder="等级"
+          clearable
+          @change="onFilterChange"
+        >
+          <el-option
+            v-for="opt in gradeOptions"
+            :key="opt.value"
+            :label="opt.label"
+            :value="opt.value"
+          />
+        </el-select>
+        <el-select
+          v-model="searchForm.status"
+          class="w-28! mr-2!"
+          placeholder="状态"
+          clearable
+          @change="onFilterChange"
+        >
+          <el-option label="在队" value="ACTIVE" />
+          <el-option label="离队" value="INACTIVE" />
+        </el-select>
         <el-button
           v-if="canCreate"
           type="primary"
@@ -125,7 +164,7 @@ onMounted(() => {
         </pure-table>
       </template>
     </PureTableBar>
-    <el-empty v-else description="您没有查看队员的权限（member.read.record）" />
+    <SrvfPermEmpty v-else action="查看队员" code="member.read.record" />
   </div>
 </template>
 

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
 import { ref, watch } from "vue";
 import dayjs from "dayjs";
 import { ElMessageBox } from "element-plus";
@@ -198,10 +199,7 @@ watch(visible, open => {
         </el-table-column>
       </el-table>
     </template>
-    <el-empty
-      v-else
-      description="您没有查看角色绑定的权限（rbac.user-role.read）"
-    />
+    <SrvfPermEmpty v-else action="查看角色绑定" code="rbac.user-role.read" />
   </el-drawer>
 </template>
 

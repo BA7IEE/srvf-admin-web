@@ -17,7 +17,8 @@ import {
   updateMember,
   deleteMember,
   updateMemberStatus,
-  type MemberItem
+  type MemberItem,
+  type MemberStatus
 } from "@/api/srvf-member";
 import { getDictTypes, getDictItems } from "@/api/srvf-dict";
 import { useSrvfDictStoreHook } from "@/store/modules/srvfDict";
@@ -48,6 +49,13 @@ export function useMembers() {
     pageSize: 10,
     currentPage: 1,
     background: true
+  });
+
+  /** 列表筛选（均为契约既有参数：q 模糊命中 displayName+memberNo；gradeCode / status 精确） */
+  const searchForm = reactive({
+    q: "",
+    gradeCode: "",
+    status: "" as "" | MemberStatus
   });
 
   const columns: TableColumnList = [
@@ -83,7 +91,10 @@ export function useMembers() {
     try {
       const { code, data } = await getMembers({
         page: pagination.currentPage,
-        pageSize: pagination.pageSize
+        pageSize: pagination.pageSize,
+        ...(searchForm.q.trim() ? { q: searchForm.q.trim() } : {}),
+        ...(searchForm.gradeCode ? { gradeCode: searchForm.gradeCode } : {}),
+        ...(searchForm.status ? { status: searchForm.status } : {})
       });
       if (code === 0) {
         dataList.value = data.items;
@@ -98,6 +109,12 @@ export function useMembers() {
     } finally {
       loading.value = false;
     }
+  }
+
+  /** 筛选条件变化：回到第一页重查 */
+  function onFilterChange() {
+    pagination.currentPage = 1;
+    onSearch();
   }
 
   function handleSizeChange(val: number) {
@@ -267,7 +284,11 @@ export function useMembers() {
     columns,
     dataList,
     pagination,
+    searchForm,
+    gradeOptions,
+    ensureGradeOptions,
     onSearch,
+    onFilterChange,
     openDialog,
     openCockpit,
     handleDelete,

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
 import { onMounted } from "vue";
 import { useContributionRules } from "./utils/hook";
 import { PureTableBar } from "@/components/RePureTableBar";
@@ -114,9 +115,10 @@ onMounted(() => {
         </pure-table>
       </template>
     </PureTableBar>
-    <el-empty
+    <SrvfPermEmpty
       v-else
-      description="您没有查看贡献值规则的权限（contribution.read.rule）"
+      action="查看贡献值规则"
+      code="contribution.read.rule"
     />
   </div>
 </template>

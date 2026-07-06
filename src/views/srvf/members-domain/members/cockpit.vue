@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
 import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import dayjs from "dayjs";
@@ -413,9 +414,10 @@ onMounted(() => {
             </template>
           </PureTableBar>
         </template>
-        <el-empty
+        <SrvfPermEmpty
           v-else
-          description="您没有查看证书的权限（certificate.read.record）"
+          action="查看证书"
+          code="certificate.read.record"
         />
       </el-tab-pane>
 
@@ -452,9 +454,10 @@ onMounted(() => {
             </template>
           </PureTableBar>
         </template>
-        <el-empty
+        <SrvfPermEmpty
           v-else
-          description="您没有查看保险的权限（member-insurance.read.other）"
+          action="查看保险"
+          code="member-insurance.read.other"
         />
       </el-tab-pane>
 
@@ -520,9 +523,10 @@ onMounted(() => {
             </template>
           </PureTableBar>
         </template>
-        <el-empty
+        <SrvfPermEmpty
           v-else
-          description="您没有查看紧急联系人的权限（emergency-contact.read.record）"
+          action="查看紧急联系人"
+          code="emergency-contact.read.record"
         />
       </el-tab-pane>
 
@@ -562,9 +566,10 @@ onMounted(() => {
             </div>
           </el-card>
         </template>
-        <el-empty
+        <SrvfPermEmpty
           v-else
-          description="您没有查看部门归属的权限（member-department.read.current）"
+          action="查看部门归属"
+          code="member-department.read.current"
         />
       </el-tab-pane>
 
@@ -656,9 +661,10 @@ onMounted(() => {
             </template>
           </PureTableBar>
         </template>
-        <el-empty
+        <SrvfPermEmpty
           v-else
-          description="您没有查看组织归属的权限（membership.list.record）"
+          action="查看组织归属"
+          code="membership.list.record"
         />
       </el-tab-pane>
 
@@ -706,9 +712,10 @@ onMounted(() => {
             </template>
           </PureTableBar>
         </template>
-        <el-empty
+        <SrvfPermEmpty
           v-else
-          description="您没有查看任职的权限（position-assignment.read.record）"
+          action="查看任职"
+          code="position-assignment.read.record"
         />
       </el-tab-pane>
 
@@ -754,9 +761,10 @@ onMounted(() => {
             </template>
           </PureTableBar>
         </template>
-        <el-empty
+        <SrvfPermEmpty
           v-else
-          description="您没有查看分管范围的权限（supervision-assignment.read.record）"
+          action="查看分管范围"
+          code="supervision-assignment.read.record"
         />
       </el-tab-pane>
 
@@ -800,9 +808,10 @@ onMounted(() => {
             </el-empty>
           </el-card>
         </template>
-        <el-empty
+        <SrvfPermEmpty
           v-else
-          description="您没有查看队员档案的权限（member-profile.read.record）"
+          action="查看队员档案"
+          code="member-profile.read.record"
         />
       </el-tab-pane>
 
@@ -858,9 +867,10 @@ onMounted(() => {
             </template>
           </PureTableBar>
         </template>
-        <el-empty
+        <SrvfPermEmpty
           v-else
-          description="您没有查看活动履历的权限（activity-registration.read.record）"
+          action="查看活动履历"
+          code="activity-registration.read.record"
         />
       </el-tab-pane>
 
@@ -895,9 +905,10 @@ onMounted(() => {
             </template>
           </PureTableBar>
         </template>
-        <el-empty
+        <SrvfPermEmpty
           v-else
-          description="您没有查看考勤记录的权限（attendance.read.sheet）"
+          action="查看考勤记录"
+          code="attendance.read.sheet"
         />
       </el-tab-pane>
 
@@ -918,9 +929,10 @@ onMounted(() => {
             </div>
           </el-card>
         </template>
-        <el-empty
+        <SrvfPermEmpty
           v-else
-          description="您没有查看贡献值的权限（attendance.read.sheet）"
+          action="查看贡献值"
+          code="attendance.read.sheet"
         />
       </el-tab-pane>
     </el-tabs>
