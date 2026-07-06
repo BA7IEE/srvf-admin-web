@@ -2,6 +2,7 @@
 import { onMounted } from "vue";
 import { useAuditLogs } from "./utils/hook";
 import { PureTableBar } from "@/components/RePureTableBar";
+import DetailDrawer from "./detail-drawer.vue";
 
 defineOptions({
   name: "SrvfAuditLogs"
@@ -15,7 +16,10 @@ const {
   pagination,
   onSearch,
   handleSizeChange,
-  handleCurrentChange
+  handleCurrentChange,
+  detailVisible,
+  detailId,
+  openDetail
 } = useAuditLogs();
 
 onMounted(() => {
@@ -56,6 +60,17 @@ onMounted(() => {
               {{ row.success ? "成功" : "失败" }}
             </el-tag>
           </template>
+          <template #operation="{ row, size }">
+            <el-button
+              class="reset-margin"
+              link
+              type="primary"
+              :size="size"
+              @click="openDetail(row)"
+            >
+              查看详情
+            </el-button>
+          </template>
         </pure-table>
       </template>
     </PureTableBar>
@@ -63,6 +78,7 @@ onMounted(() => {
       v-else
       description="您没有查看审计日志的权限（audit-log.read.entry）"
     />
+    <DetailDrawer :id="detailId" v-model="detailVisible" />
   </div>
 </template>
 

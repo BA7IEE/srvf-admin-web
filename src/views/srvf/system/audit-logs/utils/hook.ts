@@ -40,8 +40,17 @@ export function useAuditLogs() {
       minWidth: 120,
       formatter: ({ actorRoleSnap }) => actorRoleSnap ?? "—"
     },
-    { label: "结果", prop: "success", minWidth: 90, slot: "success" }
+    { label: "结果", prop: "success", minWidth: 90, slot: "success" },
+    { label: "操作", fixed: "right" as const, width: 100, slot: "operation" }
   ];
+
+  /** 详情抽屉（点开单条,重拉 GET .../{id}，与列表内存态各自独立） */
+  const detailVisible = ref(false);
+  const detailId = ref("");
+  function openDetail(row: AuditLogItem) {
+    detailId.value = row.id;
+    detailVisible.value = true;
+  }
 
   async function onSearch() {
     if (!canRead) return;
@@ -84,6 +93,9 @@ export function useAuditLogs() {
     pagination,
     onSearch,
     handleSizeChange,
-    handleCurrentChange
+    handleCurrentChange,
+    detailVisible,
+    detailId,
+    openDetail
   };
 }
