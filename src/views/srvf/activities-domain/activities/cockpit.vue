@@ -153,6 +153,8 @@ const {
 
 const {
   canRead: attCanRead,
+  canCreate: attCanCreate,
+  canUpdate: attCanUpdate,
   canApprove: attCanApprove,
   canReject: attCanReject,
   canFinalApprove: attCanFinalApprove,
@@ -164,6 +166,8 @@ const {
   pagination: attPagination,
   statusMeta: attStatusMeta,
   onSearch: attOnSearch,
+  openCreateDialog: attOpenCreateDialog,
+  openEditDialog: attOpenEditDialog,
   handleApprove: attHandleApprove,
   handleReject: attHandleReject,
   handleFinalApprove: attHandleFinalApprove,
@@ -362,6 +366,11 @@ onMounted(() => {
             :columns="attColumns"
             @refresh="attOnSearch"
           >
+            <template v-if="attCanCreate" #buttons>
+              <el-button type="primary" @click="attOpenCreateDialog">
+                提交考勤单据
+              </el-button>
+            </template>
             <template v-slot="{ size, dynamicColumns }">
               <pure-table
                 row-key="id"
@@ -396,6 +405,16 @@ onMounted(() => {
                     @click="attOpenReviewDetail(row)"
                   >
                     查看明细
+                  </el-button>
+                  <el-button
+                    v-if="attCanUpdate && row.statusCode === 'pending'"
+                    class="reset-margin"
+                    link
+                    type="primary"
+                    :size="size"
+                    @click="attOpenEditDialog(row)"
+                  >
+                    编辑
                   </el-button>
                   <el-button
                     v-if="attCanApprove && row.statusCode === 'pending'"
