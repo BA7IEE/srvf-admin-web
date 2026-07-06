@@ -116,6 +116,17 @@ export default [
         }
       },
       {
+        // 权限点管理（RBAC 管理面 2/3：蓝图 §3 标注"谨慎评估，需独立决策"，用户已明确选择开做）
+        path: "/srvf/system/permissions",
+        name: "SrvfPermissions",
+        component: () => import("@/views/srvf/system/permissions/index.vue"),
+        meta: {
+          icon: "ri/key-2-line",
+          title: "权限点管理",
+          roles: ["SUPER_ADMIN"]
+        }
+      },
+      {
         // 字典管理（路径仍为 /srvf/base-data/*；视图文件未移动,仅在菜单树折入系统管理）
         path: "/srvf/base-data/dictionaries",
         name: "SrvfDictionaries",
