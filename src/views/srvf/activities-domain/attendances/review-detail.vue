@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import dayjs from "dayjs";
 import { useSrvfDictStoreHook } from "@/store/modules/srvfDict";
+import { useRenderIcon } from "@/components/ReIcon/src/hooks";
 import type {
   AttendanceSheetReviewDetail,
   AttendanceReviewMember
 } from "@/api/srvf-attendance";
+
+import PrinterLine from "~icons/ri/printer-line";
 
 /** 只读展示组件:审核完整视图（活动摘要 + 单据 + records）。由考勤 tab 的「查看明细」在 drawer 内渲染。 */
 defineProps<{
@@ -37,106 +40,163 @@ function fmt(t?: string | null) {
 function memberSubject(member: AttendanceReviewMember, memberId: string) {
   return member?.displayName ?? member?.memberNo ?? memberId;
 }
+
+/** 原生 window.print 范式：配合下方全局 @media print 规则，只打印 .attendance-print-area。 */
+function handlePrint() {
+  window.print();
+}
 </script>
 
 <template>
   <div v-if="detail" class="review-detail">
-    <!-- 活动摘要 -->
-    <el-descriptions title="活动摘要" :column="2" border size="small">
-      <el-descriptions-item label="活动">
-        {{ detail.activity.title }}
-      </el-descriptions-item>
-      <el-descriptions-item label="类型">
-        {{ dict.label("activity_type", detail.activity.activityTypeCode) }}
-      </el-descriptions-item>
-      <el-descriptions-item label="地点">
-        {{ detail.activity.location || "—" }}
-      </el-descriptions-item>
-      <el-descriptions-item label="活动状态">
-        {{ dict.label("activity_status", detail.activity.statusCode) }}
-      </el-descriptions-item>
-      <el-descriptions-item label="开始">
-        {{ fmt(detail.activity.startAt) }}
-      </el-descriptions-item>
-      <el-descriptions-item label="结束">
-        {{ fmt(detail.activity.endAt) }}
-      </el-descriptions-item>
-    </el-descriptions>
-
-    <!-- 单据详情 -->
-    <el-descriptions
-      title="单据详情"
-      :column="2"
-      border
-      size="small"
-      class="mt-4"
-    >
-      <el-descriptions-item label="审核状态">
-        <el-tag :type="SHEET_STATUS_TAG[detail.sheet.statusCode] ?? 'info'">
-          {{ dict.label("attendance_sheet_status", detail.sheet.statusCode) }}
-        </el-tag>
-      </el-descriptions-item>
-      <el-descriptions-item label="版本">
-        {{ detail.sheet.version }}
-      </el-descriptions-item>
-      <el-descriptions-item label="提交人 ID">
-        {{ detail.sheet.submitterUserId }}
-      </el-descriptions-item>
-      <el-descriptions-item label="提交时间">
-        {{ fmt(detail.sheet.submittedAt) }}
-      </el-descriptions-item>
-      <el-descriptions-item label="一级审核备注" :span="2">
-        {{ detail.sheet.reviewNote || "—" }}
-      </el-descriptions-item>
-      <el-descriptions-item label="终审备注" :span="2">
-        {{ detail.sheet.finalReviewNote || "—" }}
-      </el-descriptions-item>
-    </el-descriptions>
-
-    <!-- 考勤记录 -->
-    <div class="review-detail__records-title">
-      考勤记录（{{ detail.records.length }} 条）
+    <div class="review-detail__toolbar no-print">
+      <el-button :icon="useRenderIcon(PrinterLine)" @click="handlePrint">
+        打印
+      </el-button>
     </div>
-    <el-table :data="detail.records" border size="small" row-key="id">
-      <el-table-column label="队员" min-width="140">
-        <template #default="{ row }">
-          {{ memberSubject(row.member, row.memberId) }}
-        </template>
-      </el-table-column>
-      <el-table-column label="角色" prop="roleCode" min-width="100">
-        <template #default="{ row }">{{ row.roleCode || "—" }}</template>
-      </el-table-column>
-      <el-table-column label="签到" min-width="150">
-        <template #default="{ row }">{{ fmt(row.checkInAt) }}</template>
-      </el-table-column>
-      <el-table-column label="签退" min-width="150">
-        <template #default="{ row }">{{ fmt(row.checkOutAt) }}</template>
-      </el-table-column>
-      <el-table-column label="服务时长(h)" prop="serviceHours" min-width="100">
-        <template #default="{ row }">{{ row.serviceHours ?? "—" }}</template>
-      </el-table-column>
-      <el-table-column
-        label="出勤状态"
-        prop="attendanceStatusCode"
-        min-width="100"
+    <div class="attendance-print-area">
+      <!-- 活动摘要 -->
+      <el-descriptions title="活动摘要" :column="2" border size="small">
+        <el-descriptions-item label="活动">
+          {{ detail.activity.title }}
+        </el-descriptions-item>
+        <el-descriptions-item label="类型">
+          {{ dict.label("activity_type", detail.activity.activityTypeCode) }}
+        </el-descriptions-item>
+        <el-descriptions-item label="地点">
+          {{ detail.activity.location || "—" }}
+        </el-descriptions-item>
+        <el-descriptions-item label="活动状态">
+          {{ dict.label("activity_status", detail.activity.statusCode) }}
+        </el-descriptions-item>
+        <el-descriptions-item label="开始">
+          {{ fmt(detail.activity.startAt) }}
+        </el-descriptions-item>
+        <el-descriptions-item label="结束">
+          {{ fmt(detail.activity.endAt) }}
+        </el-descriptions-item>
+      </el-descriptions>
+
+      <!-- 单据详情 -->
+      <el-descriptions
+        title="单据详情"
+        :column="2"
+        border
+        size="small"
+        class="mt-4"
       >
-        <template #default="{ row }">
-          {{ row.attendanceStatusCode || "—" }}
-        </template>
-      </el-table-column>
-      <el-table-column label="贡献值" prop="contributionPoints" min-width="90">
-        <template #default="{ row }">{{
-          row.contributionPoints ?? "—"
-        }}</template>
-      </el-table-column>
-    </el-table>
+        <el-descriptions-item label="审核状态">
+          <el-tag :type="SHEET_STATUS_TAG[detail.sheet.statusCode] ?? 'info'">
+            {{ dict.label("attendance_sheet_status", detail.sheet.statusCode) }}
+          </el-tag>
+        </el-descriptions-item>
+        <el-descriptions-item label="版本">
+          {{ detail.sheet.version }}
+        </el-descriptions-item>
+        <el-descriptions-item label="提交人 ID">
+          {{ detail.sheet.submitterUserId }}
+        </el-descriptions-item>
+        <el-descriptions-item label="提交时间">
+          {{ fmt(detail.sheet.submittedAt) }}
+        </el-descriptions-item>
+        <el-descriptions-item label="一级审核备注" :span="2">
+          {{ detail.sheet.reviewNote || "—" }}
+        </el-descriptions-item>
+        <el-descriptions-item label="终审备注" :span="2">
+          {{ detail.sheet.finalReviewNote || "—" }}
+        </el-descriptions-item>
+      </el-descriptions>
+
+      <!-- 考勤记录 -->
+      <div class="review-detail__records-title">
+        考勤记录（{{ detail.records.length }} 条）
+      </div>
+      <el-table :data="detail.records" border size="small" row-key="id">
+        <el-table-column label="队员" min-width="140">
+          <template #default="{ row }">
+            {{ memberSubject(row.member, row.memberId) }}
+          </template>
+        </el-table-column>
+        <el-table-column label="角色" prop="roleCode" min-width="100">
+          <template #default="{ row }">{{ row.roleCode || "—" }}</template>
+        </el-table-column>
+        <el-table-column label="签到" min-width="150">
+          <template #default="{ row }">{{ fmt(row.checkInAt) }}</template>
+        </el-table-column>
+        <el-table-column label="签退" min-width="150">
+          <template #default="{ row }">{{ fmt(row.checkOutAt) }}</template>
+        </el-table-column>
+        <el-table-column
+          label="服务时长(h)"
+          prop="serviceHours"
+          min-width="100"
+        >
+          <template #default="{ row }">{{ row.serviceHours ?? "—" }}</template>
+        </el-table-column>
+        <el-table-column
+          label="出勤状态"
+          prop="attendanceStatusCode"
+          min-width="100"
+        >
+          <template #default="{ row }">
+            {{ row.attendanceStatusCode || "—" }}
+          </template>
+        </el-table-column>
+        <el-table-column
+          label="贡献值"
+          prop="contributionPoints"
+          min-width="90"
+        >
+          <template #default="{ row }">{{
+            row.contributionPoints ?? "—"
+          }}</template>
+        </el-table-column>
+      </el-table>
+    </div>
   </div>
   <el-empty v-else description="暂无审核明细" />
 </template>
 
 <style scoped lang="scss">
+.review-detail__toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}
+
 .review-detail__records-title {
   margin: 16px 0 8px;
   font-weight: 600;
+}
+</style>
+
+<style lang="scss">
+/**
+ * 原生 window.print 范式（零新依赖）：打印时把 body 内所有内容先整体隐藏，
+ * 只让 .attendance-print-area 极其子孙可见，再把它绝对定位回页面左上角——
+ * 经典的"只打印页面里某一块"技巧，避免打印出侧栏/顶栏/drawer 遮罩等应用外壳。
+ * 未加 scoped：这条规则本来就需要跳出本组件、影响整个 body，属于有意为之的
+ * 全局样式，不是作用域泄漏。
+ */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .attendance-print-area,
+  .attendance-print-area * {
+    visibility: visible;
+  }
+
+  .attendance-print-area {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+  }
+
+  .no-print {
+    display: none !important;
+  }
 }
 </style>
