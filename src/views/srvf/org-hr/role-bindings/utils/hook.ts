@@ -1,3 +1,4 @@
+import { bizErrorMessage } from "@/api/srvf-error";
 import dayjs from "dayjs";
 import { h, ref, reactive } from "vue";
 import type { PaginationProps } from "@pureadmin/table";
@@ -221,7 +222,7 @@ export function useRoleBindings() {
         pagination.currentPage = data.page;
       }
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "加载角色绑定失败", {
+      message(bizErrorMessage(error, "加载角色绑定失败"), {
         type: "error"
       });
     } finally {
@@ -313,7 +314,7 @@ export function useRoleBindings() {
               return;
             }
           } catch (error: any) {
-            message(error?.response?.data?.message ?? "预检失败", {
+            message(bizErrorMessage(error, "预检失败"), {
               type: "error"
             });
             closeLoading();
@@ -325,7 +326,7 @@ export function useRoleBindings() {
             done();
             onSearch();
           } catch (error: any) {
-            message(error?.response?.data?.message ?? "新建失败", {
+            message(bizErrorMessage(error, "新建失败"), {
               type: "error"
             });
             closeLoading();
@@ -353,7 +354,7 @@ export function useRoleBindings() {
           message("修改成功", { type: "success" });
           onSearch();
         } catch (error: any) {
-          message(error?.response?.data?.message ?? "修改失败", {
+          message(bizErrorMessage(error, "修改失败"), {
             type: "error"
           });
         }
@@ -377,7 +378,7 @@ export function useRoleBindings() {
           message(`${action}成功`, { type: "success" });
           onSearch();
         } catch (error: any) {
-          message(error?.response?.data?.message ?? `${action}失败`, {
+          message(bizErrorMessage(error, `${action}失败`), {
             type: "error"
           });
         }
@@ -402,7 +403,7 @@ export function useRoleBindings() {
           message("删除成功", { type: "success" });
           onSearch();
         } catch (error: any) {
-          message(error?.response?.data?.message ?? "删除失败", {
+          message(bizErrorMessage(error, "删除失败"), {
             type: "error"
           });
         }

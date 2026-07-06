@@ -1,3 +1,4 @@
+import { bizErrorMessage } from "@/api/srvf-error";
 import { h, ref, computed } from "vue";
 import { ElMessageBox } from "element-plus";
 import { deviceDetection } from "@pureadmin/utils";
@@ -87,7 +88,7 @@ export function useMemberDepartment(externalMemberId: string) {
       if (code === 0) department.value = data;
       await ensureOrgTree();
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "加载部门归属失败", {
+      message(bizErrorMessage(error, "加载部门归属失败"), {
         type: "error"
       });
     } finally {
@@ -130,7 +131,7 @@ export function useMemberDepartment(externalMemberId: string) {
             done();
             onSearch();
           } catch (error: any) {
-            message(error?.response?.data?.message ?? "设置失败", {
+            message(bizErrorMessage(error, "设置失败"), {
               type: "error"
             });
             closeLoading();
@@ -159,7 +160,7 @@ export function useMemberDepartment(externalMemberId: string) {
           message("已解除归属", { type: "success" });
           onSearch();
         } catch (error: any) {
-          message(error?.response?.data?.message ?? "解除失败", {
+          message(bizErrorMessage(error, "解除失败"), {
             type: "error"
           });
         }

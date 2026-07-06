@@ -1,3 +1,4 @@
+import { bizErrorMessage } from "@/api/srvf-error";
 import dayjs from "dayjs";
 import { h, ref, reactive } from "vue";
 import { useRouter } from "vue-router";
@@ -149,7 +150,7 @@ export function usePositionAssignmentList() {
         pagination.currentPage = data.page;
       }
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "加载任职总表失败", {
+      message(bizErrorMessage(error, "加载任职总表失败"), {
         type: "error"
       });
     } finally {
@@ -195,7 +196,7 @@ export function usePositionAssignmentList() {
           message("撤销成功", { type: "success" });
           onSearch();
         } catch (error: any) {
-          message(error?.response?.data?.message ?? "撤销失败", {
+          message(bizErrorMessage(error, "撤销失败"), {
             type: "error"
           });
         }
@@ -222,7 +223,7 @@ export function usePositionAssignmentList() {
         if (code === 0) historyItems.value = data;
       })
       .catch((error: any) => {
-        message(error?.response?.data?.message ?? "加载历史失败", {
+        message(bizErrorMessage(error, "加载历史失败"), {
           type: "error"
         });
       })

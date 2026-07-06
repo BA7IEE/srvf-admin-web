@@ -1,3 +1,4 @@
+import { bizErrorMessage } from "@/api/srvf-error";
 import dayjs from "dayjs";
 import { ref, reactive } from "vue";
 import type { PaginationProps } from "@pureadmin/table";
@@ -67,7 +68,7 @@ export function useAuditLogs() {
         pagination.currentPage = data.page;
       }
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "加载审计日志失败", {
+      message(bizErrorMessage(error, "加载审计日志失败"), {
         type: "error"
       });
     } finally {

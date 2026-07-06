@@ -1,3 +1,4 @@
+import { bizErrorMessage } from "@/api/srvf-error";
 import { h, ref } from "vue";
 import { ElMessageBox } from "element-plus";
 import { deviceDetection } from "@pureadmin/utils";
@@ -86,7 +87,7 @@ export function useEmergencyContacts(externalMemberId: string) {
       const { code, data } = await getMemberEmergencyContacts(memberId.value);
       if (code === 0) dataList.value = data;
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "加载紧急联系人失败", {
+      message(bizErrorMessage(error, "加载紧急联系人失败"), {
         type: "error"
       });
     } finally {
@@ -172,7 +173,7 @@ export function useEmergencyContacts(externalMemberId: string) {
             done();
             onSearch();
           } catch (error: any) {
-            message(error?.response?.data?.message ?? "保存失败", {
+            message(bizErrorMessage(error, "保存失败"), {
               type: "error"
             });
             closeLoading();
@@ -205,7 +206,7 @@ export function useEmergencyContacts(externalMemberId: string) {
           message("删除成功", { type: "success" });
           onSearch();
         } catch (error: any) {
-          message(error?.response?.data?.message ?? "删除失败", {
+          message(bizErrorMessage(error, "删除失败"), {
             type: "error"
           });
         }

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { bizErrorMessage } from "@/api/srvf-error";
 import { ref, reactive } from "vue";
 import type { FormInstance, FormRules } from "element-plus";
 import { message } from "@/utils/message";
@@ -48,7 +49,7 @@ function onSubmit() {
       message("密码已修改", { type: "success" });
       pwdRef.value?.resetFields();
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "修改密码失败", {
+      message(bizErrorMessage(error, "修改密码失败"), {
         type: "error"
       });
     } finally {

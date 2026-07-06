@@ -1,3 +1,4 @@
+import { bizErrorMessage } from "@/api/srvf-error";
 import dayjs from "dayjs";
 import { h, ref, reactive, computed } from "vue";
 import { useRouter } from "vue-router";
@@ -143,7 +144,7 @@ export function useTeamJoinApplications(cycleId: string) {
         pagination.currentPage = data.page;
       }
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "加载入队申请失败", {
+      message(bizErrorMessage(error, "加载入队申请失败"), {
         type: "error"
       });
     } finally {
@@ -173,7 +174,7 @@ export function useTeamJoinApplications(cycleId: string) {
       const { code, data } = await getTeamJoinApplication(row.id);
       if (code === 0) detailData.value = data;
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "加载申请详情失败", {
+      message(bizErrorMessage(error, "加载申请详情失败"), {
         type: "error"
       });
     } finally {
@@ -220,7 +221,7 @@ export function useTeamJoinApplications(cycleId: string) {
             done();
             onSearch();
           } catch (error: any) {
-            message(error?.response?.data?.message ?? "标记失败", {
+            message(bizErrorMessage(error, "标记失败"), {
               type: "error"
             });
             closeLoading();
@@ -262,7 +263,7 @@ export function useTeamJoinApplications(cycleId: string) {
           message(approved ? "已评估通过" : "已淘汰", { type: "success" });
           onSearch();
         } catch (error: any) {
-          message(error?.response?.data?.message ?? `${title}失败`, {
+          message(bizErrorMessage(error, `${title}失败`), {
             type: "error"
           });
         }
@@ -320,7 +321,7 @@ export function useTeamJoinApplications(cycleId: string) {
             done();
             onSearch();
           } catch (error: any) {
-            message(error?.response?.data?.message ?? "入队失败", {
+            message(bizErrorMessage(error, "入队失败"), {
               type: "error"
             });
             closeLoading();

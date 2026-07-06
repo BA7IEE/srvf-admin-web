@@ -1,3 +1,4 @@
+import { bizErrorMessage } from "@/api/srvf-error";
 import { ref } from "vue";
 import { message } from "@/utils/message";
 import { hasPerms } from "@/utils/auth";
@@ -79,7 +80,7 @@ export function useMemberSupervisionScope(externalMemberId: string) {
         }
       }
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "加载分管范围失败", {
+      message(bizErrorMessage(error, "加载分管范围失败"), {
         type: "error"
       });
     } finally {

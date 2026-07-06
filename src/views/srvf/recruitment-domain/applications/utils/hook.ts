@@ -1,3 +1,4 @@
+import { bizErrorMessage } from "@/api/srvf-error";
 import dayjs from "dayjs";
 import { ref, reactive, computed } from "vue";
 import { useRouter } from "vue-router";
@@ -149,7 +150,7 @@ export function useRecruitmentApplications(cycleId: string) {
         pagination.currentPage = data.page;
       }
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "加载报名列表失败", {
+      message(bizErrorMessage(error, "加载报名列表失败"), {
         type: "error"
       });
     } finally {
@@ -179,7 +180,7 @@ export function useRecruitmentApplications(cycleId: string) {
       const { code, data } = await getRecruitmentApplication(row.id);
       if (code === 0) detailData.value = data;
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "加载报名详情失败", {
+      message(bizErrorMessage(error, "加载报名详情失败"), {
         type: "error"
       });
     } finally {
@@ -205,7 +206,7 @@ export function useRecruitmentApplications(cycleId: string) {
         onSearch();
       }
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "门槛标记失败", {
+      message(bizErrorMessage(error, "门槛标记失败"), {
         type: "error"
       });
     }
@@ -243,7 +244,7 @@ export function useRecruitmentApplications(cycleId: string) {
           message(approved ? "已评定通过" : "已淘汰", { type: "success" });
           onSearch();
         } catch (error: any) {
-          message(error?.response?.data?.message ?? `${title}失败`, {
+          message(bizErrorMessage(error, `${title}失败`), {
             type: "error"
           });
         }
@@ -283,7 +284,7 @@ export function useRecruitmentApplications(cycleId: string) {
           message("处理成功", { type: "success" });
           onSearch();
         } catch (error: any) {
-          message(error?.response?.data?.message ?? "处理失败", {
+          message(bizErrorMessage(error, "处理失败"), {
             type: "error"
           });
         }
@@ -299,7 +300,7 @@ export function useRecruitmentApplications(cycleId: string) {
         window.open(data.url, "_blank", "noopener,noreferrer");
       }
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "取证件照失败", {
+      message(bizErrorMessage(error, "取证件照失败"), {
         type: "error"
       });
     }

@@ -1,3 +1,4 @@
+import { bizErrorMessage } from "@/api/srvf-error";
 import { h, ref, reactive } from "vue";
 import { useRouter } from "vue-router";
 import dayjs from "dayjs";
@@ -81,7 +82,7 @@ export function useRecruitmentCycles() {
         pagination.currentPage = data.page;
       }
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "加载招新轮次失败", {
+      message(bizErrorMessage(error, "加载招新轮次失败"), {
         type: "error"
       });
     } finally {
@@ -151,7 +152,7 @@ export function useRecruitmentCycles() {
             done();
             onSearch();
           } catch (error: any) {
-            message(error?.response?.data?.message ?? "保存失败", {
+            message(bizErrorMessage(error, "保存失败"), {
               type: "error"
             });
             closeLoading();
@@ -176,7 +177,7 @@ export function useRecruitmentCycles() {
           message(`${action}成功`, { type: "success" });
           onSearch();
         } catch (error: any) {
-          message(error?.response?.data?.message ?? `${action}失败`, {
+          message(bizErrorMessage(error, `${action}失败`), {
             type: "error"
           });
         }

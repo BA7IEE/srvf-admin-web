@@ -1,3 +1,4 @@
+import { bizErrorMessage } from "@/api/srvf-error";
 import { h, ref, reactive } from "vue";
 import { useRouter } from "vue-router";
 import dayjs from "dayjs";
@@ -128,7 +129,7 @@ export function useActivities() {
         pagination.currentPage = data.page;
       }
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "加载活动列表失败", {
+      message(bizErrorMessage(error, "加载活动列表失败"), {
         type: "error"
       });
     } finally {
@@ -290,7 +291,7 @@ export function useActivities() {
             done();
             onSearch();
           } catch (error: any) {
-            message(error?.response?.data?.message ?? "保存失败", {
+            message(bizErrorMessage(error, "保存失败"), {
               type: "error"
             });
             closeLoading();
@@ -313,7 +314,7 @@ export function useActivities() {
           message("删除成功", { type: "success" });
           onSearch();
         } catch (error: any) {
-          message(error?.response?.data?.message ?? "删除失败", {
+          message(bizErrorMessage(error, "删除失败"), {
             type: "error"
           });
         }
@@ -338,7 +339,7 @@ export function useActivities() {
           message("发布成功", { type: "success" });
           onSearch();
         } catch (error: any) {
-          message(error?.response?.data?.message ?? "发布失败", {
+          message(bizErrorMessage(error, "发布失败"), {
             type: "error"
           });
         }
@@ -369,7 +370,7 @@ export function useActivities() {
           message("取消成功", { type: "success" });
           onSearch();
         } catch (error: any) {
-          message(error?.response?.data?.message ?? "取消失败", {
+          message(bizErrorMessage(error, "取消失败"), {
             type: "error"
           });
         }

@@ -1,3 +1,4 @@
+import { bizErrorMessage } from "@/api/srvf-error";
 import { ref, computed, onMounted } from "vue";
 import dayjs, { type Dayjs } from "dayjs";
 import { message } from "@/utils/message";
@@ -165,7 +166,7 @@ export function useWorkbenchDashboard() {
           : [])
       ];
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "加载出勤趋势失败", {
+      message(bizErrorMessage(error, "加载出勤趋势失败"), {
         type: "error"
       });
     } finally {
@@ -188,7 +189,7 @@ export function useWorkbenchDashboard() {
       );
       calendarActivities.value = items;
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "加载活动日历失败", {
+      message(bizErrorMessage(error, "加载活动日历失败"), {
         type: "error"
       });
     } finally {

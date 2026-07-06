@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { bizErrorMessage } from "@/api/srvf-error";
 import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
 import { h, ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
@@ -54,7 +55,7 @@ async function fetchCycle() {
     const { code, data } = await getRecruitmentCycle(cycleId);
     if (code === 0) cycle.value = data;
   } catch (error: any) {
-    message(error?.response?.data?.message ?? "加载招新轮次失败", {
+    message(bizErrorMessage(error, "加载招新轮次失败"), {
       type: "error"
     });
   } finally {
@@ -78,7 +79,7 @@ function handleToggleStatus() {
         message(`${action}成功`, { type: "success" });
         fetchCycle();
       } catch (error: any) {
-        message(error?.response?.data?.message ?? `${action}失败`, {
+        message(bizErrorMessage(error, `${action}失败`), {
           type: "error"
         });
       }
@@ -126,7 +127,7 @@ function openEditDialog() {
           done();
           fetchCycle();
         } catch (error: any) {
-          message(error?.response?.data?.message ?? "保存失败", {
+          message(bizErrorMessage(error, "保存失败"), {
             type: "error"
           });
           closeLoading();
@@ -187,7 +188,7 @@ async function openPublicity() {
     const { code, data } = await getPublicityList(cycleId);
     if (code === 0) publicityData.value = data;
   } catch (error: any) {
-    message(error?.response?.data?.message ?? "加载公示名单失败", {
+    message(bizErrorMessage(error, "加载公示名单失败"), {
       type: "error"
     });
   } finally {

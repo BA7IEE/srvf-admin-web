@@ -1,3 +1,4 @@
+import { bizErrorMessage } from "@/api/srvf-error";
 import { h, ref, reactive } from "vue";
 import { useRouter } from "vue-router";
 import dayjs from "dayjs";
@@ -104,7 +105,7 @@ export function useMembers() {
         pagination.currentPage = data.page;
       }
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "加载队员列表失败", {
+      message(bizErrorMessage(error, "加载队员列表失败"), {
         type: "error"
       });
     } finally {
@@ -208,7 +209,7 @@ export function useMembers() {
             done();
             onSearch();
           } catch (error: any) {
-            message(error?.response?.data?.message ?? "保存失败", {
+            message(bizErrorMessage(error, "保存失败"), {
               type: "error"
             });
             closeLoading();
@@ -237,7 +238,7 @@ export function useMembers() {
           message(`${action}成功`, { type: "success" });
           onSearch();
         } catch (error: any) {
-          message(error?.response?.data?.message ?? `${action}失败`, {
+          message(bizErrorMessage(error, `${action}失败`), {
             type: "error"
           });
         }
@@ -262,7 +263,7 @@ export function useMembers() {
           message("删除成功", { type: "success" });
           onSearch();
         } catch (error: any) {
-          message(error?.response?.data?.message ?? "删除失败", {
+          message(bizErrorMessage(error, "删除失败"), {
             type: "error"
           });
         }

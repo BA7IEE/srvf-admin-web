@@ -1,3 +1,4 @@
+import { bizErrorMessage } from "@/api/srvf-error";
 import { reactive, ref } from "vue";
 import dayjs from "dayjs";
 import { ElMessageBox } from "element-plus";
@@ -200,7 +201,7 @@ export function useAttachments() {
         pagination.currentPage = data.page;
       }
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "加载附件列表失败", {
+      message(bizErrorMessage(error, "加载附件列表失败"), {
         type: "error"
       });
     } finally {
@@ -317,7 +318,7 @@ export function useAttachments() {
         await onSearch();
       }
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "更新失败", { type: "error" });
+      message(bizErrorMessage(error, "更新失败"), { type: "error" });
     } finally {
       editSubmitting.value = false;
     }
@@ -345,7 +346,7 @@ export function useAttachments() {
         await onSearch();
       }
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "删除失败", { type: "error" });
+      message(bizErrorMessage(error, "删除失败"), { type: "error" });
     }
   }
 

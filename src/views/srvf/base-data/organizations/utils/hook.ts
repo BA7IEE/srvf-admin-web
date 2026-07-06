@@ -1,3 +1,4 @@
+import { bizErrorMessage } from "@/api/srvf-error";
 import { h, ref } from "vue";
 import { ElMessageBox } from "element-plus";
 import { deviceDetection } from "@pureadmin/utils";
@@ -143,7 +144,7 @@ export function useOrganizations() {
         }
       }
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "加载组织树失败", {
+      message(bizErrorMessage(error, "加载组织树失败"), {
         type: "error"
       });
     } finally {
@@ -220,7 +221,7 @@ export function useOrganizations() {
             treeOptionsCache.value = [];
             onSearch();
           } catch (error: any) {
-            message(error?.response?.data?.message ?? "保存失败", {
+            message(bizErrorMessage(error, "保存失败"), {
               type: "error"
             });
             closeLoading();
@@ -286,7 +287,7 @@ export function useOrganizations() {
             treeOptionsCache.value = [];
             onSearch();
           } catch (error: any) {
-            message(error?.response?.data?.message ?? "移动失败", {
+            message(bizErrorMessage(error, "移动失败"), {
               type: "error"
             });
             closeLoading();
@@ -311,7 +312,7 @@ export function useOrganizations() {
           message(`${action}成功`, { type: "success" });
           onSearch();
         } catch (error: any) {
-          message(error?.response?.data?.message ?? `${action}失败`, {
+          message(bizErrorMessage(error, `${action}失败`), {
             type: "error"
           });
         }
@@ -333,7 +334,7 @@ export function useOrganizations() {
           treeOptionsCache.value = [];
           onSearch();
         } catch (error: any) {
-          message(error?.response?.data?.message ?? "删除失败", {
+          message(bizErrorMessage(error, "删除失败"), {
             type: "error"
           });
         }

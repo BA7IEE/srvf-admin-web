@@ -1,3 +1,4 @@
+import { bizErrorMessage } from "@/api/srvf-error";
 import { h, ref, reactive } from "vue";
 import dayjs from "dayjs";
 import type { PaginationProps } from "@pureadmin/table";
@@ -100,7 +101,7 @@ export function useTeamInsurancePolicies() {
         pagination.currentPage = data.page;
       }
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "加载队保单失败", {
+      message(bizErrorMessage(error, "加载队保单失败"), {
         type: "error"
       });
     } finally {
@@ -168,7 +169,7 @@ export function useTeamInsurancePolicies() {
             done();
             onSearch();
           } catch (error: any) {
-            message(error?.response?.data?.message ?? "保存失败", {
+            message(bizErrorMessage(error, "保存失败"), {
               type: "error"
             });
             closeLoading();
@@ -194,7 +195,7 @@ export function useTeamInsurancePolicies() {
           message("删除成功", { type: "success" });
           onSearch();
         } catch (error: any) {
-          message(error?.response?.data?.message ?? "删除失败", {
+          message(bizErrorMessage(error, "删除失败"), {
             type: "error"
           });
         }
@@ -220,7 +221,7 @@ export function useTeamInsurancePolicies() {
         coveragePagination.currentPage = data.page;
       }
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "加载覆盖名单失败", {
+      message(bizErrorMessage(error, "加载覆盖名单失败"), {
         type: "error"
       });
     } finally {
@@ -296,7 +297,7 @@ export function useTeamInsurancePolicies() {
             done();
             coverageSearch();
           } catch (error: any) {
-            message(error?.response?.data?.message ?? "加入失败", {
+            message(bizErrorMessage(error, "加入失败"), {
               type: "error"
             });
             closeLoading();
@@ -323,7 +324,7 @@ export function useTeamInsurancePolicies() {
             coverageSearch();
           }
         } catch (error: any) {
-          message(error?.response?.data?.message ?? "一键加入失败", {
+          message(bizErrorMessage(error, "一键加入失败"), {
             type: "error"
           });
         }
@@ -350,7 +351,7 @@ export function useTeamInsurancePolicies() {
           message("已移除", { type: "success" });
           coverageSearch();
         } catch (error: any) {
-          message(error?.response?.data?.message ?? "移除失败", {
+          message(bizErrorMessage(error, "移除失败"), {
             type: "error"
           });
         }

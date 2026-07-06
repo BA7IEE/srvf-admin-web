@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { bizErrorMessage } from "@/api/srvf-error";
 import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
 import { computed, nextTick, reactive, ref, watch } from "vue";
 import type { FormInstance, FormRules } from "element-plus";
@@ -158,7 +159,7 @@ function submit() {
       });
       if (code === 0) result.value = data;
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "权限诊断失败", {
+      message(bizErrorMessage(error, "权限诊断失败"), {
         type: "error"
       });
     } finally {

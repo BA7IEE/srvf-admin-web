@@ -1,3 +1,4 @@
+import { bizErrorMessage } from "@/api/srvf-error";
 import dayjs from "dayjs";
 import { ref, reactive, computed } from "vue";
 import { useRouter } from "vue-router";
@@ -153,7 +154,7 @@ export function useApprovalRegistrations() {
         pagination.currentPage = data.page;
       }
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "加载报名横扫失败", {
+      message(bizErrorMessage(error, "加载报名横扫失败"), {
         type: "error"
       });
     } finally {
@@ -207,7 +208,7 @@ export function useApprovalRegistrations() {
           message("已通过", { type: "success" });
           onSearch();
         } catch (error: any) {
-          message(error?.response?.data?.message ?? "审核通过失败", {
+          message(bizErrorMessage(error, "审核通过失败"), {
             type: "error"
           });
         }
@@ -241,7 +242,7 @@ export function useApprovalRegistrations() {
           message("已拒绝", { type: "success" });
           onSearch();
         } catch (error: any) {
-          message(error?.response?.data?.message ?? "审核拒绝失败", {
+          message(bizErrorMessage(error, "审核拒绝失败"), {
             type: "error"
           });
         }
@@ -276,7 +277,7 @@ export function useApprovalRegistrations() {
           message("已取消", { type: "success" });
           onSearch();
         } catch (error: any) {
-          message(error?.response?.data?.message ?? "取消失败", {
+          message(bizErrorMessage(error, "取消失败"), {
             type: "error"
           });
         }
@@ -402,7 +403,7 @@ export function useApprovalAttendance() {
         pagination.currentPage = data.page;
       }
     } catch (error: any) {
-      message(error?.response?.data?.message ?? "加载考勤横扫失败", {
+      message(bizErrorMessage(error, "加载考勤横扫失败"), {
         type: "error"
       });
     } finally {
@@ -449,7 +450,7 @@ export function useApprovalAttendance() {
           message("已一级通过", { type: "success" });
           onSearch();
         } catch (error: any) {
-          message(error?.response?.data?.message ?? "一级通过失败", {
+          message(bizErrorMessage(error, "一级通过失败"), {
             type: "error"
           });
         }
@@ -481,7 +482,7 @@ export function useApprovalAttendance() {
           message("已一级驳回", { type: "success" });
           onSearch();
         } catch (error: any) {
-          message(error?.response?.data?.message ?? "一级驳回失败", {
+          message(bizErrorMessage(error, "一级驳回失败"), {
             type: "error"
           });
         }
