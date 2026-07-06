@@ -150,3 +150,25 @@ export const rejectMemberCertificate = (
     `/api/admin/v1/members/${memberId}/certificates/${id}/reject`,
     { data: body }
   );
+
+/* --------------------------- 资质核验（只读判定） --------------------------- */
+
+/** 资质判定结果（后端 `QualificationFlagResponseDto`）。 */
+export type QualificationFlagResult = Envelope<{
+  memberId: string;
+  certTypeCode: string;
+  /** 已核验 + 未过期 + 未软删 = true；不满足任一条件 = false（草案 §9.3 / Q-S9） */
+  qualified: boolean;
+}>;
+
+/**
+ * 资质判定 `GET /api/admin/v1/members/{memberId}/certificates/qualification-flag`
+ * （rbac: `certificate.read.record`，与证书列表同码）。查询队员在某证书大类下
+ * 是否具备资质：只返布尔 + 回显查询参数，不返回具体证书记录明细。
+ */
+export const getQualificationFlag = (memberId: string, certTypeCode: string) =>
+  http.request<QualificationFlagResult>(
+    "get",
+    `/api/admin/v1/members/${memberId}/certificates/qualification-flag`,
+    { params: { certTypeCode } }
+  );

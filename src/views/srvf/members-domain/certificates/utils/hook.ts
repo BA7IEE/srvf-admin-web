@@ -13,6 +13,7 @@ import {
   deleteMemberCertificate,
   verifyMemberCertificate,
   rejectMemberCertificate,
+  getQualificationFlag,
   type CertificateItem,
   type CreateCertificateBody
 } from "@/api/srvf-certificate";
@@ -43,6 +44,14 @@ export function useCertificates(externalMemberId: string) {
   /** 证书隶属队员 id：由作战室经路由参数注入并固定。保留 ref 形态，CRUD/核验 handler 仍走 memberId.value 不改。 */
   const memberId = ref<string>(externalMemberId);
   const formRef = ref();
+
+  /** 资质核验小组件状态（qualification-flag：只读判定,与 canRead 同码不单独开权限） */
+  const qualCheckCertType = ref("");
+  const qualCheckLoading = ref(false);
+  const qualCheckResult = ref<{
+    certTypeCode: string;
+    qualified: boolean;
+  } | null>(null);
 
   const columns: TableColumnList = [
     {
@@ -313,6 +322,34 @@ export function useCertificates(externalMemberId: string) {
       .catch(() => {});
   }
 
+  /**
+   * 资质核验：查该队员在选定证书大类下是否 qualified（已核验+未过期+未软删）。
+   * 只返布尔判定，不返回具体证书记录——不是"查证书"，是"查资格"。
+   */
+  async function checkQualification() {
+    if (!memberId.value || !qualCheckCertType.value) return;
+    qualCheckLoading.value = true;
+    qualCheckResult.value = null;
+    try {
+      const { code, data } = await getQualificationFlag(
+        memberId.value,
+        qualCheckCertType.value
+      );
+      if (code === 0) {
+        qualCheckResult.value = {
+          certTypeCode: data.certTypeCode,
+          qualified: data.qualified
+        };
+      }
+    } catch (error: any) {
+      message(error?.response?.data?.message ?? "资质核验查询失败", {
+        type: "error"
+      });
+    } finally {
+      qualCheckLoading.value = false;
+    }
+  }
+
   return {
     canRead,
     canCreate,
@@ -329,6 +366,10 @@ export function useCertificates(externalMemberId: string) {
     openDialog,
     handleDelete,
     handleVerify,
-    handleReject
+    handleReject,
+    qualCheckCertType,
+    qualCheckLoading,
+    qualCheckResult,
+    checkQualification
   };
 }
