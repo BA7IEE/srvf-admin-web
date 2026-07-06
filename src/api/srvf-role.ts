@@ -121,6 +121,59 @@ export const revokeRolePermission = (id: string, permissionId: string) =>
     `/api/system/v1/roles/${id}/permissions/${permissionId}`
   );
 
+/* -------------------------- 用户 ↔ RBAC角色 绑定（全局） -------------------------- */
+/* 与队员360/system.users 的"系统角色"(role:SUPER_ADMIN|ADMIN|USER 单值枚举，走           */
+/* PATCH users/{id}/role)是两回事——这里是多值的 RBAC 角色绑定，`GET/POST` +              */
+/* `DELETE .../{roleId}` 走 `users/{userId}/roles` 子资源。后端 handoff §2.6：           */
+/* 本端点只做 principalType=USER + scopeType=GLOBAL 的绑定，与「角色绑定」页(role-       */
+/* bindings)同一张底表、GLOBAL 绑定互相可见；旧判权服务 RbacService 只读 GLOBAL 绑定，   */
+/* 覆盖几乎全部业务面，是让一个用户"真正拿到某个 RBAC 角色权限"最直接的路径。            */
+
+/** 用户已绑定的 RBAC 角色（后端 `UserRoleResponseDto`） */
+export type UserRoleItem = {
+  id: string;
+  roleId: string;
+  roleCode: string;
+  roleDisplayName: string;
+  createdAt: string;
+  createdByUserId: string | null;
+};
+export type UserRolesResult = Envelope<UserRoleItem[]>;
+
+/**
+ * 查用户已绑定的 RBAC 角色 `GET /api/system/v1/users/{userId}/roles`
+ * （rbac: `rbac.user-role.read`）。已排除软删角色。
+ */
+export const getUserRbacRoles = (userId: string) =>
+  http.request<UserRolesResult>("get", `/api/system/v1/users/${userId}/roles`);
+
+export type AssignUserRoleMutationResult = Envelope<null>;
+
+/**
+ * 给用户绑定 RBAC 角色 `POST /api/system/v1/users/{userId}/roles`
+ * （rbac: `rbac.user-role.create`）。入参 `roleCode`（非 id）。
+ * Q7 角色分级：SUPER_ADMIN 可绑任意角色；持 `ops-admin` 者只能绑非 ops-admin 角色，
+ * 否则后端拒绝弹 30102；重复绑定弹 30006。
+ */
+export const assignUserRbacRole = (userId: string, roleCode: string) =>
+  http.request<AssignUserRoleMutationResult>(
+    "post",
+    `/api/system/v1/users/${userId}/roles`,
+    { data: { roleCode } }
+  );
+
+/**
+ * 撤销用户的某个 RBAC 角色 `DELETE /api/system/v1/users/{userId}/roles/{roleId}`
+ * （rbac: `rbac.user-role.delete`）。路径 `roleId` 是 `RbacRole.id`（非 code）。
+ * Q7 分级判定同上；撤销 `ops-admin` 时后端有"全局最后一个 ops-admin 保护"，
+ * 撤到只剩一个会拒绝弹 30101；关系不存在弹 30007。
+ */
+export const revokeUserRbacRole = (userId: string, roleId: string) =>
+  http.request<Envelope<null>>(
+    "delete",
+    `/api/system/v1/users/${userId}/roles/${roleId}`
+  );
+
 /**
  * RBAC 治理相关业务码的专用文案（后端 handoff + `/api/docs-json` 摘码；
  * 其余码回落后端 message，再回落调用方兜底文案）。
@@ -134,11 +187,17 @@ export function roleBizErrorMessage(error: unknown, fallback: string): string {
   if (code === 30004)
     return "角色编码与已删除的历史角色冲突，请换一个编码（30004）";
   if (code === 30005) return "该角色已被软删除（30005）";
+  if (code === 30006) return "该用户已拥有此角色，无需重复绑定（30006）";
+  if (code === 30007) return "该用户并未拥有此角色，无法撤销（30007）";
   if (code === 30008)
     return "权限点编码格式错误：应为 <module>.<action>.<resourceType>（30008）";
   if (code === 30009)
     return "角色编码格式错误：应为 kebab-case，3-32 位小写字母/数字/连字符（30009）";
   if (code === 30011) return "该角色并未拥有此权限点，无法撤销（30011）";
+  if (code === 30101)
+    return "系统必须保留至少一个 ops-admin，无法撤销最后一位持有者的此角色（30101）";
+  if (code === 30102)
+    return "分级权限不足：您当前的角色级别无法绑定/撤销此角色（30102）";
   if (code === 30103)
     return "该权限点为 SUPER_ADMIN 专属保留码，当前账号无法分配（30103）";
   return data?.message ?? fallback;
