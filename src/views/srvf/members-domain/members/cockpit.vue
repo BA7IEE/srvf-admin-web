@@ -92,7 +92,11 @@ const {
   openDialog: certOpenDialog,
   handleDelete: certHandleDelete,
   handleVerify: certHandleVerify,
-  handleReject: certHandleReject
+  handleReject: certHandleReject,
+  qualCheckCertType,
+  qualCheckLoading,
+  qualCheckResult,
+  checkQualification
 } = useCertificates(memberId);
 
 /* --------------- Tab：保险（只读，复用 hook，memberId 由路由参数注入；无队员下拉） --------------- */
@@ -277,6 +281,49 @@ onMounted(() => {
     <el-tabs v-model="activeTab" class="cockpit-tabs">
       <el-tab-pane label="证书" name="certificates">
         <template v-if="certCanRead">
+          <el-card shadow="never" class="mb-4">
+            <template #header>资质核验</template>
+            <div class="qual-check-row">
+              <el-select
+                v-model="qualCheckCertType"
+                filterable
+                clearable
+                placeholder="选择证书大类"
+                class="w-64!"
+              >
+                <el-option
+                  v-for="opt in dict.options('cert_type')"
+                  :key="opt.value"
+                  :label="opt.label"
+                  :value="opt.value"
+                />
+              </el-select>
+              <el-button
+                type="primary"
+                :loading="qualCheckLoading"
+                :disabled="!qualCheckCertType"
+                @click="checkQualification"
+              >
+                核验
+              </el-button>
+              <template v-if="qualCheckResult">
+                <el-tag
+                  :type="qualCheckResult.qualified ? 'success' : 'danger'"
+                  size="large"
+                >
+                  {{
+                    dict.label("cert_type", qualCheckResult.certTypeCode)
+                  }}：{{
+                    qualCheckResult.qualified ? "具备资质" : "不具备资质"
+                  }}
+                </el-tag>
+              </template>
+            </div>
+            <div class="qual-check-hint">
+              判定 = 已核验 + 未过期 +
+              未软删；只返回布尔结果，不代表队员没有该类型的其他证书记录（如待核验/已驳回）。
+            </div>
+          </el-card>
           <PureTableBar
             title="队员证书"
             :columns="certColumns"
@@ -883,6 +930,18 @@ onMounted(() => {
 <style scoped lang="scss">
 .main {
   margin: 24px 24px 0 !important;
+}
+
+.qual-check-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.qual-check-hint {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
 }
 
 .cockpit-header {
