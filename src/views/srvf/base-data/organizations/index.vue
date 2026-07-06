@@ -48,6 +48,7 @@ const {
   canMembers,
   canAssignments,
   canSupervisors,
+  canMove,
   loading,
   columns,
   dataList,
@@ -56,7 +57,8 @@ const {
   openCreateChild,
   openEdit,
   handleToggleStatus,
-  handleDelete
+  handleDelete,
+  openMoveDialog
 } = useOrganizations();
 
 onMounted(() => {
@@ -157,6 +159,16 @@ onMounted(() => {
               @click="openCreateChild(row)"
             >
               新增子节点
+            </el-button>
+            <el-button
+              v-if="canMove && row.parentId"
+              class="reset-margin"
+              link
+              type="warning"
+              :size="size"
+              @click="openMoveDialog(row)"
+            >
+              移动
             </el-button>
             <el-button
               v-if="canUpdate"

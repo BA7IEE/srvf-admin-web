@@ -38,7 +38,11 @@ export const getOrganizations = (params?: OrganizationListQuery) =>
     params
   });
 
-/** 组织树节点（后端 `OrganizationTreeNodeDto`；递归 children） */
+/**
+ * 组织树节点（后端 `OrganizationTreeNodeDto`；递归 children）。
+ * directMembershipCount/subtreeMembershipCount 是可选的展示态字段——本端点
+ * 本身不返回，由 hook 侧合并 `tree-with-summary` 的结果后按 id 回填。
+ */
 export type OrgTreeNode = {
   id: string;
   name: string;
@@ -50,12 +54,81 @@ export type OrgTreeNode = {
   createdAt: string;
   updatedAt: string;
   children: OrgTreeNode[];
+  /** 直属本节点的 ACTIVE 归属条数（仅合并 tree-with-summary 后才有值） */
+  directMembershipCount?: number;
+  /** 本节点+全部后代的 ACTIVE 归属条数合计（仅合并 tree-with-summary 后才有值） */
+  subtreeMembershipCount?: number;
 };
 export type OrgTreeResult = Envelope<OrgTreeNode[]>;
 
 /** 组织树 `GET /api/admin/v1/organizations/tree`（rbac: `org.read.node`） */
 export const getOrgTree = () =>
   http.request<OrgTreeResult>("get", "/api/admin/v1/organizations/tree");
+
+/**
+ * 组织树 + 归属计数节点（后端 `OrganizationTreeWithSummaryNodeDto`）。
+ * ⚠️ 与 `OrgTreeNode` 不是同一个 DTO——缺 parentId/sortOrder/createdAt/updatedAt，
+ * 只多了两个计数字段。hook 侧按 id 把计数合并进 `getOrgTree()` 的结果展示，
+ * 不整体替换数据源（避免丢 sortOrder 等既有列需要的字段）。
+ */
+export type OrgTreeSummaryNode = {
+  id: string;
+  name: string;
+  code: string | null;
+  nodeTypeCode: string;
+  status: OrgStatus;
+  directMembershipCount: number;
+  subtreeMembershipCount: number;
+  children: OrgTreeSummaryNode[];
+};
+export type OrgTreeSummaryResult = Envelope<OrgTreeSummaryNode[]>;
+
+/**
+ * 组织树 + 每节点归属计数 `GET /api/admin/v1/organizations/tree-with-summary`
+ * （rbac: `org.read.node`）。directMembershipCount 直属 / subtreeMembershipCount
+ * 含后代，均为 ACTIVE 归属条数，纯展示读。
+ */
+export const getOrgTreeWithSummary = () =>
+  http.request<OrgTreeSummaryResult>(
+    "get",
+    "/api/admin/v1/organizations/tree-with-summary"
+  );
+
+/** 组织树极简投影项（后端 `OrganizationTreeOptionItemDto`；表单级联选择器用）。 */
+export type OrgTreeOptionItem = {
+  id: string;
+  label: string;
+  code: string | null;
+  children: OrgTreeOptionItem[];
+};
+export type OrgTreeOptionsResult = Envelope<OrgTreeOptionItem[]>;
+
+/**
+ * 组织树极简投影 `GET /api/admin/v1/organizations/tree-options`（rbac: `org.read.node`）。
+ * id/label/code/children，专为表单级联选择器设计（如"移动到..."的目标父级选择）。
+ */
+export const getOrgTreeOptions = (params?: { status?: OrgStatus }) =>
+  http.request<OrgTreeOptionsResult>(
+    "get",
+    "/api/admin/v1/organizations/tree-options",
+    { params }
+  );
+
+/**
+ * 重挂组织节点父级入参（后端 `MoveOrganizationDto`）。
+ */
+export type MoveOrganizationBody = { parentId: string };
+
+/**
+ * 重挂组织节点父级 `POST /api/admin/v1/organizations/{id}/move`（rbac: `org.move.node`）。
+ * 禁改根节点父级；目标父级=自身或自身后代（会成环）后端拒绝；事务内重算 closure 表。
+ */
+export const moveOrganization = (id: string, body: MoveOrganizationBody) =>
+  http.request<OrganizationMutationResult>(
+    "post",
+    `/api/admin/v1/organizations/${id}/move`,
+    { data: body }
+  );
 
 /** 创建组织节点入参（后端 `CreateOrganizationDto`） */
 export type CreateOrganizationBody = {
