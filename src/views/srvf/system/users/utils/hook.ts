@@ -50,6 +50,11 @@ export function useUserAccounts() {
   const canClearPhone = hasPerms("user.phone.clear");
   const canClearWechat = hasPerms("user.wechat.clear");
   const canDelete = hasPerms("user.delete.account");
+  /** RBAC 角色绑定（全局，users/{userId}/roles；与上面 canUpdateRole 的系统角色单值枚举是两回事） */
+  const canRbacRoleManage =
+    hasPerms("rbac.user-role.read") ||
+    hasPerms("rbac.user-role.create") ||
+    hasPerms("rbac.user-role.delete");
   const hasAnyAction =
     canUpdateAccount ||
     canResetPassword ||
@@ -57,7 +62,12 @@ export function useUserAccounts() {
     canUpdateRole ||
     canClearPhone ||
     canClearWechat ||
-    canDelete;
+    canDelete ||
+    canRbacRoleManage;
+
+  /** RBAC 角色绑定抽屉状态（由 index.vue 传给 rbac-roles-drawer.vue） */
+  const rbacRolesDrawerVisible = ref(false);
+  const activeUser = ref<UserAccountItem | null>(null);
 
   const pagination = reactive<PaginationProps>({
     total: 0,
@@ -95,7 +105,7 @@ export function useUserAccounts() {
           {
             label: "操作",
             fixed: "right" as const,
-            width: 320,
+            width: 390,
             slot: "operation"
           }
         ]
@@ -346,6 +356,12 @@ export function useUserAccounts() {
       .catch(() => {});
   }
 
+  /** 打开 RBAC 角色绑定抽屉（rbac-roles-drawer.vue 消费 activeUser + visible） */
+  function openRbacRolesDrawer(row: UserAccountItem) {
+    activeUser.value = row;
+    rbacRolesDrawerVisible.value = true;
+  }
+
   return {
     canRead,
     canCreate,
@@ -356,10 +372,13 @@ export function useUserAccounts() {
     canClearPhone,
     canClearWechat,
     canDelete,
+    canRbacRoleManage,
     loading,
     columns,
     dataList,
     pagination,
+    rbacRolesDrawerVisible,
+    activeUser,
     roleMeta,
     onSearch,
     openDialog,
@@ -370,6 +389,7 @@ export function useUserAccounts() {
     handleClearWechat,
     handleDelete,
     handleSizeChange,
-    handleCurrentChange
+    handleCurrentChange,
+    openRbacRolesDrawer
   };
 }

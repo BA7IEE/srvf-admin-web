@@ -3,6 +3,7 @@ import { onMounted } from "vue";
 import { useUserAccounts } from "./utils/hook";
 import { PureTableBar } from "@/components/RePureTableBar";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
+import RbacRolesDrawer from "./rbac-roles-drawer.vue";
 
 import AddFill from "~icons/ri/add-circle-line";
 
@@ -20,10 +21,13 @@ const {
   canClearPhone,
   canClearWechat,
   canDelete,
+  canRbacRoleManage,
   loading,
   columns,
   dataList,
   pagination,
+  rbacRolesDrawerVisible,
+  activeUser,
   roleMeta,
   onSearch,
   openDialog,
@@ -34,7 +38,8 @@ const {
   handleClearWechat,
   handleDelete,
   handleSizeChange,
-  handleCurrentChange
+  handleCurrentChange,
+  openRbacRolesDrawer
 } = useUserAccounts();
 
 onMounted(() => {
@@ -132,6 +137,16 @@ onMounted(() => {
               改角色
             </el-button>
             <el-button
+              v-if="canRbacRoleManage"
+              class="reset-margin"
+              link
+              type="primary"
+              :size="size"
+              @click="openRbacRolesDrawer(row)"
+            >
+              RBAC角色
+            </el-button>
+            <el-button
               v-if="canClearPhone"
               class="reset-margin"
               link
@@ -166,6 +181,8 @@ onMounted(() => {
       </template>
     </PureTableBar>
     <el-empty v-else description="您没有查看用户的权限（user.read.account）" />
+
+    <RbacRolesDrawer v-model="rbacRolesDrawerVisible" :user="activeUser" />
   </div>
 </template>
 
