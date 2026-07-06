@@ -105,7 +105,7 @@ export function useUserAccounts() {
           {
             label: "操作",
             fixed: "right" as const,
-            width: 390,
+            width: 190,
             slot: "operation"
           }
         ]

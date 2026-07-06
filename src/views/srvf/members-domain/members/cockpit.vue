@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
 import { ref, onMounted } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import dayjs from "dayjs";
 import { message } from "@/utils/message";
 import { PureTableBar } from "@/components/RePureTableBar";
@@ -25,6 +25,7 @@ import {
 import Delete from "~icons/ep/delete";
 import EditPen from "~icons/ep/edit-pen";
 import AddFill from "~icons/ri/add-circle-line";
+import ArrowLeftLine from "~icons/ri/arrow-left-line";
 
 defineOptions({
   name: "SrvfMemberCockpit"
@@ -32,6 +33,7 @@ defineOptions({
 
 /** 实体 id 来自路由参数（该路由不入 keepAlive → 每次进来重新挂载，setup 取一次即可靠） */
 const route = useRoute();
+const router = useRouter();
 const memberId = route.params.id as string;
 
 /** 共享字典：队员等级 member_grade code → 中文（证书 tab 的 cert_status 由 useCertificates 预热同一 store） */
@@ -247,6 +249,14 @@ onMounted(() => {
   <div class="main">
     <!-- 头部：队员基本信息 -->
     <el-card v-loading="detailLoading" shadow="never" class="mb-2">
+      <el-button
+        link
+        class="mb-2!"
+        :icon="useRenderIcon(ArrowLeftLine)"
+        @click="router.push('/srvf/members-domain/members')"
+      >
+        返回队员列表
+      </el-button>
       <template v-if="detail">
         <div class="cockpit-header">
           <div class="cockpit-header__title">

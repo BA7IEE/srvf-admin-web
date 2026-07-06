@@ -56,9 +56,17 @@ onMounted(() => {
 
 <template>
   <div class="main">
+    <el-alert
+      v-if="canRead"
+      type="info"
+      :closable="false"
+      show-icon
+      class="mb-2"
+      title="角色绑定 = 把角色授予某个主体（用户 / 队员 / 任职）并限定生效范围；「系统管理 → 角色权限」定义的是角色本身有哪些权限，两者配合使用。"
+    />
     <PureTableBar
       v-if="canRead"
-      title="角色绑定（主体 → 角色 @ scope 的实际授予）"
+      title="角色绑定"
       :columns="columns"
       @refresh="onSearch"
     >
@@ -87,7 +95,7 @@ onMounted(() => {
         <el-select
           v-model="scopeTypeFilter"
           class="w-32! mr-2!"
-          placeholder="Scope"
+          placeholder="生效范围"
           @change="onFilterChange"
         >
           <el-option

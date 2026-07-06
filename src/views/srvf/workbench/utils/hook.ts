@@ -5,6 +5,7 @@ import type { PaginationProps } from "@pureadmin/table";
 import { ElMessageBox } from "element-plus";
 import { message } from "@/utils/message";
 import { hasPerms } from "@/utils/auth";
+import { useMultiTagsStoreHook } from "@/store/modules/multiTags";
 import {
   getAllRegistrations,
   getAllAttendanceSheets,
@@ -283,8 +284,14 @@ export function useApprovalRegistrations() {
       .catch(() => {});
   }
 
-  /** 跳进该报名所属活动的作战室（跨轴横扫 → 沿轴下钻） */
+  /** 跳进该报名所属活动的作战室（跨轴横扫 → 沿轴下钻）；页签标题带活动名 */
   function goCockpit(row: AdminRegistrationItem) {
+    useMultiTagsStoreHook().handleTags("push", {
+      path: "/srvf/activities-domain/activities/:id",
+      name: "SrvfActivityCockpit",
+      params: { id: row.activityId },
+      meta: { title: `活动 · ${row.activityTitle ?? row.activityId}` }
+    });
     router.push(`/srvf/activities-domain/activities/${row.activityId}`);
   }
 
@@ -548,8 +555,14 @@ export function useApprovalAttendance() {
       .catch(() => {});
   }
 
-  /** 跳进该单据所属活动的作战室（含考勤审核详情等深操作） */
+  /** 跳进该单据所属活动的作战室（含考勤审核详情等深操作）；页签标题带活动名 */
   function goCockpit(row: AdminAttendanceSheetItem) {
+    useMultiTagsStoreHook().handleTags("push", {
+      path: "/srvf/activities-domain/activities/:id",
+      name: "SrvfActivityCockpit",
+      params: { id: row.activityId },
+      meta: { title: `活动 · ${row.activityTitle ?? row.activityId}` }
+    });
     router.push(`/srvf/activities-domain/activities/${row.activityId}`);
   }
 

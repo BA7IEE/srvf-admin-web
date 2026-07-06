@@ -7,6 +7,11 @@ import {
   APP_STATUS_LABEL,
   type RecruitmentApplication
 } from "@/api/srvf-recruitment";
+import { useSrvfDictStoreHook } from "@/store/modules/srvfDict";
+
+/** 证件类型 code → 中文（document_type 字典;不可用时退回原 code） */
+const dict = useSrvfDictStoreHook();
+dict.ensureType("document_type");
 
 type ThresholdCode = (typeof THRESHOLD_CODES)[number];
 
@@ -52,7 +57,7 @@ function onToggle(code: ThresholdCode, val: boolean) {
         {{ app.realName ?? "—" }}
       </el-descriptions-item>
       <el-descriptions-item label="证件类型">
-        {{ app.documentTypeCode }}
+        {{ dict.label("document_type", app.documentTypeCode) }}
       </el-descriptions-item>
       <el-descriptions-item label="证件号">
         {{ app.idCardNumber ?? "—" }}

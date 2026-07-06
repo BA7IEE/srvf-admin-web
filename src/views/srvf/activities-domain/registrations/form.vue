@@ -3,7 +3,7 @@ import { ref } from "vue";
 import ReCol from "@/components/ReCol";
 import type { FormRules } from "element-plus";
 
-/** 队员下拉选项（value = Member.id；空数组 = 退化为文本输入 id） */
+/** 队员下拉选项（value = Member.id；空数组 = 无读权限，选择器禁用） */
 export type MemberOption = { label: string; value: string };
 
 /**
@@ -71,9 +71,8 @@ defineExpose({ getRef });
           <el-input
             v-else
             v-model="newFormInline.memberId"
-            clearable
-            maxlength="64"
-            placeholder="目标队员 Member.id（必填；8–64）"
+            disabled
+            placeholder="队员选项不可用（需队员读取权限），请联系管理员"
           />
         </el-form-item>
       </re-col>

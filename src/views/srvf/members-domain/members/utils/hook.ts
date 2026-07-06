@@ -7,6 +7,7 @@ import { deviceDetection } from "@pureadmin/utils";
 import { message } from "@/utils/message";
 import { hasPerms } from "@/utils/auth";
 import { addDialog } from "@/components/ReDialog";
+import { useMultiTagsStoreHook } from "@/store/modules/multiTags";
 import MemberForm, {
   type MemberFormModel,
   type MemberGradeOption
@@ -269,8 +270,16 @@ export function useMembers() {
       .catch(() => {});
   }
 
-  /** 进入队员作战室（实体详情页）：行内「管理」入口，router.push 带 member id（非侧栏菜单） */
+  /** 进入队员档案（实体详情页）：行内「管理」入口，router.push 带 member id（非侧栏菜单）。
+   *  动态 params 路由需显式 push 页签（pure-admin 范式，参考完整版 tabs/params-detail），
+   *  页签标题带队员名，多开档案页可区分。 */
   function openCockpit(row: MemberItem) {
+    useMultiTagsStoreHook().handleTags("push", {
+      path: "/srvf/members-domain/members/:id",
+      name: "SrvfMemberCockpit",
+      params: { id: row.id },
+      meta: { title: `队员 · ${row.displayName}` }
+    });
     router.push(`/srvf/members-domain/members/${row.id}`);
   }
 

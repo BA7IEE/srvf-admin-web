@@ -114,7 +114,7 @@ export function useOrganizations() {
           {
             label: "操作",
             fixed: "right" as const,
-            width: 360,
+            width: 200,
             slot: "operation"
           }
         ]
@@ -157,7 +157,7 @@ export function useOrganizations() {
    * - 新增子节点：parentId = 该行 id；
    * - 编辑：仅提交 name / code / sortOrder / nodeTypeCode（parentId 后端禁改，前端不暴露）。
    */
-  function openOrgDialog(params: {
+  async function openOrgDialog(params: {
     isEdit: boolean;
     row?: OrgTreeNode;
     parentId: string | null;
@@ -168,6 +168,8 @@ export function useOrganizations() {
       : parentId
         ? "新增子节点"
         : "新建根节点";
+    // 节点类别下拉数据源（node_type 字典;不可用时表单侧禁用选择器而非放开手填 code）
+    await dict.ensureType("node_type");
     addDialog({
       title,
       width: "40%",
@@ -182,7 +184,8 @@ export function useOrganizations() {
           code: row?.code ?? "",
           nodeTypeCode: row?.nodeTypeCode ?? "",
           sortOrder: row?.sortOrder ?? 0
-        } as OrgFormModel
+        } as OrgFormModel,
+        nodeTypeOptions: dict.options("node_type")
       },
       contentRenderer: () => h(OrgForm, { ref: formRef }),
       beforeSure: (done, { options, closeLoading }) => {
