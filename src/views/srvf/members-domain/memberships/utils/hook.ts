@@ -1,14 +1,25 @@
 import dayjs from "dayjs";
-import { ref } from "vue";
+import { h, ref } from "vue";
+import { ElMessageBox } from "element-plus";
+import { deviceDetection } from "@pureadmin/utils";
 import { message } from "@/utils/message";
 import { hasPerms } from "@/utils/auth";
+import { addDialog } from "@/components/ReDialog";
+import MembershipForm, { type MembershipFormModel } from "../form.vue";
+import TransferForm, { type TransferFormModel } from "../transfer-form.vue";
 import {
   getMemberMemberships,
+  createMemberMembership,
+  updateMemberMembership,
+  endMemberMembership,
+  transferMembership,
+  membershipBizErrorMessage,
   MEMBERSHIP_TYPE_LABEL,
   MEMBERSHIP_STATUS_LABEL,
   MEMBERSHIP_STATUS_TAG,
   type MembershipItem
 } from "@/api/srvf-membership";
+import { getOrgOptions, type OrgOptionItem } from "@/api/srvf-organization";
 import { resolveLabels } from "@/api/srvf-meta";
 
 /**
@@ -19,10 +30,22 @@ import { resolveLabels } from "@/api/srvf-meta";
  */
 export function useMemberMemberships(externalMemberId: string) {
   const canRead = hasPerms("membership.list.record");
+  /** 新增/编辑：create 走 POST members/{id}/memberships，edit 走 PATCH .../{id}（同一 rbac 码） */
+  const canSet = hasPerms("membership.set.record");
+  /** 结束归属：DELETE .../{id}（status→ENDED，非物删） */
+  const canEnd = hasPerms("membership.end.record");
+  /** 迁移：POST memberships/transfer（单事务：结束源+新建目标） */
+  const canTransfer = hasPerms("membership.transfer.record");
+  const hasAnyAction = canSet || canEnd || canTransfer;
+
   const dataList = ref<MembershipItem[]>([]);
   const loading = ref(false);
+  const formRef = ref();
+  const transferFormRef = ref();
   /** organizationId → 组织名（resolveLabels 解析结果缓存） */
   const orgLabels = ref<Record<string, string>>({});
+  /** 组织下拉（getOrgOptions 投影；首次打开新增/迁移弹窗时懒加载,之后复用缓存） */
+  const orgOptionsCache = ref<OrgOptionItem[]>([]);
 
   const columns: TableColumnList = [
     {
@@ -57,7 +80,17 @@ export function useMemberMemberships(externalMemberId: string) {
       prop: "reason",
       minWidth: 160,
       formatter: ({ reason }) => reason ?? "—"
-    }
+    },
+    ...(hasAnyAction
+      ? [
+          {
+            label: "操作",
+            fixed: "right" as const,
+            width: 220,
+            slot: "operation"
+          }
+        ]
+      : [])
   ];
 
   function orgLabel(organizationId: string) {
@@ -111,14 +144,177 @@ export function useMemberMemberships(externalMemberId: string) {
     }
   }
 
+  /** 懒加载组织下拉（首次打开新增/迁移弹窗时拉一次,同一队员详情页内复用缓存） */
+  async function ensureOrgOptions() {
+    if (orgOptionsCache.value.length) return;
+    try {
+      const { code, data } = await getOrgOptions({ limit: 100 });
+      if (code === 0) orgOptionsCache.value = data.items;
+    } catch {
+      // 拉取失败时新增/迁移弹窗的下拉会是空列表,不阻塞弹窗本身打开
+    }
+  }
+  function orgOptionsFor(excludeId?: string) {
+    return orgOptionsCache.value
+      .filter(o => o.id !== excludeId)
+      .map(o => ({
+        label: `${o.label}${o.code ? `（${o.code}）` : ""}`,
+        value: o.id
+      }));
+  }
+
+  /** 新增 / 编辑归属（create：组织+类型+原因；edit：仅类型/任期/原因，组织只读展示） */
+  async function openDialog(title: "新增" | "编辑", row?: MembershipItem) {
+    if (!externalMemberId) return;
+    const isEdit = title === "编辑";
+    await ensureOrgOptions();
+    addDialog({
+      title: `${title}组织归属`,
+      width: "46%",
+      draggable: true,
+      fullscreen: deviceDetection(),
+      closeOnClickModal: false,
+      sureBtnLoading: true,
+      props: {
+        formInline: {
+          isEdit,
+          organizationId: row?.organizationId ?? "",
+          organizationLabel: row ? orgLabel(row.organizationId) : "",
+          membershipType: row?.membershipType ?? "PRIMARY",
+          startedAt: "",
+          endedAt: "",
+          reason: row?.reason ?? ""
+        } as MembershipFormModel,
+        orgOptions: orgOptionsFor()
+      },
+      contentRenderer: () => h(MembershipForm, { ref: formRef }),
+      beforeSure: (done, { options, closeLoading }) => {
+        const cur = options.props.formInline as MembershipFormModel;
+        formRef.value.getRef().validate(async (valid: boolean) => {
+          if (!valid) {
+            closeLoading();
+            return;
+          }
+          try {
+            if (isEdit && row) {
+              await updateMemberMembership(externalMemberId, row.id, {
+                membershipType: cur.membershipType,
+                ...(cur.startedAt ? { startedAt: cur.startedAt } : {}),
+                ...(cur.endedAt ? { endedAt: cur.endedAt } : {}),
+                ...(cur.reason ? { reason: cur.reason } : {})
+              });
+              message("修改成功", { type: "success" });
+            } else {
+              await createMemberMembership(externalMemberId, {
+                organizationId: cur.organizationId,
+                membershipType: cur.membershipType,
+                ...(cur.reason ? { reason: cur.reason } : {})
+              });
+              message("新增成功", { type: "success" });
+            }
+            done();
+            onSearch();
+          } catch (error: any) {
+            message(membershipBizErrorMessage(error, "保存失败"), {
+              type: "error"
+            });
+            closeLoading();
+          }
+        });
+      }
+    });
+  }
+
+  /** 结束归属（status→ENDED，留痕不物删；无需表单，确认即执行） */
+  function handleEnd(row: MembershipItem) {
+    if (!externalMemberId) return;
+    ElMessageBox.confirm(
+      `确定结束在「${orgLabel(row.organizationId)}」的${typeLabel(row.membershipType)}归属吗？`,
+      "结束归属",
+      {
+        confirmButtonText: "确定结束",
+        cancelButtonText: "取消",
+        type: "warning"
+      }
+    )
+      .then(async () => {
+        try {
+          await endMemberMembership(externalMemberId, row.id);
+          message("已结束", { type: "success" });
+          onSearch();
+        } catch (error: any) {
+          message(membershipBizErrorMessage(error, "结束失败"), {
+            type: "error"
+          });
+        }
+      })
+      .catch(() => {});
+  }
+
+  /** 归属迁移（单事务：结束源+目标新建同类型归属；只需选目标组织+填原因） */
+  async function openTransferDialog(row: MembershipItem) {
+    if (!externalMemberId) return;
+    await ensureOrgOptions();
+    addDialog({
+      title: "迁移组织归属",
+      width: "42%",
+      draggable: true,
+      fullscreen: deviceDetection(),
+      closeOnClickModal: false,
+      sureBtnLoading: true,
+      props: {
+        formInline: {
+          fromOrganizationLabel: orgLabel(row.organizationId),
+          membershipTypeLabel: typeLabel(row.membershipType),
+          toOrganizationId: "",
+          reason: ""
+        } as TransferFormModel,
+        orgOptions: orgOptionsFor(row.organizationId)
+      },
+      contentRenderer: () => h(TransferForm, { ref: transferFormRef }),
+      beforeSure: (done, { options, closeLoading }) => {
+        const cur = options.props.formInline as TransferFormModel;
+        transferFormRef.value.getRef().validate(async (valid: boolean) => {
+          if (!valid) {
+            closeLoading();
+            return;
+          }
+          try {
+            await transferMembership({
+              memberId: externalMemberId,
+              fromOrganizationId: row.organizationId,
+              toOrganizationId: cur.toOrganizationId,
+              membershipType: row.membershipType,
+              ...(cur.reason ? { reason: cur.reason } : {})
+            });
+            message("迁移成功", { type: "success" });
+            done();
+            onSearch();
+          } catch (error: any) {
+            message(membershipBizErrorMessage(error, "迁移失败"), {
+              type: "error"
+            });
+            closeLoading();
+          }
+        });
+      }
+    });
+  }
+
   return {
     canRead,
+    canSet,
+    canEnd,
+    canTransfer,
     loading,
     columns,
     dataList,
     orgLabel,
     typeLabel,
     statusMeta,
-    onSearch
+    onSearch,
+    openDialog,
+    handleEnd,
+    openTransferDialog
   };
 }

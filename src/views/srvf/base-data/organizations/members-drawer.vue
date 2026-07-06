@@ -1,25 +1,34 @@
 <script setup lang="ts">
 import dayjs from "dayjs";
-import { ref, reactive, watch } from "vue";
+import { h, ref, reactive, watch } from "vue";
 import { useRouter } from "vue-router";
 import type { PaginationProps } from "@pureadmin/table";
 import { message } from "@/utils/message";
+import { hasPerms } from "@/utils/auth";
+import { deviceDetection } from "@pureadmin/utils";
+import { addDialog } from "@/components/ReDialog";
+import AddMemberForm, { type AddMemberFormModel } from "./add-member-form.vue";
 import {
   getOrganizationMemberships,
+  createMemberMembership,
+  membershipBizErrorMessage,
   MEMBERSHIP_TYPE_LABEL,
   MEMBERSHIP_STATUS_LABEL,
   MEMBERSHIP_STATUS_TAG,
   type MembershipItem
 } from "@/api/srvf-membership";
+import { getOrgScopedMemberOptions } from "@/api/srvf-organization";
 
 defineOptions({
   name: "SrvfOrgMembersDrawer"
 });
 
 /**
- * 组织成员面板（组织轴 memberships,只读）。
+ * 组织成员面板（组织轴 memberships）。
  * ⚠️ handoff 踩坑 #9：该端点 status 缺省三态混返（含 ENDED/SUSPENDED 全历史），
  * 默认视图必须显式传 status=ACTIVE；「含历史」开关关掉 ACTIVE 过滤。
+ * 「添加成员」是组织轴入口，复用队员360「组织归属」tab 同一条
+ * `createMemberMembership`，只是选人来源换成本组织的 members/options 投影。
  */
 const props = defineProps<{
   orgId: string;
@@ -28,6 +37,9 @@ const props = defineProps<{
 
 const visible = defineModel<boolean>({ required: true });
 const router = useRouter();
+const canAdd = hasPerms("membership.set.record");
+const addFormRef = ref();
+const memberOptionsCache = ref<{ label: string; value: string }[]>([]);
 
 const dataList = ref<MembershipItem[]>([]);
 const loading = ref(false);
@@ -98,6 +110,65 @@ function goMember(row: MembershipItem) {
   router.push(`/srvf/members-domain/members/${row.memberId}`);
 }
 
+/** 添加成员（组织轴入口）：懒加载本组织队员下拉，弹窗提交后刷新列表 */
+async function openAddMemberDialog() {
+  if (!props.orgId) return;
+  try {
+    const { code, data } = await getOrgScopedMemberOptions(props.orgId, {
+      limit: 100
+    });
+    if (code === 0) {
+      memberOptionsCache.value = data.items.map(m => ({
+        label: `${m.label}（${m.memberNo}）`,
+        value: m.id
+      }));
+    }
+  } catch {
+    // 拉取失败时下拉为空，不阻塞弹窗打开
+  }
+  addDialog({
+    title: `添加成员 — ${props.orgName}`,
+    width: "40%",
+    draggable: true,
+    fullscreen: deviceDetection(),
+    closeOnClickModal: false,
+    sureBtnLoading: true,
+    props: {
+      formInline: {
+        memberId: "",
+        membershipType: "PRIMARY",
+        reason: ""
+      } as AddMemberFormModel,
+      memberOptions: memberOptionsCache.value
+    },
+    contentRenderer: () => h(AddMemberForm, { ref: addFormRef }),
+    beforeSure: (done, { options, closeLoading }) => {
+      const cur = options.props.formInline as AddMemberFormModel;
+      addFormRef.value.getRef().validate(async (valid: boolean) => {
+        if (!valid) {
+          closeLoading();
+          return;
+        }
+        try {
+          await createMemberMembership(cur.memberId, {
+            organizationId: props.orgId,
+            membershipType: cur.membershipType,
+            ...(cur.reason ? { reason: cur.reason } : {})
+          });
+          message("添加成功", { type: "success" });
+          done();
+          onSearch();
+        } catch (error: any) {
+          message(membershipBizErrorMessage(error, "添加失败"), {
+            type: "error"
+          });
+          closeLoading();
+        }
+      });
+    }
+  });
+}
+
 /** 打开时按当前节点重置并加载 */
 watch(visible, v => {
   if (v && props.orgId) {
@@ -115,6 +186,14 @@ watch(visible, v => {
     destroy-on-close
   >
     <div class="drawer-toolbar">
+      <el-button
+        v-if="canAdd"
+        type="primary"
+        size="small"
+        @click="openAddMemberDialog"
+      >
+        添加成员
+      </el-button>
       <el-input
         v-model="keyword"
         class="w-48!"

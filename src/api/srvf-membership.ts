@@ -160,3 +160,93 @@ export const getOrganizationMemberships = (
     `/api/admin/v1/organizations/${orgId}/memberships`,
     { params }
   );
+
+/* ----------------------------- 归属 写操作（新增/编辑/结束/迁移） ----------------------------- */
+
+/** 新增队员归属入参（后端 `CreateMembershipDto`；PRIMARY 至多一条 active，其余可并存多条）。 */
+export type CreateMembershipBody = {
+  organizationId: string;
+  membershipType: string;
+  reason?: string;
+};
+/** 编辑归属入参（后端 `UpdateMembershipDto`；不改 status，仅类型/任期/原因）。 */
+export type UpdateMembershipBody = {
+  membershipType?: string;
+  startedAt?: string;
+  endedAt?: string;
+  reason?: string;
+};
+export type MembershipMutationResult = Envelope<MembershipItem>;
+
+/**
+ * 新增队员归属 `POST /api/admin/v1/members/{memberId}/memberships`
+ * （rbac: `membership.set.record`）。
+ */
+export const createMemberMembership = (
+  memberId: string,
+  body: CreateMembershipBody
+) =>
+  http.request<MembershipMutationResult>(
+    "post",
+    `/api/admin/v1/members/${memberId}/memberships`,
+    { data: body }
+  );
+
+/**
+ * 编辑归属（类型/任期/原因，不改 status）
+ * `PATCH /api/admin/v1/members/{memberId}/memberships/{id}`（rbac: `membership.set.record`）。
+ */
+export const updateMemberMembership = (
+  memberId: string,
+  id: string,
+  body: UpdateMembershipBody
+) =>
+  http.request<MembershipMutationResult>(
+    "patch",
+    `/api/admin/v1/members/${memberId}/memberships/${id}`,
+    { data: body }
+  );
+
+/**
+ * 结束队员归属（status→ENDED + endedAt，留痕不物删）
+ * `DELETE /api/admin/v1/members/{memberId}/memberships/{id}`（rbac: `membership.end.record`）。
+ */
+export const endMemberMembership = (memberId: string, id: string) =>
+  http.request<MembershipMutationResult>(
+    "delete",
+    `/api/admin/v1/members/${memberId}/memberships/${id}`
+  );
+
+/**
+ * 归属迁移入参（后端 `TransferMembershipDto`）。单事务：结束源组织对应类型的
+ * ACTIVE 归属 + 在目标组织建同类型新归属；源=目标后端拒 400；目标撞唯一 17004。
+ */
+export type TransferMembershipBody = {
+  memberId: string;
+  fromOrganizationId: string;
+  toOrganizationId: string;
+  membershipType: string;
+  reason?: string;
+};
+
+/**
+ * 归属迁移 `POST /api/admin/v1/memberships/transfer`（rbac: `membership.transfer.record`）。
+ */
+export const transferMembership = (body: TransferMembershipBody) =>
+  http.request<Envelope<null>>("post", "/api/admin/v1/memberships/transfer", {
+    data: body
+  });
+
+/** 归属相关业务码专用文案；其余码回落后端 message，再回落调用方兜底文案。 */
+export function membershipBizErrorMessage(
+  error: unknown,
+  fallback: string
+): string {
+  const data = (
+    error as { response?: { data?: { code?: unknown; message?: string } } }
+  )?.response?.data;
+  const code = Number(data?.code);
+  if (code === 17004)
+    return "目标组织已存在同类型的在册归属，无法迁移（17004）";
+  return data?.message ?? fallback;
+}

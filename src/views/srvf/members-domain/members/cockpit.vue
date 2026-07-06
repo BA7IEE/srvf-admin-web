@@ -132,16 +132,22 @@ const {
   handleClear: deptHandleClear
 } = useMemberDepartment(memberId);
 
-/* --------------- Tab：组织归属（memberships 多归属只读;旧「部门」tab 为 deprecated 单值端点,替换留待写切片） --------------- */
+/* --------------- Tab：组织归属（memberships 多归属，含新增/编辑/结束/迁移写操作；旧「部门」tab 为 deprecated 单值端点） --------------- */
 const {
   canRead: msCanRead,
+  canSet: msCanSet,
+  canEnd: msCanEnd,
+  canTransfer: msCanTransfer,
   loading: msLoading,
   columns: msColumns,
   dataList: msDataList,
   orgLabel: msOrgLabel,
   typeLabel: msTypeLabel,
   statusMeta: msStatusMeta,
-  onSearch: msOnSearch
+  onSearch: msOnSearch,
+  openDialog: msOpenDialog,
+  handleEnd: msHandleEnd,
+  openTransferDialog: msOpenTransferDialog
 } = useMemberMemberships(memberId);
 
 /* --------------- Tab：任职（队员轴,双轴子资源只读端;任命/撤销在组织架构页「在任职务」面板） --------------- */
@@ -515,7 +521,7 @@ onMounted(() => {
         />
       </el-tab-pane>
 
-      <!-- Tab：组织归属（memberships 多归属,只读;组织名经 resolveLabels 解析） -->
+      <!-- Tab：组织归属（memberships 多归属;组织名经 resolveLabels 解析；新增/编辑/结束/迁移写操作） -->
       <el-tab-pane label="组织归属" name="memberships">
         <template v-if="msCanRead">
           <PureTableBar
@@ -523,6 +529,16 @@ onMounted(() => {
             :columns="msColumns"
             @refresh="msOnSearch"
           >
+            <template #buttons>
+              <el-button
+                v-if="msCanSet"
+                type="primary"
+                :icon="useRenderIcon(AddFill)"
+                @click="msOpenDialog('新增')"
+              >
+                新增归属
+              </el-button>
+            </template>
             <template v-slot="{ size, dynamicColumns }">
               <pure-table
                 row-key="id"
@@ -555,6 +571,39 @@ onMounted(() => {
                   <el-tag :type="msStatusMeta(row.status).type">
                     {{ msStatusMeta(row.status).text }}
                   </el-tag>
+                </template>
+                <template #operation="{ row }">
+                  <el-button
+                    v-if="msCanSet"
+                    class="reset-margin"
+                    link
+                    type="primary"
+                    :size="size"
+                    :icon="useRenderIcon(EditPen)"
+                    @click="msOpenDialog('编辑', row)"
+                  >
+                    编辑
+                  </el-button>
+                  <el-button
+                    v-if="msCanTransfer && row.status === 'ACTIVE'"
+                    class="reset-margin"
+                    link
+                    type="warning"
+                    :size="size"
+                    @click="msOpenTransferDialog(row)"
+                  >
+                    迁移
+                  </el-button>
+                  <el-button
+                    v-if="msCanEnd && row.status === 'ACTIVE'"
+                    class="reset-margin"
+                    link
+                    type="danger"
+                    :size="size"
+                    @click="msHandleEnd(row)"
+                  >
+                    结束
+                  </el-button>
                 </template>
               </pure-table>
             </template>
