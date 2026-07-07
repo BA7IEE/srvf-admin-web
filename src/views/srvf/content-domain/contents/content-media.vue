@@ -160,7 +160,6 @@ function onDrawerVisible(v: boolean) {
               <el-button
                 v-if="row.kind === 'image'"
                 link
-                type="primary"
                 size="small"
                 @click="onSetCover(row)"
               >

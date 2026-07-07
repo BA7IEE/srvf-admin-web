@@ -123,7 +123,6 @@ onMounted(() => {
               v-if="canMembers"
               class="reset-margin"
               link
-              type="primary"
               :size="size"
               @click="openMembers(row)"
             >
@@ -133,7 +132,6 @@ onMounted(() => {
               v-if="canUpdate"
               class="reset-margin"
               link
-              type="primary"
               :size="size"
               :icon="useRenderIcon(EditPen)"
               @click="openEdit(row)"
@@ -144,7 +142,6 @@ onMounted(() => {
               <el-button
                 class="ml-3! mt-0.5!"
                 link
-                type="primary"
                 :size="size"
                 :icon="useRenderIcon(More)"
               />
@@ -154,7 +151,6 @@ onMounted(() => {
                     <el-button
                       class="reset-margin!"
                       link
-                      type="primary"
                       :size="size"
                       @click="openAssignments(row)"
                     >
@@ -165,7 +161,6 @@ onMounted(() => {
                     <el-button
                       class="reset-margin!"
                       link
-                      type="primary"
                       :size="size"
                       @click="openSupervisors(row)"
                     >
@@ -176,7 +171,6 @@ onMounted(() => {
                     <el-button
                       class="reset-margin!"
                       link
-                      type="primary"
                       :size="size"
                       :icon="useRenderIcon(AddFill)"
                       @click="openCreateChild(row)"

@@ -56,7 +56,6 @@ onMounted(() => {
                 v-if="canUpdate"
                 class="reset-margin"
                 link
-                type="primary"
                 :size="size"
                 @click="openDialog(row)"
               >

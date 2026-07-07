@@ -271,9 +271,7 @@ watch(visible, v => {
         </el-tag>
       </template>
       <template #operation="{ row }">
-        <el-button link type="primary" @click="goMember(row)">
-          队员档案
-        </el-button>
+        <el-button link @click="goMember(row)"> 队员档案 </el-button>
       </template>
     </pure-table>
   </el-drawer>

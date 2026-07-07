@@ -65,7 +65,6 @@ onMounted(() => {
                 v-if="row.memberId"
                 class="reset-margin"
                 link
-                type="primary"
                 :size="size"
                 @click="goMember(row)"
               >

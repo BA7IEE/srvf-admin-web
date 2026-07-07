@@ -65,7 +65,6 @@ onMounted(() => {
             <el-button
               class="reset-margin"
               link
-              type="primary"
               :size="size"
               @click="openDetail(row)"
             >

@@ -174,7 +174,6 @@ onMounted(() => {
               v-if="canUpdate"
               class="reset-margin"
               link
-              type="primary"
               :size="size"
               :icon="useRenderIcon(EditPen)"
               @click="openEditDialog(row)"

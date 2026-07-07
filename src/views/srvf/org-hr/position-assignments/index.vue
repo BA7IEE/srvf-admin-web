@@ -142,7 +142,6 @@ onMounted(() => {
             <el-button
               class="reset-margin"
               link
-              type="primary"
               :size="size"
               @click="goMember(row)"
             >
@@ -152,7 +151,6 @@ onMounted(() => {
               v-if="canHistory"
               class="reset-margin"
               link
-              type="primary"
               :size="size"
               @click="openHistory(row)"
             >

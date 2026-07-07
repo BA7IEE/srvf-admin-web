@@ -413,7 +413,6 @@ onMounted(() => {
                   <el-button
                     class="reset-margin"
                     link
-                    type="primary"
                     :size="size"
                     @click="attOpenReviewDetail(row)"
                   >
@@ -423,7 +422,6 @@ onMounted(() => {
                     v-if="attCanUpdate && row.statusCode === 'pending'"
                     class="reset-margin"
                     link
-                    type="primary"
                     :size="size"
                     @click="attOpenEditDialog(row)"
                   >

@@ -257,7 +257,6 @@ onMounted(() => {
                   <el-button
                     class="reset-margin"
                     link
-                    type="primary"
                     :size="size"
                     @click="appOpenDetail(row)"
                   >
@@ -267,7 +266,6 @@ onMounted(() => {
                     v-if="appCanDoGate(row)"
                     class="reset-margin"
                     link
-                    type="primary"
                     :size="size"
                     @click="appOpenGateDialog(row)"
                   >
@@ -307,7 +305,6 @@ onMounted(() => {
                     v-if="row.statusCode === 'joined'"
                     class="reset-margin"
                     link
-                    type="primary"
                     :size="size"
                     @click="appGoMember(row)"
                   >

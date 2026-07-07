@@ -114,7 +114,6 @@ const activeTab = ref(
                 <el-button
                   v-if="canUpdateType"
                   link
-                  type="primary"
                   :size="size"
                   @click="openTypeDialog('编辑', row)"
                 >
@@ -238,7 +237,6 @@ const activeTab = ref(
                 <el-button
                   v-if="canUpdateSize"
                   link
-                  type="primary"
                   :size="size"
                   @click="openSizeDialog('编辑', row)"
                 >

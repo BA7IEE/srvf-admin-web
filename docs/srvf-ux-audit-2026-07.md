@@ -105,9 +105,11 @@
 - [x] 招新/入队页头 funnel 流程说明 el-alert（两道门关系）
 - 组织与人事六表入口归并：评估后**不做**——每张总表是独立跨轴横扫视图（会籍/任职/督导各有 conflicts/history/preview 深操作），归并成 tab 会牺牲直达性；轴模型下平铺是合理的
 
-### D 档 · 视觉层（对应蓝图 Phase 3）
+### D 档 · 视觉层（2026-07-07 落地「品牌红 ≠ 操作红」分离）
 
-- [ ] 引入设计稿 `srvf-tokens.css`，重点解决「品牌红 ≠ 操作红」分离
+- [x] 品牌红 ≠ 操作红：59 处操作列 `el-button link type="primary"`（渲染为品牌红文字链）去掉 type → 中性深灰文字链（#606266，hover 转主色）；品牌红就此只留给**实心 CTA**（新建/保存/发布，51 处 `solid type="primary"` 不动）+ **危险操作**（`link type="danger"` 40 处不动）；状态切换的 `type="warning"/"success"/:type` 语义色不动。脚本按 `<el-button>` 元素粒度只删同标签内 `link` + 字面 `type="primary"`，绝不碰 `:type` 动态绑定
+- [ ] 引入设计稿 `srvf-tokens.css` 全套品牌梯度 + 工作台按设计稿重排（KPI 卡/堆叠柱/日历）——**人工 Phase 3**：需评估设计稿 ZIP、可能引入 cropperjs/qrcode 等新依赖（§13.2.1 人工 PR 决策），不在自驱范围
+- 注：`src/style/**` 是 §13.1 ❌ 禁改的主题核心，故未改全局 `--el-color-primary`（那会波及 logo/激活态/实心 CTA 的品牌红）；分离改在 ✅ 视图文件的按钮 type 层完成
 
 ---
 
