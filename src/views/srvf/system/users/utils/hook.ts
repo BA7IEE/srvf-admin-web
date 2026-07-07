@@ -1,6 +1,7 @@
 import { bizErrorMessage } from "@/api/srvf-error";
 import dayjs from "dayjs";
 import { h, ref, reactive } from "vue";
+import { useRouter } from "vue-router";
 import type { PaginationProps } from "@pureadmin/table";
 import { ElMessageBox } from "element-plus";
 import { deviceDetection } from "@pureadmin/utils";
@@ -19,7 +20,9 @@ import {
   clearUserPhone,
   clearUserWechat,
   deleteUserAccount,
-  type UserAccountItem
+  type UserAccountItem,
+  type AccountRole,
+  type AccountStatus
 } from "@/api/srvf-user";
 
 /**
@@ -37,9 +40,17 @@ const ROLE_META: Record<
 };
 
 export function useUserAccounts() {
+  const router = useRouter();
   const dataList = ref<UserAccountItem[]>([]);
   const loading = ref(false);
   const formRef = ref();
+
+  /** 列表筛选（均为契约既有参数：q 模糊 username+nickname+email+phone；role/status 精确枚举） */
+  const searchForm = reactive({
+    q: "",
+    role: "" as "" | AccountRole,
+    status: "" as "" | AccountStatus
+  });
   /** 读权限（后端真实 RBAC 码）；无权限不请求、不渲染表格 */
   const canRead = hasPerms("user.read.account");
   const canCreate = hasPerms("user.create.account");
@@ -124,7 +135,10 @@ export function useUserAccounts() {
     try {
       const { code, data } = await getUserAccounts({
         page: pagination.currentPage,
-        pageSize: pagination.pageSize
+        pageSize: pagination.pageSize,
+        ...(searchForm.q.trim() ? { q: searchForm.q.trim() } : {}),
+        ...(searchForm.role ? { role: searchForm.role } : {}),
+        ...(searchForm.status ? { status: searchForm.status } : {})
       });
       if (code === 0) {
         dataList.value = data.items;
@@ -139,6 +153,12 @@ export function useUserAccounts() {
     } finally {
       loading.value = false;
     }
+  }
+
+  /** 筛选条件变化：回到第一页重查 */
+  function onFilterChange() {
+    pagination.currentPage = 1;
+    onSearch();
   }
 
   function handleSizeChange(val: number) {
@@ -363,6 +383,24 @@ export function useUserAccounts() {
     rbacRolesDrawerVisible.value = true;
   }
 
+  /**
+   * 查看该用户的全部授权（含 scoped 绑定）：跳「角色绑定」页并按 principalId 精确预筛。
+   * 权限管理员「他为什么能/不能做 X」的下钻入口——这里看全部绑定，再在该页用「权限诊断」查具体判定。
+   * principalId 是契约支持的精确过滤参数；principalLabel 仅供目标页展示"正在查看谁"。
+   */
+  function goUserAuthz(row: UserAccountItem) {
+    router.push({
+      path: "/srvf/org-hr/role-bindings",
+      query: {
+        principalType: "USER",
+        principalId: row.id,
+        principalLabel: row.nickname
+          ? `${row.nickname}（${row.username}）`
+          : row.username
+      }
+    });
+  }
+
   return {
     canRead,
     canCreate,
@@ -378,10 +416,13 @@ export function useUserAccounts() {
     columns,
     dataList,
     pagination,
+    searchForm,
     rbacRolesDrawerVisible,
     activeUser,
     roleMeta,
     onSearch,
+    onFilterChange,
+    goUserAuthz,
     openDialog,
     handleResetPassword,
     handleToggleStatus,

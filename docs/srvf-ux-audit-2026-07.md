@@ -87,7 +87,8 @@
 - [x] A3 `error.ts` 恢复 `showLink:false`，「异常页面」退出生产侧栏（一行，harness ask 人工放行）
 - [x] A4 工作台 KPI 卡副标题与页头注释改人话
 - [x] A5 权限空态统一为共享组件 `src/views/srvf/components/perm-empty.vue`（人话文案 + 联系管理员指引 + 权限码弱化为小字备查），47 处全量替换
-- [x] A6 队员列表补搜索（`q` 模糊 + 等级 + 状态；参数逐条对 live docs-json 核验）；用户管理**不加**（后端 `/system/v1/users` 零查询参数，先登 gap-ledger 再说）
+- [x] A6 队员列表补搜索（`q` 模糊 + 等级 + 状态；参数逐条对 live docs-json 核验）
+- [x] **A6 勘误（2026-07-07）**：A6 曾断言"用户管理不加搜索——后端 `/system/v1/users` 零查询参数"，**该判断错误**。真相：① 契约里根本没有 `GET /system/v1/users` 列表端点；② 前端用户列表本就调 `GET /api/admin/v1/users`，该端点契约支持 `q`/`role`[SUPER_ADMIN,ADMIN,USER]/`status`[ACTIVE,DISABLED]/`memberId` 全套过滤——是**前端 `UserAccountListQuery` 类型欠声明、hook 没传**。已补：用户管理页搜索（q + 系统角色 + 状态，参数对 live v0.37.0 逐条核验）；并加「查看授权」行内下钻——跳角色绑定页按 `principalId` 精确预筛 + 顶部锁定提示条，权限管理员「他为什么能/不能做 X」闭环（#67）
 
 ### B 档 · 一致性专项（2026-07-07 主体落地）
 

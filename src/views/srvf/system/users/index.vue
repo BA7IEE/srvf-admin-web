@@ -28,10 +28,13 @@ const {
   columns,
   dataList,
   pagination,
+  searchForm,
   rbacRolesDrawerVisible,
   activeUser,
   roleMeta,
   onSearch,
+  onFilterChange,
+  goUserAuthz,
   openDialog,
   handleResetPassword,
   handleToggleStatus,
@@ -67,6 +70,35 @@ onMounted(() => {
       @refresh="onSearch"
     >
       <template #buttons>
+        <el-input
+          v-model="searchForm.q"
+          class="w-48! mr-2!"
+          placeholder="搜用户名 / 昵称 / 邮箱（回车）"
+          clearable
+          @keyup.enter="onFilterChange"
+          @clear="onFilterChange"
+        />
+        <el-select
+          v-model="searchForm.role"
+          class="w-32! mr-2!"
+          placeholder="系统角色"
+          clearable
+          @change="onFilterChange"
+        >
+          <el-option label="超级管理员" value="SUPER_ADMIN" />
+          <el-option label="管理员" value="ADMIN" />
+          <el-option label="普通用户" value="USER" />
+        </el-select>
+        <el-select
+          v-model="searchForm.status"
+          class="w-28! mr-2!"
+          placeholder="状态"
+          clearable
+          @change="onFilterChange"
+        >
+          <el-option label="正常" value="ACTIVE" />
+          <el-option label="禁用" value="DISABLED" />
+        </el-select>
         <el-button
           v-if="canCreate"
           type="primary"
@@ -153,6 +185,16 @@ onMounted(() => {
                       @click="openRbacRolesDrawer(row)"
                     >
                       业务角色绑定
+                    </el-button>
+                  </el-dropdown-item>
+                  <el-dropdown-item v-if="canRbacRoleManage">
+                    <el-button
+                      class="reset-margin!"
+                      link
+                      :size="size"
+                      @click="goUserAuthz(row)"
+                    >
+                      查看授权
                     </el-button>
                   </el-dropdown-item>
                   <el-dropdown-item v-if="canResetPassword" divided>

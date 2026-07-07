@@ -25,10 +25,21 @@ export type UserAccountItem = {
   updatedAt: string;
 };
 
-export type UserAccountListQuery = { page?: number; pageSize?: number };
+export type UserAccountListQuery = {
+  page?: number;
+  pageSize?: number;
+  /** 模糊搜索（契约：命中 username+nickname+email+phone） */
+  q?: string;
+  /** 系统角色精确过滤（契约 enum SUPER_ADMIN/ADMIN/USER） */
+  role?: AccountRole;
+  /** 账号状态精确过滤（契约 enum ACTIVE/DISABLED） */
+  status?: AccountStatus;
+  /** 按绑定的队员 id 精确过滤（契约支持；本页暂不用，留作类型完整） */
+  memberId?: string;
+};
 export type UserAccountListResult = Envelope<PageResult<UserAccountItem>>;
 
-/** 用户账号分页列表 `GET /api/admin/v1/users`（rbac: `user.read.account`） */
+/** 用户账号分页列表 `GET /api/admin/v1/users`（rbac: `user.read.account`；支持 q/role/status/memberId 过滤） */
 export const getUserAccounts = (params?: UserAccountListQuery) =>
   http.request<UserAccountListResult>("get", "/api/admin/v1/users", { params });
 
