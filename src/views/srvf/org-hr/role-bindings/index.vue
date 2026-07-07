@@ -34,6 +34,9 @@ const {
   statusOptions,
   includeExpired,
   keyword,
+  principalLabel,
+  principalLocked,
+  clearPrincipalFilter,
   columns,
   dataList,
   pagination,
@@ -64,6 +67,20 @@ onMounted(() => {
       class="mb-2"
       title="角色绑定 = 把角色授予某个主体（用户 / 队员 / 任职）并限定生效范围；「系统管理 → 角色权限」定义的是角色本身有哪些权限，两者配合使用。"
     />
+    <el-alert
+      v-if="canRead && principalLocked"
+      type="warning"
+      :closable="false"
+      show-icon
+      class="mb-2"
+    >
+      <template #title>
+        <span>正在查看用户「{{ principalLabel }}」的授权绑定；</span>
+        <el-button link type="primary" @click="clearPrincipalFilter">
+          清除筛选，查看全部
+        </el-button>
+      </template>
+    </el-alert>
     <PureTableBar
       v-if="canRead"
       title="角色绑定"

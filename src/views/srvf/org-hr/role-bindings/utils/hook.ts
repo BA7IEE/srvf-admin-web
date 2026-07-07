@@ -1,6 +1,7 @@
 import { bizErrorMessage } from "@/api/srvf-error";
 import dayjs from "dayjs";
-import { h, ref, reactive } from "vue";
+import { h, ref, reactive, watch } from "vue";
+import { useRoute } from "vue-router";
 import type { PaginationProps } from "@pureadmin/table";
 import { ElMessageBox } from "element-plus";
 import { deviceDetection } from "@pureadmin/utils";
@@ -45,6 +46,7 @@ type PositionAssignmentOption = { id: string; label: string };
  * 与「角色权限」页(system/rbac，角色→权限码静态定义)是两个不同心智，见蓝图 §7）。
  */
 export function useRoleBindings() {
+  const route = useRoute();
   const canRead = hasPerms("role-binding.read.record");
   const canCreate = hasPerms("role-binding.create.record");
   const canUpdate = hasPerms("role-binding.update.record");
@@ -57,6 +59,41 @@ export function useRoleBindings() {
   const statusFilter = ref<"" | BindingStatus>("");
   const includeExpired = ref(false);
   const keyword = ref("");
+
+  /**
+   * 按某主体精确预筛（自「用户管理 → 查看授权」等下钻入口经 route.query 传入）。
+   * principalId 精确匹配、principalLabel 仅供顶部提示条展示"正在查看谁的授权"。
+   * 从下拉筛选区独立出来——它是"从别处带上下文进来"的锚，不是常规过滤项。
+   */
+  const principalIdFilter = ref("");
+  const principalLabel = ref("");
+  /** 是否处于按主体锁定态（顶部提示条 + 清除入口据此显隐） */
+  const principalLocked = ref(false);
+
+  /** 从 route.query 吸收下钻锚（首挂载 + keep-alive 缓存导航都覆盖） */
+  function seedFromQuery() {
+    const pid = route.query.principalId;
+    const ptype = route.query.principalType;
+    const plabel = route.query.principalLabel;
+    if (typeof pid === "string" && pid) {
+      principalIdFilter.value = pid;
+      principalLabel.value = typeof plabel === "string" ? plabel : pid;
+      principalLocked.value = true;
+      if (typeof ptype === "string") {
+        principalTypeFilter.value = ptype as PrincipalType;
+      }
+    }
+  }
+  seedFromQuery();
+  // keep-alive 缓存下再次带 query 进来不会重跑 setup → watch principalId 变化补搜
+  watch(
+    () => route.query.principalId,
+    () => {
+      seedFromQuery();
+      pagination.currentPage = 1;
+      onSearch();
+    }
+  );
   const formRef = ref();
   const pagination = reactive<PaginationProps>({
     total: 0,
@@ -210,6 +247,9 @@ export function useRoleBindings() {
         ...(principalTypeFilter.value
           ? { principalType: principalTypeFilter.value }
           : {}),
+        ...(principalIdFilter.value
+          ? { principalId: principalIdFilter.value }
+          : {}),
         ...(scopeTypeFilter.value ? { scopeType: scopeTypeFilter.value } : {}),
         ...(statusFilter.value ? { status: statusFilter.value } : {}),
         ...(includeExpired.value ? { includeExpired: true } : {}),
@@ -234,6 +274,16 @@ export function useRoleBindings() {
     pagination.currentPage = 1;
     onSearch();
   }
+
+  /** 解除按主体锁定，回到全量角色绑定列表 */
+  function clearPrincipalFilter() {
+    principalIdFilter.value = "";
+    principalLabel.value = "";
+    principalLocked.value = false;
+    principalTypeFilter.value = "";
+    onFilterChange();
+  }
+
   function handleSizeChange(val: number) {
     pagination.pageSize = val;
     onSearch();
@@ -425,6 +475,9 @@ export function useRoleBindings() {
     statusOptions,
     includeExpired,
     keyword,
+    principalLabel,
+    principalLocked,
+    clearPrincipalFilter,
     columns,
     dataList,
     pagination,
