@@ -55,7 +55,16 @@ type SummaryCard = {
   title: string;
   value: number;
   desc: string;
+  /**
+   * 语义强调色（引用已定义的 SRVF 品牌 tokens，见 src/style/srvf-tokens.scss）。
+   * 色即信息：告警红=最紧急（待终审）、待命琥珀=待办（待审报名/一级审核）、
+   * 进行绿=活跃（进行中活动）；纯信息量的静态卡用盾蓝。
+   */
+  accent: string;
 };
+
+/** 盾蓝——纯信息量卡片（在册队员 / 本月活动）的品牌强调色 */
+const INFO_ACCENT = "var(--srvf-navy)";
 
 const summaryCards = computed<SummaryCard[]>(() => {
   const current = summary.value;
@@ -68,7 +77,8 @@ const summaryCards = computed<SummaryCard[]>(() => {
       key: "registrations.pending",
       title: "待审报名",
       value: current.registrations.pending,
-      desc: "等待审核的活动报名，点击处理"
+      desc: "等待审核的活动报名，点击处理",
+      accent: "var(--srvf-status-standby)"
     });
   }
 
@@ -77,13 +87,15 @@ const summaryCards = computed<SummaryCard[]>(() => {
       key: "attendanceSheets.pending",
       title: "考勤待一级审核",
       value: current.attendanceSheets.pending,
-      desc: "等待一级审核的考勤单，点击处理"
+      desc: "等待一级审核的考勤单，点击处理",
+      accent: "var(--srvf-status-standby)"
     });
     cards.push({
       key: "attendanceSheets.pendingFinalReview",
       title: "考勤待终审",
       value: current.attendanceSheets.pendingFinalReview,
-      desc: "等待终审的考勤单，点击处理"
+      desc: "等待终审的考勤单，点击处理",
+      accent: "var(--srvf-status-alert)"
     });
   }
 
@@ -92,7 +104,8 @@ const summaryCards = computed<SummaryCard[]>(() => {
       key: "activities.published",
       title: "进行中活动",
       value: current.activities.published,
-      desc: "已发布、进行中的活动，点击查看"
+      desc: "已发布、进行中的活动，点击查看",
+      accent: "var(--srvf-status-active)"
     });
   }
 
@@ -235,14 +248,18 @@ onMounted(() => {
         :closable="false"
       />
       <div v-if="summaryCards.length || canReadMembers" class="summary-grid">
-        <div v-if="canReadMembers" class="summary-item">
+        <div
+          v-if="canReadMembers"
+          class="summary-item"
+          :style="{ '--card-accent': INFO_ACCENT }"
+        >
           <div class="summary-item-title">在册队员</div>
           <div class="summary-item-value">
             {{ memberTotal ?? "—" }}
           </div>
           <div class="summary-item-desc">当前在队的队员总数</div>
         </div>
-        <div class="summary-item">
+        <div class="summary-item" :style="{ '--card-accent': INFO_ACCENT }">
           <div class="summary-item-title">本月活动</div>
           <div class="summary-item-value">
             {{ monthActivityTotal ?? "—" }}
@@ -253,6 +270,7 @@ onMounted(() => {
           v-for="card in summaryCards"
           :key="card.key"
           class="summary-item summary-item-clickable"
+          :style="{ '--card-accent': card.accent }"
           title="点击查看对应列表"
           @click="onCardClick(card.key)"
         >
@@ -562,6 +580,18 @@ onMounted(() => {
   font-size: 16px;
   font-weight: 600;
   color: var(--el-text-color-primary);
+
+  /* 品牌左强调条（救援红），把区块标题从通用后台拉回 SRVF 视觉 */
+  &::before {
+    display: inline-block;
+    width: 3px;
+    height: 15px;
+    margin-right: 8px;
+    vertical-align: -2px;
+    content: "";
+    background: var(--srvf-red, var(--el-color-primary));
+    border-radius: 2px;
+  }
 }
 
 .summary-subtitle {
@@ -577,9 +607,15 @@ onMounted(() => {
 }
 
 .summary-item {
-  padding: 16px;
+  /* --card-accent 由模板按语义注入（告警红/待命琥珀/进行绿/信息盾蓝）；
+     缺省兜底盾蓝，保证无 token 环境也不塌成透明。 */
+  --card-accent: var(--srvf-navy, var(--el-color-primary));
+
+  position: relative;
+  padding: 16px 16px 16px 20px;
   background: var(--el-fill-color-lighter);
   border: 1px solid var(--el-border-color-light);
+  border-left: 3px solid var(--card-accent);
   border-radius: 8px;
 }
 
@@ -605,7 +641,9 @@ onMounted(() => {
   font-size: 28px;
   font-weight: 700;
   line-height: 1;
-  color: var(--el-text-color-primary);
+
+  /* 数字取语义强调色——色即信息（红=紧急/琥珀=待办/绿=活跃/盾蓝=信息） */
+  color: var(--card-accent);
 }
 
 .summary-item-desc {
