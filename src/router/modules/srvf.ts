@@ -84,7 +84,8 @@ export default [
     ]
   },
   {
-    // 系统管理：账号/权限/审计 + 基础数据（字典/组织/贡献值规则,均为 system/v1 配置,折入本组）。
+    // 系统管理 = 账号与权限面：用户/角色权限/权限点/角色绑定 + 审计/短信日志/系统设置。
+    // 基础数据（字典/职务/贡献值/附件配置）已拆出为独立组（srvf-base-data.ts,C 档 IA 调整）。
     path: "/srvf/system",
     name: "SrvfSystem",
     component: Layout,
@@ -127,47 +128,15 @@ export default [
         }
       },
       {
-        // 字典管理（路径仍为 /srvf/base-data/*；视图文件未移动,仅在菜单树折入系统管理）
-        path: "/srvf/base-data/dictionaries",
-        name: "SrvfDictionaries",
-        component: () =>
-          import("@/views/srvf/base-data/dictionaries/index.vue"),
+        // 角色绑定（C 档自「组织与人事」迁入:后端 handoff §2.6 定位其为「系统管理配置面,
+        // 与角色与权限并列」,蓝图 IA v2 §5 同;权限四入口就此聚拢。路径与组件不变）
+        path: "/srvf/org-hr/role-bindings",
+        name: "SrvfRoleBindings",
+        component: () => import("@/views/srvf/org-hr/role-bindings/index.vue"),
         meta: {
-          icon: "ri/book-2-line",
-          title: "字典管理"
-        }
-      },
-      {
-        // 职务定义（P1-B 自 7.11.0 fork 移植;基础数据配置,与字典/贡献值并列——后端 handoff PR3 归位）
-        path: "/srvf/base-data/positions",
-        name: "SrvfPositions",
-        component: () => import("@/views/srvf/base-data/positions/index.vue"),
-        meta: {
-          icon: "ri/shield-star-line",
-          title: "职务定义",
-          auths: ["position.read.definition"]
-        }
-      },
-      {
-        path: "/srvf/base-data/position-rules",
-        name: "SrvfPositionRules",
-        component: () =>
-          import("@/views/srvf/base-data/position-rules/index.vue"),
-        meta: {
-          icon: "ri/list-settings-line",
-          title: "职务规则",
-          auths: ["position-rule.read.record"]
-        }
-      },
-      {
-        // 组织架构已迁入「组织与人事」组（srvf-org-hr.ts;路径与组件不变）
-        path: "/srvf/base-data/contribution-rules",
-        name: "SrvfContributionRules",
-        component: () =>
-          import("@/views/srvf/base-data/contribution-rules/index.vue"),
-        meta: {
-          icon: "ri/scales-3-line",
-          title: "贡献值规则"
+          icon: "ri/user-follow-line",
+          title: "角色绑定",
+          auths: ["role-binding.read.record"]
         }
       },
       {
@@ -187,16 +156,6 @@ export default [
         meta: {
           icon: "ri/message-2-line",
           title: "短信日志"
-        }
-      },
-      {
-        path: "/srvf/system/attachment-config",
-        name: "SrvfAttachmentConfig",
-        component: () =>
-          import("@/views/srvf/system/attachment-config/index.vue"),
-        meta: {
-          icon: "ri/folder-settings-line",
-          title: "附件配置"
         }
       },
       {
