@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { bizErrorMessage } from "@/api/srvf-error";
 import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
-import { ref, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import dayjs from "dayjs";
 import { message } from "@/utils/message";
@@ -12,7 +12,6 @@ import { getMember, type MemberItem } from "@/api/srvf-member";
 import { useCertificates } from "../certificates/utils/hook";
 import { useMemberInsurances } from "../insurances/utils/hook";
 import { useEmergencyContacts } from "../emergency-contacts/utils/hook";
-import { useMemberDepartment } from "../department/utils/hook";
 import { useMemberMemberships } from "../memberships/utils/hook";
 import { useMemberPositionAssignments } from "../position-assignments/utils/hook";
 import { useMemberSupervisionScope } from "../supervision-scope/utils/hook";
@@ -51,7 +50,6 @@ const activeTab = ref<
   | "certificates"
   | "insurances"
   | "emergency-contacts"
-  | "department"
   | "memberships"
   | "position-assignments"
   | "supervision-scope"
@@ -127,20 +125,8 @@ const {
   handleDelete: ecHandleDelete
 } = useEmergencyContacts(memberId);
 
-/* --------------- Tab：部门（单值子资源：读/设/清，memberId 由路由参数注入；无队员下拉） --------------- */
-const {
-  canRead: deptCanRead,
-  canSet: deptCanSet,
-  canClear: deptCanClear,
-  loading: deptLoading,
-  department: deptDepartment,
-  currentOrgName: deptCurrentOrgName,
-  onSearch: deptOnSearch,
-  handleSet: deptHandleSet,
-  handleClear: deptHandleClear
-} = useMemberDepartment(memberId);
-
-/* --------------- Tab：组织归属（memberships 多归属，含新增/编辑/结束/迁移写操作；旧「部门」tab 为 deprecated 单值端点） --------------- */
+/* --------------- Tab：组织归属（memberships 多归属，含新增/编辑/结束/迁移写操作;
+   旧「部门」tab（deprecated 单值端点 /department）已于 C 档摘除,handoff:「新面一律用 memberships」 --------------- */
 const {
   canRead: msCanRead,
   canSet: msCanSet,
@@ -229,13 +215,29 @@ const {
   onSearch: contribOnSearch
 } = useMemberContribution(memberId);
 
+/** 头部概览：主属部门 / 在任职务（复用组织归属、任职两 tab 已加载的数据与标签解析,零额外请求） */
+const primaryOrgName = computed(() => {
+  const hit = msDataList.value.find(
+    m => m.status === "ACTIVE" && m.membershipType === "PRIMARY"
+  );
+  return hit ? msOrgLabel(hit.organizationId) : "";
+});
+const activePositionsText = computed(() =>
+  paDataList.value
+    .filter(a => a.status === "ACTIVE")
+    .map(
+      a =>
+        `${paPositionLabel(a.positionId)} @ ${paOrgLabel(a.organizationId)}${a.isConcurrent ? "（兼）" : ""}`
+    )
+    .join("、")
+);
+
 onMounted(() => {
   fetchDetail();
   // onSearch 自带 canRead + memberId 守卫；memberId 已由路由注入，有读码即加载对应子资源
   certOnSearch();
   insOnSearch();
   ecOnSearch();
-  deptOnSearch();
   msOnSearch();
   paOnSearch();
   ssOnSearch();
@@ -280,6 +282,12 @@ onMounted(() => {
                 ? dayjs(detail.createdAt).format("YYYY-MM-DD HH:mm")
                 : "—"
             }}
+          </el-descriptions-item>
+          <el-descriptions-item label="主属部门">
+            {{ primaryOrgName || "—" }}
+          </el-descriptions-item>
+          <el-descriptions-item label="在任职务" :span="2">
+            {{ activePositionsText || "—" }}
           </el-descriptions-item>
         </el-descriptions>
       </template>
@@ -538,49 +546,6 @@ onMounted(() => {
           v-else
           action="查看紧急联系人"
           code="emergency-contact.read.record"
-        />
-      </el-tab-pane>
-
-      <!-- Tab：部门（单值子资源：读 + 设/清；组织名 + 选择器复用 srvf-organization） -->
-      <el-tab-pane label="部门" name="department">
-        <template v-if="deptCanRead">
-          <el-card v-loading="deptLoading" shadow="never">
-            <div class="dept-pane">
-              <div class="dept-pane__current">
-                <span class="dept-pane__label">当前归属部门：</span>
-                <el-tag v-if="deptDepartment" type="success">
-                  {{ deptCurrentOrgName }}
-                </el-tag>
-                <el-tag v-else type="info">未归属部门</el-tag>
-              </div>
-              <div
-                v-if="deptCanSet || (deptCanClear && deptDepartment)"
-                class="dept-pane__actions"
-              >
-                <el-button
-                  v-if="deptCanSet"
-                  type="primary"
-                  :icon="useRenderIcon(EditPen)"
-                  @click="deptHandleSet"
-                >
-                  {{ deptDepartment ? "变更部门" : "设置部门" }}
-                </el-button>
-                <el-button
-                  v-if="deptCanClear && deptDepartment"
-                  type="danger"
-                  :icon="useRenderIcon(Delete)"
-                  @click="deptHandleClear"
-                >
-                  清除归属
-                </el-button>
-              </div>
-            </div>
-          </el-card>
-        </template>
-        <SrvfPermEmpty
-          v-else
-          action="查看部门归属"
-          code="member-department.read.current"
         />
       </el-tab-pane>
 
@@ -994,28 +959,5 @@ onMounted(() => {
   margin-top: 12px;
   font-size: 13px;
   color: var(--el-text-color-secondary);
-}
-
-.dept-pane {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  align-items: center;
-  justify-content: space-between;
-
-  &__current {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-  }
-
-  &__label {
-    font-weight: 500;
-  }
-
-  &__actions {
-    display: flex;
-    gap: 8px;
-  }
 }
 </style>

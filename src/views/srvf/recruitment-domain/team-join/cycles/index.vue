@@ -36,6 +36,13 @@ onMounted(() => {
 <template>
   <div class="main">
     <template v-if="canRead">
+      <el-alert
+        type="info"
+        :closable="false"
+        show-icon
+        class="mb-2"
+        title="入队是第二道门：已在「招新轮次」发号的志愿者提交入队申请 → 综合评估 → 一键入队成为正式队员。"
+      />
       <PureTableBar title="入队轮次" :columns="columns" @refresh="onSearch">
         <template #buttons>
           <el-button
