@@ -111,7 +111,6 @@ onMounted(() => {
               v-if="canUpdateAccount"
               class="reset-margin"
               link
-              type="primary"
               :size="size"
               @click="openDialog('编辑', row)"
             >
@@ -131,7 +130,6 @@ onMounted(() => {
               <el-button
                 class="ml-3! mt-0.5!"
                 link
-                type="primary"
                 :size="size"
                 :icon="useRenderIcon(More)"
               />
@@ -141,7 +139,6 @@ onMounted(() => {
                     <el-button
                       class="reset-margin!"
                       link
-                      type="primary"
                       :size="size"
                       @click="openRoleDialog(row)"
                     >
@@ -152,7 +149,6 @@ onMounted(() => {
                     <el-button
                       class="reset-margin!"
                       link
-                      type="primary"
                       :size="size"
                       @click="openRbacRolesDrawer(row)"
                     >

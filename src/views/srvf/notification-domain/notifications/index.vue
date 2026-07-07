@@ -116,7 +116,6 @@ onMounted(() => {
                 v-if="canUpdate && row.statusCode !== 'archived'"
                 class="reset-margin"
                 link
-                type="primary"
                 :size="size"
                 @click="openDialog('编辑', row)"
               >

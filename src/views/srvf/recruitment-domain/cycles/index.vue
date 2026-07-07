@@ -83,7 +83,6 @@ onMounted(() => {
               <el-button
                 class="reset-margin"
                 link
-                type="primary"
                 :size="size"
                 @click="openCockpit(row)"
               >
@@ -93,7 +92,6 @@ onMounted(() => {
                 v-if="canUpdate"
                 class="reset-margin"
                 link
-                type="primary"
                 :size="size"
                 @click="openDialog('编辑', row)"
               >

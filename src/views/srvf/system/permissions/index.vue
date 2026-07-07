@@ -103,7 +103,6 @@ onMounted(() => {
                 v-if="canUpdate"
                 class="reset-margin"
                 link
-                type="primary"
                 :size="size"
                 :icon="useRenderIcon(EditPen)"
                 @click="openDialog('编辑', row)"

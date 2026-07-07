@@ -218,7 +218,6 @@ onMounted(() => {
           </div>
           <el-button
             link
-            type="primary"
             :loading="summaryLoading"
             @click="loadDashboardSummary"
           >
@@ -404,7 +403,6 @@ onMounted(() => {
                   <el-button
                     class="reset-margin"
                     link
-                    type="primary"
                     :size="size"
                     @click="regGoCockpit(row)"
                   >
@@ -528,7 +526,6 @@ onMounted(() => {
                   <el-button
                     class="reset-margin"
                     link
-                    type="primary"
                     :size="size"
                     @click="attGoCockpit(row)"
                   >

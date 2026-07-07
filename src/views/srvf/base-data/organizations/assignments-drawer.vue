@@ -344,7 +344,6 @@ watch(visible, v => {
           v-if="canHistory"
           class="reset-margin"
           link
-          type="primary"
           @click="openHistory(row)"
         >
           历史

@@ -390,7 +390,6 @@ onMounted(() => {
                     v-if="certCanUpdate"
                     class="reset-margin"
                     link
-                    type="primary"
                     :size="size"
                     :icon="useRenderIcon(EditPen)"
                     @click="certOpenDialog('编辑', row)"
@@ -519,7 +518,6 @@ onMounted(() => {
                     v-if="ecCanUpdate"
                     class="reset-margin"
                     link
-                    type="primary"
                     :size="size"
                     :icon="useRenderIcon(EditPen)"
                     @click="ecOpenDialog('编辑', row)"
@@ -605,7 +603,6 @@ onMounted(() => {
                     v-if="msCanSet"
                     class="reset-margin"
                     link
-                    type="primary"
                     :size="size"
                     :icon="useRenderIcon(EditPen)"
                     @click="msOpenDialog('编辑', row)"

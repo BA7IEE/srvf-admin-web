@@ -141,7 +141,6 @@ onMounted(() => {
               <el-button
                 v-if="canUpdate(row.ownerType)"
                 link
-                type="primary"
                 size="small"
                 @click="openEdit(row)"
               >

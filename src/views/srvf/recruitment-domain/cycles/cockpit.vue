@@ -450,7 +450,6 @@ onMounted(() => {
                   <el-button
                     class="reset-margin"
                     link
-                    type="primary"
                     :size="size"
                     @click="appOpenDetail(row)"
                   >
@@ -460,7 +459,6 @@ onMounted(() => {
                     v-if="row.hasIdCardImage"
                     class="reset-margin"
                     link
-                    type="primary"
                     :size="size"
                     @click="appOpenIdCardImage(row)"
                   >
@@ -510,7 +508,6 @@ onMounted(() => {
                     v-if="row.promotedMemberId"
                     class="reset-margin"
                     link
-                    type="primary"
                     :size="size"
                     @click="appGoMember(row)"
                   >

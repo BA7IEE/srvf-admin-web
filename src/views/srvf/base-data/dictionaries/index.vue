@@ -100,7 +100,6 @@ onMounted(() => {
                 v-if="canUpdateType"
                 class="reset-margin"
                 link
-                type="primary"
                 :size="size"
                 :icon="useRenderIcon(EditPen)"
                 @click.stop="openTypeDialog('编辑', row)"
@@ -192,7 +191,6 @@ onMounted(() => {
                 v-if="canUpdateItem"
                 class="reset-margin"
                 link
-                type="primary"
                 :size="size"
                 :icon="useRenderIcon(EditPen)"
                 @click="openItemDialog('编辑', row)"
