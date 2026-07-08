@@ -102,7 +102,7 @@ export default [
         component: () => import("@/views/srvf/system/users/index.vue"),
         meta: {
           icon: "ri/user-settings-line",
-          title: "用户管理",
+          title: "系统账号",
           roles: ["SUPER_ADMIN", "ADMIN"]
         }
       },

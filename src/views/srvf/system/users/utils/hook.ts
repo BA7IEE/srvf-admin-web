@@ -8,6 +8,7 @@ import { deviceDetection } from "@pureadmin/utils";
 import { message } from "@/utils/message";
 import { hasPerms } from "@/utils/auth";
 import { addDialog } from "@/components/ReDialog";
+import { useMultiTagsStoreHook } from "@/store/modules/multiTags";
 import RoleForm, { type RoleFormModel } from "../role-form.vue";
 import UserForm, { type UserFormModel } from "../user-form.vue";
 import {
@@ -98,13 +99,7 @@ export function useUserAccounts() {
     },
     { label: "系统角色", prop: "role", minWidth: 120, slot: "role" },
     { label: "状态", prop: "status", minWidth: 100, slot: "status" },
-    {
-      label: "所属队员",
-      prop: "member",
-      minWidth: 160,
-      formatter: ({ member }) =>
-        member ? `${member.displayName}（${member.memberNo}）` : "—"
-    },
+    { label: "所属队员", prop: "member", minWidth: 160, slot: "member" },
     {
       label: "最近登录",
       prop: "lastLoginAt",
@@ -390,6 +385,18 @@ export function useUserAccounts() {
     rbacRolesDrawerVisible.value = true;
   }
 
+  /** 所属队员反查：跳队员详情页（沿用队员列表「档案」入口同款 tag 注册，行内 memberId 已由用户接口 additive 暴露） */
+  function goMemberProfile(row: UserAccountItem) {
+    if (!row.memberId) return;
+    useMultiTagsStoreHook().handleTags("push", {
+      path: `/srvf/members-domain/members/${row.memberId}`,
+      name: "SrvfMemberCockpit",
+      params: { id: row.memberId },
+      meta: { title: `队员 · ${row.member?.displayName ?? row.memberId}` }
+    });
+    router.push(`/srvf/members-domain/members/${row.memberId}`);
+  }
+
   /**
    * 查看该用户的全部授权（含 scoped 绑定）：跳「角色绑定」页并按 principalId 精确预筛。
    * 权限管理员「他为什么能/不能做 X」的下钻入口——这里看全部绑定，再在该页用「权限诊断」查具体判定。
@@ -429,6 +436,7 @@ export function useUserAccounts() {
     roleMeta,
     onSearch,
     onFilterChange,
+    goMemberProfile,
     goUserAuthz,
     openDialog,
     handleResetPassword,

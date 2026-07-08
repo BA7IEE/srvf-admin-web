@@ -13,12 +13,14 @@ import MemberForm, {
   type MemberFormModel,
   type MemberGradeOption
 } from "../form.vue";
+import BulkGrantForm, { type BulkGrantFormModel } from "../bulk-grant-form.vue";
 import {
   getMembers,
   createMember,
   updateMember,
   deleteMember,
   updateMemberStatus,
+  bulkGrantMemberAccounts,
   type MemberItem,
   type MemberStatus
 } from "@/api/srvf-member";
@@ -34,6 +36,7 @@ export function useMembers() {
   const dataList = ref<MemberItem[]>([]);
   const loading = ref(false);
   const formRef = ref();
+  const bulkFormRef = ref();
   /** 等级下拉选项（来自 type=member_grade 字典；空数组 = 退化为文本输入） */
   const gradeOptions = ref<MemberGradeOption[]>([]);
   let gradeResolved = false;
@@ -45,6 +48,14 @@ export function useMembers() {
   const canUpdate = hasPerms("member.update.record");
   const canDelete = hasPerms("member.delete.record");
   const canUpdateStatus = hasPerms("member.update.status");
+  /** 批量开号码（复用单条开号码，绑 ops-admin） */
+  const canBulkGrant = hasPerms("member.grant.account");
+
+  /** 勾选行（供批量开号用；选择列仅在有批量开号权限时渲染） */
+  const selectedRows = ref<MemberItem[]>([]);
+  function handleSelectionChange(rows: MemberItem[]) {
+    selectedRows.value = rows;
+  }
 
   const pagination = reactive<PaginationProps>({
     total: 0,
@@ -63,6 +74,10 @@ export function useMembers() {
   });
 
   const columns: TableColumnList = [
+    // 勾选列仅供「批量开通账号」用；无该权限时不渲染，避免摆一列没有对应动作的空勾选框
+    ...(canBulkGrant
+      ? [{ type: "selection" as const, width: 50, align: "center" as const }]
+      : []),
     { label: "队员编号", prop: "memberNo", minWidth: 150 },
     { label: "称呼", prop: "displayName", minWidth: 120 },
     {
@@ -277,6 +292,80 @@ export function useMembers() {
       .catch(() => {});
   }
 
+  /**
+   * 批量开通账号（勾选多行队员，逐行填手机号后一次提交；单行失败不影响其余行）。
+   * 勾选中若含已开通队员，直接提示让用户先取消勾选——不替他们静默剔除，避免"怎么少了几个"的困惑。
+   */
+  function openBulkGrantDialog() {
+    if (!selectedRows.value.length) {
+      message("请先在列表左侧勾选要开通账号的队员", { type: "warning" });
+      return;
+    }
+    const alreadyHasAccount = selectedRows.value.filter(r => r.hasAccount);
+    if (alreadyHasAccount.length) {
+      message(
+        `勾选中有 ${alreadyHasAccount.length} 名队员已开通账号，请先取消勾选后重试`,
+        { type: "warning" }
+      );
+      return;
+    }
+    const rows = selectedRows.value.map(r => ({
+      memberId: r.id,
+      memberNo: r.memberNo,
+      displayName: r.displayName,
+      phone: ""
+    }));
+    addDialog({
+      title: `批量开通账号（${rows.length} 人）`,
+      width: "50%",
+      draggable: true,
+      fullscreen: deviceDetection(),
+      closeOnClickModal: false,
+      sureBtnLoading: true,
+      props: { formInline: { rows } as BulkGrantFormModel },
+      contentRenderer: () => h(BulkGrantForm, { ref: bulkFormRef }),
+      beforeSure: (done, { options, closeLoading }) => {
+        const cur = options.props.formInline as BulkGrantFormModel;
+        const invalid = cur.rows.filter(r => !/^1[3-9]\d{9}$/.test(r.phone));
+        if (invalid.length) {
+          message(
+            `有 ${invalid.length} 名队员的手机号未填或格式不对（需 11 位手机号）`,
+            { type: "warning" }
+          );
+          closeLoading();
+          return;
+        }
+        (async () => {
+          try {
+            const { data } = await bulkGrantMemberAccounts(
+              cur.rows.map(r => ({ memberId: r.memberId, phone: r.phone }))
+            );
+            const blockedDetail = data.items
+              .filter(i => i.status === "blocked")
+              .map(i => i.reason)
+              .join("；");
+            message(
+              `完成：成功 ${data.summary.ok} / 共 ${data.summary.total}` +
+                (data.summary.blocked
+                  ? `，失败 ${data.summary.blocked} 个（${blockedDetail}）`
+                  : ""),
+              {
+                type: data.summary.blocked ? "warning" : "success",
+                duration: 6000
+              }
+            );
+            done();
+            selectedRows.value = [];
+            onSearch();
+          } catch (error: any) {
+            message(bizErrorMessage(error, "批量开通失败"), { type: "error" });
+            closeLoading();
+          }
+        })();
+      }
+    });
+  }
+
   /** 进入队员档案（实体详情页）：行内「管理」入口，router.push 带 member id（非侧栏菜单）。
    *  动态 params 路由需显式 push 页签（pure-admin 范式，参考完整版 tabs/params-detail），
    *  页签标题带队员名，多开档案页可区分。 */
@@ -296,6 +385,7 @@ export function useMembers() {
     canUpdate,
     canDelete,
     canUpdateStatus,
+    canBulkGrant,
     loading,
     columns,
     dataList,
@@ -305,6 +395,8 @@ export function useMembers() {
     ensureGradeOptions,
     onSearch,
     onFilterChange,
+    handleSelectionChange,
+    openBulkGrantDialog,
     openDialog,
     openCockpit,
     handleDelete,
