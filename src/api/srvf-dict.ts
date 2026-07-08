@@ -113,6 +113,24 @@ export const getDictItems = (params: DictItemListQuery) =>
     params
   });
 
+/** 字典条目树节点（`DictItem` + 嵌套 `children`；叶子节点 `children` 为空数组，深度不限） */
+export type DictItemTreeNode = DictItem & { children: DictItemTreeNode[] };
+
+export type DictItemTreeQuery = {
+  typeId: string;
+  status?: DictTypeStatus;
+};
+export type DictItemTreeResult = Envelope<DictItemTreeNode[]>;
+
+/**
+ * 字典条目树形 `GET /api/system/v1/dict-items/tree`（rbac: `dict.read.item`；typeId 必填）。
+ * 一次性返回该类型下完整条目树（不分页），供树形表格展示 + 新建条目时的完整父级候选使用。
+ */
+export const getDictItemTree = (params: DictItemTreeQuery) =>
+  http.request<DictItemTreeResult>("get", "/api/system/v1/dict-items/tree", {
+    params
+  });
+
 /** 创建字典条目入参（后端 `CreateDictItemDto`） */
 export type CreateDictItemBody = {
   /** 所属类型 id（必须存在） */

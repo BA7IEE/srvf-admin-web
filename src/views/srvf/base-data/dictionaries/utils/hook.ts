@@ -1,6 +1,5 @@
 import { bizErrorMessage } from "@/api/srvf-error";
-import { h, ref, reactive } from "vue";
-import type { PaginationProps } from "@pureadmin/table";
+import { h, ref, computed } from "vue";
 import { ElMessageBox } from "element-plus";
 import { deviceDetection } from "@pureadmin/utils";
 import { message } from "@/utils/message";
@@ -14,14 +13,20 @@ import {
   updateDictType,
   deleteDictType,
   updateDictTypeStatus,
-  getDictItems,
+  getDictItemTree,
   createDictItem,
   updateDictItem,
   deleteDictItem,
   updateDictItemStatus,
   type DictTypeItem,
-  type DictItem
+  type DictItem,
+  type DictItemTreeNode
 } from "@/api/srvf-dict";
+
+// 后端分页硬上限 100（PaginationQueryDto），左侧类型导航一次性拉全量（不分页，改滚动）。
+const TYPE_FETCH_PAGE_SIZE = 100;
+// 防御性上限：即使类型数远超「几十个」的预期，循环也保证收敛，不做无界 while(true)。
+const TYPE_FETCH_MAX_PAGES = 50;
 
 export function useDictTypes() {
   /* -------------------------------- 权限 -------------------------------- */
@@ -35,55 +40,54 @@ export function useDictTypes() {
   const canDeleteItem = hasPerms("dict.delete.item");
 
   /* ------------------------------ 左侧：类型 ----------------------------- */
-  const dataList = ref<DictTypeItem[]>([]);
-  const loading = ref(false);
+  const typeList = ref<DictTypeItem[]>([]);
+  const typeLoading = ref(false);
+  const typeKeyword = ref("");
   const selectedType = ref<DictTypeItem | null>(null);
   const formRef = ref();
 
-  const pagination = reactive<PaginationProps>({
-    total: 0,
-    pageSize: 10,
-    currentPage: 1,
-    background: true
+  /** 搜索（label / code 子串，忽略大小写）；类型数量小，纯前端过滤，无需防抖 */
+  const filteredTypeList = computed(() => {
+    const kw = typeKeyword.value.trim().toLowerCase();
+    if (!kw) return typeList.value;
+    return typeList.value.filter(
+      t =>
+        t.label.toLowerCase().includes(kw) || t.code.toLowerCase().includes(kw)
+    );
   });
 
-  const columns: TableColumnList = [
-    { label: "类型 code", prop: "code", minWidth: 140 },
-    { label: "显示名", prop: "label", minWidth: 130 },
-    { label: "排序", prop: "sortOrder", minWidth: 70 },
-    { label: "状态", prop: "status", minWidth: 90, slot: "status" },
-    ...(canUpdateType || canDeleteType
-      ? [
-          {
-            label: "操作",
-            fixed: "right" as const,
-            width: 200,
-            slot: "operation"
-          }
-        ]
-      : [])
-  ];
-
-  async function onSearch() {
-    if (!canRead) return;
-    loading.value = true;
-    try {
+  /** 循环拉全量类型（后端 pageSize 上限 100）；导航列表不分页，改滚动展示 */
+  async function fetchAllTypes(): Promise<DictTypeItem[]> {
+    let page = 1;
+    let all: DictTypeItem[] = [];
+    for (let guard = 0; guard < TYPE_FETCH_MAX_PAGES; guard++) {
       const { code, data } = await getDictTypes({
-        page: pagination.currentPage,
-        pageSize: pagination.pageSize
+        page,
+        pageSize: TYPE_FETCH_PAGE_SIZE
       });
-      if (code === 0) {
-        dataList.value = data.items;
-        pagination.total = data.total;
-        pagination.pageSize = data.pageSize;
-        pagination.currentPage = data.page;
-        // 已选类型若已不在列表中则清空右侧
-        if (
-          selectedType.value &&
-          !data.items.some(t => t.id === selectedType.value!.id)
-        ) {
+      if (code !== 0) break;
+      all = all.concat(data.items);
+      if (all.length >= data.total || data.items.length === 0) break;
+      page += 1;
+    }
+    return all;
+  }
+
+  async function fetchTypes() {
+    if (!canRead) return;
+    typeLoading.value = true;
+    try {
+      const all = await fetchAllTypes();
+      typeList.value = all;
+      if (selectedType.value) {
+        const fresh = all.find(t => t.id === selectedType.value!.id);
+        if (fresh) {
+          // 类型可能被并发编辑（label/status），指回最新对象，避免右侧标题/状态显示过期
+          selectedType.value = fresh;
+        } else {
+          // 已选类型不在最新列表中（被删除等）→ 清空右侧
           selectedType.value = null;
-          itemList.value = [];
+          itemTree.value = [];
         }
       }
     } catch (error: any) {
@@ -91,32 +95,14 @@ export function useDictTypes() {
         type: "error"
       });
     } finally {
-      loading.value = false;
+      typeLoading.value = false;
     }
   }
 
-  function handleSizeChange(val: number) {
-    pagination.pageSize = val;
-    onSearch();
-  }
-  function handleCurrentChange(val: number) {
-    pagination.currentPage = val;
-    onSearch();
-  }
-
   function selectType(row: DictTypeItem) {
+    if (selectedType.value?.id === row.id) return;
     selectedType.value = row;
-    itemPagination.currentPage = 1;
-    onSearchItems();
-  }
-
-  /** 左侧类型行样式：可点击 + 选中高亮（参 full-version table-select/radio 范式） */
-  function rowStyle({ row }: { row: DictTypeItem }) {
-    return {
-      cursor: "pointer",
-      background:
-        selectedType.value?.id === row.id ? "var(--el-fill-color-light)" : ""
-    };
+    fetchItems();
   }
 
   function openTypeDialog(title: "新建" | "编辑", row?: DictTypeItem) {
@@ -161,7 +147,7 @@ export function useDictTypes() {
               message("新建成功", { type: "success" });
             }
             done();
-            onSearch();
+            fetchTypes();
           } catch (error: any) {
             message(bizErrorMessage(error, "保存失败"), {
               type: "error"
@@ -185,7 +171,7 @@ export function useDictTypes() {
         try {
           await updateDictTypeStatus(row.id, next);
           message(`${action}成功`, { type: "success" });
-          onSearch();
+          fetchTypes();
         } catch (error: any) {
           message(bizErrorMessage(error, `${action}失败`), {
             type: "error"
@@ -207,9 +193,9 @@ export function useDictTypes() {
           message("删除成功", { type: "success" });
           if (selectedType.value?.id === row.id) {
             selectedType.value = null;
-            itemList.value = [];
+            itemTree.value = [];
           }
-          onSearch();
+          fetchTypes();
         } catch (error: any) {
           message(bizErrorMessage(error, "删除失败"), {
             type: "error"
@@ -220,28 +206,14 @@ export function useDictTypes() {
   }
 
   /* ------------------------------ 右侧：条目 ----------------------------- */
-  const itemList = ref<DictItem[]>([]);
+  /** 树形表格数据；`el-table` 依 `row-key` + 每行的 `children` 自动渲染为树 */
+  const itemTree = ref<DictItemTreeNode[]>([]);
   const itemLoading = ref(false);
-  const itemPagination = reactive<PaginationProps>({
-    total: 0,
-    pageSize: 10,
-    currentPage: 1,
-    background: true
-  });
-
-  function parentLabelOf(parentId: string) {
-    return itemList.value.find(i => i.id === parentId)?.label ?? "子级";
-  }
 
   const itemColumns: TableColumnList = [
+    // 显示名放第一列以承载树形缩进 + 展开图标，比 code 更适合表达层级
+    { label: "显示名", prop: "label", minWidth: 160 },
     { label: "条目 code", prop: "code", minWidth: 140 },
-    { label: "显示名", prop: "label", minWidth: 130 },
-    {
-      label: "父级",
-      prop: "parentId",
-      minWidth: 110,
-      formatter: ({ parentId }) => (parentId ? parentLabelOf(parentId) : "顶级")
-    },
     { label: "排序", prop: "sortOrder", minWidth: 70 },
     { label: "状态", prop: "status", minWidth: 90, slot: "itemStatus" },
     ...(canUpdateItem || canDeleteItem
@@ -249,28 +221,24 @@ export function useDictTypes() {
           {
             label: "操作",
             fixed: "right" as const,
-            width: 200,
+            width: 190,
             slot: "itemOperation"
           }
         ]
       : [])
   ];
 
-  async function onSearchItems() {
-    if (!selectedType.value || !canReadItem) return;
+  async function fetchItems() {
+    if (!selectedType.value || !canReadItem) {
+      itemTree.value = [];
+      return;
+    }
     itemLoading.value = true;
     try {
-      const { code, data } = await getDictItems({
-        typeId: selectedType.value.id,
-        page: itemPagination.currentPage,
-        pageSize: itemPagination.pageSize
+      const { code, data } = await getDictItemTree({
+        typeId: selectedType.value.id
       });
-      if (code === 0) {
-        itemList.value = data.items;
-        itemPagination.total = data.total;
-        itemPagination.pageSize = data.pageSize;
-        itemPagination.currentPage = data.page;
-      }
+      if (code === 0) itemTree.value = data;
     } catch (error: any) {
       message(bizErrorMessage(error, "加载字典条目失败"), {
         type: "error"
@@ -278,15 +246,6 @@ export function useDictTypes() {
     } finally {
       itemLoading.value = false;
     }
-  }
-
-  function handleItemSizeChange(val: number) {
-    itemPagination.pageSize = val;
-    onSearchItems();
-  }
-  function handleItemCurrentChange(val: number) {
-    itemPagination.currentPage = val;
-    onSearchItems();
   }
 
   function openItemDialog(title: "新建" | "编辑", row?: DictItem) {
@@ -310,10 +269,8 @@ export function useDictTypes() {
           parentId: row?.parentId ?? null,
           sortOrder: row?.sortOrder ?? 0
         } as DictItemFormModel,
-        // 同类型其它条目作父级候选（编辑态排除自身，避免自环）
-        parentOptions: itemList.value
-          .filter(i => i.id !== row?.id)
-          .map(i => ({ id: i.id, label: i.label }))
+        // 父级候选 = 当前类型完整条目树（非当前页/非当前展开状态截取），任意已有条目均可选
+        parentTreeData: itemTree.value
       },
       contentRenderer: () => h(DictItemForm, { ref: formRef }),
       beforeSure: (done, { options, closeLoading }) => {
@@ -342,7 +299,7 @@ export function useDictTypes() {
               message("新建成功", { type: "success" });
             }
             done();
-            onSearchItems();
+            fetchItems();
           } catch (error: any) {
             message(bizErrorMessage(error, "保存失败"), {
               type: "error"
@@ -370,7 +327,7 @@ export function useDictTypes() {
         try {
           await updateDictItemStatus(row.id, next);
           message(`${action}成功`, { type: "success" });
-          onSearchItems();
+          fetchItems();
         } catch (error: any) {
           message(bizErrorMessage(error, `${action}失败`), {
             type: "error"
@@ -390,7 +347,7 @@ export function useDictTypes() {
         try {
           await deleteDictItem(row.id);
           message("删除成功", { type: "success" });
-          onSearchItems();
+          fetchItems();
         } catch (error: any) {
           message(bizErrorMessage(error, "删除失败"), {
             type: "error"
@@ -411,29 +368,22 @@ export function useDictTypes() {
     canUpdateItem,
     canDeleteItem,
     // 类型（左）
-    loading,
-    columns,
-    dataList,
-    pagination,
+    typeLoading,
+    typeKeyword,
+    filteredTypeList,
     selectedType,
-    rowStyle,
-    onSearch,
+    fetchTypes,
     selectType,
     openTypeDialog,
     handleDeleteType,
     handleToggleTypeStatus,
-    handleSizeChange,
-    handleCurrentChange,
     // 条目（右）
     itemLoading,
     itemColumns,
-    itemList,
-    itemPagination,
-    onSearchItems,
+    itemTree,
+    fetchItems,
     openItemDialog,
     handleDeleteItem,
-    handleToggleItemStatus,
-    handleItemSizeChange,
-    handleItemCurrentChange
+    handleToggleItemStatus
   };
 }
