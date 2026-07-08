@@ -11,6 +11,7 @@ import EditPen from "~icons/ep/edit-pen";
 import More from "~icons/ep/more-filled";
 import Search from "~icons/ri/search-line";
 import AddFill from "~icons/ri/add-circle-line";
+import type { DictItemTreeNode } from "@/api/srvf-dict";
 
 defineOptions({
   name: "SrvfDictionaries"
@@ -46,6 +47,11 @@ const {
 onMounted(() => {
   fetchTypes();
 });
+
+/** 有子级的行按"分组行"加粗+浅底，让层级一眼可辨（与叶子行区分，不看缩进也能分清） */
+function itemRowClassName({ row }: { row: DictItemTreeNode }) {
+  return row.children?.length ? "is-dict-item-parent" : "";
+}
 </script>
 
 <template>
@@ -200,6 +206,8 @@ onMounted(() => {
             adaptive
             default-expand-all
             show-overflow-tooltip
+            :indent="24"
+            :row-class-name="itemRowClassName"
             :adaptiveConfig="{ offsetBottom: 108 }"
             align-whole="center"
             table-layout="auto"
@@ -331,6 +339,16 @@ onMounted(() => {
     flex-shrink: 0;
     gap: 6px;
     align-items: center;
+  }
+}
+
+// 树表分组行（有子级）加粗+浅底，跟叶子行拉开视觉层级，不必只靠缩进辨认
+:deep(.is-dict-item-parent) {
+  font-weight: 600;
+  background-color: var(--el-fill-color-light);
+
+  td {
+    background-color: var(--el-fill-color-light);
   }
 }
 </style>
