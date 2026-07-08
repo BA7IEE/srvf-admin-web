@@ -99,6 +99,13 @@ export function useUserAccounts() {
     { label: "系统角色", prop: "role", minWidth: 120, slot: "role" },
     { label: "状态", prop: "status", minWidth: 100, slot: "status" },
     {
+      label: "所属队员",
+      prop: "member",
+      minWidth: 160,
+      formatter: ({ member }) =>
+        member ? `${member.displayName}（${member.memberNo}）` : "—"
+    },
+    {
       label: "最近登录",
       prop: "lastLoginAt",
       minWidth: 170,

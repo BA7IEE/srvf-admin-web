@@ -53,11 +53,13 @@ export function useMembers() {
     background: true
   });
 
-  /** 列表筛选（均为契约既有参数：q 模糊命中 displayName+memberNo；gradeCode / status 精确） */
+  /** 列表筛选（均为契约既有参数：q 模糊命中 displayName+memberNo；gradeCode / status 精确；hasAccount 布尔） */
   const searchForm = reactive({
     q: "",
     gradeCode: "",
-    status: "" as "" | MemberStatus
+    status: "" as "" | MemberStatus,
+    /** 字符串三态（""=全部）；提交时转真布尔，契约参数本身是 boolean */
+    hasAccount: "" as "" | "true" | "false"
   });
 
   const columns: TableColumnList = [
@@ -70,6 +72,7 @@ export function useMembers() {
       formatter: ({ gradeCode }) => dict.label("member_grade", gradeCode)
     },
     { label: "状态", prop: "status", minWidth: 100, slot: "status" },
+    { label: "账号", prop: "hasAccount", minWidth: 110, slot: "account" },
     {
       label: "创建时间",
       prop: "createdAt",
@@ -96,7 +99,10 @@ export function useMembers() {
         pageSize: pagination.pageSize,
         ...(searchForm.q.trim() ? { q: searchForm.q.trim() } : {}),
         ...(searchForm.gradeCode ? { gradeCode: searchForm.gradeCode } : {}),
-        ...(searchForm.status ? { status: searchForm.status } : {})
+        ...(searchForm.status ? { status: searchForm.status } : {}),
+        ...(searchForm.hasAccount
+          ? { hasAccount: searchForm.hasAccount === "true" }
+          : {})
       });
       if (code === 0) {
         dataList.value = data.items;
@@ -276,7 +282,7 @@ export function useMembers() {
    *  页签标题带队员名，多开档案页可区分。 */
   function openCockpit(row: MemberItem) {
     useMultiTagsStoreHook().handleTags("push", {
-      path: "/srvf/members-domain/members/:id",
+      path: `/srvf/members-domain/members/${row.id}`,
       name: "SrvfMemberCockpit",
       params: { id: row.id },
       meta: { title: `队员 · ${row.displayName}` }

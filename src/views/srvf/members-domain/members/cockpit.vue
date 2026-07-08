@@ -1,14 +1,30 @@
 <script setup lang="ts">
 import { bizErrorMessage } from "@/api/srvf-error";
 import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, h } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import dayjs from "dayjs";
+import { ElMessageBox } from "element-plus";
+import { deviceDetection } from "@pureadmin/utils";
 import { message } from "@/utils/message";
+import { hasPerms } from "@/utils/auth";
+import { addDialog } from "@/components/ReDialog";
 import { PureTableBar } from "@/components/RePureTableBar";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
 import { useSrvfDictStoreHook } from "@/store/modules/srvfDict";
-import { getMember, type MemberItem } from "@/api/srvf-member";
+import {
+  getMember,
+  grantMemberAccount,
+  bindMemberAccount,
+  unbindMemberAccount,
+  reopenMemberAccount,
+  updateMemberAccountStatus,
+  type MemberItem
+} from "@/api/srvf-member";
+import { getUserOptions, type UserOptionItem } from "@/api/srvf-user";
+import AccountBindForm, {
+  type AccountBindFormModel
+} from "./account-bind-form.vue";
 import { useCertificates } from "../certificates/utils/hook";
 import { useMemberInsurances } from "../insurances/utils/hook";
 import { useEmergencyContacts } from "../emergency-contacts/utils/hook";
@@ -54,6 +70,7 @@ const activeTab = ref<
   | "position-assignments"
   | "supervision-scope"
   | "profile"
+  | "account"
   | "registrations-history"
   | "attendance-records"
   | "contribution"
@@ -76,6 +93,160 @@ async function fetchDetail() {
   } finally {
     detailLoading.value = false;
   }
+}
+
+/* --------------- Tab：账号（队员账号闭环；字段随 fetchDetail 一并到手，无需单独 GET） --------------- */
+/** 开号/退号重开码（绑 ops-admin，与本页其余按钮的 biz-admin 归属不同，单独判显隐） */
+const canGrantAccount = hasPerms("member.grant.account");
+/** 绑定/解绑码（同上绑 ops-admin） */
+const canBindAccount = hasPerms("member.bind.account");
+/** 启停关联账号码（复用既有用户管理码） */
+const canUpdateAccountStatus = hasPerms("user.update.status");
+/** 当前账号状态下是否有任一可用操作（启停码只在已开通时才算数，启停码与开号码不总是同归属） */
+const canManageAccountInCurrentState = computed(
+  () =>
+    canGrantAccount ||
+    canBindAccount ||
+    (!!detail.value?.hasAccount && canUpdateAccountStatus)
+);
+
+const accountFormRef = ref();
+const userOptions = ref<UserOptionItem[]>([]);
+let userOptionsResolved = false;
+
+/** 懒加载账号选择器（供"绑定既有账号"用）；无权限/后端不可达 → 静默保持空 → 下拉退化为空列表 */
+async function ensureUserOptions() {
+  if (userOptionsResolved) return;
+  userOptionsResolved = true;
+  try {
+    const { code, data } = await getUserOptions({ limit: 100 });
+    if (code === 0) userOptions.value = data.items;
+  } catch {
+    // 无权限 / 后端不可达 → 保持空
+  }
+}
+
+/** 开通账号 / 退号重开共用的手机号输入弹窗（11 位手机号校验规则、错误文案统一在此维护） */
+function promptForPhone(title: string, tip: string): Promise<string | null> {
+  return ElMessageBox.prompt(tip, title, {
+    confirmButtonText: "确定",
+    cancelButtonText: "取消",
+    inputPlaceholder: "如 13800001234",
+    inputPattern: /^1[3-9]\d{9}$/,
+    inputErrorMessage: "请输入11位手机号"
+  })
+    .then(({ value }) => value)
+    .catch(() => null);
+}
+
+/** 开通账号（prompt 输入手机号；后端建 User 绑手机验证码登录，不设密码） */
+async function handleGrantAccount() {
+  const phone = await promptForPhone(
+    "开通账号",
+    "为该队员开通登录账号（手机验证码登录，不设密码），请输入手机号："
+  );
+  if (!phone) return;
+  try {
+    const { data } = await grantMemberAccount(memberId, phone);
+    message(`开通成功，登录用户名：${data.username}`, { type: "success" });
+    fetchDetail();
+  } catch (error: any) {
+    message(bizErrorMessage(error, "开通失败"), { type: "error" });
+  }
+}
+
+/** 绑定既有悬空账号（选择器投影 + filterable 本地搜索，已绑定他人的账号由后端拒绝） */
+async function openBindAccountDialog() {
+  await ensureUserOptions();
+  addDialog({
+    title: "绑定既有账号",
+    width: "32%",
+    draggable: true,
+    fullscreen: deviceDetection(),
+    closeOnClickModal: false,
+    sureBtnLoading: true,
+    props: {
+      formInline: { userId: "" } as AccountBindFormModel,
+      userOptions: userOptions.value
+    },
+    contentRenderer: () => h(AccountBindForm, { ref: accountFormRef }),
+    beforeSure: (done, { options, closeLoading }) => {
+      const cur = options.props.formInline as AccountBindFormModel;
+      if (!cur.userId) {
+        message("请选择要绑定的账号", { type: "warning" });
+        closeLoading();
+        return;
+      }
+      (async () => {
+        try {
+          await bindMemberAccount(memberId, cur.userId);
+          message("绑定成功", { type: "success" });
+          done();
+          fetchDetail();
+        } catch (error: any) {
+          message(bizErrorMessage(error, "绑定失败"), { type: "error" });
+          closeLoading();
+        }
+      })();
+    }
+  });
+}
+
+/** 解绑账号（只断链，账号回落悬空 ACTIVE，不顺手停用/删除） */
+function handleUnbindAccount() {
+  ElMessageBox.confirm(
+    "解绑后该账号将成为悬空账号（不会停用或删除该账号本身），确定解绑吗？",
+    "解绑账号",
+    { confirmButtonText: "确定", cancelButtonText: "取消", type: "warning" }
+  )
+    .then(async () => {
+      try {
+        await unbindMemberAccount(memberId);
+        message("已解绑", { type: "success" });
+        fetchDetail();
+      } catch (error: any) {
+        message(bizErrorMessage(error, "解绑失败"), { type: "error" });
+      }
+    })
+    .catch(() => {});
+}
+
+/** 退号重开（软删旧号 + 新手机号开新号，须与旧号不同） */
+async function handleReopenAccount() {
+  const phone = await promptForPhone(
+    "退号重开",
+    "旧账号将被作废，请输入新手机号重新开通（须与原手机号不同）："
+  );
+  if (!phone) return;
+  try {
+    const { data } = await reopenMemberAccount(memberId, phone);
+    message(`已重新开通，登录用户名：${data.username}`, { type: "success" });
+    fetchDetail();
+  } catch (error: any) {
+    message(bizErrorMessage(error, "退号重开失败"), { type: "error" });
+  }
+}
+
+/** 启用 / 停用关联账号（后端禁止对自己绑定的账号操作，拒绝时走 bizErrorMessage 兜底文案） */
+function handleToggleAccountStatus() {
+  if (!detail.value) return;
+  const next = detail.value.accountStatus === "ACTIVE" ? "DISABLED" : "ACTIVE";
+  const action = next === "ACTIVE" ? "启用" : "停用";
+  ElMessageBox.confirm(`确定要${action}该队员的登录账号吗？`, "系统提示", {
+    confirmButtonText: "确定",
+    cancelButtonText: "取消",
+    type: "warning"
+  })
+    .then(async () => {
+      try {
+        await updateMemberAccountStatus(memberId, next);
+        message(`${action}成功`, { type: "success" });
+        fetchDetail();
+      } catch (error: any) {
+        message(bizErrorMessage(error, `${action}失败`), { type: "error" });
+      }
+    })
+    .catch(() => {});
 }
 
 /* --------------- Tab：证书（复用既有 hook，memberId 由路由参数注入；无队员下拉） --------------- */
@@ -788,6 +959,81 @@ onMounted(() => {
         />
       </el-tab-pane>
 
+      <!-- Tab：账号（队员账号闭环；字段随头部详情一并到手，开号/绑定归 ops-admin，启停复用用户管理码） -->
+      <el-tab-pane label="账号" name="account">
+        <el-card v-loading="detailLoading" shadow="never">
+          <template v-if="detail">
+            <el-descriptions :column="2" border>
+              <el-descriptions-item label="账号状态">
+                <el-tag v-if="!detail.hasAccount" type="info">未开通</el-tag>
+                <el-tag
+                  v-else
+                  :type="
+                    detail.accountStatus === 'ACTIVE' ? 'success' : 'danger'
+                  "
+                >
+                  {{
+                    detail.accountStatus === "ACTIVE"
+                      ? "已开通 · 正常"
+                      : "已开通 · 已停用"
+                  }}
+                </el-tag>
+              </el-descriptions-item>
+              <el-descriptions-item label="关联账号 ID">
+                {{ detail.userId ?? "—" }}
+              </el-descriptions-item>
+            </el-descriptions>
+            <div class="account-actions">
+              <template v-if="!detail.hasAccount">
+                <el-button
+                  v-if="canGrantAccount && detail.status === 'ACTIVE'"
+                  type="primary"
+                  @click="handleGrantAccount"
+                >
+                  开通账号
+                </el-button>
+                <el-button v-if="canBindAccount" @click="openBindAccountDialog">
+                  绑定既有账号
+                </el-button>
+              </template>
+              <template v-else>
+                <el-button
+                  v-if="canUpdateAccountStatus"
+                  :type="
+                    detail.accountStatus === 'ACTIVE' ? 'warning' : 'success'
+                  "
+                  @click="handleToggleAccountStatus"
+                >
+                  {{
+                    detail.accountStatus === "ACTIVE" ? "停用账号" : "启用账号"
+                  }}
+                </el-button>
+                <el-button
+                  v-if="canGrantAccount && detail.status === 'ACTIVE'"
+                  @click="handleReopenAccount"
+                >
+                  退号重开
+                </el-button>
+                <el-button
+                  v-if="canBindAccount"
+                  type="danger"
+                  @click="handleUnbindAccount"
+                >
+                  解绑账号
+                </el-button>
+              </template>
+            </div>
+            <p v-if="!canManageAccountInCurrentState" class="account-hint">
+              账号操作需要账号管理权限（开号/绑定归系统管理员），如需操作请联系拥有相应权限的管理员。
+            </p>
+          </template>
+          <el-empty
+            v-else-if="!detailLoading"
+            description="未找到该队员或无权查看"
+          />
+        </el-card>
+      </el-tab-pane>
+
       <!-- Tab：活动履历（队员跨活动报名,只读;状态可过滤） -->
       <el-tab-pane label="活动履历" name="registrations-history">
         <template v-if="regCanRead">
@@ -950,6 +1196,18 @@ onMounted(() => {
   display: flex;
   justify-content: flex-end;
   margin-bottom: 16px;
+}
+
+.account-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.account-hint {
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--el-text-color-secondary);
 }
 
 .contribution-hint {

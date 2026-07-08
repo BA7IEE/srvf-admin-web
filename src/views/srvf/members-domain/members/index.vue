@@ -84,6 +84,16 @@ onMounted(() => {
           <el-option label="在队" value="ACTIVE" />
           <el-option label="离队" value="INACTIVE" />
         </el-select>
+        <el-select
+          v-model="searchForm.hasAccount"
+          class="w-28! mr-2!"
+          placeholder="账号"
+          clearable
+          @change="onFilterChange"
+        >
+          <el-option label="已开通" value="true" />
+          <el-option label="未开通" value="false" />
+        </el-select>
         <el-button
           v-if="canCreate"
           type="primary"
@@ -116,6 +126,15 @@ onMounted(() => {
           <template #status="{ row }">
             <el-tag :type="row.status === 'ACTIVE' ? 'success' : 'info'">
               {{ row.status === "ACTIVE" ? "在队" : "离队" }}
+            </el-tag>
+          </template>
+          <template #account="{ row }">
+            <el-tag v-if="!row.hasAccount" type="info">未开通</el-tag>
+            <el-tag
+              v-else
+              :type="row.accountStatus === 'ACTIVE' ? 'success' : 'danger'"
+            >
+              {{ row.accountStatus === "ACTIVE" ? "已开通" : "已停用" }}
             </el-tag>
           </template>
           <template #operation="{ row }">
