@@ -21,6 +21,7 @@ import {
   updateMemberAccountStatus,
   type MemberItem
 } from "@/api/srvf-member";
+import { getUserAccount } from "@/api/srvf-user";
 import AccountBindForm, {
   type AccountBindFormModel
 } from "./account-bind-form.vue";
@@ -92,6 +93,24 @@ async function fetchDetail() {
   } finally {
     detailLoading.value = false;
   }
+  fetchLinkedAccountDetail();
+}
+
+/**
+ * 已开通账号时补拉「最近登录」（GET /users/{id}，rbac user.read.account——与队员管理不同码族，
+ * 无权限时静默保持空，账号 tab 退化为不显示该行）。
+ * 契约未暴露手机号 / 微信绑定状态字段（仅 app/v1/me/* 自助端点有，属账号本人视角），故只做最近登录。
+ */
+const linkedAccountLastLoginAt = ref<string | null>(null);
+async function fetchLinkedAccountDetail() {
+  linkedAccountLastLoginAt.value = null;
+  if (!detail.value?.userId) return;
+  try {
+    const { code, data } = await getUserAccount(detail.value.userId);
+    if (code === 0) linkedAccountLastLoginAt.value = data.lastLoginAt;
+  } catch {
+    // 无 user.read.account 权限 / 后端不可达 → 静默保持空
+  }
 }
 
 /* --------------- Tab：账号（队员账号闭环；字段随 fetchDetail 一并到手，无需单独 GET） --------------- */
@@ -101,6 +120,8 @@ const canGrantAccount = hasPerms("member.grant.account");
 const canBindAccount = hasPerms("member.bind.account");
 /** 启停关联账号码（复用既有用户管理码） */
 const canUpdateAccountStatus = hasPerms("user.update.status");
+/** 「查看授权」跳转目标（角色绑定页）的读码——与角色绑定页 canRead 同码，保证跳过去看得到东西 */
+const canViewAccountAuthz = hasPerms("role-binding.read.record");
 /** 当前账号状态下是否有任一可用操作（启停码只在已开通时才算数，启停码与开号码不总是同归属） */
 const canManageAccountInCurrentState = computed(
   () =>
@@ -230,6 +251,22 @@ function handleToggleAccountStatus() {
       }
     })
     .catch(() => {});
+}
+
+/**
+ * 查看该关联账号的全部授权（含 scoped 绑定）：跳「角色绑定」页并按 principalId 精确预筛。
+ * 只在已开通账号时可用（授权绑定挂在 USER 主体，没有 userId 无从查起）。
+ */
+function goAccountAuthz() {
+  if (!detail.value?.userId) return;
+  router.push({
+    path: "/srvf/org-hr/role-bindings",
+    query: {
+      principalType: "USER",
+      principalId: detail.value.userId,
+      principalLabel: detail.value.displayName
+    }
+  });
 }
 
 /* --------------- Tab：证书（复用既有 hook，memberId 由路由参数注入；无队员下拉） --------------- */
@@ -977,6 +1014,12 @@ onMounted(() => {
                   账号 ID：{{ detail.userId }}
                 </span>
               </el-descriptions-item>
+              <el-descriptions-item
+                v-if="detail.hasAccount && linkedAccountLastLoginAt"
+                label="最近登录"
+              >
+                {{ dayjs(linkedAccountLastLoginAt).format("YYYY-MM-DD HH:mm") }}
+              </el-descriptions-item>
             </el-descriptions>
             <div class="account-actions">
               <template v-if="!detail.hasAccount">
@@ -1015,6 +1058,13 @@ onMounted(() => {
                   @click="handleUnbindAccount"
                 >
                   解绑账号
+                </el-button>
+                <el-button
+                  v-if="canViewAccountAuthz"
+                  link
+                  @click="goAccountAuthz"
+                >
+                  查看授权
                 </el-button>
               </template>
             </div>
