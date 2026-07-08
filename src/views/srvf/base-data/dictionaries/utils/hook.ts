@@ -211,8 +211,9 @@ export function useDictTypes() {
   const itemLoading = ref(false);
 
   const itemColumns: TableColumnList = [
-    // 显示名放第一列以承载树形缩进 + 展开图标，比 code 更适合表达层级
-    { label: "显示名", prop: "label", minWidth: 160 },
+    // 显示名放第一列以承载树形缩进 + 展开图标，比 code 更适合表达层级；
+    // 必须左对齐——align-whole="center" 会跟树形缩进打架，同深度文字对不齐左边线，层级看着乱
+    { label: "显示名", prop: "label", minWidth: 160, align: "left" },
     { label: "条目 code", prop: "code", minWidth: 140 },
     { label: "排序", prop: "sortOrder", minWidth: 70 },
     { label: "状态", prop: "status", minWidth: 90, slot: "itemStatus" },
