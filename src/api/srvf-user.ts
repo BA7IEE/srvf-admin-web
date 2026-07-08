@@ -53,6 +53,16 @@ export type UserAccountListResult = Envelope<PageResult<UserAccountItem>>;
 export const getUserAccounts = (params?: UserAccountListQuery) =>
   http.request<UserAccountListResult>("get", "/api/admin/v1/users", { params });
 
+export type UserAccountDetailResult = Envelope<UserAccountItem>;
+
+/**
+ * 用户账号详情 `GET /api/admin/v1/users/{id}`（rbac: `user.read.account`，同列表码）。
+ * 字段与列表同形（`UserResponseDto`）——契约里没有手机号 / 微信绑定状态字段
+ * （`app/v1/me/*` 才有，是账号本人自助视角，admin 面查不到别人的），仅 `lastLoginAt` 可用。
+ */
+export const getUserAccount = (id: string) =>
+  http.request<UserAccountDetailResult>("get", `/api/admin/v1/users/${id}`);
+
 /** 用户选择器投影项（后端 `UserOptionItemDto`）。label = nickname || username。 */
 export type UserOptionItem = {
   id: string;
