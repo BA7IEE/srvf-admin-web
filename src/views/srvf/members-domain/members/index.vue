@@ -19,6 +19,7 @@ const {
   canUpdate,
   canDelete,
   canUpdateStatus,
+  canBulkGrant,
   loading,
   columns,
   dataList,
@@ -28,6 +29,8 @@ const {
   ensureGradeOptions,
   onSearch,
   onFilterChange,
+  handleSelectionChange,
+  openBulkGrantDialog,
   openDialog,
   openCockpit,
   handleDelete,
@@ -102,6 +105,9 @@ onMounted(() => {
         >
           新建
         </el-button>
+        <el-button v-if="canBulkGrant" @click="openBulkGrantDialog">
+          批量开通账号
+        </el-button>
       </template>
       <template v-slot="{ size, dynamicColumns }">
         <pure-table
@@ -122,6 +128,7 @@ onMounted(() => {
           }"
           @page-size-change="handleSizeChange"
           @page-current-change="handleCurrentChange"
+          @selection-change="handleSelectionChange"
         >
           <template #status="{ row }">
             <el-tag :type="row.status === 'ACTIVE' ? 'success' : 'info'">
@@ -144,7 +151,7 @@ onMounted(() => {
               :size="size"
               @click="openCockpit(row)"
             >
-              管理
+              档案
             </el-button>
             <el-button
               v-if="canUpdate"

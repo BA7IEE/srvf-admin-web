@@ -197,3 +197,30 @@ export const updateMemberAccountStatus = (id: string, status: AccountStatus) =>
     `/api/admin/v1/members/${id}/account/status`,
     { data: { status } }
   );
+
+/** 批量开号单条入参（后端 `BulkGrantAccountItemDto`） */
+export type BulkGrantAccountItem = { memberId: string; phone: string };
+
+/** 批量开号单条结果（后端 `BulkGrantAccountResultItemDto`）。userId/reason 恒回显两键，不适用为 null。 */
+export type BulkGrantAccountResultItem = {
+  memberId: string;
+  status: "ok" | "blocked";
+  userId: string | null;
+  reason: string | null;
+};
+
+export type BulkGrantMemberAccountsResult = Envelope<{
+  items: BulkGrantAccountResultItem[];
+  summary: { total: number; ok: number; blocked: number };
+}>;
+
+/**
+ * 批量开号 `POST /api/admin/v1/members/accounts/bulk-grant`（rbac: `member.grant.account`，复用，0 新码）。
+ * 1-200 条；逐行 skip-on-error，单行失败不影响其余行。
+ */
+export const bulkGrantMemberAccounts = (items: BulkGrantAccountItem[]) =>
+  http.request<BulkGrantMemberAccountsResult>(
+    "post",
+    "/api/admin/v1/members/accounts/bulk-grant",
+    { data: { items } }
+  );

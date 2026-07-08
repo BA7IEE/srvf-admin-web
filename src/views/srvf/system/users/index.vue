@@ -34,6 +34,7 @@ const {
   roleMeta,
   onSearch,
   onFilterChange,
+  goMemberProfile,
   goUserAuthz,
   openDialog,
   handleResetPassword,
@@ -65,7 +66,7 @@ onMounted(() => {
   <div class="main">
     <PureTableBar
       v-if="canRead"
-      title="用户管理"
+      title="系统账号"
       :columns="columns"
       @refresh="onSearch"
     >
@@ -137,6 +138,17 @@ onMounted(() => {
             <el-tag :type="row.status === 'ACTIVE' ? 'success' : 'danger'">
               {{ row.status === "ACTIVE" ? "正常" : "禁用" }}
             </el-tag>
+          </template>
+          <template #member="{ row }">
+            <el-link
+              v-if="row.member"
+              type="primary"
+              :underline="false"
+              @click="goMemberProfile(row)"
+            >
+              {{ row.member.displayName }}（{{ row.member.memberNo }}）
+            </el-link>
+            <span v-else>—</span>
           </template>
           <template #operation="{ row }">
             <el-button

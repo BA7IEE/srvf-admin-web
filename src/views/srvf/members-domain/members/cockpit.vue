@@ -21,7 +21,6 @@ import {
   updateMemberAccountStatus,
   type MemberItem
 } from "@/api/srvf-member";
-import { getUserOptions, type UserOptionItem } from "@/api/srvf-user";
 import AccountBindForm, {
   type AccountBindFormModel
 } from "./account-bind-form.vue";
@@ -111,20 +110,6 @@ const canManageAccountInCurrentState = computed(
 );
 
 const accountFormRef = ref();
-const userOptions = ref<UserOptionItem[]>([]);
-let userOptionsResolved = false;
-
-/** 懒加载账号选择器（供"绑定既有账号"用）；无权限/后端不可达 → 静默保持空 → 下拉退化为空列表 */
-async function ensureUserOptions() {
-  if (userOptionsResolved) return;
-  userOptionsResolved = true;
-  try {
-    const { code, data } = await getUserOptions({ limit: 100 });
-    if (code === 0) userOptions.value = data.items;
-  } catch {
-    // 无权限 / 后端不可达 → 保持空
-  }
-}
 
 /** 开通账号 / 退号重开共用的手机号输入弹窗（11 位手机号校验规则、错误文案统一在此维护） */
 function promptForPhone(title: string, tip: string): Promise<string | null> {
@@ -155,9 +140,8 @@ async function handleGrantAccount() {
   }
 }
 
-/** 绑定既有悬空账号（选择器投影 + filterable 本地搜索，已绑定他人的账号由后端拒绝） */
-async function openBindAccountDialog() {
-  await ensureUserOptions();
+/** 绑定既有悬空账号（弹窗内自带远程搜索，已绑定他人的账号由后端拒绝） */
+function openBindAccountDialog() {
   addDialog({
     title: "绑定既有账号",
     width: "32%",
@@ -166,8 +150,7 @@ async function openBindAccountDialog() {
     closeOnClickModal: false,
     sureBtnLoading: true,
     props: {
-      formInline: { userId: "" } as AccountBindFormModel,
-      userOptions: userOptions.value
+      formInline: { userId: "" } as AccountBindFormModel
     },
     contentRenderer: () => h(AccountBindForm, { ref: accountFormRef }),
     beforeSure: (done, { options, closeLoading }) => {
@@ -437,6 +420,18 @@ onMounted(() => {
             <span class="cockpit-header__name">{{ detail.displayName }}</span>
             <el-tag :type="detail.status === 'ACTIVE' ? 'success' : 'info'">
               {{ detail.status === "ACTIVE" ? "在队" : "离队" }}
+            </el-tag>
+            <el-tag v-if="!detail.hasAccount" type="info" effect="plain">
+              账号：未开通
+            </el-tag>
+            <el-tag
+              v-else
+              :type="detail.accountStatus === 'ACTIVE' ? 'success' : 'danger'"
+              effect="plain"
+            >
+              账号：{{
+                detail.accountStatus === "ACTIVE" ? "已开通" : "已停用"
+              }}
             </el-tag>
           </div>
         </div>
@@ -963,7 +958,7 @@ onMounted(() => {
       <el-tab-pane label="账号" name="account">
         <el-card v-loading="detailLoading" shadow="never">
           <template v-if="detail">
-            <el-descriptions :column="2" border>
+            <el-descriptions :column="1" border>
               <el-descriptions-item label="账号状态">
                 <el-tag v-if="!detail.hasAccount" type="info">未开通</el-tag>
                 <el-tag
@@ -978,9 +973,9 @@ onMounted(() => {
                       : "已开通 · 已停用"
                   }}
                 </el-tag>
-              </el-descriptions-item>
-              <el-descriptions-item label="关联账号 ID">
-                {{ detail.userId ?? "—" }}
+                <span v-if="detail.userId" class="account-id-caption">
+                  账号 ID：{{ detail.userId }}
+                </span>
               </el-descriptions-item>
             </el-descriptions>
             <div class="account-actions">
@@ -1207,6 +1202,12 @@ onMounted(() => {
 .account-hint {
   margin-top: 12px;
   font-size: 13px;
+  color: var(--el-text-color-secondary);
+}
+
+.account-id-caption {
+  margin-left: 12px;
+  font-size: 12px;
   color: var(--el-text-color-secondary);
 }
 
