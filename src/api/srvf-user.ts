@@ -11,6 +11,12 @@ type PageResult<T> = {
 export type AccountRole = "SUPER_ADMIN" | "ADMIN" | "USER";
 export type AccountStatus = "ACTIVE" | "DISABLED";
 
+/** 账号关联队员摘要（后端 `UserLinkedMemberDto`） */
+export type UserLinkedMember = {
+  memberNo: string;
+  displayName: string;
+};
+
 /** 系统用户账号（后端 UserResponseDto；与 @/api/user 的登录态无关） */
 export type UserAccountItem = {
   id: string;
@@ -23,6 +29,10 @@ export type UserAccountItem = {
   createdAt: string;
   lastLoginAt: string | null;
   updatedAt: string;
+  /** 关联队员 id（队员账号闭环 additive；仅 admin list/detail 返回，未关联为 null） */
+  memberId: string | null;
+  /** 关联队员摘要（同上；未关联为 null） */
+  member: UserLinkedMember | null;
 };
 
 export type UserAccountListQuery = {
