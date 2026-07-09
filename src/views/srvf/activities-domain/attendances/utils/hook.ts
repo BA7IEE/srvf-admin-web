@@ -28,6 +28,7 @@ import {
   type AttendanceRecordInputBody
 } from "@/api/srvf-attendance";
 import { useSrvfDictStoreHook } from "@/store/modules/srvfDict";
+import { resolveLabelMap } from "@/api/srvf-meta";
 import AttendanceForm, {
   createEmptyRecord,
   type AttendanceFormOption,
@@ -76,6 +77,8 @@ export function useAttendances(externalActivityId: string) {
   dict.ensureTypes(["attendance_sheet_status"]);
   const dataList = ref<AttendanceSheetItem[]>([]);
   const loading = ref(false);
+  /** 提交人 User.id → 展示名（resolve-labels 批量解析；未命中回落原 id） */
+  const submitterLabels = ref<Record<string, string>>({});
   /** 审核明细 drawer 状态（查看明细：活动摘要 + 单据 + records，只读） */
   const reviewDetailVisible = ref(false);
   const reviewDetailLoading = ref(false);
@@ -98,9 +101,13 @@ export function useAttendances(externalActivityId: string) {
   });
 
   const columns: TableColumnList = [
-    { label: "提交人 ID", prop: "submitterUserId", minWidth: 200 },
+    {
+      label: "提交人",
+      prop: "submitterUserId",
+      minWidth: 140,
+      formatter: row => rowSubject(row as AttendanceSheetItem)
+    },
     { label: "状态", prop: "statusCode", minWidth: 110, slot: "statusCode" },
-    { label: "版本", prop: "version", minWidth: 80 },
     {
       label: "提交时间",
       prop: "submittedAt",
@@ -155,6 +162,11 @@ export function useAttendances(externalActivityId: string) {
         pagination.total = data.total;
         pagination.pageSize = data.pageSize;
         pagination.currentPage = data.page;
+        const resolved = await resolveLabelMap(
+          "user",
+          data.items.map(i => i.submitterUserId)
+        );
+        submitterLabels.value = { ...submitterLabels.value, ...resolved };
       }
     } catch (error: any) {
       message(bizErrorMessage(error, "加载考勤单据失败"), {
@@ -175,9 +187,9 @@ export function useAttendances(externalActivityId: string) {
     onSearch();
   }
 
-  /** 行主语：以提交人 ID 标识单据（列表项无展示名,沿提交人列口径） */
+  /** 行主语：提交人展示名（resolve-labels 命中）；未命中回落原 User.id */
   function rowSubject(row: AttendanceSheetItem) {
-    return row.submitterUserId;
+    return submitterLabels.value[row.submitterUserId] ?? row.submitterUserId;
   }
 
   function toFormDate(value?: string | null): Date | null {

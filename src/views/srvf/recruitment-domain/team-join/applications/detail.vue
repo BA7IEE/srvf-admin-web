@@ -26,7 +26,9 @@ function fmtDt(t?: string | null) {
         {{ app.memberDisplayName ?? app.memberNo ?? app.memberId }}
       </el-descriptions-item>
       <el-descriptions-item label="状态">
-        {{ TJ_APP_STATUS_LABEL[app.statusCode] ?? app.statusCode }}
+        <span :title="app.statusCode">
+          {{ TJ_APP_STATUS_LABEL[app.statusCode] ?? "未知状态" }}
+        </span>
       </el-descriptions-item>
       <el-descriptions-item label="通用门槛">
         {{ app.generalGatesSatisfied ? "已满足" : "未满足" }}

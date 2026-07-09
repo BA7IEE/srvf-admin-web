@@ -26,6 +26,7 @@ import {
   finalReviewErrorMessage
 } from "@/api/srvf-attendance";
 import { useSrvfDictStoreHook } from "@/store/modules/srvfDict";
+import { resolveLabelMap } from "@/api/srvf-meta";
 
 /**
  * 报名状态 code → tag 颜色（仅展示色；文案查 registration_status 字典,前端不臆造）。
@@ -337,6 +338,10 @@ export function useApprovalAttendance() {
 
   const dataList = ref<AdminAttendanceSheetItem[]>([]);
   const loading = ref(false);
+  /** 提交人 User.id → 展示名（resolve-labels 批量解析；未命中回落原 id） */
+  const submitterLabels = ref<Record<string, string>>({});
+  const submitterName = (row: AdminAttendanceSheetItem) =>
+    submitterLabels.value[row.submitterUserId] ?? row.submitterUserId;
   /** statusCode 横扫过滤（默认 pending = 待一级审；可切 pending_final_review = 待终审） */
   const statusFilter = ref<string>("pending");
   /** q 综合关键词（契约 F2；空串不传参） */
@@ -363,9 +368,13 @@ export function useApprovalAttendance() {
       minWidth: 180,
       formatter: ({ activityTitle, activityId }) => activityTitle ?? activityId
     },
-    { label: "提交人 ID", prop: "submitterUserId", minWidth: 180 },
+    {
+      label: "提交人",
+      prop: "submitterUserId",
+      minWidth: 140,
+      formatter: row => submitterName(row as AdminAttendanceSheetItem)
+    },
     { label: "状态", prop: "statusCode", minWidth: 110, slot: "statusCode" },
-    { label: "版本", prop: "version", minWidth: 70 },
     {
       label: "提交时间",
       prop: "submittedAt",
@@ -401,6 +410,11 @@ export function useApprovalAttendance() {
         pagination.total = data.total;
         pagination.pageSize = data.pageSize;
         pagination.currentPage = data.page;
+        const resolved = await resolveLabelMap(
+          "user",
+          data.items.map(i => i.submitterUserId)
+        );
+        submitterLabels.value = { ...submitterLabels.value, ...resolved };
       }
     } catch (error: any) {
       message(bizErrorMessage(error, "加载考勤横扫失败"), {
@@ -427,7 +441,7 @@ export function useApprovalAttendance() {
   /** 一级通过（pending → pending_final_review；reviewNote 可空；前置校验由后端裁决 → 弹其 message） */
   function handleApprove(row: AdminAttendanceSheetItem) {
     ElMessageBox.prompt(
-      `确定一级通过「提交人 ${row.submitterUserId}」在「${row.activityTitle ?? row.activityId}」的考勤单据吗？可填写审核备注（可空）。`,
+      `确定一级通过「${submitterName(row)}」在「${row.activityTitle ?? row.activityId}」提交的考勤单据吗？可填写审核备注（可空）。`,
       "一级通过",
       {
         confirmButtonText: "确定通过",
@@ -461,7 +475,7 @@ export function useApprovalAttendance() {
   /** 一级驳回（pending → rejected；reviewNote 必填；后端拒绝弹其 message） */
   function handleReject(row: AdminAttendanceSheetItem) {
     ElMessageBox.prompt(
-      `确定一级驳回「提交人 ${row.submitterUserId}」的考勤单据吗？请填写驳回理由（必填）。`,
+      `确定一级驳回「${submitterName(row)}」提交的考勤单据吗？请填写驳回理由（必填）。`,
       "一级驳回",
       {
         confirmButtonText: "确定驳回",
@@ -493,7 +507,7 @@ export function useApprovalAttendance() {
   /** 终审通过（pending_final_review → approved；finalReviewNote 可空；贡献值正式生效；后端拒绝弹其 message） */
   function handleFinalApprove(row: AdminAttendanceSheetItem) {
     ElMessageBox.prompt(
-      `确定终审通过「提交人 ${row.submitterUserId}」的考勤单据吗？贡献值将正式生效。可填写终审备注（可空）。`,
+      `确定终审通过「${submitterName(row)}」提交的考勤单据吗？贡献值将正式生效。可填写终审备注（可空）。`,
       "终审通过",
       {
         confirmButtonText: "确定终审通过",
@@ -527,7 +541,7 @@ export function useApprovalAttendance() {
   /** 终审驳回（pending_final_review → final_rejected；finalReviewNote 必填；后端拒绝弹其 message） */
   function handleFinalReject(row: AdminAttendanceSheetItem) {
     ElMessageBox.prompt(
-      `确定终审驳回「提交人 ${row.submitterUserId}」的考勤单据吗？请填写终审驳回理由（必填）。`,
+      `确定终审驳回「${submitterName(row)}」提交的考勤单据吗？请填写终审驳回理由（必填）。`,
       "终审驳回",
       {
         confirmButtonText: "确定终审驳回",

@@ -51,7 +51,9 @@ function onToggle(code: ThresholdCode, val: boolean) {
         {{ app.tempNo ?? "—" }}
       </el-descriptions-item>
       <el-descriptions-item label="状态">
-        {{ APP_STATUS_LABEL[app.statusCode] ?? app.statusCode }}
+        <span :title="app.statusCode">
+          {{ APP_STATUS_LABEL[app.statusCode] ?? "未知状态" }}
+        </span>
       </el-descriptions-item>
       <el-descriptions-item label="姓名">
         {{ app.realName ?? "—" }}
