@@ -103,96 +103,108 @@ onKeyStroke(e => {
 </script>
 
 <template>
-  <div
-    class="srvf-global-search-trigger w-10 h-12 flex-c cursor-pointer navbar-bg-hover hover:[&>svg]:animate-scale-bounce"
-    title="全局搜索（Ctrl/Cmd + K）"
-    @click="open"
-  >
-    <IconifyIconOffline :icon="SearchIcon" />
-  </div>
-
-  <el-dialog
-    v-model="show"
-    top="5vh"
-    class="srvf-global-search-dialog"
-    :show-close="false"
-    width="min(600px, 92vw)"
-    :style="{ borderRadius: '6px' }"
-    append-to-body
-    :before-close="close"
-    @opened="inputRef?.focus()"
-  >
-    <el-input
-      ref="inputRef"
-      v-model="keyword"
-      size="large"
-      clearable
-      placeholder="搜索队员 / 活动 / 组织 / 内容"
-      @input="onInput"
+  <div>
+    <div
+      class="srvf-global-search-trigger w-10 h-12 flex-c cursor-pointer navbar-bg-hover hover:[&>svg]:animate-scale-bounce"
+      title="全局搜索（Ctrl/Cmd + K）"
+      @click="open"
     >
-      <template #prefix>
-        <IconifyIconOffline :icon="SearchIcon" class="text-primary size-5" />
-      </template>
-    </el-input>
-
-    <div class="srvf-global-search-content">
-      <el-scrollbar max-height="calc(80vh - 140px)">
-        <el-empty
-          v-if="showEmpty"
-          description="没有找到匹配的记录"
-          :image-size="72"
-        />
-
-        <template v-if="showRecents">
-          <div class="srvf-global-search-group-label">最近访问</div>
-          <div
-            v-for="item in recents.items"
-            :key="keyOf(item)"
-            :ref="el => setRowRef(item, el)"
-            class="srvf-global-search-row"
-            :class="{ 'is-active': keyOf(item) === activeKey }"
-            @click="handleJump(item)"
-            @mouseenter="activeKey = keyOf(item)"
-          >
-            <span class="srvf-global-search-row__title">{{ item.title }}</span>
-            <span v-if="item.subtitle" class="srvf-global-search-row__subtitle">
-              {{ item.subtitle }}
-            </span>
-          </div>
-        </template>
-
-        <template v-for="group in groups" :key="group.type">
-          <div class="srvf-global-search-group-label">{{ group.label }}</div>
-          <div
-            v-for="item in group.items"
-            :key="keyOf(item)"
-            :ref="el => setRowRef(item, el)"
-            class="srvf-global-search-row"
-            :class="{ 'is-active': keyOf(item) === activeKey }"
-            @click="handleJump(item)"
-            @mouseenter="activeKey = keyOf(item)"
-          >
-            <span class="srvf-global-search-row__title">{{ item.title }}</span>
-            <span v-if="item.subtitle" class="srvf-global-search-row__subtitle">
-              {{ item.subtitle }}
-            </span>
-            <SrvfStatusTag
-              v-if="item.statusValue && group.statusLabelDict"
-              :value="item.statusValue"
-              :label-dict="group.statusLabelDict"
-              :tag-dict="group.statusTagDict ?? {}"
-            />
-          </div>
-        </template>
-      </el-scrollbar>
+      <IconifyIconOffline :icon="SearchIcon" />
     </div>
 
-    <template #footer>
-      <span class="srvf-global-search-footer">
-        <kbd>↑↓</kbd> 选择 <kbd>Enter</kbd> 打开 <kbd>Esc</kbd> 关闭
-      </span>
-    </template>
-  </el-dialog>
+    <el-dialog
+      v-model="show"
+      top="5vh"
+      class="srvf-global-search-dialog"
+      :show-close="false"
+      width="min(600px, 92vw)"
+      :style="{ borderRadius: '6px' }"
+      append-to-body
+      :before-close="close"
+      @opened="inputRef?.focus()"
+    >
+      <el-input
+        ref="inputRef"
+        v-model="keyword"
+        size="large"
+        clearable
+        placeholder="搜索队员 / 活动 / 组织 / 内容"
+        @input="onInput"
+      >
+        <template #prefix>
+          <IconifyIconOffline :icon="SearchIcon" class="text-primary size-5" />
+        </template>
+      </el-input>
+
+      <div class="srvf-global-search-content">
+        <el-scrollbar max-height="calc(80vh - 140px)">
+          <el-empty
+            v-if="showEmpty"
+            description="没有找到匹配的记录"
+            :image-size="72"
+          />
+
+          <template v-if="showRecents">
+            <div class="srvf-global-search-group-label">最近访问</div>
+            <div
+              v-for="item in recents.items"
+              :key="keyOf(item)"
+              :ref="el => setRowRef(item, el)"
+              class="srvf-global-search-row"
+              :class="{ 'is-active': keyOf(item) === activeKey }"
+              @click="handleJump(item)"
+              @mouseenter="activeKey = keyOf(item)"
+            >
+              <span class="srvf-global-search-row__title">{{
+                item.title
+              }}</span>
+              <span
+                v-if="item.subtitle"
+                class="srvf-global-search-row__subtitle"
+              >
+                {{ item.subtitle }}
+              </span>
+            </div>
+          </template>
+
+          <template v-for="group in groups" :key="group.type">
+            <div class="srvf-global-search-group-label">{{ group.label }}</div>
+            <div
+              v-for="item in group.items"
+              :key="keyOf(item)"
+              :ref="el => setRowRef(item, el)"
+              class="srvf-global-search-row"
+              :class="{ 'is-active': keyOf(item) === activeKey }"
+              @click="handleJump(item)"
+              @mouseenter="activeKey = keyOf(item)"
+            >
+              <span class="srvf-global-search-row__title">{{
+                item.title
+              }}</span>
+              <span
+                v-if="item.subtitle"
+                class="srvf-global-search-row__subtitle"
+              >
+                {{ item.subtitle }}
+              </span>
+              <SrvfStatusTag
+                v-if="item.statusValue && group.statusLabelDict"
+                :value="item.statusValue"
+                :label-dict="group.statusLabelDict"
+                :tag-dict="group.statusTagDict ?? {}"
+              />
+            </div>
+          </template>
+        </el-scrollbar>
+      </div>
+
+      <template #footer>
+        <span class="srvf-global-search-footer">
+          <kbd>↑↓</kbd> 选择 <kbd>Enter</kbd> 打开 <kbd>Esc</kbd> 关闭
+        </span>
+      </template>
+    </el-dialog>
+  </div>
 </template>
 
 <style lang="scss" scoped>
