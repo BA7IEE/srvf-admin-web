@@ -3,6 +3,7 @@ import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
 import { onMounted, ref } from "vue";
 import { PureTableBar } from "@/components/RePureTableBar";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
+import { SrvfPageIntro } from "@/srvf-kit";
 import { hasPerms } from "@/utils/auth";
 import { useRoleBindings } from "./utils/hook";
 import AuthzExplainDrawer from "./authz-explain-drawer.vue";
@@ -59,11 +60,8 @@ onMounted(() => {
 
 <template>
   <div class="main">
-    <el-alert
+    <SrvfPageIntro
       v-if="canRead"
-      type="info"
-      :closable="false"
-      show-icon
       class="mb-2"
       title="角色绑定 = 把角色授予某个主体（用户 / 队员 / 任职）并限定生效范围；「系统管理 → 角色权限」定义的是角色本身有哪些权限，两者配合使用。"
     />

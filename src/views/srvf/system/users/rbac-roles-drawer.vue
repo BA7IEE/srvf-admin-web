@@ -5,6 +5,7 @@ import dayjs from "dayjs";
 import { ElMessageBox } from "element-plus";
 import { message } from "@/utils/message";
 import { hasPerms } from "@/utils/auth";
+import { SrvfPageIntro } from "@/srvf-kit";
 import {
   getUserRbacRoles,
   assignUserRbacRole,
@@ -138,11 +139,8 @@ watch(visible, open => {
     destroy-on-close
   >
     <template v-if="canRead">
-      <el-alert
+      <SrvfPageIntro
         class="mb-3"
-        type="info"
-        show-icon
-        :closable="false"
         title="这是全局角色绑定"
         description="与「组织与人事 → 角色绑定」页是两个入口、同一张底表；旧判权服务只读这里的 GLOBAL 绑定，覆盖几乎全部业务面，是让用户真正拿到某角色权限最直接的路径。"
       />

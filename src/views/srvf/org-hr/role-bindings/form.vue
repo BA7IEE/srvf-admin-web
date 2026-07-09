@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import type { FormRules } from "element-plus";
+import { SrvfRemoteSelect } from "@/srvf-kit";
 import type { RoleOptionItem } from "@/api/srvf-role";
 import type { UserOptionItem } from "@/api/srvf-user";
 import type { MemberOptionItem } from "@/api/srvf-position-assignment";
@@ -83,6 +84,11 @@ const props = withDefaults(
 
 const form = props.formInline;
 const formRef = ref();
+
+/** SrvfRemoteSelect 吃 {value,label}；本页 activityOptions 是 {id,label}（对齐 el-option :value="opt.id" 原写法） */
+const activitySelectOptions = computed(() =>
+  props.activityOptions.map(opt => ({ value: opt.id, label: opt.label }))
+);
 
 const needsPrincipalId = computed(() => form.principalType !== "SYSTEM");
 const needsScopeOrg = computed(
@@ -298,19 +304,12 @@ defineExpose({ getRef });
       </el-col>
       <el-col v-if="needsScopeActivity" :span="12">
         <el-form-item label="Scope 活动" prop="scopeActivityId">
-          <el-select
+          <SrvfRemoteSelect
             v-model="form.scopeActivityId"
-            filterable
+            :options="activitySelectOptions"
+            :clearable="false"
             placeholder="选择活动"
-            class="w-full"
-          >
-            <el-option
-              v-for="opt in props.activityOptions"
-              :key="opt.id"
-              :label="opt.label"
-              :value="opt.id"
-            />
-          </el-select>
+          />
         </el-form-item>
       </el-col>
       <template v-if="needsScopeResource">
