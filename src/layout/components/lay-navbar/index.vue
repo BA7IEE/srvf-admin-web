@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useNav } from "@/layout/hooks/useNav";
 import LaySearch from "../lay-search/index.vue";
+import SrvfGlobalSearch from "@/srvf-kit/components/SrvfGlobalSearch.vue";
 import LayNotice from "../lay-notice/index.vue";
 import LayNavMix from "../lay-sidebar/NavMix.vue";
 import LaySidebarThemeMode from "../lay-sidebar/components/SidebarThemeMode.vue";
@@ -47,6 +48,8 @@ const {
     <div v-if="/vertical|double/.test(layout)" class="vertical-header-right">
       <!-- 菜单搜索 -->
       <LaySearch id="header-search" />
+      <!-- 全局实体搜索 -->
+      <SrvfGlobalSearch id="header-global-search" />
       <!-- 全屏 -->
       <LaySidebarFullScreen id="full-screen" />
       <!-- 主题模式 -->
