@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import dayjs from "dayjs";
+import { ref, watch } from "vue";
 import { useSrvfDictStoreHook } from "@/store/modules/srvfDict";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
+import { resolveLabelMap } from "@/api/srvf-meta";
 import type {
   AttendanceSheetReviewDetail,
   AttendanceReviewMember
@@ -10,17 +12,32 @@ import type {
 import PrinterLine from "~icons/ri/printer-line";
 
 /** 只读展示组件:审核完整视图（活动摘要 + 单据 + records）。由考勤 tab 的「查看明细」在 drawer 内渲染。 */
-defineProps<{
+const props = defineProps<{
   detail: AttendanceSheetReviewDetail | null;
 }>();
 
-/** 共享字典：活动类型 / 活动状态 / 考勤单据状态 code → 中文（不臆造,查不到退化为原 code） */
+/** 共享字典：活动类型 / 活动状态 / 考勤单据状态 / 考勤角色 / 出勤状态 code → 中文（不臆造,查不到退化为原 code） */
 const dict = useSrvfDictStoreHook();
 dict.ensureTypes([
   "activity_type",
   "activity_status",
-  "attendance_sheet_status"
+  "attendance_sheet_status",
+  "attendance_role",
+  "attendance_status"
 ]);
+
+/** 提交人 User.id → 展示名（resolve-labels 单条解析；未命中/失败回落原 id） */
+const submitterLabel = ref("");
+watch(
+  () => props.detail?.sheet.submitterUserId,
+  async id => {
+    submitterLabel.value = "";
+    if (!id) return;
+    const map = await resolveLabelMap("user", [id]);
+    submitterLabel.value = map[id] ?? "";
+  },
+  { immediate: true }
+);
 
 const SHEET_STATUS_TAG: Record<
   string,
@@ -90,11 +107,11 @@ function handlePrint() {
             {{ dict.label("attendance_sheet_status", detail.sheet.statusCode) }}
           </el-tag>
         </el-descriptions-item>
-        <el-descriptions-item label="版本">
-          {{ detail.sheet.version }}
+        <el-descriptions-item label="提交版次">
+          第 {{ detail.sheet.version }} 版
         </el-descriptions-item>
-        <el-descriptions-item label="提交人 ID">
-          {{ detail.sheet.submitterUserId }}
+        <el-descriptions-item label="提交人">
+          {{ submitterLabel || detail.sheet.submitterUserId }}
         </el-descriptions-item>
         <el-descriptions-item label="提交时间">
           {{ fmt(detail.sheet.submittedAt) }}
@@ -118,7 +135,11 @@ function handlePrint() {
           </template>
         </el-table-column>
         <el-table-column label="角色" prop="roleCode" min-width="100">
-          <template #default="{ row }">{{ row.roleCode || "—" }}</template>
+          <template #default="{ row }">
+            {{
+              row.roleCode ? dict.label("attendance_role", row.roleCode) : "—"
+            }}
+          </template>
         </el-table-column>
         <el-table-column label="签到" min-width="150">
           <template #default="{ row }">{{ fmt(row.checkInAt) }}</template>
@@ -139,7 +160,11 @@ function handlePrint() {
           min-width="100"
         >
           <template #default="{ row }">
-            {{ row.attendanceStatusCode || "—" }}
+            {{
+              row.attendanceStatusCode
+                ? dict.label("attendance_status", row.attendanceStatusCode)
+                : "—"
+            }}
           </template>
         </el-table-column>
         <el-table-column

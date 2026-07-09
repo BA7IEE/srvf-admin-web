@@ -12,6 +12,17 @@ defineOptions({
 
 const user = useUserStoreHook();
 
+/**
+ * 系统角色 code → 中文展示（与 system/users 的 ROLE_META 同源：docs-json 固定枚举
+ * SUPER_ADMIN / ADMIN / USER 的最小展示映射，未知 code 退化为原文）。
+ */
+const ROLE_LABEL: Record<string, string> = {
+  SUPER_ADMIN: "超级管理员",
+  ADMIN: "管理员",
+  USER: "普通用户"
+};
+const roleLabel = (r: string) => ROLE_LABEL[r] ?? r;
+
 /* ----------------------------- 改密表单 ----------------------------- */
 const pwdRef = ref<FormInstance>();
 const submitting = ref(false);
@@ -78,7 +89,7 @@ function onSubmit() {
             type="info"
             size="small"
           >
-            {{ r }}
+            {{ roleLabel(r) }}
           </el-tag>
           <span v-if="!user.roles || user.roles.length === 0">—</span>
         </el-descriptions-item>
