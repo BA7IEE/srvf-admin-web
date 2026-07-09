@@ -3,6 +3,7 @@ import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
 import { onMounted } from "vue";
 import { PureTableBar } from "@/components/RePureTableBar";
 import { usePositionAssignmentList } from "./utils/hook";
+import { SrvfPageIntro } from "@/srvf-kit";
 
 defineOptions({
   name: "SrvfPositionAssignments"
@@ -41,9 +42,13 @@ onMounted(() => {
 
 <template>
   <div class="main">
+    <SrvfPageIntro
+      class="mb-2"
+      title="跨组织查看全部职务任命记录；新的任命在「组织架构」页对应节点的「在任职务」里发起。"
+    />
     <PureTableBar
       v-if="canRead"
-      title="任职总表（跨组织跨队员）"
+      title="任命记录（跨组织跨队员）"
       :columns="columns"
       @refresh="onSearch"
     >

@@ -110,7 +110,7 @@ export function useRoles() {
   function handleReload() {
     ElMessageBox.confirm(
       "确定重载 RBAC 权限缓存吗？改完角色/权限绑定后需重载才即时生效。",
-      "重载权限缓存",
+      "使权限立即生效",
       {
         confirmButtonText: "确定重载",
         cancelButtonText: "取消",

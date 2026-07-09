@@ -56,14 +56,14 @@ export function useContributionRules() {
         dict.label("attendance_role", attendanceRoleCode)
     },
     {
-      label: "时长阈值",
+      label: "时长门槛(小时)",
       prop: "durationThreshold",
       minWidth: 110,
       formatter: ({ durationThreshold }) => durationThreshold ?? "—"
     },
-    { label: "阈下分", prop: "pointsBelow", minWidth: 90 },
+    { label: "门槛内得分", prop: "pointsBelow", minWidth: 90 },
     {
-      label: "阈上分",
+      label: "超出门槛得分",
       prop: "pointsAbove",
       minWidth: 90,
       formatter: ({ pointsAbove }) => pointsAbove ?? "—"

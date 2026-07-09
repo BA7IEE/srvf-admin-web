@@ -6,6 +6,7 @@ import { useRenderIcon } from "@/components/ReIcon/src/hooks";
 import { useAttachmentConfigs } from "./utils/hook";
 
 import AddFill from "~icons/ri/add-circle-line";
+import { SrvfPageIntro } from "@/srvf-kit";
 
 defineOptions({
   name: "SrvfAttachmentConfig"
@@ -74,6 +75,10 @@ const activeTab = ref(
 
 <template>
   <div class="main">
+    <SrvfPageIntro
+      class="mb-2"
+      title="上传文件的类型、格式与大小限制（技术配置页），影响全站所有上传入口。"
+    />
     <el-tabs v-if="anyRead" v-model="activeTab" class="ac-tabs">
       <!-- 类型配置 -->
       <el-tab-pane v-if="canReadType" label="类型配置" name="type">

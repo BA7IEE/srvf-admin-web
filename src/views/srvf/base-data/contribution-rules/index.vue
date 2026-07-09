@@ -8,6 +8,7 @@ import { useRenderIcon } from "@/components/ReIcon/src/hooks";
 import Delete from "~icons/ep/delete";
 import EditPen from "~icons/ep/edit-pen";
 import AddFill from "~icons/ri/add-circle-line";
+import { SrvfPageIntro } from "@/srvf-kit";
 
 defineOptions({
   name: "SrvfContributionRules"
@@ -37,6 +38,10 @@ onMounted(() => {
 
 <template>
   <div class="main">
+    <SrvfPageIntro
+      class="mb-2"
+      title="配置各类活动、各考勤角色的记分规则：按服务时长门槛给分，考勤终审通过后自动落分。"
+    />
     <PureTableBar
       v-if="canRead"
       title="贡献值规则"

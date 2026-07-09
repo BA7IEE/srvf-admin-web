@@ -44,7 +44,7 @@ export function useMembershipConflicts() {
         organizationLabel ?? organizationId ?? "—"
     },
     {
-      label: "涉及会籍",
+      label: "涉及归属",
       prop: "membershipIds",
       minWidth: 100,
       formatter: ({ membershipIds }) => `${membershipIds.length} 条`

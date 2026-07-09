@@ -7,6 +7,7 @@ import { useRenderIcon } from "@/components/ReIcon/src/hooks";
 import Delete from "~icons/ep/delete";
 import EditPen from "~icons/ep/edit-pen";
 import AddFill from "~icons/ri/add-circle-line";
+import { SrvfPageIntro } from "@/srvf-kit";
 
 defineOptions({
   name: "SrvfActivities"
@@ -40,6 +41,10 @@ onMounted(() => {
 
 <template>
   <div class="main">
+    <SrvfPageIntro
+      class="mb-2"
+      title="发布和管理全队活动：新建后点「管理」进入活动详情，在那里发布活动、审核报名、提交和审核考勤。"
+    />
     <PureTableBar title="活动列表" :columns="columns" @refresh="onSearch">
       <template #buttons>
         <el-button

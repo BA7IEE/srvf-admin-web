@@ -6,6 +6,7 @@ import { useRenderIcon } from "@/components/ReIcon/src/hooks";
 import { useSupervisionAssignments } from "./utils/hook";
 
 import AddFill from "~icons/ri/add-circle-line";
+import { SrvfPageIntro } from "@/srvf-kit";
 
 defineOptions({
   name: "SrvfSupervisionAssignments"
@@ -42,9 +43,13 @@ onMounted(() => {
 
 <template>
   <div class="main">
+    <SrvfPageIntro
+      class="mb-2"
+      title="维护「谁分管哪些组织」：分管与职务任命相互独立，用于范围化的监督权限。"
+    />
     <PureTableBar
       v-if="canRead"
-      title="督导总表（分管,与职务正交）"
+      title="分管总表（谁分管哪些组织,与职务任命相互独立）"
       :columns="columns"
       @refresh="onSearch"
     >
@@ -147,7 +152,7 @@ onMounted(() => {
     </PureTableBar>
     <SrvfPermEmpty
       v-else
-      action="查看督导"
+      action="查看分管"
       code="supervision-assignment.read.record"
     />
   </div>

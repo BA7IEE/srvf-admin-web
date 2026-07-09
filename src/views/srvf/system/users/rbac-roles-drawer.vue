@@ -75,9 +75,12 @@ function doAssign() {
     assigning.value = true;
     try {
       await assignUserRbacRole(props.user!.id, roleCode);
-      message("绑定成功；如需立即生效请到「角色权限」页点击「重载权限缓存」", {
-        type: "success"
-      });
+      message(
+        "绑定成功；如需立即生效，请到「角色权限」页点「使权限立即生效」",
+        {
+          type: "success"
+        }
+      );
       selectedRoleCode.value = "";
       await loadData();
     } catch (error: any) {
@@ -142,7 +145,7 @@ watch(visible, open => {
       <SrvfPageIntro
         class="mb-3"
         title="这是全局角色绑定"
-        description="与「组织与人事 → 角色绑定」页是两个入口、同一张底表；旧判权服务只读这里的 GLOBAL 绑定，覆盖几乎全部业务面，是让用户真正拿到某角色权限最直接的路径。"
+        description="在这里绑定的角色对全队范围生效，是让某人真正获得一个角色权限的最直接方式。「系统管理 → 角色绑定」页也能看到这些记录（生效范围显示为「全局」），两处是同一份数据。"
       />
 
       <div v-if="canAssign" class="assign-row">

@@ -273,7 +273,7 @@ onMounted(() => {
           公示名单
         </el-button>
         <el-button v-if="canPromote" type="primary" @click="openPrecheck">
-          一键发号
+          发放队员编号
         </el-button>
       </template>
       <template #overview>
@@ -348,7 +348,7 @@ onMounted(() => {
             <div class="stats-group">
               <div class="stats-group__title">公示发号</div>
               <div class="stats-group__row">
-                公示中 {{ stats.issuance.inPublicity }} · 可一键发号
+                公示中 {{ stats.issuance.inPublicity }} · 可直接发编号
                 {{ stats.issuance.oneClickIssuable }} · 需手动建档
                 {{ stats.issuance.needManualBuild }} · 已发号
                 {{ stats.issuance.promoted }}
@@ -587,7 +587,7 @@ onMounted(() => {
     <!-- 一键发号预检 dialog（纯读,与实发结构性同源;确认后才真正调用 promote） -->
     <el-dialog
       v-model="precheckVisible"
-      title="一键发号预检"
+      title="发放编号预检（将为通过者建立队员档案）"
       width="72%"
       destroy-on-close
     >
@@ -598,7 +598,7 @@ onMounted(() => {
             type="info"
             show-icon
             :closable="false"
-            :title="`公示总数 ${precheckData.total} · 可一键发号 ${precheckData.promotableCount} · 需跳过(手动建档) ${precheckData.skipCount}`"
+            :title="`公示总数 ${precheckData.total} · 可直接发编号 ${precheckData.promotableCount} · 需手动建档 ${precheckData.skipCount}`"
           />
           <el-table
             :data="precheckData.rows"

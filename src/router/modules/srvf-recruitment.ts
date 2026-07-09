@@ -29,7 +29,7 @@ export default [
         component: () =>
           import("@/views/srvf/recruitment-domain/cycles/cockpit.vue"),
         meta: {
-          title: "招新作战室",
+          title: "招新详情",
           showLink: false,
           activePath: "/srvf/recruitment-domain/cycles"
         }
@@ -51,7 +51,7 @@ export default [
         component: () =>
           import("@/views/srvf/recruitment-domain/team-join/cycles/cockpit.vue"),
         meta: {
-          title: "入队作战室",
+          title: "入队详情",
           showLink: false,
           activePath: "/srvf/recruitment-domain/team-join"
         }

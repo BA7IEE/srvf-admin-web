@@ -477,7 +477,7 @@ export function useAttendances(externalActivityId: string) {
   /** 提交新考勤单据（对话框；对齐既有 openXxxDialog 范式：addDialog + contentRenderer + beforeSure）。 */
   function openCreateDialog() {
     if (!activityId.value) {
-      message("请先进入一个活动作战室", { type: "warning" });
+      message("请先从活动列表点「管理」进入一个活动", { type: "warning" });
       return;
     }
     ensureAttendanceFormOptions()

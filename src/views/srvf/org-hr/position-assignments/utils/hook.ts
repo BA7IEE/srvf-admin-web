@@ -150,7 +150,7 @@ export function usePositionAssignmentList() {
         pagination.currentPage = data.page;
       }
     } catch (error: any) {
-      message(bizErrorMessage(error, "加载任职总表失败"), {
+      message(bizErrorMessage(error, "加载任命记录失败"), {
         type: "error"
       });
     } finally {

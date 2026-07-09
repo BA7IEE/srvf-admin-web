@@ -4,6 +4,7 @@ import { onMounted } from "vue";
 import { PureTableBar } from "@/components/RePureTableBar";
 import { useAttachments, canViewAttachmentLibrary } from "./utils/hook";
 import { ACCESS_LEVEL_LABEL } from "@/api/srvf-attachment";
+import { SrvfPageIntro } from "@/srvf-kit";
 
 defineOptions({
   name: "SrvfAttachments"
@@ -55,6 +56,10 @@ onMounted(() => {
 
 <template>
   <div class="main">
+    <SrvfPageIntro
+      class="mb-2"
+      title="全站上传文件的总台账（按归属对象管理）；日常上传请优先在对应业务页（如内容编辑）内进行。"
+    />
     <template v-if="canView">
       <PureTableBar title="附件库" :columns="columns" @refresh="onSearch">
         <template #buttons>

@@ -32,7 +32,7 @@ const formRef = ref();
 
 const rules: FormRules = {
   code: [
-    { required: true, message: "请输入权限点 code", trigger: "blur" },
+    { required: true, message: "请输入权限标识", trigger: "blur" },
     {
       pattern: /^[a-z][a-z0-9-]*(\.[a-z][a-z0-9-]*){2,3}$/,
       message: "格式：<module>.<action>.<resourceType>[.<scope>]，3-4 段点分隔",
@@ -52,7 +52,7 @@ defineExpose({ getRef });
 
 <template>
   <el-form ref="formRef" :model="form" :rules="rules" label-width="96px">
-    <el-form-item label="权限点 code" prop="code">
+    <el-form-item label="权限标识" prop="code">
       <el-input
         v-model="form.code"
         clearable

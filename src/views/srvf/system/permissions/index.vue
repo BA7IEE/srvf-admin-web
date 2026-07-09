@@ -8,6 +8,7 @@ import { useRenderIcon } from "@/components/ReIcon/src/hooks";
 import AddFill from "~icons/ri/add-circle-line";
 import EditPen from "~icons/ep/edit-pen";
 import Delete from "~icons/ep/delete";
+import { SrvfPageIntro } from "@/srvf-kit";
 
 defineOptions({
   name: "SrvfPermissions"
@@ -39,6 +40,10 @@ onMounted(() => {
 
 <template>
   <div class="main">
+    <SrvfPageIntro
+      class="mb-2"
+      title="系统权限的最小单元（技术配置页）：一般由系统管理员维护，日常无需改动。"
+    />
     <template v-if="canRead">
       <el-form :inline="true" :model="filterForm" class="mb-2">
         <el-form-item label="模块">

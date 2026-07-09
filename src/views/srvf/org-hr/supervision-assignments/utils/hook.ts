@@ -152,7 +152,7 @@ export function useSupervisionAssignments() {
         pagination.currentPage = data.page;
       }
     } catch (error: any) {
-      message(bizErrorMessage(error, "加载督导总表失败"), {
+      message(bizErrorMessage(error, "加载分管总表失败"), {
         type: "error"
       });
     } finally {

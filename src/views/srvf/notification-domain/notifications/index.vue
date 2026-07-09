@@ -6,6 +6,7 @@ import { useRenderIcon } from "@/components/ReIcon/src/hooks";
 import { useNotifications } from "./utils/hook";
 
 import AddFill from "~icons/ri/add-circle-line";
+import { SrvfPageIntro } from "@/srvf-kit";
 
 defineOptions({
   name: "SrvfNotifications"
@@ -46,6 +47,10 @@ onMounted(() => {
 
 <template>
   <div class="main">
+    <SrvfPageIntro
+      class="mb-2"
+      title="向队员发布通知：站内消息随发布送达；勾选短信的通知可在发布后手动发送短信（按条计费，需二次确认）。"
+    />
     <template v-if="canRead">
       <PureTableBar title="通知管理" :columns="columns" @refresh="onSearch">
         <template #buttons>

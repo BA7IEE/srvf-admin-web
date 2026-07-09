@@ -45,7 +45,9 @@ const rules: FormRules = {
   attendanceRoleCode: [
     { required: true, message: "请输入考勤角色字典 code", trigger: "blur" }
   ],
-  pointsBelow: [{ required: true, message: "请输入阈下分值", trigger: "blur" }]
+  pointsBelow: [
+    { required: true, message: "请输入门槛内得分", trigger: "blur" }
+  ]
 };
 
 function getRef() {
@@ -84,7 +86,7 @@ defineExpose({ getRef });
         </el-form-item>
       </re-col>
       <re-col>
-        <el-form-item label="时长阈值">
+        <el-form-item label="时长门槛(小时)">
           <el-input-number
             v-model="newFormInline.durationThreshold"
             :disabled="newFormInline.isEdit"
@@ -98,7 +100,7 @@ defineExpose({ getRef });
         </el-form-item>
       </re-col>
       <re-col>
-        <el-form-item label="阈下分" prop="pointsBelow">
+        <el-form-item label="门槛内得分" prop="pointsBelow">
           <el-input-number
             v-model="newFormInline.pointsBelow"
             :min="0"
@@ -106,12 +108,12 @@ defineExpose({ getRef });
             :value-on-clear="0"
             class="w-full!"
             controls-position="right"
-            placeholder="≤ 阈值（或无档位）的预填分值"
+            placeholder="服务时长未超过门槛（或未设门槛）时记的分"
           />
         </el-form-item>
       </re-col>
       <re-col>
-        <el-form-item label="阈上分">
+        <el-form-item label="超出门槛得分">
           <el-input-number
             v-model="newFormInline.pointsAbove"
             :min="0"
@@ -119,7 +121,7 @@ defineExpose({ getRef });
             :value-on-clear="null"
             class="w-full!"
             controls-position="right"
-            placeholder="留空 = 无；非空需 > 阈下分 且 有时长阈值"
+            placeholder="留空 = 不设；填写时须大于门槛内得分，且已设时长门槛"
           />
         </el-form-item>
       </re-col>

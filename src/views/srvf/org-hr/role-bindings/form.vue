@@ -271,7 +271,7 @@ defineExpose({ getRef });
         </el-form-item>
       </el-col>
       <el-col :span="12">
-        <el-form-item label="Scope" prop="scopeType">
+        <el-form-item label="生效范围" prop="scopeType">
           <el-select v-model="form.scopeType" class="w-full">
             <el-option label="全局 GLOBAL" value="GLOBAL" />
             <el-option label="指定组织 ORGANIZATION" value="ORGANIZATION" />
@@ -286,7 +286,7 @@ defineExpose({ getRef });
         </el-form-item>
       </el-col>
       <el-col v-if="needsScopeOrg" :span="12">
-        <el-form-item label="Scope 组织" prop="scopeOrgId">
+        <el-form-item label="范围组织" prop="scopeOrgId">
           <el-select
             v-model="form.scopeOrgId"
             filterable
@@ -303,7 +303,7 @@ defineExpose({ getRef });
         </el-form-item>
       </el-col>
       <el-col v-if="needsScopeActivity" :span="12">
-        <el-form-item label="Scope 活动" prop="scopeActivityId">
+        <el-form-item label="范围活动" prop="scopeActivityId">
           <SrvfRemoteSelect
             v-model="form.scopeActivityId"
             :options="activitySelectOptions"

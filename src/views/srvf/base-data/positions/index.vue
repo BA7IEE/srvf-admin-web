@@ -8,6 +8,7 @@ import { usePositions } from "./utils/hook";
 import Delete from "~icons/ep/delete";
 import EditPen from "~icons/ep/edit-pen";
 import AddFill from "~icons/ri/add-circle-line";
+import { SrvfPageIntro } from "@/srvf-kit";
 
 defineOptions({
   name: "SrvfPositions"
@@ -42,6 +43,10 @@ onMounted(() => {
 
 <template>
   <div class="main">
+    <SrvfPageIntro
+      class="mb-2"
+      title="定义队内有哪些职务（如中队长、组长）及其属性，是发起任命的前提。"
+    />
     <PureTableBar
       v-if="canRead"
       title="职务定义（全局复用）"

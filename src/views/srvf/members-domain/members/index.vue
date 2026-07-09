@@ -49,6 +49,7 @@ onMounted(() => {
   <SrvfListPage
     :can-read="canRead"
     title="队员列表"
+    intro="全队队员花名册：点「档案」查看某位队员的完整信息（证书、归属、履历、贡献值等都在档案里）。"
     :columns="columns"
     :loading="loading"
     :data-list="dataList"

@@ -8,6 +8,7 @@ import { usePositionRules } from "./utils/hook";
 import Delete from "~icons/ep/delete";
 import EditPen from "~icons/ep/edit-pen";
 import AddFill from "~icons/ri/add-circle-line";
+import { SrvfPageIntro } from "@/srvf-kit";
 
 defineOptions({
   name: "SrvfPositionRules"
@@ -47,6 +48,10 @@ onMounted(() => {
 
 <template>
   <div class="main">
+    <SrvfPageIntro
+      class="mb-2"
+      title="约束每类组织可设哪些职务、人数上下限，任命时系统会按此校验。"
+    />
     <PureTableBar
       v-if="canRead"
       title="职务规则（组织类别 × 职务）"

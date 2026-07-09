@@ -6,6 +6,7 @@ import { useRenderIcon } from "@/components/ReIcon/src/hooks";
 import { useTeamInsurancePolicies } from "./utils/hook";
 
 import AddFill from "~icons/ri/add-circle-line";
+import { SrvfPageIntro } from "@/srvf-kit";
 
 defineOptions({
   name: "SrvfTeamInsurancePolicies"
@@ -48,6 +49,10 @@ onMounted(() => {
 
 <template>
   <div class="main">
+    <SrvfPageIntro
+      class="mb-2"
+      title="管理团队统一购买的保险单，并维护每张保单覆盖哪些队员。"
+    />
     <template v-if="canRead">
       <PureTableBar title="队保单" :columns="columns" @refresh="onSearch">
         <template #buttons>
