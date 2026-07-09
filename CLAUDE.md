@@ -48,6 +48,8 @@ Every AI task in this repository must read these documents first, in order:
 
 8. **`docs/srvf-admin-vnext-blueprint.md`**（v0.37.0 重估蓝图 · 差距矩阵 · IA v2 · Phase 0~3 路线图——新业务页动工前先在此定位）
 
+9. **`docs/srvf-admin-ux-upgrade-blueprint.md`**（产品化升级蓝图 · IA v3 / 工作台 v2 / 流程四件套 / 术语系统 / U0~U4 路线——凡涉及菜单、文案、页面交互的工作先读其 §4.1 七条军规与 §8 待拍板清单）
+
 For route / menu work also read:
 
 - `docs/pure-admin/03-router-menu.md` (especially §5.2.1 asyncRoutes P0 prohibition)
