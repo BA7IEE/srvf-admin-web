@@ -10,6 +10,7 @@ import { hasPerms } from "@/utils/auth";
 import { addDialog } from "@/components/ReDialog";
 import { PureTableBar } from "@/components/RePureTableBar";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
+import { SrvfDetailShell } from "@/srvf-kit";
 import {
   getRecruitmentCycle,
   updateRecruitmentCycle,
@@ -26,7 +27,6 @@ import { useRecruitmentTools } from "./utils/tools-hook";
 import EditPen from "~icons/ep/edit-pen";
 import DownloadLine from "~icons/ri/download-2-line";
 import CheckboxMultiple from "~icons/ri/checkbox-multiple-line";
-import ArrowLeftLine from "~icons/ri/arrow-left-line";
 
 defineOptions({
   name: "SrvfRecruitmentCycleCockpit"
@@ -238,48 +238,45 @@ onMounted(() => {
 <template>
   <div class="main">
     <!-- 头部：轮次信息 + 动作 -->
-    <el-card v-loading="cycleLoading" shadow="never" class="mb-2">
-      <el-button
-        link
-        class="mb-2!"
-        :icon="useRenderIcon(ArrowLeftLine)"
-        @click="router.push('/srvf/recruitment-domain/cycles')"
-      >
-        返回招新轮次
-      </el-button>
-      <template v-if="cycle">
-        <div class="cockpit-header">
-          <div class="cockpit-header__title">
-            <span class="cockpit-header__name">
-              {{ cycle.year }} · {{ cycle.name }}
-            </span>
-            <el-tag :type="cycle.statusCode === 'open' ? 'success' : 'info'">
-              {{ cycleStatusText(cycle.statusCode) }}
-            </el-tag>
-          </div>
-          <div class="cockpit-header__actions">
-            <el-button
-              v-if="canUpdate"
-              :icon="useRenderIcon(EditPen)"
-              @click="openEditDialog"
-            >
-              编辑
-            </el-button>
-            <el-button
-              v-if="canUpdate"
-              :type="cycle.statusCode === 'open' ? 'warning' : 'success'"
-              @click="handleToggleStatus"
-            >
-              {{ cycle.statusCode === "open" ? "关闭本轮" : "开启本轮" }}
-            </el-button>
-            <el-button v-if="canReadApp" @click="openPublicity">
-              公示名单
-            </el-button>
-            <el-button v-if="canPromote" type="primary" @click="openPrecheck">
-              一键发号
-            </el-button>
-          </div>
-        </div>
+    <SrvfDetailShell
+      :loading="cycleLoading"
+      :found="!!cycle"
+      not-found-text="未找到该轮次或无权查看"
+      back-text="返回招新轮次"
+      wrap
+      @back="router.push('/srvf/recruitment-domain/cycles')"
+    >
+      <template #title>
+        <span class="cockpit-header__name">
+          {{ cycle.year }} · {{ cycle.name }}
+        </span>
+        <el-tag :type="cycle.statusCode === 'open' ? 'success' : 'info'">
+          {{ cycleStatusText(cycle.statusCode) }}
+        </el-tag>
+      </template>
+      <template #actions>
+        <el-button
+          v-if="canUpdate"
+          :icon="useRenderIcon(EditPen)"
+          @click="openEditDialog"
+        >
+          编辑
+        </el-button>
+        <el-button
+          v-if="canUpdate"
+          :type="cycle.statusCode === 'open' ? 'warning' : 'success'"
+          @click="handleToggleStatus"
+        >
+          {{ cycle.statusCode === "open" ? "关闭本轮" : "开启本轮" }}
+        </el-button>
+        <el-button v-if="canReadApp" @click="openPublicity">
+          公示名单
+        </el-button>
+        <el-button v-if="canPromote" type="primary" @click="openPrecheck">
+          一键发号
+        </el-button>
+      </template>
+      <template #overview>
         <el-descriptions :column="3" border class="mt-3">
           <el-descriptions-item label="容量">
             {{ cycle.capacity ?? "不限" }}
@@ -295,236 +292,232 @@ onMounted(() => {
           </el-descriptions-item>
         </el-descriptions>
       </template>
-      <el-empty
-        v-else-if="!cycleLoading"
-        description="未找到该轮次或无权查看"
-      />
-    </el-card>
 
-    <!-- 工作台聚合 stats（今日/待处理/门槛/评定/发号 五组,纯读零写,同源业务态计数） -->
-    <el-card
-      v-if="toolsCanReadStats"
-      v-loading="statsLoading"
-      shadow="never"
-      class="mb-2"
-    >
-      <template v-if="stats">
-        <div class="stats-grid">
-          <div class="stats-group">
-            <div class="stats-group__title">今日</div>
-            <div class="stats-group__row">
-              新报名 {{ stats.today.newApplications }} · 发临时号
-              {{ stats.today.tempNoIssued }} · 人工处理
-              {{ stats.today.manualProcessed }}
+      <!-- 工作台聚合 stats（今日/待处理/门槛/评定/发号 五组,纯读零写,同源业务态计数） -->
+      <el-card
+        v-if="toolsCanReadStats"
+        v-loading="statsLoading"
+        shadow="never"
+        class="mb-2"
+      >
+        <template v-if="stats">
+          <div class="stats-grid">
+            <div class="stats-group">
+              <div class="stats-group__title">今日</div>
+              <div class="stats-group__row">
+                新报名 {{ stats.today.newApplications }} · 发临时号
+                {{ stats.today.tempNoIssued }} · 人工处理
+                {{ stats.today.manualProcessed }}
+              </div>
             </div>
-          </div>
-          <div class="stats-group">
-            <div class="stats-group__title">待处理</div>
-            <div class="stats-group__row">
-              待人工 {{ stats.pending.manualTotal }}（普通
-              {{ stats.pending.manualNormal }} / 高风险
-              {{ stats.pending.manualHigh }} / 系统异常
-              {{ stats.pending.manualSystem }}）
+            <div class="stats-group">
+              <div class="stats-group__title">待处理</div>
+              <div class="stats-group__row">
+                待人工 {{ stats.pending.manualTotal }}（普通
+                {{ stats.pending.manualNormal }} / 高风险
+                {{ stats.pending.manualHigh }} / 系统异常
+                {{ stats.pending.manualSystem }}）
+              </div>
+              <div class="stats-group__row">
+                待评定 {{ stats.pending.pendingEvaluation }} · 待发号
+                {{ stats.pending.pendingIssuance }}
+              </div>
             </div>
-            <div class="stats-group__row">
-              待评定 {{ stats.pending.pendingEvaluation }} · 待发号
-              {{ stats.pending.pendingIssuance }}
-            </div>
-          </div>
-          <div class="stats-group">
-            <div class="stats-group__title">
-              门槛跟踪中 {{ stats.threshold.tracking }} 人
-            </div>
-            <div class="stats-group__row">
-              <span
-                v-for="item in stats.threshold.byThreshold"
-                :key="item.code"
-                class="stats-group__pill"
-              >
-                {{ item.name }} {{ item.completedCount }}
-              </span>
-            </div>
-          </div>
-          <div class="stats-group">
-            <div class="stats-group__title">综合评定</div>
-            <div class="stats-group__row">
-              待评定 {{ stats.evaluation.pending }} · 已通过
-              {{ stats.evaluation.passed }} · 淘汰
-              {{ stats.evaluation.eliminated }}
-            </div>
-          </div>
-          <div class="stats-group">
-            <div class="stats-group__title">公示发号</div>
-            <div class="stats-group__row">
-              公示中 {{ stats.issuance.inPublicity }} · 可一键发号
-              {{ stats.issuance.oneClickIssuable }} · 需手动建档
-              {{ stats.issuance.needManualBuild }} · 已发号
-              {{ stats.issuance.promoted }}
-            </div>
-          </div>
-        </div>
-      </template>
-      <el-empty v-else-if="!statsLoading" description="暂无工作台数据" />
-    </el-card>
-
-    <!-- Tab：报名审核 -->
-    <el-tabs v-model="activeTab" class="cockpit-tabs">
-      <el-tab-pane label="报名审核" name="applications">
-        <template v-if="appCanRead">
-          <PureTableBar
-            title="报名审核"
-            :columns="appColumns"
-            @refresh="appOnSearch"
-          >
-            <template #buttons>
-              <el-select
-                v-model="appStatusFilter"
-                class="w-40! mr-2!"
-                placeholder="按状态过滤"
-                @change="appOnFilterChange"
-              >
-                <el-option
-                  v-for="opt in appStatusOptions"
-                  :key="opt.value"
-                  :label="opt.label"
-                  :value="opt.value"
-                />
-              </el-select>
-              <el-button
-                v-if="toolsCanMarkThreshold"
-                :icon="useRenderIcon(CheckboxMultiple)"
-                @click="openBatchMark"
-              >
-                批量标门槛
-              </el-button>
-              <el-dropdown
-                v-if="toolsCanExport"
-                class="ml-2"
-                @command="handleExport"
-              >
-                <el-button
-                  :icon="useRenderIcon(DownloadLine)"
-                  :loading="exportLoading"
+            <div class="stats-group">
+              <div class="stats-group__title">
+                门槛跟踪中 {{ stats.threshold.tracking }} 人
+              </div>
+              <div class="stats-group__row">
+                <span
+                  v-for="item in stats.threshold.byThreshold"
+                  :key="item.code"
+                  class="stats-group__pill"
                 >
-                  导出
-                </el-button>
-                <template #dropdown>
-                  <el-dropdown-menu>
-                    <el-dropdown-item
-                      v-for="opt in exportFilterOptions"
-                      :key="opt.value"
-                      :command="opt.value"
-                    >
-                      {{ opt.label }}
-                    </el-dropdown-item>
-                  </el-dropdown-menu>
-                </template>
-              </el-dropdown>
-            </template>
-            <template v-slot="{ size, dynamicColumns }">
-              <pure-table
-                row-key="id"
-                adaptive
-                :adaptiveConfig="{ offsetBottom: 108 }"
-                align-whole="center"
-                table-layout="auto"
-                :loading="appLoading"
-                :size="size"
-                :data="appDataList"
-                :columns="dynamicColumns"
-                :pagination="appPagination"
-                :paginationSmall="size === 'small' ? true : false"
-                :header-cell-style="{
-                  background: 'var(--el-fill-color-light)',
-                  color: 'var(--el-text-color-primary)'
-                }"
-                @page-size-change="appHandleSizeChange"
-                @page-current-change="appHandleCurrentChange"
-              >
-                <template #statusCode="{ row }">
-                  <el-tag :type="appStatusMeta(row.statusCode).type">
-                    {{ appStatusMeta(row.statusCode).text }}
-                  </el-tag>
-                </template>
-                <template #operation="{ row }">
-                  <el-button
-                    class="reset-margin"
-                    link
-                    :size="size"
-                    @click="appOpenDetail(row)"
-                  >
-                    详情
-                  </el-button>
-                  <el-button
-                    v-if="row.hasIdCardImage"
-                    class="reset-margin"
-                    link
-                    :size="size"
-                    @click="appOpenIdCardImage(row)"
-                  >
-                    证件照
-                  </el-button>
-                  <el-button
-                    v-if="appCanDoEvaluate(row)"
-                    class="reset-margin"
-                    link
-                    type="success"
-                    :size="size"
-                    @click="appHandleEvaluate(row, true)"
-                  >
-                    评定通过
-                  </el-button>
-                  <el-button
-                    v-if="appCanDoEvaluate(row)"
-                    class="reset-margin"
-                    link
-                    type="danger"
-                    :size="size"
-                    @click="appHandleEvaluate(row, false)"
-                  >
-                    淘汰
-                  </el-button>
-                  <el-button
-                    v-if="appCanDoResolve(row)"
-                    class="reset-margin"
-                    link
-                    type="success"
-                    :size="size"
-                    @click="appHandleResolve(row, true)"
-                  >
-                    人工通过
-                  </el-button>
-                  <el-button
-                    v-if="appCanDoResolve(row)"
-                    class="reset-margin"
-                    link
-                    type="danger"
-                    :size="size"
-                    @click="appHandleResolve(row, false)"
-                  >
-                    人工驳回
-                  </el-button>
-                  <el-button
-                    v-if="row.promotedMemberId"
-                    class="reset-margin"
-                    link
-                    :size="size"
-                    @click="appGoMember(row)"
-                  >
-                    查看队员
-                  </el-button>
-                </template>
-              </pure-table>
-            </template>
-          </PureTableBar>
+                  {{ item.name }} {{ item.completedCount }}
+                </span>
+              </div>
+            </div>
+            <div class="stats-group">
+              <div class="stats-group__title">综合评定</div>
+              <div class="stats-group__row">
+                待评定 {{ stats.evaluation.pending }} · 已通过
+                {{ stats.evaluation.passed }} · 淘汰
+                {{ stats.evaluation.eliminated }}
+              </div>
+            </div>
+            <div class="stats-group">
+              <div class="stats-group__title">公示发号</div>
+              <div class="stats-group__row">
+                公示中 {{ stats.issuance.inPublicity }} · 可一键发号
+                {{ stats.issuance.oneClickIssuable }} · 需手动建档
+                {{ stats.issuance.needManualBuild }} · 已发号
+                {{ stats.issuance.promoted }}
+              </div>
+            </div>
+          </div>
         </template>
-        <SrvfPermEmpty
-          v-else
-          action="查看招新报名"
-          code="recruitment-application.read.record"
-        />
-      </el-tab-pane>
-    </el-tabs>
+        <el-empty v-else-if="!statsLoading" description="暂无工作台数据" />
+      </el-card>
+
+      <!-- Tab：报名审核 -->
+      <el-tabs v-model="activeTab" class="cockpit-tabs">
+        <el-tab-pane label="报名审核" name="applications">
+          <template v-if="appCanRead">
+            <PureTableBar
+              title="报名审核"
+              :columns="appColumns"
+              @refresh="appOnSearch"
+            >
+              <template #buttons>
+                <el-select
+                  v-model="appStatusFilter"
+                  class="w-40! mr-2!"
+                  placeholder="按状态过滤"
+                  @change="appOnFilterChange"
+                >
+                  <el-option
+                    v-for="opt in appStatusOptions"
+                    :key="opt.value"
+                    :label="opt.label"
+                    :value="opt.value"
+                  />
+                </el-select>
+                <el-button
+                  v-if="toolsCanMarkThreshold"
+                  :icon="useRenderIcon(CheckboxMultiple)"
+                  @click="openBatchMark"
+                >
+                  批量标门槛
+                </el-button>
+                <el-dropdown
+                  v-if="toolsCanExport"
+                  class="ml-2"
+                  @command="handleExport"
+                >
+                  <el-button
+                    :icon="useRenderIcon(DownloadLine)"
+                    :loading="exportLoading"
+                  >
+                    导出
+                  </el-button>
+                  <template #dropdown>
+                    <el-dropdown-menu>
+                      <el-dropdown-item
+                        v-for="opt in exportFilterOptions"
+                        :key="opt.value"
+                        :command="opt.value"
+                      >
+                        {{ opt.label }}
+                      </el-dropdown-item>
+                    </el-dropdown-menu>
+                  </template>
+                </el-dropdown>
+              </template>
+              <template v-slot="{ size, dynamicColumns }">
+                <pure-table
+                  row-key="id"
+                  adaptive
+                  :adaptiveConfig="{ offsetBottom: 108 }"
+                  align-whole="center"
+                  table-layout="auto"
+                  :loading="appLoading"
+                  :size="size"
+                  :data="appDataList"
+                  :columns="dynamicColumns"
+                  :pagination="appPagination"
+                  :paginationSmall="size === 'small' ? true : false"
+                  :header-cell-style="{
+                    background: 'var(--el-fill-color-light)',
+                    color: 'var(--el-text-color-primary)'
+                  }"
+                  @page-size-change="appHandleSizeChange"
+                  @page-current-change="appHandleCurrentChange"
+                >
+                  <template #statusCode="{ row }">
+                    <el-tag :type="appStatusMeta(row.statusCode).type">
+                      {{ appStatusMeta(row.statusCode).text }}
+                    </el-tag>
+                  </template>
+                  <template #operation="{ row }">
+                    <el-button
+                      class="reset-margin"
+                      link
+                      :size="size"
+                      @click="appOpenDetail(row)"
+                    >
+                      详情
+                    </el-button>
+                    <el-button
+                      v-if="row.hasIdCardImage"
+                      class="reset-margin"
+                      link
+                      :size="size"
+                      @click="appOpenIdCardImage(row)"
+                    >
+                      证件照
+                    </el-button>
+                    <el-button
+                      v-if="appCanDoEvaluate(row)"
+                      class="reset-margin"
+                      link
+                      type="success"
+                      :size="size"
+                      @click="appHandleEvaluate(row, true)"
+                    >
+                      评定通过
+                    </el-button>
+                    <el-button
+                      v-if="appCanDoEvaluate(row)"
+                      class="reset-margin"
+                      link
+                      type="danger"
+                      :size="size"
+                      @click="appHandleEvaluate(row, false)"
+                    >
+                      淘汰
+                    </el-button>
+                    <el-button
+                      v-if="appCanDoResolve(row)"
+                      class="reset-margin"
+                      link
+                      type="success"
+                      :size="size"
+                      @click="appHandleResolve(row, true)"
+                    >
+                      人工通过
+                    </el-button>
+                    <el-button
+                      v-if="appCanDoResolve(row)"
+                      class="reset-margin"
+                      link
+                      type="danger"
+                      :size="size"
+                      @click="appHandleResolve(row, false)"
+                    >
+                      人工驳回
+                    </el-button>
+                    <el-button
+                      v-if="row.promotedMemberId"
+                      class="reset-margin"
+                      link
+                      :size="size"
+                      @click="appGoMember(row)"
+                    >
+                      查看队员
+                    </el-button>
+                  </template>
+                </pure-table>
+              </template>
+            </PureTableBar>
+          </template>
+          <SrvfPermEmpty
+            v-else
+            action="查看招新报名"
+            code="recruitment-application.read.record"
+          />
+        </el-tab-pane>
+      </el-tabs>
+    </SrvfDetailShell>
 
     <!-- 报名详情 drawer（全 PII + 门槛开关；标门槛回调到 hook） -->
     <el-drawer
@@ -808,29 +801,9 @@ onMounted(() => {
   margin: 24px 24px 0 !important;
 }
 
-.cockpit-header {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  align-items: center;
-  justify-content: space-between;
-
-  &__title {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-  }
-
-  &__name {
-    font-size: 18px;
-    font-weight: 600;
-  }
-
-  &__actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
+.cockpit-header__name {
+  font-size: 18px;
+  font-weight: 600;
 }
 
 .publicity-summary {
