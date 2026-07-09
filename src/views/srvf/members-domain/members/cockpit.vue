@@ -12,6 +12,11 @@ import { addDialog } from "@/components/ReDialog";
 import { PureTableBar } from "@/components/RePureTableBar";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
 import { useSrvfDictStoreHook } from "@/store/modules/srvfDict";
+import { SrvfStatusTag } from "@/srvf-kit";
+import {
+  MEMBERSHIP_STATUS_LABEL,
+  MEMBERSHIP_STATUS_TAG
+} from "@/api/srvf-labels";
 import {
   getMember,
   grantMemberAccount,
@@ -328,7 +333,6 @@ const {
   dataList: msDataList,
   orgLabel: msOrgLabel,
   typeLabel: msTypeLabel,
-  statusMeta: msStatusMeta,
   onSearch: msOnSearch,
   openDialog: msOpenDialog,
   handleEnd: msHandleEnd,
@@ -797,9 +801,11 @@ onMounted(() => {
                   </el-tag>
                 </template>
                 <template #status="{ row }">
-                  <el-tag :type="msStatusMeta(row.status).type">
-                    {{ msStatusMeta(row.status).text }}
-                  </el-tag>
+                  <SrvfStatusTag
+                    :value="row.status"
+                    :label-dict="MEMBERSHIP_STATUS_LABEL"
+                    :tag-dict="MEMBERSHIP_STATUS_TAG"
+                  />
                 </template>
                 <template #operation="{ row }">
                   <el-button
