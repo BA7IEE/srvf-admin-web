@@ -3,6 +3,8 @@ import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
 import { onMounted } from "vue";
 import { PureTableBar } from "@/components/RePureTableBar";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
+import { SrvfStatusTag } from "@/srvf-kit";
+import { SMS_STATUS_LABEL, SMS_STATUS_TAG } from "@/api/srvf-labels";
 import { useSmsLogs } from "./utils/hook";
 
 import Search from "~icons/ri/search-line";
@@ -18,8 +20,6 @@ const {
   columns,
   dataList,
   pagination,
-  statusTag,
-  statusLabel,
   onSearch,
   onFilterChange,
   handleSizeChange,
@@ -68,9 +68,11 @@ onMounted(() => {
             @page-current-change="handleCurrentChange"
           >
             <template #status="{ row }">
-              <el-tag :type="statusTag(row.status)">
-                {{ statusLabel(row.status) }}
-              </el-tag>
+              <SrvfStatusTag
+                :value="row.status"
+                :label-dict="SMS_STATUS_LABEL"
+                :tag-dict="SMS_STATUS_TAG"
+              />
             </template>
           </pure-table>
         </template>

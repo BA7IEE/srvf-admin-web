@@ -2,6 +2,11 @@
 import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
 import { onMounted } from "vue";
 import { PureTableBar } from "@/components/RePureTableBar";
+import { SrvfStatusTag } from "@/srvf-kit";
+import {
+  MEMBERSHIP_STATUS_LABEL,
+  MEMBERSHIP_STATUS_TAG
+} from "@/api/srvf-labels";
 import { useMembershipList } from "./utils/hook";
 
 defineOptions({
@@ -20,7 +25,6 @@ const {
   dataList,
   pagination,
   typeLabel,
-  statusMeta,
   onSearch,
   onFilterChange,
   goMember,
@@ -109,9 +113,11 @@ onMounted(() => {
             </el-tag>
           </template>
           <template #status="{ row }">
-            <el-tag :type="statusMeta(row.status).type">
-              {{ statusMeta(row.status).text }}
-            </el-tag>
+            <SrvfStatusTag
+              :value="row.status"
+              :label-dict="MEMBERSHIP_STATUS_LABEL"
+              :tag-dict="MEMBERSHIP_STATUS_TAG"
+            />
           </template>
           <template #operation="{ row }">
             <el-button
