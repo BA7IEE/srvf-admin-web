@@ -125,7 +125,7 @@ async function handleSave() {
         { type: "warning" }
       );
     } else {
-      message("权限点已更新；如需立即生效请到列表页「重载权限缓存」", {
+      message("权限点已更新；如需立即生效，请回列表页点「使权限立即生效」", {
         type: "success"
       });
     }
@@ -156,7 +156,7 @@ watch(visible, open => {
         type="info"
         show-icon
         :closable="false"
-        description="左侧为未分配权限点，右侧为已分配。分配为批量接口幂等；撤销逐条调用，勾选较多时会依次请求。"
+        description="左侧为未分配的权限点，右侧为已分配。保存后即写入该角色；勾选较多时保存需要几秒钟，请等待完成提示。"
       />
       <el-transfer
         v-model="targetKeys"
@@ -164,7 +164,7 @@ watch(visible, open => {
         :data="transferData"
         :titles="['未分配', '已分配']"
         filterable
-        filter-placeholder="搜索权限点 code"
+        filter-placeholder="搜索权限标识"
         :props="{ key: 'key', label: 'label' }"
       />
       <div class="drawer-footer">

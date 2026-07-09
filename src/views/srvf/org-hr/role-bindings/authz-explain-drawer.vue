@@ -50,7 +50,13 @@ const rules: FormRules = {
   userId: [
     { required: true, message: "请输入或选择目标用户 id", trigger: "change" }
   ],
-  action: [{ required: true, message: "请输入 action 权限码", trigger: "blur" }]
+  action: [
+    {
+      required: true,
+      message: "请输入权限标识（如 attendance.final-approve.sheet）",
+      trigger: "blur"
+    }
+  ]
 };
 
 const resourceTypeOptions = Object.entries(RESOURCE_TYPE_LABEL).map(

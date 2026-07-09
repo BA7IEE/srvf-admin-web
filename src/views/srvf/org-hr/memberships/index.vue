@@ -2,7 +2,7 @@
 import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
 import { onMounted } from "vue";
 import { PureTableBar } from "@/components/RePureTableBar";
-import { SrvfStatusTag } from "@/srvf-kit";
+import { SrvfStatusTag, SrvfPageIntro } from "@/srvf-kit";
 import {
   MEMBERSHIP_STATUS_LABEL,
   MEMBERSHIP_STATUS_TAG
@@ -40,9 +40,13 @@ onMounted(() => {
 
 <template>
   <div class="main">
+    <SrvfPageIntro
+      class="mb-2"
+      title="跨队员查看全部部门归属记录；给某位队员调整归属，请在其档案的「组织归属」页操作。"
+    />
     <PureTableBar
       v-if="canRead"
-      title="会籍总表（跨队员跨组织）"
+      title="归属总表（跨队员跨组织）"
       :columns="columns"
       @refresh="onSearch"
     >
@@ -132,7 +136,7 @@ onMounted(() => {
         </pure-table>
       </template>
     </PureTableBar>
-    <SrvfPermEmpty v-else action="查看会籍" code="membership.list.record" />
+    <SrvfPermEmpty v-else action="查看归属" code="membership.list.record" />
   </div>
 </template>
 

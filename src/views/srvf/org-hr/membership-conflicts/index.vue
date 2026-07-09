@@ -33,7 +33,7 @@ onMounted(() => {
           loading
             ? '正在体检…'
             : total === 0
-              ? '归属数据体检通过：未发现多主/悬空/停用组织类冲突'
+              ? '归属数据体检通过：未发现重复主属、指向失效对象或挂在停用组织的归属'
               : `发现 ${total} 项归属冲突，请逐项排查处理`
         "
         :type="loading ? 'info' : total === 0 ? 'success' : 'warning'"
@@ -76,7 +76,7 @@ onMounted(() => {
         </template>
       </PureTableBar>
     </template>
-    <SrvfPermEmpty v-else action="查看会籍" code="membership.list.record" />
+    <SrvfPermEmpty v-else action="查看归属" code="membership.list.record" />
   </div>
 </template>
 

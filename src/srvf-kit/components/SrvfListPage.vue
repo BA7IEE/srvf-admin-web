@@ -3,6 +3,7 @@ import { useSlots, computed } from "vue";
 import type { PaginationProps } from "@pureadmin/table";
 import { PureTableBar } from "@/components/RePureTableBar";
 import SrvfPermEmpty from "./SrvfPermEmpty.vue";
+import SrvfPageIntro from "./SrvfPageIntro.vue";
 
 defineOptions({
   name: "SrvfListPage"
@@ -24,8 +25,10 @@ withDefaults(
     emptyAction: string;
     /** 权限空态：相关 RBAC 码（备查） */
     emptyCode?: string;
+    /** 页头一句话说明（有值且有读权限时渲染 SrvfPageIntro） */
+    intro?: string;
   }>(),
-  { rowKey: "id", emptyCode: "" }
+  { rowKey: "id", emptyCode: "", intro: "" }
 );
 
 defineEmits<{
@@ -44,6 +47,7 @@ const columnSlotNames = computed(() =>
 
 <template>
   <div class="main">
+    <SrvfPageIntro v-if="intro && canRead" class="mb-2" :title="intro" />
     <PureTableBar
       v-if="canRead"
       :title="title"

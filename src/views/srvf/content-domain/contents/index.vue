@@ -8,6 +8,7 @@ import ContentMedia from "./content-media.vue";
 
 import AddFill from "~icons/ri/add-circle-line";
 import Search from "~icons/ri/search-line";
+import { SrvfPageIntro } from "@/srvf-kit";
 
 defineOptions({
   name: "SrvfContents"
@@ -46,6 +47,10 @@ onMounted(() => {
 
 <template>
   <div class="main">
+    <SrvfPageIntro
+      class="mb-2"
+      title="面向队内或公众的图文内容：先保存为草稿，点「发布」上线，可随时撤回或归档。"
+    />
     <template v-if="canRead">
       <PureTableBar title="内容发布" :columns="columns" @refresh="onSearch">
         <template #buttons>

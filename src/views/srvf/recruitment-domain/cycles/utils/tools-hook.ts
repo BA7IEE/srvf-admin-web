@@ -80,7 +80,7 @@ export function useRecruitmentTools(cycleId: string) {
       const { code, data } = await getPromotePrecheck(cycleId);
       if (code === 0) precheckData.value = data;
     } catch (error: any) {
-      message(bizErrorMessage(error, "加载发号预检失败"), {
+      message(bizErrorMessage(error, "加载发放预检失败"), {
         type: "error"
       });
     } finally {
@@ -101,14 +101,14 @@ export function useRecruitmentTools(cycleId: string) {
       if (code === 0) {
         precheckVisible.value = false;
         ElMessageBox.alert(
-          `已发号 ${data.promotedCount} 人；跳过 ${data.skippedCount} 人（外籍/需手动建档）。`,
-          "发号结果",
+          `已发放编号 ${data.promotedCount} 人；跳过 ${data.skippedCount} 人（外籍等需手动建档）。`,
+          "发放结果",
           { confirmButtonText: "知道了", type: "success" }
         );
         onDone();
       }
     } catch (error: any) {
-      message(bizErrorMessage(error, "一键发号失败"), {
+      message(bizErrorMessage(error, "发放队员编号失败"), {
         type: "error"
       });
     }

@@ -30,7 +30,7 @@ export default [
         component: () =>
           import("@/views/srvf/activities-domain/activities/cockpit.vue"),
         meta: {
-          title: "活动作战室",
+          title: "活动详情",
           showLink: false,
           activePath: "/srvf/activities-domain/activities"
         }

@@ -331,7 +331,7 @@ onMounted(() => {
       <el-tab-pane label="报名审批" name="registrations">
         <template v-if="regCanRead">
           <PureTableBar
-            title="报名横扫（待我处理）"
+            title="待我审批的报名"
             :columns="regColumns"
             @refresh="regOnSearch"
           >
@@ -347,7 +347,7 @@ onMounted(() => {
               <el-select
                 v-model="regStatusFilter"
                 class="w-40!"
-                placeholder="按状态横扫"
+                placeholder="按状态筛选"
                 @change="regOnFilterChange"
               >
                 <el-option
@@ -424,7 +424,7 @@ onMounted(() => {
                     :size="size"
                     @click="regGoCockpit(row)"
                   >
-                    前往作战室
+                    活动详情
                   </el-button>
                 </template>
               </pure-table>
@@ -442,7 +442,7 @@ onMounted(() => {
       <el-tab-pane label="考勤审批" name="attendances">
         <template v-if="attCanRead">
           <PureTableBar
-            title="考勤横扫（待我处理）"
+            title="待我审批的考勤"
             :columns="attColumns"
             @refresh="attOnSearch"
           >
@@ -458,7 +458,7 @@ onMounted(() => {
               <el-select
                 v-model="attStatusFilter"
                 class="w-40!"
-                placeholder="按状态横扫"
+                placeholder="按状态筛选"
                 @change="attOnFilterChange"
               >
                 <el-option
@@ -547,7 +547,7 @@ onMounted(() => {
                     :size="size"
                     @click="attGoCockpit(row)"
                   >
-                    前往作战室
+                    活动详情
                   </el-button>
                 </template>
               </pure-table>

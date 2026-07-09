@@ -13,6 +13,7 @@ import Delete from "~icons/ep/delete";
 import EditPen from "~icons/ep/edit-pen";
 import AddFill from "~icons/ri/add-circle-line";
 import More from "~icons/ep/more-filled";
+import { SrvfPageIntro } from "@/srvf-kit";
 
 defineOptions({
   name: "SrvfOrganizations"
@@ -79,6 +80,10 @@ onMounted(() => {
 
 <template>
   <div class="main">
+    <SrvfPageIntro
+      class="mb-2"
+      title="维护大队/中队/组的组织树：行内可查看成员、在任职务、被谁分管，并在「在任职务」里发起任命。"
+    />
     <PureTableBar
       v-if="canRead"
       title="组织架构"

@@ -110,7 +110,7 @@ defineExpose({ getRef });
         </el-form-item>
       </el-col>
       <el-col :span="12">
-        <el-form-item label="层级权重" prop="rank">
+        <el-form-item label="职级排序" prop="rank">
           <el-input-number v-model="form.rank" :min="0" class="w-full!" />
         </el-form-item>
       </el-col>

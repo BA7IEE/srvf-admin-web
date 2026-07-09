@@ -63,7 +63,7 @@ export function usePositions() {
       formatter: ({ categoryCode }) =>
         POSITION_CATEGORY_LABEL[categoryCode] ?? categoryCode
     },
-    { label: "层级权重", prop: "rank", minWidth: 90 },
+    { label: "职级排序", prop: "rank", minWidth: 90 },
     {
       label: "领导职务",
       prop: "isLeadership",

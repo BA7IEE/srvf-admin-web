@@ -4,6 +4,7 @@ import { onMounted } from "vue";
 import { useAuditLogs } from "./utils/hook";
 import { PureTableBar } from "@/components/RePureTableBar";
 import DetailDrawer from "./detail-drawer.vue";
+import { SrvfPageIntro } from "@/srvf-kit";
 
 defineOptions({
   name: "SrvfAuditLogs"
@@ -30,6 +31,10 @@ onMounted(() => {
 
 <template>
   <div class="main">
+    <SrvfPageIntro
+      class="mb-2"
+      title="系统操作留痕（技术排查用）：出现异常操作或需要追溯时，按时间和资源检索。"
+    />
     <PureTableBar
       v-if="canRead"
       title="审计日志"

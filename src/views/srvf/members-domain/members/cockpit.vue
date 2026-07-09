@@ -203,7 +203,7 @@ function openBindAccountDialog() {
 /** 解绑账号（只断链，账号回落悬空 ACTIVE，不顺手停用/删除） */
 function handleUnbindAccount() {
   ElMessageBox.confirm(
-    "解绑后该账号将成为悬空账号（不会停用或删除该账号本身），确定解绑吗？",
+    "解绑后该账号将不再关联任何队员（账号本身不会停用或删除），确定解绑吗？",
     "解绑账号",
     { confirmButtonText: "确定", cancelButtonText: "取消", type: "warning" }
   )
@@ -222,7 +222,7 @@ function handleUnbindAccount() {
 /** 退号重开（软删旧号 + 新手机号开新号，须与旧号不同） */
 async function handleReopenAccount() {
   const phone = await promptForPhone(
-    "退号重开",
+    "作废旧账号并重新开通",
     "旧账号将被作废，请输入新手机号重新开通（须与原手机号不同）："
   );
   if (!phone) return;
@@ -231,7 +231,7 @@ async function handleReopenAccount() {
     message(`已重新开通，登录用户名：${data.username}`, { type: "success" });
     fetchDetail();
   } catch (error: any) {
-    message(bizErrorMessage(error, "退号重开失败"), { type: "error" });
+    message(bizErrorMessage(error, "重新开通失败"), { type: "error" });
   }
 }
 
@@ -350,7 +350,7 @@ const {
   onSearch: paOnSearch
 } = useMemberPositionAssignments(memberId);
 
-/* --------------- Tab：分管范围（该队员若是分管人,只读展示;新建/撤销在督导总表页） --------------- */
+/* --------------- Tab：分管范围（该队员若是分管人,只读展示;新建/撤销在分管总表页） --------------- */
 const {
   canRead: ssCanRead,
   loading: ssLoading,
@@ -889,7 +889,7 @@ onMounted(() => {
           />
         </el-tab-pane>
 
-        <!-- Tab：分管范围（该队员若是分管人,只读;新建/撤销在督导总表页） -->
+        <!-- Tab：分管范围（该队员若是分管人,只读;新建/撤销在分管总表页） -->
         <el-tab-pane label="分管范围" name="supervision-scope">
           <template v-if="ssCanRead">
             <PureTableBar
@@ -1055,7 +1055,7 @@ onMounted(() => {
                     v-if="canGrantAccount && detail.status === 'ACTIVE'"
                     @click="handleReopenAccount"
                   >
-                    退号重开
+                    作废并重新开通
                   </el-button>
                   <el-button
                     v-if="canBindAccount"

@@ -233,10 +233,10 @@ export function useTeamJoinApplications(cycleId: string) {
 
   /** 综合评估（pending_evaluation；通过→待入队 / 淘汰→未通过；note 淘汰必填） */
   function handleEvaluate(row: TeamJoinApplication, approved: boolean) {
-    const title = approved ? "评估通过" : "评估淘汰";
+    const title = approved ? "评定通过" : "评定淘汰";
     ElMessageBox.prompt(
       approved
-        ? `确定评估通过「${rowSubject(row)}」吗？通过后待入队。可填写备注（可空）。`
+        ? `确定评定通过「${rowSubject(row)}」吗？通过后待入队。可填写备注（可空）。`
         : `确定淘汰「${rowSubject(row)}」吗？请填写淘汰理由（必填）。`,
       title,
       {
@@ -260,7 +260,7 @@ export function useTeamJoinApplications(cycleId: string) {
             approved,
             ...(value ? { note: value } : {})
           });
-          message(approved ? "已评估通过" : "已淘汰", { type: "success" });
+          message(approved ? "已评定通过" : "已淘汰", { type: "success" });
           onSearch();
         } catch (error: any) {
           message(bizErrorMessage(error, `${title}失败`), {

@@ -269,7 +269,7 @@ onMounted(() => {
                       :size="size"
                       @click="appHandleEvaluate(row, true)"
                     >
-                      评估通过
+                      评定通过
                     </el-button>
                     <el-button
                       v-if="appCanDoEvaluate(row)"

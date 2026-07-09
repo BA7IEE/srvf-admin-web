@@ -35,7 +35,7 @@ export default [
         component: () => import("@/views/srvf/org-hr/memberships/index.vue"),
         meta: {
           icon: "ri/exchange-2-line",
-          title: "会籍总表",
+          title: "归属总表",
           auths: ["membership.list.record"]
         }
       },
@@ -58,7 +58,7 @@ export default [
           import("@/views/srvf/org-hr/position-assignments/index.vue"),
         meta: {
           icon: "ri/user-star-line",
-          title: "任职总表",
+          title: "任命记录",
           auths: ["position-assignment.read.record"]
         }
       },
@@ -71,7 +71,7 @@ export default [
           import("@/views/srvf/org-hr/supervision-assignments/index.vue"),
         meta: {
           icon: "ri/eye-line",
-          title: "督导总表",
+          title: "分管总表",
           auths: ["supervision-assignment.read.record"]
         }
       }

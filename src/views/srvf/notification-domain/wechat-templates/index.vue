@@ -3,6 +3,7 @@ import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
 import { onMounted } from "vue";
 import { PureTableBar } from "@/components/RePureTableBar";
 import { useWechatTemplates } from "./utils/hook";
+import { SrvfPageIntro } from "@/srvf-kit";
 
 defineOptions({
   name: "SrvfNotificationWechatTemplates"
@@ -18,6 +19,10 @@ onMounted(() => {
 
 <template>
   <div class="main">
+    <SrvfPageIntro
+      class="mb-2"
+      title="配置各类通知对应的微信模板，启用后发布通知时会向已订阅微信的队员推送。"
+    />
     <template v-if="canRead">
       <PureTableBar
         title="微信订阅模板配置"

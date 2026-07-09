@@ -37,10 +37,10 @@ export const MEMBERSHIP_STATUS_TAG: Record<
 
 /** 冲突类型 → 中文（契约闭集 enum；语义沿后端 handoff「多主/悬空/停用组织」体检口径）。 */
 export const MEMBERSHIP_CONFLICT_TYPE_LABEL: Record<string, string> = {
-  multiple_active_primary: "多条在册主属（应至多一条）",
-  dangling_member: "悬空归属：队员侧缺失",
-  dangling_organization: "悬空归属：组织侧缺失",
-  inactive_organization: "归属挂在已停用组织"
+  multiple_active_primary: "同时有多个主属部门（应至多一个）",
+  dangling_member: "归属指向的队员已不存在",
+  dangling_organization: "归属指向的组织已不存在",
+  inactive_organization: "归属的组织已停用"
 };
 
 /** expand=member 时出现的队员摘要（后端 `MembershipExpandedMemberDto`）。 */

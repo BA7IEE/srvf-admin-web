@@ -39,7 +39,7 @@ onMounted(() => {
     <template v-if="canRead">
       <SrvfPageIntro
         class="mb-2"
-        title="招新是入队前的第一道门：路人公开报名 → 实名核验与考核 → 一键发号成为志愿者；志愿者再经「入队轮次」综合评估，入队成为正式队员。"
+        title="招新是入队前的第一道门：公开报名 → 实名核验与考核 → 发放队员编号（简称「发号」）成为志愿者；志愿者再经「入队轮次」综合评定，成为正式队员。"
       />
       <PureTableBar title="招新轮次" :columns="columns" @refresh="onSearch">
         <template #buttons>

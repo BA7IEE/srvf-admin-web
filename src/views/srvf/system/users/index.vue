@@ -8,6 +8,7 @@ import RbacRolesDrawer from "./rbac-roles-drawer.vue";
 
 import AddFill from "~icons/ri/add-circle-line";
 import More from "~icons/ep/more-filled";
+import { SrvfPageIntro } from "@/srvf-kit";
 
 defineOptions({
   name: "SrvfUsers"
@@ -64,6 +65,10 @@ onMounted(() => {
 
 <template>
   <div class="main">
+    <SrvfPageIntro
+      class="mb-2"
+      title="管理登录本系统的账号：创建账号、重置密码、调整系统角色与业务角色绑定。"
+    />
     <PureTableBar
       v-if="canRead"
       title="系统账号"

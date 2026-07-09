@@ -3,7 +3,7 @@ import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
 import { onMounted } from "vue";
 import { PureTableBar } from "@/components/RePureTableBar";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
-import { SrvfStatusTag } from "@/srvf-kit";
+import { SrvfStatusTag, SrvfPageIntro } from "@/srvf-kit";
 import { SMS_STATUS_LABEL, SMS_STATUS_TAG } from "@/api/srvf-labels";
 import { useSmsLogs } from "./utils/hook";
 
@@ -33,6 +33,10 @@ onMounted(() => {
 
 <template>
   <div class="main">
+    <SrvfPageIntro
+      class="mb-2"
+      title="短信发送记录：核对某手机号是否收到短信、排查发送失败原因。"
+    />
     <template v-if="canRead">
       <PureTableBar title="短信日志" :columns="columns" @refresh="onSearch">
         <template #buttons>

@@ -11,6 +11,7 @@ import AddFill from "~icons/ri/add-circle-line";
 import EditPen from "~icons/ep/edit-pen";
 import Delete from "~icons/ep/delete";
 import KeyLine from "~icons/ri/key-2-line";
+import { SrvfPageIntro } from "@/srvf-kit";
 
 defineOptions({
   name: "SrvfRbac"
@@ -45,6 +46,10 @@ onMounted(() => {
 
 <template>
   <div class="main">
+    <SrvfPageIntro
+      class="mb-2"
+      title="定义每个角色拥有哪些权限点；要把角色授予具体的人，请用「系统账号 → 业务角色绑定」或「角色绑定」页。"
+    />
     <PureTableBar
       v-if="canRead"
       title="角色权限"
@@ -65,7 +70,7 @@ onMounted(() => {
           :icon="useRenderIcon(Refresh)"
           @click="handleReload"
         >
-          重载权限缓存
+          使权限立即生效
         </el-button>
       </template>
       <template v-slot="{ size, dynamicColumns }">

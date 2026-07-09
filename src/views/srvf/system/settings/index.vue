@@ -2,6 +2,7 @@
 import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
 import { onMounted, ref } from "vue";
 import { useSystemSettings } from "./utils/hook";
+import { SrvfPageIntro } from "@/srvf-kit";
 
 defineOptions({
   name: "SrvfSystemSettings"
@@ -60,6 +61,10 @@ const activeTab = ref(
 
 <template>
   <div class="main">
+    <SrvfPageIntro
+      class="mb-2"
+      title="平台参数（管理员专用）：存储、短信、微信、实名核验的云服务配置，配置错误会影响全队使用，改前请确认。"
+    />
     <el-card v-if="anyRead" v-loading="loading" shadow="never">
       <el-tabs v-model="activeTab">
         <!-- 存储 -->

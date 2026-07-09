@@ -155,7 +155,7 @@ export function useApprovalRegistrations() {
         pagination.currentPage = data.page;
       }
     } catch (error: any) {
-      message(bizErrorMessage(error, "加载报名横扫失败"), {
+      message(bizErrorMessage(error, "加载待审报名失败"), {
         type: "error"
       });
     } finally {
@@ -417,7 +417,7 @@ export function useApprovalAttendance() {
         submitterLabels.value = { ...submitterLabels.value, ...resolved };
       }
     } catch (error: any) {
-      message(bizErrorMessage(error, "加载考勤横扫失败"), {
+      message(bizErrorMessage(error, "加载待审考勤失败"), {
         type: "error"
       });
     } finally {
