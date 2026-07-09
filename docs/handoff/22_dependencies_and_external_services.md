@@ -17,9 +17,11 @@
 ## 二、外部服务
 
 - 真实后端：`srvf-nest-api`。
+- 后端 API 仓库：[BA7IEE/srvf-nest-api](https://github.com/BA7IEE/srvf-nest-api)。
 - 本地后端默认：`http://localhost:3000`。
 - Swagger：`/api/docs`。
 - OpenAPI JSON：`/api/docs-json`。
+- 开源前端框架组件写法参考：[pure-admin/vue-pure-admin](https://github.com/pure-admin/vue-pure-admin)。
 
 ## 三、依赖规则
 

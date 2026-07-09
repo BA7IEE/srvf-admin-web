@@ -27,7 +27,7 @@ This repository is the SRVF-specific admin frontend derived from the private `u-
 - ✅ **主线已推进到 #80**：相对旧 handoff 基线 `c2001c9` 已合入 #34~#80，覆盖组织人事、RBAC 治理、Auth 专线、队员账号闭环、字典主从布局和 srvf-kit 原语层。
 - ✅ **本次直接验证通过**：`./node_modules/.bin/vue-tsc --noEmit --skipLibCheck` 与 `./node_modules/.bin/vite build` 通过。
 - ⚠️ **尚未补当前主线浏览器冒烟**：本次未跑 `pnpm dev`、真实后端登录或页面验证，当前状态只能标 `BUILD_PASS`。
-- ⚠️ **后端权威版本**：以真实后端仓库 `BA7IEE/srvf-nest-api` 的 `docs/current-state.md`、`docs/handoff/admin-web.md` 和 live `/api/docs-json` 为准；当前前端文档已知快照为 v0.37.0 / 195 权限码。
+- ⚠️ **后端权威版本**：以真实后端仓库 [BA7IEE/srvf-nest-api](https://github.com/BA7IEE/srvf-nest-api) 的 `docs/current-state.md`、`docs/handoff/admin-web.md` 和 live `/api/docs-json` 为准；当前前端文档已知快照为 v0.37.0 / 195 权限码。
 - ⚠️ **handoff 自检脚本需修复**：当前会误扫 `.git`、`node_modules`、`.claude/worktrees/**/node_modules`，导致依赖 README 示例文本误报。
 
 ## 当前允许工作
@@ -88,6 +88,8 @@ This repository is the SRVF-specific admin frontend derived from the private `u-
 - **上游同步规则**：见 starter 的 `docs/pure-admin/11-upstream-sync.md`（cherry-pick，禁 merge）
 
 ## 完整版参考库
+
+GitHub 参考：[pure-admin/vue-pure-admin](https://github.com/pure-admin/vue-pure-admin)
 
 本地路径：`/Users/dengwang/Documents/coding/SRVF-web-admin参考/vue-pure-admin`
 

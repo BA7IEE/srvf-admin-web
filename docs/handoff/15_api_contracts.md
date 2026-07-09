@@ -2,10 +2,11 @@
 
 ## 一、权威来源
 
-1. live `http://localhost:3000/api/docs-json`
-2. `../srvf-nest-api/docs/handoff/admin-web.md`
-3. `../srvf-nest-api/docs/current-state.md`
-4. 前端 `docs/srvf-admin-vnext-blueprint.md` 仅作 2026-07-06 快照和路线参考。
+1. 后端 API 仓库：[BA7IEE/srvf-nest-api](https://github.com/BA7IEE/srvf-nest-api)
+2. live `http://localhost:3000/api/docs-json`
+3. `../srvf-nest-api/docs/handoff/admin-web.md`
+4. `../srvf-nest-api/docs/current-state.md`
+5. 前端 `docs/srvf-admin-vnext-blueprint.md` 仅作 2026-07-06 快照和路线参考。
 
 ## 二、Auth 主链
 

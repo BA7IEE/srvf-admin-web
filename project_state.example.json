@@ -3,6 +3,16 @@
   "project_name": "srvf-admin-web",
   "current_version": "git-main-1aba0da-handoff-20260710",
   "current_status": "BUILD_PASS",
+  "external_references": {
+    "backend_api_repository": {
+      "label": "BA7IEE/srvf-nest-api",
+      "url": "https://github.com/BA7IEE/srvf-nest-api"
+    },
+    "frontend_framework_reference": {
+      "label": "pure-admin/vue-pure-admin",
+      "url": "https://github.com/pure-admin/vue-pure-admin"
+    }
+  },
   "latest_full_package": {
     "filename": "not_packaged_git_checkout_main_1aba0da_20260710",
     "sha256": "pending_external_manifest"

@@ -33,7 +33,12 @@
 9. `docs/srvf-admin-vnext-blueprint.md`
 10. `../srvf-nest-api/docs/handoff/admin-web.md`
 
-## 四、下一步建议
+## 四、关键参考地址
+
+- 后端 API 仓库：[BA7IEE/srvf-nest-api](https://github.com/BA7IEE/srvf-nest-api)
+- 开源前端框架组件写法参考：[pure-admin/vue-pure-admin](https://github.com/pure-admin/vue-pure-admin)
+
+## 五、下一步建议
 
 下一轮不要再按旧 handoff 的 `P1.2 memberships-read` 启动；该线已被 #37~#60 覆盖并继续收尾。建议优先做三件事：
 
@@ -41,7 +46,7 @@
 2. 修正 `scripts/check_handoff_docs.py` 递归误扫 `.git` / `node_modules` / `.claude/worktrees/**/node_modules` 的问题，再恢复 strict 自检可信度。
 3. 若继续做产品开发，先基于当前 `main@1aba0da` 和 live `/api/docs-json` 重新选一个小切片，不使用 2026-07-05 的 zip 包任务名。
 
-## 五、给下一位 AI 的最小指令
+## 六、给下一位 AI 的最小指令
 
 ```text
 请基于当前 srvf-admin-web Git checkout `main@1aba0da` 继续。先读 CLAUDE.md、AGENTS.md、project_state.json、docs/handoff/00/01/23/24/29/30、docs/srvf-admin-vnext-blueprint.md，以及后端 ../srvf-nest-api/docs/handoff/admin-web.md。注意 2026-07-05 handoff 已过期：#34~#80 已合入，字典主从布局、组织人事、RBAC 治理、队员账号闭环和 srvf-kit 原语层均已在主线。不要恢复 /get-async-routes，不启用 asyncRoutes，不改依赖；涉及 auth 主线必须按 CLAUDE.md §4 声明。

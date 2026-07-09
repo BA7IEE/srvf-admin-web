@@ -28,6 +28,18 @@
       "permission_codes": 195
     }
   },
+  "external_references": {
+    "backend_api_repository": {
+      "label": "BA7IEE/srvf-nest-api",
+      "url": "https://github.com/BA7IEE/srvf-nest-api",
+      "usage": "Backend API contract authority; use with live /api/docs-json."
+    },
+    "frontend_framework_reference": {
+      "label": "pure-admin/vue-pure-admin",
+      "url": "https://github.com/pure-admin/vue-pure-admin",
+      "usage": "Open-source Pure Admin component and page-pattern reference only; do not copy mock/API/RBAC/tenant contracts."
+    }
+  },
   "current_status": "BUILD_PASS",
   "latest_full_package": {
     "filename": "not_packaged_git_checkout_main_1aba0da_20260710",
