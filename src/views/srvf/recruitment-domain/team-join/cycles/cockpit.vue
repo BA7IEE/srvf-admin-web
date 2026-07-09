@@ -10,6 +10,7 @@ import { hasPerms } from "@/utils/auth";
 import { addDialog } from "@/components/ReDialog";
 import { PureTableBar } from "@/components/RePureTableBar";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
+import { SrvfDetailShell } from "@/srvf-kit";
 import {
   getTeamJoinCycle,
   updateTeamJoinCycle,
@@ -21,7 +22,6 @@ import { useTeamJoinApplications } from "../applications/utils/hook";
 import TjApplicationDetail from "../applications/detail.vue";
 
 import EditPen from "~icons/ep/edit-pen";
-import ArrowLeftLine from "~icons/ri/arrow-left-line";
 
 defineOptions({
   name: "SrvfTeamJoinCycleCockpit"
@@ -161,167 +161,158 @@ onMounted(() => {
 <template>
   <div class="main">
     <!-- 头部：入队轮信息 + 动作 -->
-    <el-card v-loading="cycleLoading" shadow="never" class="mb-2">
-      <el-button
-        link
-        class="mb-2!"
-        :icon="useRenderIcon(ArrowLeftLine)"
-        @click="router.push('/srvf/recruitment-domain/team-join')"
-      >
-        返回入队轮次
-      </el-button>
-      <template v-if="cycle">
-        <div class="cockpit-header">
-          <div class="cockpit-header__title">
-            <span class="cockpit-header__name">
-              {{ cycle.year }} · {{ cycle.name }}
-            </span>
-            <el-tag :type="cycle.statusCode === 'open' ? 'success' : 'info'">
-              {{ cycleStatusText(cycle.statusCode) }}
-            </el-tag>
-          </div>
-          <div class="cockpit-header__actions">
-            <el-button
-              v-if="canUpdate"
-              :icon="useRenderIcon(EditPen)"
-              @click="openEditDialog"
-            >
-              编辑
-            </el-button>
-            <el-button
-              v-if="canUpdate"
-              :type="cycle.statusCode === 'open' ? 'warning' : 'success'"
-              @click="handleToggleStatus"
-            >
-              {{ cycle.statusCode === "open" ? "关闭本轮" : "开启本轮" }}
-            </el-button>
-          </div>
-        </div>
+    <SrvfDetailShell
+      :loading="cycleLoading"
+      :found="!!cycle"
+      not-found-text="未找到该入队轮或无权查看"
+      back-text="返回入队轮次"
+      wrap
+      @back="router.push('/srvf/recruitment-domain/team-join')"
+    >
+      <template #title>
+        <span class="cockpit-header__name">
+          {{ cycle.year }} · {{ cycle.name }}
+        </span>
+        <el-tag :type="cycle.statusCode === 'open' ? 'success' : 'info'">
+          {{ cycleStatusText(cycle.statusCode) }}
+        </el-tag>
       </template>
-      <el-empty
-        v-else-if="!cycleLoading"
-        description="未找到该入队轮或无权查看"
-      />
-    </el-card>
+      <template #actions>
+        <el-button
+          v-if="canUpdate"
+          :icon="useRenderIcon(EditPen)"
+          @click="openEditDialog"
+        >
+          编辑
+        </el-button>
+        <el-button
+          v-if="canUpdate"
+          :type="cycle.statusCode === 'open' ? 'warning' : 'success'"
+          @click="handleToggleStatus"
+        >
+          {{ cycle.statusCode === "open" ? "关闭本轮" : "开启本轮" }}
+        </el-button>
+      </template>
 
-    <!-- Tab：入队申请审核 -->
-    <el-tabs v-model="activeTab" class="cockpit-tabs">
-      <el-tab-pane label="入队申请审核" name="applications">
-        <template v-if="appCanRead">
-          <PureTableBar
-            title="入队申请审核"
-            :columns="appColumns"
-            @refresh="appOnSearch"
-          >
-            <template #buttons>
-              <el-select
-                v-model="appStatusFilter"
-                class="w-40!"
-                placeholder="按状态过滤"
-                @change="appOnFilterChange"
-              >
-                <el-option
-                  v-for="opt in appStatusOptions"
-                  :key="opt.value"
-                  :label="opt.label"
-                  :value="opt.value"
-                />
-              </el-select>
-            </template>
-            <template v-slot="{ size, dynamicColumns }">
-              <pure-table
-                row-key="id"
-                adaptive
-                :adaptiveConfig="{ offsetBottom: 108 }"
-                align-whole="center"
-                table-layout="auto"
-                :loading="appLoading"
-                :size="size"
-                :data="appDataList"
-                :columns="dynamicColumns"
-                :pagination="appPagination"
-                :paginationSmall="size === 'small' ? true : false"
-                :header-cell-style="{
-                  background: 'var(--el-fill-color-light)',
-                  color: 'var(--el-text-color-primary)'
-                }"
-                @page-size-change="appHandleSizeChange"
-                @page-current-change="appHandleCurrentChange"
-              >
-                <template #statusCode="{ row }">
-                  <el-tag :type="appStatusMeta(row.statusCode).type">
-                    {{ appStatusMeta(row.statusCode).text }}
-                  </el-tag>
-                </template>
-                <template #operation="{ row }">
-                  <el-button
-                    class="reset-margin"
-                    link
-                    :size="size"
-                    @click="appOpenDetail(row)"
-                  >
-                    详情
-                  </el-button>
-                  <el-button
-                    v-if="appCanDoGate(row)"
-                    class="reset-margin"
-                    link
-                    :size="size"
-                    @click="appOpenGateDialog(row)"
-                  >
-                    标考核
-                  </el-button>
-                  <el-button
-                    v-if="appCanDoEvaluate(row)"
-                    class="reset-margin"
-                    link
-                    type="success"
-                    :size="size"
-                    @click="appHandleEvaluate(row, true)"
-                  >
-                    评估通过
-                  </el-button>
-                  <el-button
-                    v-if="appCanDoEvaluate(row)"
-                    class="reset-margin"
-                    link
-                    type="danger"
-                    :size="size"
-                    @click="appHandleEvaluate(row, false)"
-                  >
-                    淘汰
-                  </el-button>
-                  <el-button
-                    v-if="appCanDoJoin(row)"
-                    class="reset-margin"
-                    link
-                    type="success"
-                    :size="size"
-                    @click="appOpenJoinDialog(row)"
-                  >
-                    一键入队
-                  </el-button>
-                  <el-button
-                    v-if="row.statusCode === 'joined'"
-                    class="reset-margin"
-                    link
-                    :size="size"
-                    @click="appGoMember(row)"
-                  >
-                    查看队员
-                  </el-button>
-                </template>
-              </pure-table>
-            </template>
-          </PureTableBar>
-        </template>
-        <SrvfPermEmpty
-          v-else
-          action="查看入队申请"
-          code="team-join-application.read.record"
-        />
-      </el-tab-pane>
-    </el-tabs>
+      <!-- Tab：入队申请审核 -->
+      <el-tabs v-model="activeTab" class="cockpit-tabs">
+        <el-tab-pane label="入队申请审核" name="applications">
+          <template v-if="appCanRead">
+            <PureTableBar
+              title="入队申请审核"
+              :columns="appColumns"
+              @refresh="appOnSearch"
+            >
+              <template #buttons>
+                <el-select
+                  v-model="appStatusFilter"
+                  class="w-40!"
+                  placeholder="按状态过滤"
+                  @change="appOnFilterChange"
+                >
+                  <el-option
+                    v-for="opt in appStatusOptions"
+                    :key="opt.value"
+                    :label="opt.label"
+                    :value="opt.value"
+                  />
+                </el-select>
+              </template>
+              <template v-slot="{ size, dynamicColumns }">
+                <pure-table
+                  row-key="id"
+                  adaptive
+                  :adaptiveConfig="{ offsetBottom: 108 }"
+                  align-whole="center"
+                  table-layout="auto"
+                  :loading="appLoading"
+                  :size="size"
+                  :data="appDataList"
+                  :columns="dynamicColumns"
+                  :pagination="appPagination"
+                  :paginationSmall="size === 'small' ? true : false"
+                  :header-cell-style="{
+                    background: 'var(--el-fill-color-light)',
+                    color: 'var(--el-text-color-primary)'
+                  }"
+                  @page-size-change="appHandleSizeChange"
+                  @page-current-change="appHandleCurrentChange"
+                >
+                  <template #statusCode="{ row }">
+                    <el-tag :type="appStatusMeta(row.statusCode).type">
+                      {{ appStatusMeta(row.statusCode).text }}
+                    </el-tag>
+                  </template>
+                  <template #operation="{ row }">
+                    <el-button
+                      class="reset-margin"
+                      link
+                      :size="size"
+                      @click="appOpenDetail(row)"
+                    >
+                      详情
+                    </el-button>
+                    <el-button
+                      v-if="appCanDoGate(row)"
+                      class="reset-margin"
+                      link
+                      :size="size"
+                      @click="appOpenGateDialog(row)"
+                    >
+                      标考核
+                    </el-button>
+                    <el-button
+                      v-if="appCanDoEvaluate(row)"
+                      class="reset-margin"
+                      link
+                      type="success"
+                      :size="size"
+                      @click="appHandleEvaluate(row, true)"
+                    >
+                      评估通过
+                    </el-button>
+                    <el-button
+                      v-if="appCanDoEvaluate(row)"
+                      class="reset-margin"
+                      link
+                      type="danger"
+                      :size="size"
+                      @click="appHandleEvaluate(row, false)"
+                    >
+                      淘汰
+                    </el-button>
+                    <el-button
+                      v-if="appCanDoJoin(row)"
+                      class="reset-margin"
+                      link
+                      type="success"
+                      :size="size"
+                      @click="appOpenJoinDialog(row)"
+                    >
+                      一键入队
+                    </el-button>
+                    <el-button
+                      v-if="row.statusCode === 'joined'"
+                      class="reset-margin"
+                      link
+                      :size="size"
+                      @click="appGoMember(row)"
+                    >
+                      查看队员
+                    </el-button>
+                  </template>
+                </pure-table>
+              </template>
+            </PureTableBar>
+          </template>
+          <SrvfPermEmpty
+            v-else
+            action="查看入队申请"
+            code="team-join-application.read.record"
+          />
+        </el-tab-pane>
+      </el-tabs>
+    </SrvfDetailShell>
 
     <!-- 入队申请详情 drawer（gates 实况 + 贡献值 + 候选部门） -->
     <el-drawer
@@ -342,28 +333,8 @@ onMounted(() => {
   margin: 24px 24px 0 !important;
 }
 
-.cockpit-header {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  align-items: center;
-  justify-content: space-between;
-
-  &__title {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-  }
-
-  &__name {
-    font-size: 18px;
-    font-weight: 600;
-  }
-
-  &__actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
+.cockpit-header__name {
+  font-size: 18px;
+  font-weight: 600;
 }
 </style>

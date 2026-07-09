@@ -10,6 +10,7 @@ import { hasPerms } from "@/utils/auth";
 import { PureTableBar } from "@/components/RePureTableBar";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
 import { useSrvfDictStoreHook } from "@/store/modules/srvfDict";
+import { SrvfDetailShell } from "@/srvf-kit";
 import {
   getActivity,
   publishActivity,
@@ -21,7 +22,6 @@ import { useAttendances } from "../attendances/utils/hook";
 import ReviewDetail from "../attendances/review-detail.vue";
 
 import AddFill from "~icons/ri/add-circle-line";
-import ArrowLeftLine from "~icons/ri/arrow-left-line";
 
 defineOptions({
   name: "SrvfActivityCockpit"
@@ -196,40 +196,36 @@ onMounted(() => {
 <template>
   <div class="main">
     <!-- 头部：活动信息 + 发布/取消 -->
-    <el-card v-loading="detailLoading" shadow="never" class="mb-2">
-      <el-button
-        link
-        class="mb-2!"
-        :icon="useRenderIcon(ArrowLeftLine)"
-        @click="router.push('/srvf/activities-domain/activities')"
-      >
-        返回活动列表
-      </el-button>
-      <template v-if="detail">
-        <div class="cockpit-header">
-          <div class="cockpit-header__title">
-            <span class="cockpit-header__name">{{ detail.title }}</span>
-            <el-tag :type="statusType(detail.statusCode)">
-              {{ statusText(detail.statusCode) }}
-            </el-tag>
-          </div>
-          <div class="cockpit-header__actions">
-            <el-button
-              v-if="canPublish && detail.statusCode === 'draft'"
-              type="success"
-              @click="handlePublish"
-            >
-              发布
-            </el-button>
-            <el-button
-              v-if="canCancel && detail.statusCode !== 'cancelled'"
-              type="warning"
-              @click="handleCancel"
-            >
-              取消活动
-            </el-button>
-          </div>
-        </div>
+    <SrvfDetailShell
+      :loading="detailLoading"
+      :found="!!detail"
+      not-found-text="未找到该活动或无权查看"
+      back-text="返回活动列表"
+      @back="router.push('/srvf/activities-domain/activities')"
+    >
+      <template #title>
+        <span class="cockpit-header__name">{{ detail.title }}</span>
+        <el-tag :type="statusType(detail.statusCode)">
+          {{ statusText(detail.statusCode) }}
+        </el-tag>
+      </template>
+      <template #actions>
+        <el-button
+          v-if="canPublish && detail.statusCode === 'draft'"
+          type="success"
+          @click="handlePublish"
+        >
+          发布
+        </el-button>
+        <el-button
+          v-if="canCancel && detail.statusCode !== 'cancelled'"
+          type="warning"
+          @click="handleCancel"
+        >
+          取消活动
+        </el-button>
+      </template>
+      <template #overview>
         <el-descriptions :column="3" border class="mt-3">
           <el-descriptions-item label="活动类型">
             {{ dict.label("activity_type", detail.activityTypeCode) }}
@@ -269,228 +265,228 @@ onMounted(() => {
           </el-descriptions-item>
         </el-descriptions>
       </template>
-      <el-empty
-        v-else-if="!detailLoading"
-        description="未找到该活动或无权查看"
-      />
-    </el-card>
 
-    <!-- Tab：报名 / 考勤（各自复用对应 list hook，无需再选活动） -->
-    <el-tabs v-model="activeTab" class="cockpit-tabs">
-      <el-tab-pane label="报名" name="registrations">
-        <template v-if="regCanRead">
-          <PureTableBar
-            title="报名记录"
-            :columns="regColumns"
-            @refresh="regOnSearch"
-          >
-            <template #buttons>
-              <el-button
-                v-if="regCanCreate"
-                type="primary"
-                :icon="useRenderIcon(AddFill)"
-                @click="regOpenCreateDialog"
-              >
-                代报名
-              </el-button>
-              <el-button v-if="regCanRead" @click="regHandleExport('pass')">
-                导出通过名单
-              </el-button>
-              <el-button v-if="regCanRead" @click="regHandleExport('all')">
-                导出全部
-              </el-button>
-            </template>
-            <template v-slot="{ size, dynamicColumns }">
-              <pure-table
-                row-key="id"
-                adaptive
-                :adaptiveConfig="{ offsetBottom: 108 }"
-                align-whole="center"
-                table-layout="auto"
-                :loading="regLoading"
-                :size="size"
-                :data="regDataList"
-                :columns="dynamicColumns"
-                :pagination="regPagination"
-                :paginationSmall="size === 'small' ? true : false"
-                :header-cell-style="{
-                  background: 'var(--el-fill-color-light)',
-                  color: 'var(--el-text-color-primary)'
-                }"
-                @page-size-change="regHandleSizeChange"
-                @page-current-change="regHandleCurrentChange"
-              >
-                <template #statusCode="{ row }">
-                  <el-tag :type="regStatusMeta(row.statusCode).type">
-                    {{ regStatusMeta(row.statusCode).text }}
-                  </el-tag>
-                </template>
-                <template #operation="{ row }">
-                  <el-button
-                    v-if="regCanApprove && row.statusCode === 'pending'"
-                    class="reset-margin"
-                    link
-                    type="success"
-                    :size="size"
-                    @click="regHandleApprove(row)"
-                  >
-                    审核通过
-                  </el-button>
-                  <el-button
-                    v-if="regCanReject && row.statusCode === 'pending'"
-                    class="reset-margin"
-                    link
-                    type="danger"
-                    :size="size"
-                    @click="regHandleReject(row)"
-                  >
-                    审核拒绝
-                  </el-button>
-                  <el-button
-                    v-if="
-                      regCanCancel &&
-                      (row.statusCode === 'pending' ||
-                        row.statusCode === 'pass')
-                    "
-                    class="reset-margin"
-                    link
-                    type="warning"
-                    :size="size"
-                    @click="regHandleCancel(row)"
-                  >
-                    代取消
-                  </el-button>
-                </template>
-              </pure-table>
-            </template>
-          </PureTableBar>
-        </template>
-        <SrvfPermEmpty
-          v-else
-          action="查看报名记录"
-          code="activity-registration.read.record"
-        />
-      </el-tab-pane>
+      <!-- Tab：报名 / 考勤（各自复用对应 list hook，无需再选活动） -->
+      <el-tabs v-model="activeTab" class="cockpit-tabs">
+        <el-tab-pane label="报名" name="registrations">
+          <template v-if="regCanRead">
+            <PureTableBar
+              title="报名记录"
+              :columns="regColumns"
+              @refresh="regOnSearch"
+            >
+              <template #buttons>
+                <el-button
+                  v-if="regCanCreate"
+                  type="primary"
+                  :icon="useRenderIcon(AddFill)"
+                  @click="regOpenCreateDialog"
+                >
+                  代报名
+                </el-button>
+                <el-button v-if="regCanRead" @click="regHandleExport('pass')">
+                  导出通过名单
+                </el-button>
+                <el-button v-if="regCanRead" @click="regHandleExport('all')">
+                  导出全部
+                </el-button>
+              </template>
+              <template v-slot="{ size, dynamicColumns }">
+                <pure-table
+                  row-key="id"
+                  adaptive
+                  :adaptiveConfig="{ offsetBottom: 108 }"
+                  align-whole="center"
+                  table-layout="auto"
+                  :loading="regLoading"
+                  :size="size"
+                  :data="regDataList"
+                  :columns="dynamicColumns"
+                  :pagination="regPagination"
+                  :paginationSmall="size === 'small' ? true : false"
+                  :header-cell-style="{
+                    background: 'var(--el-fill-color-light)',
+                    color: 'var(--el-text-color-primary)'
+                  }"
+                  @page-size-change="regHandleSizeChange"
+                  @page-current-change="regHandleCurrentChange"
+                >
+                  <template #statusCode="{ row }">
+                    <el-tag :type="regStatusMeta(row.statusCode).type">
+                      {{ regStatusMeta(row.statusCode).text }}
+                    </el-tag>
+                  </template>
+                  <template #operation="{ row }">
+                    <el-button
+                      v-if="regCanApprove && row.statusCode === 'pending'"
+                      class="reset-margin"
+                      link
+                      type="success"
+                      :size="size"
+                      @click="regHandleApprove(row)"
+                    >
+                      审核通过
+                    </el-button>
+                    <el-button
+                      v-if="regCanReject && row.statusCode === 'pending'"
+                      class="reset-margin"
+                      link
+                      type="danger"
+                      :size="size"
+                      @click="regHandleReject(row)"
+                    >
+                      审核拒绝
+                    </el-button>
+                    <el-button
+                      v-if="
+                        regCanCancel &&
+                        (row.statusCode === 'pending' ||
+                          row.statusCode === 'pass')
+                      "
+                      class="reset-margin"
+                      link
+                      type="warning"
+                      :size="size"
+                      @click="regHandleCancel(row)"
+                    >
+                      代取消
+                    </el-button>
+                  </template>
+                </pure-table>
+              </template>
+            </PureTableBar>
+          </template>
+          <SrvfPermEmpty
+            v-else
+            action="查看报名记录"
+            code="activity-registration.read.record"
+          />
+        </el-tab-pane>
 
-      <el-tab-pane label="考勤" name="attendances">
-        <template v-if="attCanRead">
-          <PureTableBar
-            title="考勤管理"
-            :columns="attColumns"
-            @refresh="attOnSearch"
-          >
-            <template v-if="attCanCreate" #buttons>
-              <el-button type="primary" @click="attOpenCreateDialog">
-                提交考勤单据
-              </el-button>
-            </template>
-            <template v-slot="{ size, dynamicColumns }">
-              <pure-table
-                row-key="id"
-                adaptive
-                :adaptiveConfig="{ offsetBottom: 108 }"
-                align-whole="center"
-                table-layout="auto"
-                :loading="attLoading"
-                :size="size"
-                :data="attDataList"
-                :columns="dynamicColumns"
-                :pagination="attPagination"
-                :paginationSmall="size === 'small' ? true : false"
-                :header-cell-style="{
-                  background: 'var(--el-fill-color-light)',
-                  color: 'var(--el-text-color-primary)'
-                }"
-                @page-size-change="attHandleSizeChange"
-                @page-current-change="attHandleCurrentChange"
-              >
-                <template #statusCode="{ row }">
-                  <el-tag :type="attStatusMeta(row.statusCode).type">
-                    {{ attStatusMeta(row.statusCode).text }}
-                  </el-tag>
-                </template>
-                <template #operation="{ row }">
-                  <el-button
-                    class="reset-margin"
-                    link
-                    :size="size"
-                    @click="attOpenReviewDetail(row)"
-                  >
-                    查看明细
-                  </el-button>
-                  <el-button
-                    v-if="attCanUpdate && row.statusCode === 'pending'"
-                    class="reset-margin"
-                    link
-                    :size="size"
-                    @click="attOpenEditDialog(row)"
-                  >
-                    编辑
-                  </el-button>
-                  <el-button
-                    v-if="attCanApprove && row.statusCode === 'pending'"
-                    class="reset-margin"
-                    link
-                    type="success"
-                    :size="size"
-                    @click="attHandleApprove(row)"
-                  >
-                    一级通过
-                  </el-button>
-                  <el-button
-                    v-if="attCanReject && row.statusCode === 'pending'"
-                    class="reset-margin"
-                    link
-                    type="danger"
-                    :size="size"
-                    @click="attHandleReject(row)"
-                  >
-                    一级驳回
-                  </el-button>
-                  <el-button
-                    v-if="
-                      attCanFinalApprove &&
-                      row.statusCode === 'pending_final_review'
-                    "
-                    class="reset-margin"
-                    link
-                    type="success"
-                    :size="size"
-                    @click="attHandleFinalApprove(row)"
-                  >
-                    终审通过
-                  </el-button>
-                  <el-button
-                    v-if="
-                      attCanFinalReject &&
-                      row.statusCode === 'pending_final_review'
-                    "
-                    class="reset-margin"
-                    link
-                    type="danger"
-                    :size="size"
-                    @click="attHandleFinalReject(row)"
-                  >
-                    终审驳回
-                  </el-button>
-                  <el-button
-                    v-if="attCanDelete && row.statusCode === 'pending'"
-                    class="reset-margin"
-                    link
-                    type="danger"
-                    :size="size"
-                    @click="attHandleDelete(row)"
-                  >
-                    删除
-                  </el-button>
-                </template>
-              </pure-table>
-            </template>
-          </PureTableBar>
-        </template>
-        <SrvfPermEmpty v-else action="查看考勤" code="attendance.read.sheet" />
-      </el-tab-pane>
-    </el-tabs>
+        <el-tab-pane label="考勤" name="attendances">
+          <template v-if="attCanRead">
+            <PureTableBar
+              title="考勤管理"
+              :columns="attColumns"
+              @refresh="attOnSearch"
+            >
+              <template v-if="attCanCreate" #buttons>
+                <el-button type="primary" @click="attOpenCreateDialog">
+                  提交考勤单据
+                </el-button>
+              </template>
+              <template v-slot="{ size, dynamicColumns }">
+                <pure-table
+                  row-key="id"
+                  adaptive
+                  :adaptiveConfig="{ offsetBottom: 108 }"
+                  align-whole="center"
+                  table-layout="auto"
+                  :loading="attLoading"
+                  :size="size"
+                  :data="attDataList"
+                  :columns="dynamicColumns"
+                  :pagination="attPagination"
+                  :paginationSmall="size === 'small' ? true : false"
+                  :header-cell-style="{
+                    background: 'var(--el-fill-color-light)',
+                    color: 'var(--el-text-color-primary)'
+                  }"
+                  @page-size-change="attHandleSizeChange"
+                  @page-current-change="attHandleCurrentChange"
+                >
+                  <template #statusCode="{ row }">
+                    <el-tag :type="attStatusMeta(row.statusCode).type">
+                      {{ attStatusMeta(row.statusCode).text }}
+                    </el-tag>
+                  </template>
+                  <template #operation="{ row }">
+                    <el-button
+                      class="reset-margin"
+                      link
+                      :size="size"
+                      @click="attOpenReviewDetail(row)"
+                    >
+                      查看明细
+                    </el-button>
+                    <el-button
+                      v-if="attCanUpdate && row.statusCode === 'pending'"
+                      class="reset-margin"
+                      link
+                      :size="size"
+                      @click="attOpenEditDialog(row)"
+                    >
+                      编辑
+                    </el-button>
+                    <el-button
+                      v-if="attCanApprove && row.statusCode === 'pending'"
+                      class="reset-margin"
+                      link
+                      type="success"
+                      :size="size"
+                      @click="attHandleApprove(row)"
+                    >
+                      一级通过
+                    </el-button>
+                    <el-button
+                      v-if="attCanReject && row.statusCode === 'pending'"
+                      class="reset-margin"
+                      link
+                      type="danger"
+                      :size="size"
+                      @click="attHandleReject(row)"
+                    >
+                      一级驳回
+                    </el-button>
+                    <el-button
+                      v-if="
+                        attCanFinalApprove &&
+                        row.statusCode === 'pending_final_review'
+                      "
+                      class="reset-margin"
+                      link
+                      type="success"
+                      :size="size"
+                      @click="attHandleFinalApprove(row)"
+                    >
+                      终审通过
+                    </el-button>
+                    <el-button
+                      v-if="
+                        attCanFinalReject &&
+                        row.statusCode === 'pending_final_review'
+                      "
+                      class="reset-margin"
+                      link
+                      type="danger"
+                      :size="size"
+                      @click="attHandleFinalReject(row)"
+                    >
+                      终审驳回
+                    </el-button>
+                    <el-button
+                      v-if="attCanDelete && row.statusCode === 'pending'"
+                      class="reset-margin"
+                      link
+                      type="danger"
+                      :size="size"
+                      @click="attHandleDelete(row)"
+                    >
+                      删除
+                    </el-button>
+                  </template>
+                </pure-table>
+              </template>
+            </PureTableBar>
+          </template>
+          <SrvfPermEmpty
+            v-else
+            action="查看考勤"
+            code="attendance.read.sheet"
+          />
+        </el-tab-pane>
+      </el-tabs>
+    </SrvfDetailShell>
 
     <!-- 考勤审核明细 drawer（只读：活动摘要 + 单据 + records 含队员嵌套） -->
     <el-drawer
@@ -511,25 +507,8 @@ onMounted(() => {
   margin: 24px 24px 0 !important;
 }
 
-.cockpit-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  &__title {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-  }
-
-  &__name {
-    font-size: 18px;
-    font-weight: 600;
-  }
-
-  &__actions {
-    display: flex;
-    gap: 8px;
-  }
+.cockpit-header__name {
+  font-size: 18px;
+  font-weight: 600;
 }
 </style>
