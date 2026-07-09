@@ -4,4 +4,6 @@ export { default as SrvfDetailShell } from "./components/SrvfDetailShell.vue";
 export { default as SrvfPageIntro } from "./components/SrvfPageIntro.vue";
 export { default as SrvfRemoteSelect } from "./components/SrvfRemoteSelect.vue";
 export { default as SrvfListPage } from "./components/SrvfListPage.vue";
+export { default as SrvfGlobalSearch } from "./components/SrvfGlobalSearch.vue";
 export { useSrvfList } from "./composables/useSrvfList";
+export { useSrvfGlobalSearch } from "./composables/useSrvfGlobalSearch";
