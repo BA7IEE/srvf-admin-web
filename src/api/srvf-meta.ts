@@ -64,3 +64,31 @@ export const resolveLabels = (data: ResolveLabelsParams) =>
     "/api/admin/v1/meta/resolve-labels",
     { data }
   );
+
+/**
+ * `resolveLabels` 的薄封装：单类型批量解析，只返回命中的 `id → label`。
+ * 未命中的 id 不进结果（保持各页现有"未命中回退原 id"的口径，回退逻辑留在调用方）。
+ * 请求失败时静默返回空表，不抛出（对齐现有调用点普遍的"解析失败不阻塞列表"策略）。
+ */
+export async function resolveLabelMap(
+  type: ResolvableRefType,
+  ids: string[]
+): Promise<Record<string, string>> {
+  const map: Record<string, string> = {};
+  const uniqueIds = [...new Set(ids)];
+  if (!uniqueIds.length) return map;
+  try {
+    const { code, data } = await resolveLabels({
+      refs: uniqueIds.map(id => ({ type, id }))
+    });
+    if (code === 0) {
+      for (const id of uniqueIds) {
+        const hit = data[type]?.[id];
+        if (hit) map[id] = hit.label;
+      }
+    }
+  } catch {
+    // 解析失败不阻塞调用方 → 回落显示原 id
+  }
+  return map;
+}

@@ -8,6 +8,12 @@
  *
  * 领域专用映射（如考勤终审 22074/22075、membership 冲突）仍由各自 api 层维护，
  * 调用侧链式组合：`finalReviewErrorMessage(code) ?? bizErrorMessage(error, "终审失败")`。
+ *
+ * 错误翻译目录（域码留各自域文件，不并入本表）：
+ * - `finalReviewErrorMessage`  → src/api/srvf-attendance.ts（考勤终审码）
+ * - `membershipBizErrorMessage` → src/api/srvf-membership.ts（会籍冲突码）
+ * - `permissionBizErrorMessage` → src/api/srvf-permission.ts（权限变更码）
+ * - `roleBizErrorMessage`      → src/api/srvf-role.ts（角色变更码）
  */
 type BizErrorLike = {
   response?: { data?: { code?: number; message?: string } };

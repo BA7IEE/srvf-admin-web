@@ -15,6 +15,7 @@ import {
   verifyMemberCertificate,
   rejectMemberCertificate,
   getQualificationFlag,
+  CERT_STATUS_TAG,
   type CertificateItem,
   type CreateCertificateBody
 } from "@/api/srvf-certificate";
@@ -108,13 +109,7 @@ export function useCertificates(externalMemberId: string) {
   function certStatusTagType(
     code: string
   ): "success" | "warning" | "danger" | "info" {
-    const map: Record<string, "success" | "warning" | "danger" | "info"> = {
-      verified: "success",
-      pending: "warning",
-      rejected: "danger",
-      expired: "info"
-    };
-    return map[code] ?? "info";
+    return CERT_STATUS_TAG[code] ?? "info";
   }
 
   async function onSearch() {

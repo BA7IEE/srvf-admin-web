@@ -22,6 +22,17 @@ export type CertificateItem = {
   updatedAt: string;
 };
 
+/** 证书状态 code → tag 颜色（仅展示色；状态码来自后端字典，前端不臆造） */
+export const CERT_STATUS_TAG: Record<
+  string,
+  "success" | "warning" | "danger" | "info"
+> = {
+  verified: "success",
+  pending: "warning",
+  rejected: "danger",
+  expired: "info"
+};
+
 /**
  * 某队员的证书列表（**无分页**，按 certStatusCode ASC / createdAt DESC）。
  * `GET /api/admin/v1/members/{memberId}/certificates`（rbac: `certificate.read.record`）。
