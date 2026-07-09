@@ -19,6 +19,8 @@ export { ACCESS_LEVEL_LABEL, ACCESS_LEVEL_TAG } from "./srvf-attachment";
 
 export { AUTHZ_REASON_LABEL, RESOURCE_TYPE_LABEL } from "./srvf-authz";
 
+export { CERT_STATUS_TAG } from "./srvf-certificate";
+
 export {
   CONTENT_STATUS_LABEL,
   CONTENT_STATUS_TAG,
@@ -67,6 +69,8 @@ export {
   SUPERVISION_STATUS_LABEL,
   SUPERVISION_STATUS_TAG
 } from "./srvf-supervision";
+
+export { SMS_STATUS_LABEL, SMS_STATUS_TAG } from "./srvf-system-settings";
 
 export {
   TJ_CYCLE_STATUS_LABEL,

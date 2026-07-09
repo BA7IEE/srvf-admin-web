@@ -194,3 +194,22 @@ export const getSmsSendLogs = (params?: SmsSendLogListQuery) =>
     "/api/system/v1/sms-send-logs",
     { params }
   );
+
+/** 发送状态 code → tag 展示色(冗余键做历史数据兜底,未知码回退 info) */
+export const SMS_STATUS_TAG: Record<
+  string,
+  "primary" | "success" | "info" | "warning" | "danger"
+> = {
+  SENT: "success",
+  SUCCESS: "success",
+  FAILED: "danger",
+  PENDING: "warning"
+};
+
+/** 发送状态 → 中文(契约 v0.37.0 已固化 enum ['SENT','FAILED'];未知码回退原文) */
+export const SMS_STATUS_LABEL: Record<string, string> = {
+  SENT: "已发送",
+  SUCCESS: "已发送",
+  FAILED: "发送失败",
+  PENDING: "发送中"
+};
