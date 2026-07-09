@@ -12,52 +12,52 @@
 
 ## 当前版本
 
-- 当前 handoff / 交付版本：`7.1.0-p1.meta-workbench`。
-- 最新 validated 完整包：`srvf-admin-web_v7.1.0-p1.meta-workbench_validated_full_20260705.zip`。
-- 最新 validated 增量包：`srvf-admin-web_v7.1.0-p1.meta-workbench_validated_delta_20260705.zip`。
-- 当前验证状态：`LOCAL_TEST_PASS`，用户本地已通过 `pnpm typecheck`、`pnpm build`、`pnpm dev`、真实后端登录、Network 和工作台摘要验证。
-- 源码等同：`srvf-admin-web_v7.1.0-p1.meta-workbench_full_20260705.zip`。
-- 代码改动来源：P1.1 meta-workbench。
-- 生产代码改动：新增 `src/api/srvf-meta.ts`，更新 `src/views/srvf/workbench/index.vue`，清空 `src/views/login/index.vue` 旧密码预填。
-- 未改：`package.json`、`pnpm-lock.yaml`、`.env*`、路由主链、权限主链、后端契约。
+- 当前 handoff / 代码基准：`git-main-1aba0da-handoff-20260710`。
+- 当前 Git HEAD：`1aba0da` (`feat(layout): navbar 挂全局实体搜索入口 (#80)`)。
+- 当前包状态：未重新打包，以 Git checkout `main@1aba0da` 为准。
+- 当前验证状态：`BUILD_PASS`，已直接通过 `vue-tsc` 与 `vite build`。
+- 历史 validated 包：`srvf-admin-web_v7.1.0-p1.meta-workbench_validated_full_20260705.zip` 只作历史，不再作为当前下一步入口。
+- 主线增量：相对 `c2001c9` 已合入 #34~#80，包括组织人事、RBAC 治理、Auth 专线、队员账号闭环、字典主从布局、srvf-kit 原语层。
+- 本次未改：`src/**`、`package.json`、`pnpm-lock.yaml`、`.env*`、路由主链、权限主链、后端契约。
 
-## 已确认本地验证
+## 已确认验证
 
-用户本地已确认：
+本次 Codex 直接确认：
 
 ```bash
-pnpm typecheck
-pnpm build
-pnpm dev
+./node_modules/.bin/vue-tsc --noEmit --skipLibCheck
+./node_modules/.bin/vite build
 ```
 
 结果：
 
-- `pnpm typecheck` 通过。
-- `pnpm build` 通过。
-- `pnpm dev` 启动成功，实际端口 `http://localhost:8850/`，验证后已停止。
-- 登录页密码框为空，不再预填 `admin123`。
-- 真实后端登录 `admin / ChangeMe123456` 成功。
-- Network 出现 `GET /api/admin/v1/meta/dashboard-summary`，状态 `200`。
-- Network 未出现 `/get-async-routes`。
-- 工作台顶部摘要正常显示：待审报名 `0`、考勤待一级审核 `1`、考勤待终审 `2`、进行中活动 `0`。
-- dashboard-summary 响应只包含后端返回的 `registrations / attendanceSheets / activities`，没有把缺权限 block 渲染成 `0`。
-- “报名审批”正常加载为空态，“考勤审批”正常加载 1 条记录。
-- 控制台无 error / warn / issue。
+- 直接 `vue-tsc` 通过。
+- 直接 `vite build` 通过。
+
+当前未确认：
+
+- `pnpm typecheck`：在当前环境触发 pnpm 依赖状态检查并尝试 install，无 TTY 下中止。
+- `python scripts/check_handoff_docs.py --root . --strict`：脚本误扫 `.git` / `node_modules` / `.claude/worktrees/**/node_modules`，当前不可作为 strict 证据。
+- `pnpm dev` / 浏览器 / 真实后端登录：本次未运行。
 
 ## 后续验证建议
 
 后续开发前仍建议执行：
 
 ```bash
-python scripts/check_handoff_docs.py --root . --strict
-rg -n "@/api/routes|getAsyncRoutes\(|/get-async-routes" src/api src/router/utils.ts src/router/index.ts src/views src/store src/utils
-pnpm typecheck
-pnpm build
+./node_modules/.bin/vue-tsc --noEmit --skipLibCheck
+./node_modules/.bin/vite build
+pnpm dev
 ```
 
-如启动端口被占用，Vite 会顺延端口；本次用户实测端口为 `http://localhost:8850/`。
+并补：
+
+- 真实后端登录。
+- 字典主从布局浏览器检查。
+- 全局搜索入口检查。
+- 队员账号 tab、组织人事、RBAC 治理面关键页面冒烟。
+- 修复 `scripts/check_handoff_docs.py` 排除规则后，再跑 strict 自检。
 
 ## 下一步建议
 
-下一轮建议进入 `P1.2 memberships-read` 的开发前分析：队员详情新增 memberships 只读“组织归属”Tab，不删除旧 department，不做职务/角色绑定/分管大模块。
+不要再按旧 `P1.2 memberships-read` 入口继续；该线已被 #37~#60 覆盖。下一轮优先做 `main@1aba0da` 浏览器冒烟和 handoff 自检脚本修复。

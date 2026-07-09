@@ -2,28 +2,23 @@
 
 ## 一、当前接手结论
 
-| 项                      | 当前状态                                                                                                          |
-| ----------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| 当前 handoff / 代码版本 | `7.1.0-p1.meta-workbench`                                                                                         |
-| 最新 validated 完整包   | `srvf-admin-web_v7.1.0-p1.meta-workbench_validated_full_20260705.zip`                                             |
-| 最新 validated 增量包   | `srvf-admin-web_v7.1.0-p1.meta-workbench_validated_delta_20260705.zip`                                            |
-| 源码等同包              | `srvf-admin-web_v7.1.0-p1.meta-workbench_full_20260705.zip`                                                       |
-| 上一验证基准            | `srvf-admin-web_v7.0.1-p0.routes_validated_full_20260705.zip`                                                     |
-| 当前验证状态            | LOCAL_TEST_PASS：用户本地 typecheck/build/dev/真实后端登录/Network/工作台摘要验证通过                             |
-| 后端权威基准            | `BA7IEE/srvf-nest-api`，以后端 `docs/current-state.md`、`docs/handoff/admin-web.md` 和 live `/api/docs-json` 为准 |
+| 项                | 当前状态                                                                                                        |
+| ----------------- | --------------------------------------------------------------------------------------------------------------- |
+| 当前代码基准      | `main@1aba0da` / `origin/main`，2026-07-10 checkout                                                             |
+| 当前 handoff 版本 | `git-main-1aba0da-handoff-20260710`                                                                             |
+| 最新包状态        | 未重新打包；以当前 Git checkout 为准                                                                            |
+| 相对旧基线        | `c2001c9..1aba0da` 合入 #34~#80，共 256 文件、+21957/-6030                                                      |
+| 当前验证状态      | BUILD_PASS：直接执行 `vue-tsc` 与 `vite build` 通过；未做浏览器/dev 后端冒烟                                    |
+| 后端权威基准      | `../srvf-nest-api/docs/handoff/admin-web.md` + live `/api/docs-json`；文档仍以 v0.37.0/195 权限码为当前已知基准 |
 
-## 二、已验证事实
+## 二、当前主线事实
 
-- P0 `/get-async-routes` 生产链路已移除，用户本地 Network 未出现 `/get-async-routes`。
-- P1.1 工作台已接 `GET /api/admin/v1/meta/dashboard-summary`，用户本地 Network 返回 200。
-- 登录页密码框为空，不再预填 `admin123`。
-- 用户本地 `pnpm typecheck` 通过。
-- 用户本地 `pnpm build` 通过。
-- 用户本地 `pnpm dev` 启动成功，实际端口 `http://localhost:8850/`。
-- 真实后端登录 `admin / ChangeMe123456` 成功。
-- 工作台摘要显示：待审报名 `0`、考勤待一级审核 `1`、考勤待终审 `2`、进行中活动 `0`。
-- 下方“报名审批”为空态正常，“考勤审批”加载 1 条记录。
-- 控制台无 error / warn / issue。
+- Phase 0~3 蓝图主线已完成大部分：行为校准、组织人事支柱、附件/招新/公告补件、体验层快赢已合入。
+- 字典主从布局已完成：#71 改为左侧类型导航 + 右侧条目树表，#72 补分组行视觉层级。
+- 队员账号闭环已完成：#68/#69/#70 覆盖开号、绑定、解绑、退号重开、启停、批量开号、最近登录与授权入口。
+- RBAC 治理面已完成：#52~#54 角色 CRUD/角色权限绑定、权限点 CRUD、用户-角色分配。
+- Auth 专线已合入：#51 修改 `src/api/user.ts`、`src/store/modules/user.ts`、`src/utils/http/index.ts`，接入 40100 被动刷新重试与真实 logout 撤销端点。此为历史代码事实，本次 handoff 未改 auth 文件。
+- srvf-kit 表现层原语已开始抽取：#74~#80 包含权限空态、状态标签、详情壳、说明块、远程选择器、列表壳/组合式、全局搜索与最近访问入口。
 
 ## 三、必须先读文件
 
@@ -35,20 +30,19 @@
 6. `docs/handoff/30_handoff_self_check.md`
 7. `CLAUDE.md`
 8. `AGENTS.md`
+9. `docs/srvf-admin-vnext-blueprint.md`
+10. `../srvf-nest-api/docs/handoff/admin-web.md`
 
 ## 四、下一步建议
 
-建议下一轮先做 `P1.2 memberships-read` 开发前分析：
+下一轮不要再按旧 handoff 的 `P1.2 memberships-read` 启动；该线已被 #37~#60 覆盖并继续收尾。建议优先做三件事：
 
-- 对照后端 memberships / organizations memberships 接口。
-- 队员详情新增“组织归属”Tab，只读接 memberships。
-- 不删除旧 department。
-- 不做 positions / role-bindings / supervision / action-state 大模块。
-- 不启用 asyncRoutes，不恢复 `/get-async-routes`。
-- 不改依赖。
+1. 浏览器/dev 后端冒烟：登录、菜单、全局搜索、字典主从、队员账号、组织人事、RBAC 治理面各抽一条路径。
+2. 修正 `scripts/check_handoff_docs.py` 递归误扫 `.git` / `node_modules` / `.claude/worktrees/**/node_modules` 的问题，再恢复 strict 自检可信度。
+3. 若继续做产品开发，先基于当前 `main@1aba0da` 和 live `/api/docs-json` 重新选一个小切片，不使用 2026-07-05 的 zip 包任务名。
 
 ## 五、给下一位 AI 的最小指令
 
 ```text
-请基于 `srvf-admin-web_v7.1.0-p1.meta-workbench_validated_full_20260705.zip` 继续，只分析不改代码。先读取 project_state.json 与 docs/handoff/00/01/23/24/29/30，再对照真实后端 srvf-nest-api v0.37 的 admin-web handoff，分析 P1.2 memberships-read 的最小开发范围。不要恢复 /get-async-routes，不启用 asyncRoutes，不删除旧 department。
+请基于当前 srvf-admin-web Git checkout `main@1aba0da` 继续。先读 CLAUDE.md、AGENTS.md、project_state.json、docs/handoff/00/01/23/24/29/30、docs/srvf-admin-vnext-blueprint.md，以及后端 ../srvf-nest-api/docs/handoff/admin-web.md。注意 2026-07-05 handoff 已过期：#34~#80 已合入，字典主从布局、组织人事、RBAC 治理、队员账号闭环和 srvf-kit 原语层均已在主线。不要恢复 /get-async-routes，不启用 asyncRoutes，不改依赖；涉及 auth 主线必须按 CLAUDE.md §4 声明。
 ```

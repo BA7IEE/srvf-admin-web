@@ -2,37 +2,37 @@
 
 ## 一、当前优先级
 
-| 优先级 | 任务                                            | 状态            | 说明                                                                                      |
-| ------ | ----------------------------------------------- | --------------- | ----------------------------------------------------------------------------------------- |
-| P0     | 移除真实登录后对 `/get-async-routes` 的生产依赖 | LOCAL_TEST_PASS | `7.0.1-p0.routes` 已完成源码层修复，并已由用户本地验证通过                                |
-| P1     | 工作台接 `GET admin/v1/meta/dashboard-summary`  | LOCAL_TEST_PASS | `7.1.0-p1.meta-workbench` 已完成并由用户本地验证通过                                      |
-| P1     | 登录页旧预填密码处理                            | LOCAL_TEST_PASS | 已清空旧密码预填并由用户本地验证通过                                                      |
-| P1     | memberships-read 队员组织归属只读接线           | NEXT            | 建议下一轮先做开发前分析；不删除旧 department                                             |
-| P1     | 对齐后端 v0.37 scoped-authz 能力                | TODO            | positions / role-bindings / supervision / authz explain / action-state batch 后续切片推进 |
-| P0     | 核对当前上传包与前序 v7.8.0 通过包血缘          | TODO            | 当前包缺少 `scoped_authz_smoke.py`，如要继承历史 Playwright 能力需单独核对                |
-| P2     | 参考 pure-admin 优化 UI 细节                    | TODO            | 只读参考，不复制 mock 和业务模型                                                          |
+| 优先级 | 任务                      | 状态               | 说明                                                                                                 |
+| ------ | ------------------------- | ------------------ | ---------------------------------------------------------------------------------------------------- |
+| P0     | 浏览器/dev 后端冒烟       | NEXT               | 覆盖登录、菜单、全局搜索、字典主从、队员账号、组织人事、RBAC 治理面                                  |
+| P0     | 修复 handoff 自检脚本误扫 | TODO               | 当前脚本扫 `.git`、`node_modules`、`.claude/worktrees/**/node_modules`，导致依赖 README 示例私钥误伤 |
+| P1     | 当前主线 API/页面覆盖复盘 | TODO               | 基于 live `/api/docs-json` 重新跑一次结构级对账，更新蓝图附录                                        |
+| P1     | srvf-kit 原语继续迁移     | TODO               | #74~#80 已建立原语层；后续迁移应小步进行，不做大爆炸重构                                             |
+| P1     | 字典主从布局后验收        | DONE_NEEDS_BROWSER | #71/#72 已合入；仍建议浏览器看类型导航、条目树表、分组行视觉                                         |
 
 ## 二、下一轮建议任务
 
-| 项       | 内容                                                                                 |
-| -------- | ------------------------------------------------------------------------------------ |
-| 任务名称 | `P1.2 memberships-read` 开发前分析                                                   |
-| 目标     | 对照真实后端 memberships 相关接口，为队员详情新增“组织归属”只读 Tab 制定最小开发范围 |
-| 涉及方向 | members cockpit、memberships API、organizations memberships、权限/空态处理           |
-| 输出形式 | 只读分析：影响文件、接口字段风险、UI 归位、验证清单                                  |
-| 风险     | 旧 department 页面仍存在，不能直接删除；memberships 是终态方向但需小步迁移           |
+| 项       | 内容                                                                    |
+| -------- | ----------------------------------------------------------------------- |
+| 任务名称 | `main@1aba0da smoke + handoff self-check fix`                           |
+| 目标     | 先确认当前主线可运行，再修复交接自检脚本的扫描排除噪音                  |
+| 涉及方向 | dev server、真实后端登录、关键页面冒烟、`scripts/check_handoff_docs.py` |
+| 输出形式 | 验证记录 + 最小脚本修复 PR                                              |
+| 风险     | 脚本修复属于工具改动；不要顺手改业务代码或依赖                          |
 
-## 三、暂缓任务
+## 三、已不再适用的旧下一步
 
-| 任务                            | 暂缓原因                                        | 重启条件                            |
-| ------------------------------- | ----------------------------------------------- | ----------------------------------- |
-| positions / position-rules      | 需要先完成 members / organizations 归属显示基础 | memberships-read 稳定后             |
-| role-bindings + authz diagnosis | 涉及 scoped 判权解释，测试矩阵较大              | scoped-authz 缺口表与基础 UI 完成后 |
-| action-state batch 全站铺开     | 按钮状态影响面大                                | 先在报名/考勤单页试点               |
-| 大规模 UI 重构                  | scoped-authz 对齐前不应大改结构                 | 缺口表完成并明确页面切片            |
+旧 handoff 中的 `P1.2 memberships-read` 已过期。当前主线已经有：
+
+- 会籍只读切片与总表：#37。
+- 队员/组织归属写操作：#55。
+- 任职、督导、角色绑定、权限诊断：#39~#42。
+- 后续收尾与真实缺陷修复：#56~#60。
+
+因此新任务必须从当前代码重新切，而不是从 2026-07-05 zip 包计划继续。
 
 ## 四、给新聊天的下一步指令
 
 ```text
-请基于最新 validated 完整包继续，只分析不改代码：对照真实后端 srvf-nest-api v0.37 current-state、docs/handoff/admin-web.md 和 live /api/docs-json，分析 P1.2 memberships-read 最小开发范围。重点检查 src/api、members cockpit、旧 department Tab、organizations memberships 入口、权限与空态。不要启用 asyncRoutes，不恢复 /get-async-routes，不删除旧 department，不改依赖。
+请基于当前 srvf-admin-web `main@1aba0da` 做验证优先的接手：先不要改业务代码。读取 handoff 与 CLAUDE/AGENTS 后，启动或复用本地后端，跑一次 dev 浏览器冒烟，重点看登录、菜单、全局搜索、字典主从布局、队员账号 tab、组织人事、RBAC 治理面。随后修复 scripts/check_handoff_docs.py 误扫 .git/node_modules/.claude/worktrees 的问题，并重新跑自检。禁止改依赖、禁止启用 asyncRoutes、禁止恢复 /get-async-routes。
 ```

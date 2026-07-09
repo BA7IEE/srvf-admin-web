@@ -1,33 +1,29 @@
 # 17 测试证据
 
-## 7.1.0-p1.meta-workbench 本地验证证据
+## main@1aba0da handoff refresh
 
-| 时间                                    | 命令 / 验证项                                            | 结果                 | 说明                                                                                              |
-| --------------------------------------- | -------------------------------------------------------- | -------------------- | ------------------------------------------------------------------------------------------------- | ------------------------- | ----------------------------------------------------------------------------------- |
-| 2026-07-05 P1 development               | `python scripts/check_handoff_docs.py --root . --strict` | PASS                 | 0 error(s), 0 warning(s)                                                                          |
-| 2026-07-05 P1 development               | `rg -n "@/api/routes                                     | getAsyncRoutes\(     | /get-async-routes" src/api src/router/utils.ts src/router/index.ts src/views src/store src/utils` | PASS                      | 无生产调用链；仅 `src/router/asyncRoutes.ts` 历史注释若全量搜 getAsyncRoutes 会命中 |
-| 2026-07-05 P1 development               | `rg -n "dashboard-summary                                | resolve-labels" src` | PASS                                                                                              | 仅命中新 API 与工作台说明 |
-| 2026-07-05 user local validation report | `pnpm typecheck`                                         | PASS_BY_USER         | 用户本地验证通过                                                                                  |
-| 2026-07-05 user local validation report | `pnpm build`                                             | PASS_BY_USER         | 用户本地验证通过                                                                                  |
-| 2026-07-05 user local validation report | `pnpm dev`                                               | PASS_BY_USER         | 用户本地启动成功，端口 `http://localhost:8850/`，验证后已停止                                     |
-| 2026-07-05 user local validation report | 登录页密码框                                             | PASS_BY_USER         | 密码框为空，不再预填 `admin123`                                                                   |
-| 2026-07-05 user local validation report | 真实后端登录 `admin / ChangeMe123456`                    | PASS_BY_USER         | 登录成功                                                                                          |
-| 2026-07-05 user local validation report | `GET /api/admin/v1/meta/dashboard-summary`               | PASS_BY_USER         | Network 出现该请求，状态 200                                                                      |
-| 2026-07-05 user local validation report | `/get-async-routes` Network 检查                         | PASS_BY_USER         | 未出现                                                                                            |
-| 2026-07-05 user local validation report | 工作台摘要                                               | PASS_BY_USER         | 待审报名 `0`、考勤待一级审核 `1`、考勤待终审 `2`、进行中活动 `0`                                  |
-| 2026-07-05 user local validation report | 权限裁剪 block 语义                                      | PASS_BY_USER         | 只渲染后端返回的 `registrations / attendanceSheets / activities`；未把缺权限 block 渲染为 `0`     |
-| 2026-07-05 user local validation report | 报名审批 / 考勤审批                                      | PASS_BY_USER         | 报名审批为空态，考勤审批加载 1 条记录                                                             |
-| 2026-07-05 user local validation report | 控制台                                                   | PASS_BY_USER         | 无 error / warn / issue                                                                           |
+| 时间       | 命令 / 验证项                                         | 结果       | 说明                                                                                                                    |
+| ---------- | ----------------------------------------------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------- |
+| 2026-07-10 | `./node_modules/.bin/vue-tsc --noEmit --skipLibCheck` | PASS       | 直接调用本地 binary，类型检查通过                                                                                       |
+| 2026-07-10 | `./node_modules/.bin/vite build`                      | PASS       | 生产构建通过，Vite 输出 `✓ built in 6.29s`                                                                              |
+| 2026-07-10 | `pnpm typecheck`                                      | BLOCKED    | pnpm 触发依赖状态检查并尝试 `install`，无 TTY 下报 `ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY`                         |
+| 2026-07-10 | `python3 scripts/check_handoff_docs.py --root .`      | FAIL_NOISY | 15 error / 158 warning，主要来自误扫 `.git`、`node_modules`、`.claude/worktrees/**/node_modules` 的依赖 README 示例文本 |
+| 2026-07-10 | 浏览器/dev 后端冒烟                                   | NOT_RUN    | 本次只做交接文档续写                                                                                                    |
 
 ## 当前结论
 
-`7.1.0-p1.meta-workbench` 当前为 `LOCAL_TEST_PASS`，可作为下一轮开发基准。
+当前主线可标记为 `BUILD_PASS`，不能标记为 `LOCAL_TEST_PASS` 或 `DEPLOY_PASS`。
 
-## 7.0.1-p0.routes 证据
+## 必补验证
 
-- 用户本地 `pnpm install --frozen-lockfile`、`pnpm typecheck`、`pnpm build`、`pnpm dev`、真实后端登录、Network 检查和刷新菜单均通过。
-- P0 `/get-async-routes` 问题仍关闭，本轮未恢复该依赖。
+1. `pnpm dev` 启动。
+2. 真实后端登录。
+3. 菜单与全局搜索入口。
+4. 字典主从布局。
+5. 队员账号 tab。
+6. 组织人事/RBAC 治理面关键列表。
+7. Auth #51 的 40100 refresh 与 logout 撤销。
 
-## 历史用户反馈
+## 历史证据
 
-用户前序反馈 `srvf-admin-web_v7.8.0_scoped-authz-browser-smoke_full_20260703.zip` 已通过：`pnpm typecheck`、`pnpm build`、`pnpm dev`、静态源码守护、Playwright 浏览器冒烟。该包未在本轮上传物中，需后续核血缘。
+2026-07-05 `7.1.0-p1.meta-workbench` 曾由用户本地验证通过，但该证据只覆盖旧基线，不能覆盖 #34~#80。

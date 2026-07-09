@@ -1,23 +1,30 @@
-# srvf-admin-web 7.1.0-p1.meta-workbench validated changed files
+# srvf-admin-web handoff refresh for main@1aba0da
 
-## Source code
-No source code changes in this validation-sync package.
-Source code is identical to `srvf-admin-web_v7.1.0-p1.meta-workbench_full_20260705.zip`.
+## Scope
 
-## Validation / handoff docs
-changed_files.txt
-project_state.json
+Docs/state refresh only. No `src/**`, dependency, env, route, or auth-source edits in this handoff sync.
+
+## Updated handoff files
+
 README.md
 USAGE.md
+VERSION
+changed_files.txt
+project_state.json
+project_state.example.json
 docs/handoff/00_new_chat_start.md
 docs/handoff/01_current_state.md
 docs/handoff/07_release_log.md
 docs/handoff/08_next_steps.md
 docs/handoff/09_known_issues.md
 docs/handoff/10_package_manifest.md
+docs/handoff/11_decision_log.md
 docs/handoff/12_task_board.md
+docs/handoff/13_code_map.md
 docs/handoff/15_api_contracts.md
+docs/handoff/16_environment_snapshot.md
 docs/handoff/17_test_evidence.md
+docs/handoff/18_rollback_and_recovery.md
 docs/handoff/20_doc_sync_checklist.md
 docs/handoff/23_package_lineage.md
 docs/handoff/24_validation_matrix.md

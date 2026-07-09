@@ -1,104 +1,34 @@
 {
   "schema_version": "3.0",
   "project_name": "srvf-admin-web",
-  "project_type": "Vue 3 + Vite + TypeScript + Pinia + Element Plus admin frontend",
-  "current_version": "example-docs.1",
-  "frontend_package_json_version": "7.0.0",
-  "backend_authority": {
-    "repository": "https://github.com/BA7IEE/srvf-nest-api",
-    "current_backend_version": "v0.37.0",
-    "authority_docs": [
-      "srvf-nest-api/docs/current-state.md",
-      "srvf-nest-api/docs/handoff/admin-web.md",
-      "live http://localhost:3000/api/docs-json"
-    ],
-    "known_backend_counts_2026_07_05": {
-      "expected_routes": 320,
-      "permission_codes": 195,
-      "modules": 35,
-      "migrations": 39
-    }
-  },
-  "current_status": "DRAFT",
+  "current_version": "git-main-1aba0da-handoff-20260710",
+  "current_status": "BUILD_PASS",
   "latest_full_package": {
-    "filename": "example_full.zip",
-    "sha256": "pending",
-    "package_type": "docs_only_full",
-    "validation_status": "DRAFT",
-    "created_at": "2026-07-05 07:15 EDT / 2026-07-05 19:15 CST",
-    "based_on": "srvf-admin-web_git-main_c2001c9_20260705.zip",
-    "based_on_sha256": "e23f33b63137913104901512d94498a6a3a1a454a3f0dbf1cabe8de88efd5492",
-    "self_hash_note": "包内无法稳定写入自身 SHA256；以交付响应和外部 release_manifest 为准。"
+    "filename": "not_packaged_git_checkout_main_1aba0da_20260710",
+    "sha256": "pending_external_manifest"
   },
   "latest_delta_package": {
-    "filename": "example_delta.zip",
-    "sha256": "pending",
-    "package_type": "docs_only_delta",
-    "validation_status": "DRAFT",
-    "created_at": "2026-07-05 07:15 EDT / 2026-07-05 19:15 CST",
-    "self_hash_note": "以交付响应和外部 release_manifest 为准。"
+    "filename": "not_packaged_handoff_delta_main_1aba0da_20260710",
+    "sha256": "pending_external_manifest"
   },
   "last_user_confirmed_code_package": {
-    "filename": "srvf-admin-web_v7.8.0_scoped-authz-browser-smoke_full_20260703.zip",
-    "sha256": "unknown_not_in_current_upload",
-    "confirmed_at": "2026-07-03 22:12 conversation record",
-    "validation_status": "USER_CONFIRMED_BY_USER_MESSAGE",
-    "notes": "用户前序反馈 pnpm typecheck / build / dev / 静态源码守护 / Playwright 浏览器冒烟均通过；但该包未在本轮压缩包中出现，不能自动等同于当前 c2001c9 包。"
-  },
-  "current_uploaded_baseline": {
-    "filename": "srvf-admin-web_git-main_c2001c9_20260705.zip",
-    "sha256": "e23f33b63137913104901512d94498a6a3a1a454a3f0dbf1cabe8de88efd5492",
-    "validation_status": "STATIC_ANALYSIS_ONLY",
-    "notes": "本轮真实前端基准。只做静态分析与文档补齐，未运行 typecheck/build/dev。"
-  },
-  "reference_package": {
-    "filename": "SRVF-web-admin参考.zip",
-    "usage": "pure-admin / vue-pure-admin UI 参考包，只读参考，不作为业务基准，不得覆盖当前仓库。"
+    "filename": "srvf-admin-web_v7.1.0-p1.meta-workbench_full_20260705.zip",
+    "sha256": "67a4ba7c3d18b283aa3381acf627b7dd037c5199230076a8335abfc9bbdd8b45",
+    "validation_status": "LOCAL_TEST_PASS_BY_USER_MESSAGE"
   },
   "change_flags": {
-    "business_code_changed": false,
-    "database_changed": false,
-    "frontend_source_changed": false,
-    "mobile_changed": false,
-    "docker_changed": false,
-    "deployment_changed": false,
     "docs_only": true,
-    "requires_retest": false
+    "frontend_source_changed": false,
+    "auth_route_main_chain_changed": false,
+    "dependency_changed": false,
+    "requires_retest": true
   },
-  "status_levels": [
-    "DRAFT",
-    "CODE_DONE",
-    "BUILD_PASS",
-    "LOCAL_TEST_PASS",
-    "DEPLOY_PASS",
-    "USER_CONFIRMED"
-  ],
-  "package_types": [
-    "code",
-    "docs_only",
-    "config_only",
-    "deploy_only",
-    "database_only",
-    "mixed"
-  ],
   "must_read_docs": [
     "docs/handoff/00_new_chat_start.md",
     "docs/handoff/01_current_state.md",
-    "docs/handoff/02_development_rules.md",
-    "docs/handoff/11_decision_log.md",
-    "docs/handoff/12_task_board.md",
-    "docs/handoff/13_code_map.md",
-    "docs/handoff/19_ai_workflow_protocol.md",
     "docs/handoff/23_package_lineage.md",
-    "docs/handoff/24_validation_matrix.md",
     "docs/handoff/29_doc_conflict_map.md",
     "docs/handoff/30_handoff_self_check.md"
   ],
-  "known_p0_risks": [
-    "src/router/utils.ts 登录后仍可能调用 src/api/routes.ts 的 /get-async-routes，真实后端无该接口。",
-    "当前前端未完整对齐后端 v0.37.0 scoped-authz / memberships / positions / role-bindings / action-state batch 能力。",
-    "当前上传基准与用户前序确认 v7.8.0 测试通过包之间存在血缘未证实风险。"
-  ],
-  "next_task": "P0 文档后优先修真实登录后的 /get-async-routes 依赖风险，保持静态菜单和真实权限过滤，不引入后端菜单树。",
-  "last_updated_at": "2026-07-05 07:15 EDT / 2026-07-05 19:15 CST"
+  "next_task": "Run browser/dev backend smoke for main@1aba0da, then fix handoff self-check script exclusions."
 }
