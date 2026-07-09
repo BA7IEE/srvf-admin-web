@@ -2,13 +2,13 @@ import { bizErrorMessage } from "@/api/srvf-error";
 import { h, ref, reactive } from "vue";
 import { useRouter } from "vue-router";
 import dayjs from "dayjs";
-import type { PaginationProps } from "@pureadmin/table";
 import { ElMessageBox } from "element-plus";
 import { deviceDetection } from "@pureadmin/utils";
 import { message } from "@/utils/message";
 import { hasPerms } from "@/utils/auth";
 import { addDialog } from "@/components/ReDialog";
 import { useMultiTagsStoreHook } from "@/store/modules/multiTags";
+import { useSrvfList } from "@/srvf-kit";
 import MemberForm, {
   type MemberFormModel,
   type MemberGradeOption
@@ -22,6 +22,7 @@ import {
   updateMemberStatus,
   bulkGrantMemberAccounts,
   type MemberItem,
+  type MemberListQuery,
   type MemberStatus
 } from "@/api/srvf-member";
 import { getDictTypes, getDictItems } from "@/api/srvf-dict";
@@ -33,8 +34,6 @@ export function useMembers() {
   const dict = useSrvfDictStoreHook();
   dict.ensureTypes(["member_grade"]);
 
-  const dataList = ref<MemberItem[]>([]);
-  const loading = ref(false);
   const formRef = ref();
   const bulkFormRef = ref();
   /** 等级下拉选项（来自 type=member_grade 字典；空数组 = 退化为文本输入） */
@@ -56,13 +55,6 @@ export function useMembers() {
   function handleSelectionChange(rows: MemberItem[]) {
     selectedRows.value = rows;
   }
-
-  const pagination = reactive<PaginationProps>({
-    total: 0,
-    pageSize: 10,
-    currentPage: 1,
-    background: true
-  });
 
   /** 列表筛选（均为契约既有参数：q 模糊命中 displayName+memberNo；gradeCode / status 精确；hasAccount 布尔） */
   const searchForm = reactive({
@@ -105,50 +97,27 @@ export function useMembers() {
     }
   ];
 
-  async function onSearch() {
-    if (!canRead) return;
-    loading.value = true;
-    try {
-      const { code, data } = await getMembers({
-        page: pagination.currentPage,
-        pageSize: pagination.pageSize,
-        ...(searchForm.q.trim() ? { q: searchForm.q.trim() } : {}),
-        ...(searchForm.gradeCode ? { gradeCode: searchForm.gradeCode } : {}),
-        ...(searchForm.status ? { status: searchForm.status } : {}),
-        ...(searchForm.hasAccount
-          ? { hasAccount: searchForm.hasAccount === "true" }
-          : {})
-      });
-      if (code === 0) {
-        dataList.value = data.items;
-        pagination.total = data.total;
-        pagination.pageSize = data.pageSize;
-        pagination.currentPage = data.page;
-      }
-    } catch (error: any) {
-      message(bizErrorMessage(error, "加载队员列表失败"), {
-        type: "error"
-      });
-    } finally {
-      loading.value = false;
-    }
-  }
-
-  /** 筛选条件变化：回到第一页重查 */
-  function onFilterChange() {
-    pagination.currentPage = 1;
-    onSearch();
-  }
-
-  function handleSizeChange(val: number) {
-    pagination.pageSize = val;
-    onSearch();
-  }
-
-  function handleCurrentChange(val: number) {
-    pagination.currentPage = val;
-    onSearch();
-  }
+  const {
+    dataList,
+    loading,
+    pagination,
+    onSearch,
+    onFilterChange,
+    handleSizeChange,
+    handleCurrentChange
+  } = useSrvfList<MemberItem, MemberListQuery>({
+    fetch: getMembers,
+    buildParams: () => ({
+      ...(searchForm.q.trim() ? { q: searchForm.q.trim() } : {}),
+      ...(searchForm.gradeCode ? { gradeCode: searchForm.gradeCode } : {}),
+      ...(searchForm.status ? { status: searchForm.status } : {}),
+      ...(searchForm.hasAccount
+        ? { hasAccount: searchForm.hasAccount === "true" }
+        : {})
+    }),
+    errorMessage: "加载队员列表失败",
+    canRead
+  });
 
   /**
    * 懒加载 member_grade 字典做等级下拉。
