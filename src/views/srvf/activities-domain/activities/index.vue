@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import { useActivities } from "./utils/hook";
 import { PureTableBar } from "@/components/RePureTableBar";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
@@ -12,6 +13,16 @@ import { SrvfPageIntro } from "@/srvf-kit";
 defineOptions({
   name: "SrvfActivities"
 });
+
+const route = useRoute();
+const router = useRouter();
+
+/** 工作台「快捷发起」入口：带 ?create=1 进来时自动打开新建弹窗（无创建权限则静默忽略） */
+function consumeQuickCreate() {
+  if (route.query.create !== "1") return;
+  router.replace({ path: route.path });
+  if (canCreate) openDialog("新建");
+}
 
 const {
   canCreate,
@@ -35,6 +46,7 @@ const {
 } = useActivities();
 
 onMounted(() => {
+  consumeQuickCreate();
   onSearch();
 });
 </script>

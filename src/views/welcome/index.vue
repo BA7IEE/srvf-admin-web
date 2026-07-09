@@ -34,14 +34,14 @@ const entries = [
     path: "/srvf/base-data/organizations"
   },
   {
-    title: "内容发布",
-    desc: "文章与公告的撰写、封面配图和发布",
+    title: "内容与通知",
+    desc: "文章公告的撰写发布，与站内/微信/短信通知",
     path: "/srvf/content-domain/contents"
   },
   {
-    title: "通知中心",
-    desc: "站内通知、微信推送与紧急短信兜底",
-    path: "/srvf/notification-domain/notifications"
+    title: "队务设置",
+    desc: "账号权限、字典职务规则、平台参数等配置项",
+    path: "/srvf/settings-center"
   }
 ];
 </script>

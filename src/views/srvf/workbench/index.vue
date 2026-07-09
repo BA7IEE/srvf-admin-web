@@ -5,6 +5,12 @@ import { computed, ref, watch, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { dayjs } from "element-plus";
 import { PureTableBar } from "@/components/RePureTableBar";
+import { hasPerms } from "@/utils/auth";
+import { useMultiTagsStoreHook } from "@/store/modules/multiTags";
+import {
+  useSrvfRecentsStoreHook,
+  type SrvfRecentEntity
+} from "@/store/modules/srvfRecents";
 import { getDashboardSummary, type DashboardSummary } from "@/api/srvf-meta";
 import { useApprovalRegistrations, useApprovalAttendance } from "./utils/hook";
 import { useWorkbenchDashboard } from "./utils/dashboard-hook";
@@ -44,6 +50,56 @@ watch(calendarDate, val => loadCalendarMonth(val));
 
 function calendarDayLabel(day: string) {
   return day.split("-").slice(2).join("");
+}
+
+/**
+ * 快捷发起（工作台 v2,UX 升级蓝图 §4.4）：按创建权限显隐;
+ * 带 ?create=1 跳目标列表页,目标页 onMounted 直开新建弹窗。
+ */
+const quickActions = [
+  {
+    label: "新建活动",
+    path: "/srvf/activities-domain/activities",
+    perm: "activity.create.record"
+  },
+  {
+    label: "发通知",
+    path: "/srvf/notification-domain/notifications",
+    perm: "notification.create.record"
+  },
+  {
+    label: "录队员",
+    path: "/srvf/members-domain/members",
+    perm: "member.create.record"
+  }
+].filter(action => hasPerms(action.perm));
+
+function quickCreate(action: (typeof quickActions)[number]) {
+  router.push({ path: action.path, query: { create: "1" } });
+}
+
+/** 最近访问（与全局搜索 Ctrl/Cmd+K 同一份数据;点击回到上次看的实体） */
+const recents = useSrvfRecentsStoreHook();
+const recentItems = computed(() => recents.items.slice(0, 8));
+const RECENT_TYPE_LABEL: Record<SrvfRecentEntity["type"], string> = {
+  member: "队员",
+  activity: "活动",
+  organization: "组织",
+  content: "内容"
+};
+
+function openRecent(item: SrvfRecentEntity) {
+  if (item.routeName) {
+    useMultiTagsStoreHook().handleTags("push", {
+      path: item.path,
+      name: item.routeName,
+      params: item.routeParams,
+      meta: { title: `${RECENT_TYPE_LABEL[item.type]} · ${item.title}` }
+    });
+    router.push({ name: item.routeName, params: item.routeParams });
+  } else {
+    router.push(item.path);
+  }
 }
 
 const summary = ref<DashboardSummary | null>(null);
@@ -229,13 +285,25 @@ onMounted(() => {
               只显示您有权查看的数据，数字卡片可点击直达处理
             </div>
           </div>
-          <el-button
-            link
-            :loading="summaryLoading"
-            @click="loadDashboardSummary"
-          >
-            刷新摘要
-          </el-button>
+          <div class="summary-header-actions">
+            <el-button
+              v-for="action in quickActions"
+              :key="action.path"
+              type="primary"
+              plain
+              size="small"
+              @click="quickCreate(action)"
+            >
+              {{ action.label }}
+            </el-button>
+            <el-button
+              link
+              :loading="summaryLoading"
+              @click="loadDashboardSummary"
+            >
+              刷新摘要
+            </el-button>
+          </div>
         </div>
       </template>
 
@@ -283,6 +351,19 @@ onMounted(() => {
         v-else-if="!summaryLoading"
         description="当前账号暂无可展示的工作台摘要块"
       />
+      <div v-if="recentItems.length" class="recent-row">
+        <span class="recent-label">最近访问</span>
+        <el-button
+          v-for="item in recentItems"
+          :key="item.type + item.id"
+          link
+          size="small"
+          class="recent-link"
+          @click="openRecent(item)"
+        >
+          {{ RECENT_TYPE_LABEL[item.type] }} · {{ item.title }}
+        </el-button>
+      </div>
     </el-card>
 
     <div class="dashboard-row">
@@ -574,6 +655,33 @@ onMounted(() => {
   gap: 16px;
   align-items: center;
   justify-content: space-between;
+}
+
+.summary-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+}
+
+.recent-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  align-items: center;
+  padding-top: 12px;
+  margin-top: 12px;
+  border-top: 1px solid var(--el-border-color-lighter);
+}
+
+.recent-label {
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
+}
+
+.recent-link {
+  max-width: 220px;
+  overflow: hidden;
 }
 
 .summary-title {

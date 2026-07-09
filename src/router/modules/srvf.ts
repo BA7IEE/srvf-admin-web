@@ -84,18 +84,28 @@ export default [
     ]
   },
   {
-    // 系统管理 = 账号与权限面：用户/角色权限/权限点/角色绑定 + 审计/短信日志/系统设置。
-    // 基础数据（字典/职务/贡献值/附件配置）已拆出为独立组（srvf-base-data.ts,C 档 IA 调整）。
+    // 队务设置（IA v3,UX 升级蓝图 §4.3.2）：原「系统管理」7 页 +「基础数据」5 页 +
+    // 附件库/微信模板 共 14 个配置运维页撤出一级导航,收敛为一个「设置中心」卡片页入口;
+    // 各页路径/组件/权限门控全部不变（showLink:false + activePath 指回设置中心,书签/页签不断链）。
     path: "/srvf/system",
     name: "SrvfSystem",
     component: Layout,
-    redirect: "/srvf/system/users",
+    redirect: "/srvf/settings-center",
     meta: {
       icon: "ri/settings-3-line",
-      title: "系统管理",
+      title: "队务设置",
       rank: 8
     },
     children: [
+      {
+        path: "/srvf/settings-center",
+        name: "SrvfSettingsCenter",
+        component: () => import("@/views/srvf/settings-center/index.vue"),
+        meta: {
+          icon: "ri/settings-3-line",
+          title: "队务设置"
+        }
+      },
       {
         path: "/srvf/system/users",
         name: "SrvfUsers",
@@ -103,7 +113,9 @@ export default [
         meta: {
           icon: "ri/user-settings-line",
           title: "系统账号",
-          roles: ["SUPER_ADMIN", "ADMIN"]
+          roles: ["SUPER_ADMIN", "ADMIN"],
+          showLink: false,
+          activePath: "/srvf/settings-center"
         }
       },
       {
@@ -113,7 +125,9 @@ export default [
         meta: {
           icon: "ri/shield-keyhole-line",
           title: "角色权限",
-          roles: ["SUPER_ADMIN"]
+          roles: ["SUPER_ADMIN"],
+          showLink: false,
+          activePath: "/srvf/settings-center"
         }
       },
       {
@@ -124,19 +138,22 @@ export default [
         meta: {
           icon: "ri/key-2-line",
           title: "权限点管理",
-          roles: ["SUPER_ADMIN"]
+          roles: ["SUPER_ADMIN"],
+          showLink: false,
+          activePath: "/srvf/settings-center"
         }
       },
       {
-        // 角色绑定（C 档自「组织与人事」迁入:后端 handoff §2.6 定位其为「系统管理配置面,
-        // 与角色与权限并列」,蓝图 IA v2 §5 同;权限四入口就此聚拢。路径与组件不变）
+        // 角色绑定（后端 handoff §2.6 定位其为系统管理配置面;权限四入口聚拢在设置中心「账号与权限」区）
         path: "/srvf/org-hr/role-bindings",
         name: "SrvfRoleBindings",
         component: () => import("@/views/srvf/org-hr/role-bindings/index.vue"),
         meta: {
           icon: "ri/user-follow-line",
           title: "角色绑定",
-          auths: ["role-binding.read.record"]
+          auths: ["role-binding.read.record"],
+          showLink: false,
+          activePath: "/srvf/settings-center"
         }
       },
       {
@@ -146,7 +163,9 @@ export default [
         meta: {
           icon: "ri/file-list-3-line",
           title: "审计日志",
-          roles: ["SUPER_ADMIN"]
+          roles: ["SUPER_ADMIN"],
+          showLink: false,
+          activePath: "/srvf/settings-center"
         }
       },
       {
@@ -155,7 +174,9 @@ export default [
         component: () => import("@/views/srvf/system/sms-logs/index.vue"),
         meta: {
           icon: "ri/message-2-line",
-          title: "短信日志"
+          title: "短信日志",
+          showLink: false,
+          activePath: "/srvf/settings-center"
         }
       },
       {
@@ -164,7 +185,9 @@ export default [
         component: () => import("@/views/srvf/system/settings/index.vue"),
         meta: {
           icon: "ri/tools-line",
-          title: "系统设置"
+          title: "系统设置",
+          showLink: false,
+          activePath: "/srvf/settings-center"
         }
       }
     ]

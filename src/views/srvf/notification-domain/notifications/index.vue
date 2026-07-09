@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
 import { onMounted } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import { PureTableBar } from "@/components/RePureTableBar";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
 import { useNotifications } from "./utils/hook";
@@ -11,6 +12,16 @@ import { SrvfPageIntro } from "@/srvf-kit";
 defineOptions({
   name: "SrvfNotifications"
 });
+
+const route = useRoute();
+const router = useRouter();
+
+/** 工作台「快捷发起」入口：带 ?create=1 进来时自动打开新建弹窗（无创建权限则静默忽略） */
+function consumeQuickCreate() {
+  if (route.query.create !== "1") return;
+  router.replace({ path: route.path });
+  if (canCreate) openDialog("新建");
+}
 
 const {
   canRead,
@@ -40,6 +51,7 @@ const {
 } = useNotifications();
 
 onMounted(() => {
+  consumeQuickCreate();
   onSearch();
   ensureTypeOptions();
 });
