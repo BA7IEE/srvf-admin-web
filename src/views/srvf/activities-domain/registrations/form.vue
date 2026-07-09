@@ -2,6 +2,7 @@
 import { ref } from "vue";
 import ReCol from "@/components/ReCol";
 import type { FormRules } from "element-plus";
+import { SrvfRemoteSelect } from "@/srvf-kit";
 
 /** 队员下拉选项（value = Member.id；空数组 = 无读权限，选择器禁用） */
 export type MemberOption = { label: string; value: string };
@@ -53,26 +54,11 @@ defineExpose({ getRef });
     <el-row :gutter="30">
       <re-col>
         <el-form-item label="代报名队员" prop="memberId">
-          <el-select
-            v-if="memberOptions.length"
+          <SrvfRemoteSelect
             v-model="newFormInline.memberId"
-            class="w-full!"
-            clearable
-            filterable
+            :options="memberOptions"
             placeholder="选择队员（按显示名 / 编号检索）"
-          >
-            <el-option
-              v-for="opt in memberOptions"
-              :key="opt.value"
-              :label="opt.label"
-              :value="opt.value"
-            />
-          </el-select>
-          <el-input
-            v-else
-            v-model="newFormInline.memberId"
-            disabled
-            placeholder="队员选项不可用（需队员读取权限），请联系管理员"
+            empty-hint="队员选项不可用（需队员读取权限），请联系管理员"
           />
         </el-form-item>
       </re-col>

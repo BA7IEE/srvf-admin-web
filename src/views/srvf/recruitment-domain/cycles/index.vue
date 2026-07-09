@@ -3,6 +3,7 @@ import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
 import { onMounted } from "vue";
 import { PureTableBar } from "@/components/RePureTableBar";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
+import { SrvfPageIntro } from "@/srvf-kit";
 import { useRecruitmentCycles } from "./utils/hook";
 
 import AddFill from "~icons/ri/add-circle-line";
@@ -36,10 +37,7 @@ onMounted(() => {
 <template>
   <div class="main">
     <template v-if="canRead">
-      <el-alert
-        type="info"
-        :closable="false"
-        show-icon
+      <SrvfPageIntro
         class="mb-2"
         title="招新是入队前的第一道门：路人公开报名 → 实名核验与考核 → 一键发号成为志愿者；志愿者再经「入队轮次」综合评估，入队成为正式队员。"
       />

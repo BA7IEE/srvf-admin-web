@@ -2,6 +2,7 @@
 import { ref } from "vue";
 import ReCol from "@/components/ReCol";
 import type { FormRules } from "element-plus";
+import { SrvfRemoteSelect } from "@/srvf-kit";
 import { MEMBERSHIP_TYPE_LABEL } from "@/api/srvf-membership";
 
 export type MembershipOption = { label: string; value: string };
@@ -79,21 +80,12 @@ defineExpose({ getRef });
             :model-value="newFormInline.organizationLabel"
             disabled
           />
-          <el-select
+          <SrvfRemoteSelect
             v-else
             v-model="newFormInline.organizationId"
-            class="w-full!"
-            clearable
-            filterable
+            :options="orgOptions"
             placeholder="选择目标组织"
-          >
-            <el-option
-              v-for="opt in orgOptions"
-              :key="opt.value"
-              :label="opt.label"
-              :value="opt.value"
-            />
-          </el-select>
+          />
         </el-form-item>
       </re-col>
 

@@ -3,6 +3,7 @@ import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
 import { onMounted } from "vue";
 import { PureTableBar } from "@/components/RePureTableBar";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
+import { SrvfPageIntro } from "@/srvf-kit";
 import { useTeamJoinCycles } from "./utils/hook";
 
 import AddFill from "~icons/ri/add-circle-line";
@@ -36,10 +37,7 @@ onMounted(() => {
 <template>
   <div class="main">
     <template v-if="canRead">
-      <el-alert
-        type="info"
-        :closable="false"
-        show-icon
+      <SrvfPageIntro
         class="mb-2"
         title="入队是第二道门：已在「招新轮次」发号的志愿者提交入队申请 → 综合评估 → 一键入队成为正式队员。"
       />
