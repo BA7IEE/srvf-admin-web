@@ -8,7 +8,7 @@ export default [
     redirect: "/srvf/recruitment-domain/cycles",
     meta: {
       icon: "ri/user-add-line",
-      title: "招募与入队",
+      title: "招新",
       rank: 5
     },
     children: [

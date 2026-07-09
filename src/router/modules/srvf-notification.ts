@@ -1,29 +1,20 @@
 const Layout = () => import("@/layout/index.vue");
 
-// 通知中心(后端 v0.32.0 统一通知:站内信 CRUD + 状态机 + 渠道勾选 + 短信兜底计费确认 + 微信模板配置)。
-// 顶级任务组,排在「内容发布」(rank 6)之后;系统管理顺延为 rank 8(P1-A 插入「组织与人事」rank 4 后整体顺移)。
+// IA v3（UX 升级蓝图 §4.3.1）：「通知管理」可见项已迁入「内容与通知」组（srvf-content.ts,
+// 路径/组件/name 不变）;本组仅余微信模板配置（配置面,经「队务设置」设置中心进入）,整组隐藏。
 export default [
   {
     path: "/srvf/notification-domain",
     name: "SrvfNotificationDomain",
     component: Layout,
-    redirect: "/srvf/notification-domain/notifications",
+    redirect: "/srvf/notification-domain/wechat-templates",
     meta: {
       icon: "ri/notification-3-line",
       title: "通知中心",
-      rank: 7
+      rank: 7,
+      showLink: false
     },
     children: [
-      {
-        path: "/srvf/notification-domain/notifications",
-        name: "SrvfNotifications",
-        component: () =>
-          import("@/views/srvf/notification-domain/notifications/index.vue"),
-        meta: {
-          icon: "ri/mail-send-line",
-          title: "通知管理"
-        }
-      },
       {
         path: "/srvf/notification-domain/wechat-templates",
         name: "SrvfNotificationWechatTemplates",
@@ -31,7 +22,9 @@ export default [
           import("@/views/srvf/notification-domain/wechat-templates/index.vue"),
         meta: {
           icon: "ri/wechat-line",
-          title: "微信模板配置"
+          title: "微信模板配置",
+          showLink: false,
+          activePath: "/srvf/settings-center"
         }
       }
     ]

@@ -40,6 +40,7 @@ export default [
         }
       },
       {
+        // IA v3：体检页退出侧栏,入口收敛到「归属总表」页头按钮（同一份数据的检查视图）。
         path: "/srvf/org-hr/membership-conflicts",
         name: "SrvfMembershipConflicts",
         component: () =>
@@ -47,7 +48,9 @@ export default [
         meta: {
           icon: "ri/first-aid-kit-line",
           title: "归属体检",
-          auths: ["membership.list.record"]
+          auths: ["membership.list.record"],
+          showLink: false,
+          activePath: "/srvf/org-hr/memberships"
         }
       },
       {
