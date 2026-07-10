@@ -25,16 +25,16 @@
 
 - [x] `./node_modules/.bin/vue-tsc --noEmit --skipLibCheck` 通过。
 - [x] `./node_modules/.bin/vite build` 通过。
-- [ ] `pnpm typecheck` 通过：当前被 pnpm 依赖状态检查阻塞。
-- [ ] `python3 scripts/check_handoff_docs.py --root . --strict` 通过：当前脚本误扫依赖目录。
+- [x] `pnpm typecheck` 通过：worktree 内直跑通过(2026-07-10,UX 系列逐 PR);主检出如遇 pnpm TTY 阻塞可用 `./node_modules/.bin/vue-tsc` 直跑。
+- [x] `python3 scripts/check_handoff_docs.py --root . --strict` 通过：T-013 修复后普通+strict 双 0 error/0 warning PASS(2026-07-10,#96)。
 - [ ] 浏览器/dev 后端冒烟：未执行。
 
 ## 四、结论
 
-| 项                   | 状态             | 说明                      |
-| -------------------- | ---------------- | ------------------------- |
-| 当前代码基准         | PASS             | `main@1aba0da`            |
-| 当前验证等级         | BUILD_PASS       | 直接 typecheck/build 通过 |
-| 可作为下一轮开发基准 | 是，但需先补冒烟 | 不再使用旧 zip 下一步口径 |
-| 生产部署验证         | 未执行           | 不得标记 `DEPLOY_PASS`    |
-| 下一步               | P0 验证/脚本修复 | 见 `08_next_steps.md`     |
+| 项                   | 状态             | 说明                               |
+| -------------------- | ---------------- | ---------------------------------- |
+| 当前代码基准         | PASS             | `main@2cca7a3`(+同日 #95/#96 增量) |
+| 当前验证等级         | BUILD_PASS       | 直接 typecheck/build 通过          |
+| 可作为下一轮开发基准 | 是，但需先补冒烟 | 不再使用旧 zip 下一步口径          |
+| 生产部署验证         | 未执行           | 不得标记 `DEPLOY_PASS`             |
+| 下一步               | P0 验证/脚本修复 | 见 `08_next_steps.md`              |

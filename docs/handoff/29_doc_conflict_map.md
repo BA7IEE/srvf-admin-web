@@ -7,9 +7,10 @@
 | C-001 | README/历史文档写 PR-4 暂停          | PR-4 已上线，auth 文件是 active code                            | `CLAUDE.md` / `AGENTS.md`                        | 已处理   | 历史暂停只作决策记录    |
 | C-002 | 权限码数量 155 / 163                 | 当前已知后端 v0.37.0 为 195 权限码                              | 后端 current-state / live docs                   | 生效     | 动工前重新查 live       |
 | C-003 | `/get-async-routes` 是生产菜单接口   | 这是 pure-admin mock，不是 SRVF 后端接口                        | 代码与本 handoff                                 | 已处理   | 不得恢复                |
-| C-004 | 当前下一步是 `P1.2 memberships-read` | 当前主线已完成 #37~#60 的会籍/组织人事/RBAC 大量工作            | `main@1aba0da` + 本 handoff                      | 已纠偏   | 旧下一步废弃            |
+| C-004 | 当前下一步是 `P1.2 memberships-read` | 主线已完成 #37~#93 组织人事/RBAC/UX 产品化系列                  | `main@2cca7a3` + 本 handoff                      | 已纠偏   | 旧下一步废弃            |
 | C-005 | 字典主从布局进行中                   | #71/#72 已合入主线                                              | Git log / 当前源码                               | 已纠偏   | 后续只需浏览器验收      |
-| C-006 | `7.1.0-p1.meta-workbench` 是最新基准 | 最新基准是 Git `main@1aba0da`                                   | `23_package_lineage.md`                          | 已纠偏   | 2026-07-05 zip 只作历史 |
+| C-006 | `7.1.0-p1.meta-workbench` 是最新基准 | 最新基准是 Git `main@2cca7a3`(+同日 #95/#96)                    | `23_package_lineage.md`                          | 已纠偏   | 2026-07-05 zip 只作历史 |
+| C-007 | 多份文档「当前基准=main@1aba0da」    | 基线已刷至 `main@2cca7a3`(20260710 第二次,+同日 #95/#96)        | `VERSION` / `project_state.json` / 00/01/07      | 已纠偏   | 2026-07-10 全量清扫     |
 | C-007 | Auth 文件仍不可作为业务 PR 触碰      | 松绑后可改但必须声明文件/内容/影响面；#51 已按该线动过 3 个文件 | `CLAUDE.md` / `AGENTS.md` / `11_decision_log.md` | 生效     | 本次未改 auth           |
 | C-008 | handoff 自检失败说明当前仓库有私钥   | 当前失败来自脚本误扫依赖 README 示例文本                        | `17_test_evidence.md`                            | 待修脚本 | 需排除依赖目录          |
 

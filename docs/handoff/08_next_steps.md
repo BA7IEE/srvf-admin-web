@@ -38,5 +38,5 @@
 ## 四、给新聊天的下一步指令
 
 ```text
-请基于当前 srvf-admin-web `main@1aba0da` 做验证优先的接手：先不要改业务代码。读取 handoff 与 CLAUDE/AGENTS 后，启动或复用本地后端，跑一次 dev 浏览器冒烟，重点看登录、菜单、全局搜索、字典主从布局、队员账号 tab、组织人事、RBAC 治理面。随后修复 scripts/check_handoff_docs.py 误扫 .git/node_modules/.claude/worktrees 的问题，并重新跑自检。禁止改依赖、禁止启用 asyncRoutes、禁止恢复 /get-async-routes。
+请基于当前 srvf-admin-web 最新 origin/main（本 handoff 基线 main@2cca7a3,同日后续增量见 07）接手。先读 CLAUDE.md、AGENTS.md、project_state.json、docs/handoff/00/01/07/08、docs/srvf-admin-ux-upgrade-blueprint.md（体验路线单一来源,动菜单/文案/交互前先读其 §4.1 军规）与后端 ../srvf-nest-api/docs/handoff/admin-web.md。注意:#34~#96 已全部合入——组织人事/RBAC/账号闭环/srvf-kit/UX 产品化系列（IA v3 七组菜单、设置中心、授权向导、使用手册、19 页列表外壳迁移）与自检脚本修复均在主线,逐 PR 浏览器冒烟证据见 17。当前仅剩人工事项:五任务无提示测试（T-018,真人）与字典数据文案修订（T-019,字典管理页改数据）。禁止改依赖、禁止启用 asyncRoutes、禁止恢复 /get-async-routes;auth 文件按 CLAUDE.md §4 三要素申明;src/layout/** 为 ask 闸,编辑需人工逐次确认;新列表页默认用 @/srvf-kit 的 SrvfListPage。
 ```

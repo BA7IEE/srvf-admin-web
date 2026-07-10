@@ -16,7 +16,7 @@
 
 ## 二、代码回滚基准
 
-- 当前代码基准：Git `main@1aba0da`。
+- 当前代码基准：Git `main@2cca7a3`(同日后续增量 #95/#96,回滚锚点以 git log 实况为准)。
 - 旧 handoff 基准：`c2001c9` / `7.1.0-p1.meta-workbench`，只作历史参考。
 - 若某个 #34~#80 功能需要回退，应优先用 Git 单独 revert 对应 PR/commit，不要回退到 2026-07-05 zip 包。
 

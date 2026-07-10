@@ -27,6 +27,11 @@
 - #92 chore:harness——src/layout/\*\* 编辑闸 deny→ask（逐次人工确认）。
 - #93 refactor:19 个列表页迁移 SrvfListPage（kit 采用率 20/29,hook 未动,列插槽逐字保留）;外壳新增 #banner 槽位;6 个结构不适配页明确豁免。
 
+### 同日后续增量(基线 2cca7a3 之后)
+
+- #95 refactor:移除旧权限空态转发垫片(T-020,用户手打路径授权;删除前核验发现并切换残余 15 处 import 到 @/srvf-kit)。
+- #96 fix:交接自检脚本排除依赖目录误扫(T-013;普通+strict 双 0/0 PASS)。
+
 ### 已知遗留
 
 - 旧权限空态垫片 `src/views/srvf/components/perm-empty.vue` 已零引用,文件删除待人工（harness 删除闸）。
@@ -93,7 +98,7 @@ PR #51 修改过以下 auth 高风险文件：
 
 ## 7.1.0-p1.meta-workbench — 历史基准（2026-07-05）
 
-该版本曾作为 handoff 基准，但已被当前 `main@1aba0da` 超越。保留结论如下：
+该版本曾作为 handoff 基准，2026-07-10 第一次刷新时已被 `main@1aba0da` 超越(同日第二次刷新再推进至 `main@2cca7a3`)。保留结论如下：
 
 - P0 `/get-async-routes` 生产链路已移除。
 - P1.1 工作台接入 `GET /api/admin/v1/meta/dashboard-summary`。
