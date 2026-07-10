@@ -7,6 +7,7 @@ import type { UserOptionItem } from "@/api/srvf-user";
 import type { MemberOptionItem } from "@/api/srvf-position-assignment";
 import type { OrgOptionItem } from "@/api/srvf-organization";
 import type { ActivityOptionItem } from "@/api/srvf-activity";
+import FormLabelTip from "@/views/srvf/components/form-label-tip.vue";
 import type {
   PrincipalType,
   ScopeType,
@@ -191,7 +192,13 @@ defineExpose({ getRef });
     </el-alert>
     <el-row :gutter="16">
       <el-col :span="12">
-        <el-form-item label="主体类型" prop="principalType">
+        <el-form-item prop="principalType">
+          <template #label>
+            <FormLabelTip
+              label="主体类型"
+              tip="把角色授予谁：登录账号（用户）、队员，还是某条职务任职（换届撤任职即自动失权）"
+            />
+          </template>
           <el-select v-model="form.principalType" class="w-full">
             <el-option label="队员 MEMBER" value="MEMBER" />
             <el-option label="用户 USER" value="USER" />
@@ -271,7 +278,13 @@ defineExpose({ getRef });
         </el-form-item>
       </el-col>
       <el-col :span="12">
-        <el-form-item label="生效范围" prop="scopeType">
+        <el-form-item prop="scopeType">
+          <template #label>
+            <FormLabelTip
+              label="生效范围"
+              tip="角色权限在多大范围内生效：全局=全队；指定组织/组织+下级=只管该范围；范围化目前仅对考勤终审与活动/报名/考勤点动作生效"
+            />
+          </template>
           <el-select v-model="form.scopeType" class="w-full">
             <el-option label="全局 GLOBAL" value="GLOBAL" />
             <el-option label="指定组织 ORGANIZATION" value="ORGANIZATION" />
@@ -314,7 +327,13 @@ defineExpose({ getRef });
       </el-col>
       <template v-if="needsScopeResource">
         <el-col :span="12">
-          <el-form-item label="资源类型" prop="scopeResourceType">
+          <el-form-item prop="scopeResourceType">
+            <template #label>
+              <FormLabelTip
+                label="资源类型"
+                tip="把权限限定到单个具体对象时填写（少用；一般选组织或活动范围即可）"
+              />
+            </template>
             <el-select
               v-model="form.scopeResourceType"
               filterable
@@ -331,7 +350,13 @@ defineExpose({ getRef });
           </el-form-item>
         </el-col>
         <el-col :span="12">
-          <el-form-item label="资源 ID" prop="scopeResourceId">
+          <el-form-item prop="scopeResourceId">
+            <template #label>
+              <FormLabelTip
+                label="资源 ID"
+                tip="上面那个具体对象的编号；不确定就不要用资源级范围"
+              />
+            </template>
             <el-input
               v-model="form.scopeResourceId"
               clearable

@@ -15,6 +15,7 @@ import { getDashboardSummary, type DashboardSummary } from "@/api/srvf-meta";
 import { useApprovalRegistrations, useApprovalAttendance } from "./utils/hook";
 import { useWorkbenchDashboard } from "./utils/dashboard-hook";
 import AttendanceTrendChart from "./attendance-trend-chart.vue";
+import SetupProgressCard from "./setup-progress-card.vue";
 
 defineOptions({
   name: "SrvfWorkbench"
@@ -276,6 +277,7 @@ onMounted(() => {
 
 <template>
   <div class="main">
+    <SetupProgressCard />
     <el-card shadow="never" class="summary-card">
       <template #header>
         <div class="summary-header">
