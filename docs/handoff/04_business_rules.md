@@ -17,18 +17,13 @@
 - 内容发布
 - 用户、角色、RBAC、审计、附件配置、短信日志、系统设置
 
-## 三、后端 v0.37 对齐方向
+## 三、后端 v0.39 对齐现状
 
-下一阶段必须重点补齐：
+以下能力已对齐后端并接入（历史「待补齐」项均已完成,见 01/07）：
 
-- memberships：替代旧单部门 department 模型的队员组织归属能力。
-- positions / position-rules：系统配置面的职务定义和职务规则。
-- position-assignments：组织轴 + 队员轴双入口任职展示与管理。
-- supervision-assignments：系统配置面分管配置。
-- role-bindings：系统配置面角色绑定。
-- authz explain / explain-batch：权限诊断与批量解释。
-- action-state batch：权限 + 状态机按钮可用性合并判断。
-- meta dashboard summary：工作台/首页待办汇总。
+- memberships / positions / position-rules / position-assignments / supervision-assignments / role-bindings。
+- authz explain / explain-batch、action-state batch、meta dashboard summary。
+- **v0.39.0 档案敏感字段掩码分级**（#98）：`documentNumber` / `mobile` 默认掩码,明文闸 `member-profile.read.sensitive`;编辑面剔除掩码回写,契约见 `15_api_contracts.md §七`。
 
 ## 四、禁止前端臆造
 

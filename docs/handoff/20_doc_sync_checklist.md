@@ -1,6 +1,21 @@
 # 20 文档同步检查清单
 
-## 一、本轮 handoff refresh（git-main-2cca7a3-handoff-20260710,UX 产品化系列收官）已检查
+## 〇、本轮 re-baseline（git-main-075eded-handoff-20260710,基线 2cca7a3→075eded,#94~#98）已检查
+
+- [x] `VERSION` 更新为 `git-main-075eded-handoff-20260710`。
+- [x] `project_state.json` 更新为 `main@075eded` / 后端 v0.39.0（326 路由 / 198 权限码 / biz-admin 74）/ `frontend_source_changed:true`。
+- [x] `changed_files.txt` 更新为本次 re-baseline 清单（含 01/07/08/10）。
+- [x] `00/01` 基线、后端 v0.39.0、#94~#98 事实、self-check PASS、next-steps 全部 true-up。
+- [x] `07_release_log.md` 新增 `main@075eded` 一节（#94~#98 逐条,含 #98 掩码适配三文件）+ 折叠旧「同日后续增量」。
+- [x] `08_next_steps.md` 优先级刷新（perm-empty 删除 DONE;新增 #98 掩码浏览器验;下一轮任务改选题）。
+- [x] `11_decision_log.md` 追加 D-020（档案掩码 FE 更严）。
+- [x] `12_task_board.md` 追加 T-021（本 re-baseline）/ T-022（#98）;T-017 归档。
+- [x] `13_code_map.md` 追加 #94~#98 段（掩码三文件 + perm-empty 实删）。
+- [x] `15_api_contracts.md` 新增 §七 敏感字段掩码分级契约。
+- [x] `04/10/17/18/23/24/28/29/30` 基线 / 后端版本 / self-check 状态一致化。
+- [x] 规则/架构/环境类文档（02/03/05/06/09/14/16/19/21/22/25/26/27）本轮无实质变化。
+
+## 一、上轮 handoff refresh（git-main-2cca7a3-handoff-20260710,UX 产品化系列收官）已检查
 
 - [x] `VERSION` 更新为 `git-main-2cca7a3-handoff-20260710`。
 - [x] `changed_files.txt` 更新为本次文档同步清单。

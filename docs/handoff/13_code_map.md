@@ -51,13 +51,13 @@
 
 ## 五、测试/验证对应
 
-| 功能         | 推荐验证                                                                       |
-| ------------ | ------------------------------------------------------------------------------ |
-| 当前类型     | `./node_modules/.bin/vue-tsc --noEmit --skipLibCheck`                          |
-| 当前构建     | `./node_modules/.bin/vite build` 或 pnpm 环境修好后 `pnpm build`               |
-| handoff 自检 | 修复脚本排除规则后跑 `python3 scripts/check_handoff_docs.py --root . --strict` |
-| 字典主从     | 浏览器检查左侧类型导航、右侧条目树表、分组行视觉                               |
-| Auth 专线    | 登录、refresh 过期、40100 重试、logout 后后端 refresh token 撤销               |
+| 功能         | 推荐验证                                                                                         |
+| ------------ | ------------------------------------------------------------------------------------------------ |
+| 当前类型     | `./node_modules/.bin/vue-tsc --noEmit --skipLibCheck`                                            |
+| 当前构建     | `./node_modules/.bin/vite build` 或 pnpm 环境修好后 `pnpm build`                                 |
+| handoff 自检 | `python3 scripts/check_handoff_docs.py --root . --strict`（#96 已修排除规则,普通+strict 双 0/0） |
+| 字典主从     | 浏览器检查左侧类型导航、右侧条目树表、分组行视觉                                                 |
+| Auth 专线    | 登录、refresh 过期、40100 重试、logout 后后端 refresh token 撤销                                 |
 
 ## 2026-07-10 UX 产品化系列新增/重构（#81~#93）
 
@@ -75,4 +75,15 @@
 | `src/layout/components/lay-notice/index.vue`           | 铃铛→真实待办入口（dashboard-summary 角标;layout 文件,ask 闸）            |
 | 路由模块 `src/router/modules/srvf-*.ts`                | IA v3:一级菜单 7 组;12+2 配置页 showLink:false 收进设置中心;招新组含总览  |
 
-> 迁移未动 hook 层;旧 `src/views/srvf/components/perm-empty.vue` 零引用待人工删除。
+> 迁移未动 hook 层;旧 `src/views/srvf/components/perm-empty.vue` 已于 #95 实删（见下方 #94~#98 段）。
+
+## 2026-07-10 交接清理 + 后端 v0.39.0 档案掩码适配（#94~#98）
+
+| 路径                                                  | 说明                                                                                                                                                                               |
+| ----------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/views/srvf/members-domain/profile/utils/hook.ts` | #98 新增 `canReadSensitive`（=`hasPerms('member-profile.read.sensitive')`）+ `buildUpdateBody`:编辑提交剔除掩码 `documentNumber`/`mobile`（无该权限或值含 `*`）,防掩码回写覆盖真值 |
+| `src/views/srvf/members-domain/profile/form.vue`      | #98 新增 `canReadSensitive` prop + `sensitiveLocked` computed:编辑态无权限时禁用证件号/手机输入 + 脱敏提示;新建态与持权者不受影响                                                  |
+| `src/api/srvf-member-profile.ts`                      | #98 契约注释 true-up:`documentNumber`/`mobile` 默认掩码规则 + `UpdateMemberProfileBody` 回写陷阱                                                                                   |
+| `src/views/srvf/components/perm-empty.vue`            | #95 **已删除**;全站权限空态改用 `@/srvf-kit`（残余 15 处 import 已切）,单一实现                                                                                                    |
+
+> 掩码分级契约见 `15_api_contracts.md §七`;FE 比后端更严的取舍见 `11_decision_log.md` D-020。

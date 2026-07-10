@@ -49,3 +49,12 @@
 ## 六、反接口
 
 `/get-async-routes` 是 pure-admin mock 动态路由接口，不是 SRVF 后端接口。不得恢复到生产调用链。
+
+## 七、敏感字段掩码分级（后端 v0.39.0 §F&A-3,#98 已适配）
+
+- 端点：`GET/POST/PATCH /api/admin/v1/members/{memberId}/profile`（队员扩展档案三端点）。
+- 入口码仍是 `member-profile.read.record`；**明文**需更严的 `member-profile.read.sensitive`（绑 biz-admin,故一切 ADMIN 默认见明文;org-admin / group-manager 等 scoped 派生角色**不含**该码 → 见掩码）。
+- 掩码字段仅两个：`documentNumber`（证件号 → `110101********1234`）、`mobile`（本人手机 → `138****1234`）。**字段名 / 类型不变**（值变换,非新增 `*Masked` 字段;仍是 string）,读展示无需改绑定;其余字段（含医疗类）不随该码分级。
+- **前端编辑面陷阱（#98 已处理）**：编辑弹窗按读响应回填,若把掩码值原样 PATCH 回写 = 用掩码覆盖后端真实值。修法——无 `member-profile.read.sensitive` 者编辑态禁用 `documentNumber`/`mobile`,提交时剔除（后端「PATCH 不发某字段=保留原值」）。落点见 `13_code_map.md` #94~#98 段 / 决策 `11_decision_log.md` D-020。
+- 若某岗位需在管理端看 / 改明文,给其角色补挂 `member-profile.read.sensitive` 即可（后端 seed 已定义,绑 biz-admin）。
+- 镜像既有 `recruitment-application.read.sensitive`（招新报名明文闸,同款「敏感码不下放」）。

@@ -1,16 +1,16 @@
 # 10 包清单
 
-| 时间       | 类型         | 文件名 / 基准                                                          | SHA256                                                             | 验证状态                        | 是否最新 | 说明                                                                                       |
-| ---------- | ------------ | ---------------------------------------------------------------------- | ------------------------------------------------------------------ | ------------------------------- | -------- | ------------------------------------------------------------------------------------------ |
-| 2026-07-10 | git-checkout | `not_packaged_git_checkout_main_2cca7a3_20260710`                      | pending_external_manifest                                          | BUILD_PASS                      | 是       | 当前真实工作基准；未重新打包，使用 Git checkout `main@2cca7a3`(同日后续增量 #95/#96 见 07) |
-| 2026-07-05 | full         | `srvf-admin-web_v7.1.0-p1.meta-workbench_validated_full_20260705.zip`  | pending_external_manifest                                          | LOCAL_TEST_PASS_BY_USER_MESSAGE | 否       | 历史 handoff 基准，已被 #34~#80 超越                                                       |
-| 2026-07-05 | delta        | `srvf-admin-web_v7.1.0-p1.meta-workbench_validated_delta_20260705.zip` | pending_external_manifest                                          | LOCAL_TEST_PASS_BY_USER_MESSAGE | 否       | 历史验证文档同步包                                                                         |
-| 2026-07-05 | full         | `srvf-admin-web_v7.1.0-p1.meta-workbench_full_20260705.zip`            | `67a4ba7c3d18b283aa3381acf627b7dd037c5199230076a8335abfc9bbdd8b45` | LOCAL_TEST_PASS_BY_USER_MESSAGE | 否       | P1.1 meta-workbench 源码包                                                                 |
+| 时间       | 类型         | 文件名 / 基准                                                          | SHA256                                                             | 验证状态                        | 是否最新 | 说明                                                                                                          |
+| ---------- | ------------ | ---------------------------------------------------------------------- | ------------------------------------------------------------------ | ------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------- |
+| 2026-07-10 | git-checkout | `not_packaged_git_checkout_main_075eded_20260710`                      | pending_external_manifest                                          | BUILD_PASS                      | 是       | 当前真实工作基准；未重新打包，使用 Git checkout `main@075eded`(#94~#98,含后端 v0.39.0 档案掩码适配 #98,见 07) |
+| 2026-07-05 | full         | `srvf-admin-web_v7.1.0-p1.meta-workbench_validated_full_20260705.zip`  | pending_external_manifest                                          | LOCAL_TEST_PASS_BY_USER_MESSAGE | 否       | 历史 handoff 基准，已被 #34~#80 超越                                                                          |
+| 2026-07-05 | delta        | `srvf-admin-web_v7.1.0-p1.meta-workbench_validated_delta_20260705.zip` | pending_external_manifest                                          | LOCAL_TEST_PASS_BY_USER_MESSAGE | 否       | 历史验证文档同步包                                                                                            |
+| 2026-07-05 | full         | `srvf-admin-web_v7.1.0-p1.meta-workbench_full_20260705.zip`            | `67a4ba7c3d18b283aa3381acf627b7dd037c5199230076a8335abfc9bbdd8b45` | LOCAL_TEST_PASS_BY_USER_MESSAGE | 否       | P1.1 meta-workbench 源码包                                                                                    |
 
-| 2026-07-10 | docs-sync | `not_packaged_handoff_delta_main_2cca7a3_20260710` | pending_external_manifest | BUILD_PASS | 是 | 本轮 handoff 文档同步增量(未打包) |
+| 2026-07-10 | docs-sync | `not_packaged_handoff_delta_main_075eded_20260710` | pending_external_manifest | BUILD_PASS | 是 | 本轮 re-baseline 文档同步增量(未打包) |
 
 ## 当前结论
 
-- 当前最新基准不是 zip 包，而是 Git `main@2cca7a3`(handoff-20260710 第二次;同日后续增量 #95/#96)。
+- 当前最新基准不是 zip 包，而是 Git `main@075eded`(handoff-20260710 第三次 re-baseline;#94~#98)。
 - 本次未创建 full/delta 包；如要交付 zip，应由后续任务基于 clean checkout 重新打包并生成外部 SHA256。
 - 2026-07-05 的 validated 包只作历史血缘，不可作为当前下一步开发入口。

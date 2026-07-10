@@ -2,15 +2,15 @@
 
 ## 一、版本与代码状态
 
-| 项                | 当前值                                                                           |
-| ----------------- | -------------------------------------------------------------------------------- |
-| 当前 Git HEAD     | `2cca7a3` (`refactor(srvf): 十九个列表页统一迁移到列表外壳 (#93)`)               |
-| 当前分支          | `main`，与 `origin/main` 对齐                                                    |
-| 当前 handoff 版本 | `git-main-2cca7a3-handoff-20260710`                                              |
-| 旧 handoff 基线   | `git-main-1aba0da-handoff-20260710`（2026-07-10 上一次）                         |
-| 主线增量          | `1aba0da..2cca7a3`，#81~#93（UX 产品化系列），106 文件，+5854/-3691              |
-| 当前验证状态      | BUILD_PASS + 逐 PR 浏览器/dev 后端冒烟（:8849 + live :3000,见 17_test_evidence） |
-| 未跟踪目录        | `.agents/`、`.codex/`，本次保留未动                                              |
+| 项                | 当前值                                                                                                            |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------- |
+| 当前 Git HEAD     | `075eded` (`fix(srvf): 队员档案证件号/手机掩码回写防护(适配后端 v0.39.0 §F&A-3) (#98)`)                           |
+| 当前分支          | `main`，与 `origin/main` 对齐                                                                                     |
+| 当前 handoff 版本 | `git-main-075eded-handoff-20260710`                                                                               |
+| 旧 handoff 基线   | `git-main-2cca7a3-handoff-20260710`（2026-07-10 第二次,UX 产品化系列）                                            |
+| 主线增量          | `2cca7a3..075eded`，#94~#98（含后端 v0.39.0 档案掩码适配 #98），40 文件，+351/-189                                |
+| 当前验证状态      | BUILD_PASS（#94~#98 均 typecheck/eslint/build 绿;#81~#93 另有逐 PR 浏览器冒烟。#98 档案掩码 UI 待浏览器验,见 17） |
+| 未跟踪目录        | `.agents/`、`.codex/`，本次保留未动                                                                               |
 
 ## 二、当前阶段
 
@@ -35,21 +35,23 @@
 - #91 工作台启用进度卡（五类基础数据探测+直达设置中心）+ 三张规则表单 15 处字段提示。
 - #92 harness 调整:src/layout/\*\* 编辑闸 deny→ask（逐次人工确认,非放开）。
 - #93 一致性收敛主体:19 个列表页迁移到 SrvfListPage（kit 采用率 20/29,hook 未动）,外壳新增 #banner 槽位;6 个结构不适配页明确豁免（微信模板/字典/组织架构/归属体检/工作台/附件配置）。
+- #94~#97 交接与清理:#94 交接文件刷新基线、#95 移除旧权限空态转发垫片（`perm-empty.vue` 零引用,残余 15 处 import 切到 `@/srvf-kit`,T-020）、#96 交接自检脚本排除依赖目录误扫（普通+strict 双 0/0,T-013）、#97 清扫交接文档残留旧基线表述。
+- #98 fix:队员档案证件号/手机掩码回写防护——适配后端 v0.39.0 §F&A-3（`documentNumber`/`mobile` 默认掩码,明文需 `member-profile.read.sensitive`）。无该码者编辑档案时两字段禁用+提示,提交剔除掩码值,靠后端「PATCH 不发某字段=保留原值」防覆盖真值;新建 / 持权者不受影响。详见 15/13/11。
 
 ## 三、验证结果
 
-| 验证项                                                | 结果       | 说明                                                                                                                        |
-| ----------------------------------------------------- | ---------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `./node_modules/.bin/vue-tsc --noEmit --skipLibCheck` | PASS       | 2026-07-10 本地直接执行通过                                                                                                 |
-| `./node_modules/.bin/vite build`                      | PASS       | 2026-07-10 本地直接执行通过                                                                                                 |
-| `pnpm typecheck`                                      | BLOCKED    | pnpm 先触发依赖状态检查并尝试 `install`，无 TTY 下中止；未进入 typecheck                                                    |
-| `python3 scripts/check_handoff_docs.py --root .`      | FAIL_NOISY | 脚本递归扫 `.git`、`node_modules`、`.claude/worktrees/**/node_modules`，被依赖 README 示例私钥误伤                          |
-| 浏览器/dev 后端冒烟                                   | PASS       | #82~#93 每个 PR 合并前均在 :8849 + live :3000 实测（登录/菜单/设置中心/向导三场景/漏斗/迁移页行操作等,见 17_test_evidence） |
+| 验证项                                                | 结果    | 说明                                                                                                                        |
+| ----------------------------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `./node_modules/.bin/vue-tsc --noEmit --skipLibCheck` | PASS    | 2026-07-10 本地直接执行通过                                                                                                 |
+| `./node_modules/.bin/vite build`                      | PASS    | 2026-07-10 本地直接执行通过                                                                                                 |
+| `pnpm typecheck`                                      | BLOCKED | pnpm 先触发依赖状态检查并尝试 `install`，无 TTY 下中止；未进入 typecheck                                                    |
+| `python3 scripts/check_handoff_docs.py --root .`      | PASS    | #96 已修排除规则;普通 + strict 双 0 error / 0 warning（2026-07-10 复跑）                                                    |
+| 浏览器/dev 后端冒烟                                   | PASS    | #82~#93 每个 PR 合并前均在 :8849 + live :3000 实测（登录/菜单/设置中心/向导三场景/漏斗/迁移页行操作等,见 17_test_evidence） |
 
 ## 四、后端权威状态
 
 - 后端仓库：`../srvf-nest-api`
-- 当前前端文档仍以后端 v0.37.0、232 paths / 320 operations / 195 权限码为已知基准。
+- 当前后端基准 **v0.39.0**（2026-07-10;`EXPECTED_ROUTES` 326 / 权限码 198 / biz-admin 74,取自后端 `docs/current-state.md`）。v0.38.0 队员账号闭环 + v0.39.0 档案掩码分级均已知并适配（后者 = #98）。paths/operations 精确值以 live `/api/docs-json` 为准。
 - 字段级事实必须重新看 live `http://localhost:3000/api/docs-json`。
 - 轴模型、任务归位、缺口台账看 `../srvf-nest-api/docs/handoff/admin-web.md`。
 
@@ -64,6 +66,5 @@
 
 ## 六、下一步建议
 
-1. 先做浏览器/dev 后端冒烟，覆盖 #34~#80 的关键入口。
-2. 修复 handoff 自检脚本的扫描排除规则，让 strict 自检不再被依赖目录误伤。
-3. 若继续开发，基于当前主线重新定小切片；不要沿用旧 `P1.2 memberships-read` 任务。
+1. 浏览器/dev 后端冒烟：重点验 #98 档案掩码——用一个**不含** `member-profile.read.sensitive` 的角色（如 org-admin）打开队员档案「编辑」,确认证件号/手机禁用+提示、保存后真实值不被掩码覆盖;再抽 #34~#93 关键入口回归。
+2. 若继续开发，基于当前主线 `main@075eded` + live `/api/docs-json`（后端 v0.39.0）重新定小切片；不要沿用旧 `P1.2 memberships-read` 任务。

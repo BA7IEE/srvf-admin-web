@@ -2,30 +2,31 @@
   "schema_version": "3.0",
   "project_name": "srvf-admin-web",
   "project_type": "Vue 3 + Vite + TypeScript + Pinia + Element Plus admin frontend",
-  "current_version": "git-main-2cca7a3-handoff-20260710",
+  "current_version": "git-main-075eded-handoff-20260710",
   "frontend_package_json_version": "7.0.0",
   "git_baseline": {
     "branch": "main",
-    "head": "2cca7a3",
+    "head": "075eded",
     "remote": "origin/main",
-    "head_subject": "refactor(srvf): 十九个列表页统一迁移到列表外壳 (#93)",
-    "previous_handoff_baseline": "1aba0da",
-    "range_since_previous_handoff": "c2001c9..1aba0da",
-    "merged_prs_since_previous_handoff": "#34..#80",
-    "diff_summary": "256 files changed, 21957 insertions(+), 6030 deletions(-)"
+    "head_subject": "fix(srvf): 队员档案证件号/手机掩码回写防护(适配后端 v0.39.0 §F&A-3) (#98)",
+    "previous_handoff_baseline": "2cca7a3",
+    "range_since_previous_handoff": "2cca7a3..075eded",
+    "merged_prs_since_previous_handoff": "#94..#98",
+    "diff_summary": "40 files changed, 351 insertions(+), 189 deletions(-)"
   },
   "backend_authority": {
     "repository": "https://github.com/BA7IEE/srvf-nest-api",
-    "current_backend_version": "v0.37.0",
+    "current_backend_version": "v0.39.0",
     "authority_docs": [
       "../srvf-nest-api/docs/current-state.md",
       "../srvf-nest-api/docs/handoff/admin-web.md",
       "live http://localhost:3000/api/docs-json"
     ],
-    "known_backend_counts_2026_07_06": {
-      "paths": 232,
-      "operations": 320,
-      "permission_codes": 195
+    "known_backend_counts_2026_07_10": {
+      "expected_routes": 326,
+      "permission_codes": 198,
+      "biz_admin_codes": 74,
+      "note": "取自后端 docs/current-state.md v0.39.0(权限码 197→198,含 member-profile.read.sensitive);paths/operations 精确值以 live /api/docs-json 为准。"
     }
   },
   "external_references": {
@@ -42,46 +43,45 @@
   },
   "current_status": "BUILD_PASS",
   "latest_full_package": {
-    "filename": "not_packaged_git_checkout_main_2cca7a3_20260710",
+    "filename": "not_packaged_git_checkout_main_075eded_20260710",
     "sha256": "pending_external_manifest",
     "package_type": "git_checkout",
     "validation_status": "BUILD_PASS",
-    "created_at": "2026-07-10 handoff refresh",
-    "notes": "No zip package was created in this turn. Use current Git checkout main@1aba0da as the source baseline."
+    "created_at": "2026-07-10 re-baseline to main@075eded",
+    "notes": "No zip package was created in this turn. Use current Git checkout main@075eded as the source baseline."
   },
   "latest_delta_package": {
-    "filename": "not_packaged_handoff_delta_main_2cca7a3_20260710",
+    "filename": "not_packaged_handoff_delta_main_075eded_20260710",
     "sha256": "pending_external_manifest",
     "package_type": "docs_state_sync",
     "validation_status": "BUILD_PASS",
-    "created_at": "2026-07-10 handoff refresh",
-    "notes": "Docs/state files refreshed only; no src or dependency edits."
+    "notes": "Docs/state files re-baselined only; the covered code delta #94..#98 (perm-empty shim removal + member-profile masking adaptation) was shipped in its own PRs."
   },
   "last_user_confirmed_code_package": {
     "filename": "srvf-admin-web_v7.1.0-p1.meta-workbench_full_20260705.zip",
     "sha256": "67a4ba7c3d18b283aa3381acf627b7dd037c5199230076a8335abfc9bbdd8b45",
     "confirmed_at": "2026-07-05 user local validation report for P1.1 meta-workbench",
     "validation_status": "LOCAL_TEST_PASS_BY_USER_MESSAGE",
-    "notes": "Historical validation only. It does not cover #34..#80 now present in main@1aba0da."
+    "notes": "Historical validation only. It does not cover #34..#98 now present in main@075eded."
   },
   "current_uploaded_baseline": {
     "filename": "not_applicable_current_git_checkout",
     "sha256": "pending_external_manifest",
     "validation_status": "BUILD_PASS",
-    "notes": "This handoff refresh used the local Git checkout, not an uploaded zip."
+    "notes": "This re-baseline used the local Git checkout, not an uploaded zip."
   },
   "change_flags": {
     "business_code_changed": false,
     "database_changed": false,
-    "frontend_source_changed": false,
+    "frontend_source_changed": true,
     "mobile_changed": false,
     "docker_changed": false,
     "deployment_changed": false,
-    "docs_only": true,
+    "docs_only": false,
     "requires_retest": true,
     "auth_route_main_chain_changed": false,
     "dependency_changed": false,
-    "validation_status_sync_only": true,
+    "validation_status_sync_only": false,
     "workbench_meta_changed": false,
     "login_default_password_cleared": false
   },
@@ -122,21 +122,20 @@
     "../srvf-nest-api/docs/handoff/admin-web.md"
   ],
   "known_p0_risks": [
-    "scripts/check_handoff_docs.py currently scans .git, node_modules, and .claude/worktrees/**/node_modules, causing noisy false positives from dependency README examples.",
-    "Current main@1aba0da has only direct typecheck/build verification in this turn; browser/dev backend smoke remains required.",
+    "Current main@075eded has only typecheck/eslint/build verification for the #94..#98 delta; browser/dev backend smoke (esp. member-profile masking edit lock #98) remains required.",
     "pnpm typecheck is blocked in this environment by pnpm dependency-state install confirmation; direct vue-tsc passes."
   ],
-  "next_task": "Run browser/dev backend smoke for main@1aba0da, then fix scripts/check_handoff_docs.py exclusion rules and rerun strict handoff self-check.",
-  "last_updated_at": "2026-07-10 handoff refresh by Codex",
+  "next_task": "Run browser/dev backend smoke for main@075eded (member-profile 档案 编辑弹窗 in a role WITHOUT member-profile.read.sensitive: 证件号/手机 disabled + not overwritten on save), then pick the next small slice against live /api/docs-json (backend v0.39.0).",
+  "last_updated_at": "2026-07-10 re-baseline to main@075eded (v0.39.0 member-profile masking adaptation) by Claude",
   "current_code_baseline": {
-    "version": "git-main-1aba0da-handoff-20260710",
-    "git_head": "1aba0da",
-    "full_package": "not_packaged_git_checkout_main_1aba0da_20260710",
+    "version": "git-main-075eded-handoff-20260710",
+    "git_head": "075eded",
+    "full_package": "not_packaged_git_checkout_main_075eded_20260710",
     "full_package_sha256": "pending_external_manifest",
-    "source_code_same_as": "current Git checkout main@1aba0da",
-    "delta_package": "not_packaged_handoff_delta_main_1aba0da_20260710",
+    "source_code_same_as": "current Git checkout main@075eded",
+    "delta_package": "not_packaged_handoff_delta_main_075eded_20260710",
     "delta_package_sha256": "pending_external_manifest",
-    "code_change_summary": "No code edits in this handoff refresh. Existing main includes #34..#80: org/hr, RBAC governance, auth lane, member account loop, dict master-detail layout, and srvf-kit primitives.",
+    "code_change_summary": "Range #94..#98: doc refresh (#94), perm-empty shim removal + 15 imports switched to @/srvf-kit (#95), handoff self-check exclusion fix (#96), stale-baseline doc cleanup (#97), member-profile documentNumber/mobile masking write-back protection adapting to backend v0.39.0 §F&A-3 (#98).",
     "validation_status": "BUILD_PASS"
   },
   "auth_boundary_record": {
@@ -149,8 +148,8 @@
     "historical_pr_51_impact": "40100 passive refresh retry plus real logout token revocation; affects login state, token lifecycle, and global request retry."
   },
   "known_non_p0_followups": [
-    "Re-run frontend/backend API coverage against live /api/docs-json because vNext blueprint appendix is a 2026-07-06 snapshot and #37..#80 consumed many gaps.",
-    "Browser-check dictionary master-detail layout from #71/#72.",
+    "Re-run frontend/backend API coverage against live /api/docs-json because vNext blueprint appendix is a 2026-07-06 snapshot and #37..#98 consumed many gaps.",
+    "If more backend sensitive fields get read.sensitive masking, apply the same edit-form drop pattern (see 13_code_map member-profile masking + 11_decision_log D-020).",
     "Continue srvf-kit primitive migration only in small scoped slices."
   ]
 }
