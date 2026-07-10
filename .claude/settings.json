@@ -17,8 +17,6 @@
       "Write(./src/router/asyncRoutes.ts)",
       "Edit(./src/components/Re*/**)",
       "Write(./src/components/Re*/**)",
-      "Edit(./src/layout/**)",
-      "Write(./src/layout/**)",
       "Edit(./src/plugins/**)",
       "Write(./src/plugins/**)",
       "Edit(./src/main.ts)",
@@ -57,6 +55,8 @@
       "Read(./dist/**)"
     ],
     "ask": [
+      "Edit(./src/layout/**)",
+      "Write(./src/layout/**)",
       "Edit(./src/views/dict/**)",
       "Write(./src/views/dict/**)",
       "Edit(./src/views/tenant/**)",
