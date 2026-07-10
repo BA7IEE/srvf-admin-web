@@ -21,6 +21,18 @@ export default [
           icon: "ri/inbox-2-line",
           title: "审批工作台"
         }
+      },
+      {
+        // 使用手册（UX 升级蓝图 §4.7 帮助体系）：隐藏路由,入口在工作台页头与首页导览卡,
+        // 不占侧栏(保住「工作台」单子项自动提升的一击直达形态)。
+        path: "/srvf/help",
+        name: "SrvfHelp",
+        component: () => import("@/views/srvf/help/index.vue"),
+        meta: {
+          title: "使用手册",
+          showLink: false,
+          activePath: "/srvf/workbench/approvals"
+        }
       }
     ]
   }

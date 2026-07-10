@@ -42,6 +42,11 @@ const entries = [
     title: "队务设置",
     desc: "账号权限、字典职务规则、平台参数等配置项",
     path: "/srvf/settings-center"
+  },
+  {
+    title: "使用手册",
+    desc: "按「你想做什么」查操作步骤，一分钟一篇",
+    path: "/srvf/help"
   }
 ];
 </script>
