@@ -1,9 +1,7 @@
 <script setup lang="ts">
-import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
 import { onMounted, ref } from "vue";
-import { PureTableBar } from "@/components/RePureTableBar";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
-import { SrvfPageIntro } from "@/srvf-kit";
+import { SrvfListPage } from "@/srvf-kit";
 import { hasPerms } from "@/utils/auth";
 import { useRoleBindings } from "./utils/hook";
 import AuthzExplainDrawer from "./authz-explain-drawer.vue";
@@ -59,178 +57,148 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="main">
-    <SrvfPageIntro
-      v-if="canRead"
-      class="mb-2"
-      title="角色绑定 = 把角色授予某个主体（用户 / 队员 / 任职）并限定生效范围；「系统管理 → 角色权限」定义的是角色本身有哪些权限，两者配合使用。"
-    />
-    <el-alert
-      v-if="canRead && principalLocked"
-      type="warning"
-      :closable="false"
-      show-icon
-      class="mb-2"
-    >
-      <template #title>
-        <span>正在查看用户「{{ principalLabel }}」的授权绑定；</span>
-        <el-button link type="primary" @click="clearPrincipalFilter">
-          清除筛选，查看全部
-        </el-button>
-      </template>
-    </el-alert>
-    <PureTableBar
-      v-if="canRead"
-      title="角色绑定"
-      :columns="columns"
-      @refresh="onSearch"
-    >
-      <template #buttons>
-        <el-input
-          v-model="keyword"
-          class="w-40! mr-2!"
-          placeholder="搜主体（回车）"
-          clearable
-          @keyup.enter="onFilterChange"
-          @clear="onFilterChange"
+  <SrvfListPage
+    :can-read="canRead"
+    title="角色绑定"
+    intro="角色绑定 = 把角色授予某个主体（用户 / 队员 / 任职）并限定生效范围；「系统管理 → 角色权限」定义的是角色本身有哪些权限，两者配合使用。"
+    :columns="columns"
+    :loading="loading"
+    :data-list="dataList"
+    :pagination="pagination"
+    empty-action="查看角色绑定"
+    empty-code="role-binding.read.record"
+    @refresh="onSearch"
+    @page-size-change="handleSizeChange"
+    @page-current-change="handleCurrentChange"
+  >
+    <template #banner>
+      <el-alert
+        v-if="principalLocked"
+        type="warning"
+        :closable="false"
+        show-icon
+        class="mb-2"
+      >
+        <template #title>
+          <span>正在查看用户「{{ principalLabel }}」的授权绑定；</span>
+          <el-button link type="primary" @click="clearPrincipalFilter">
+            清除筛选，查看全部
+          </el-button>
+        </template>
+      </el-alert>
+    </template>
+    <template #buttons>
+      <el-input
+        v-model="keyword"
+        class="w-40! mr-2!"
+        placeholder="搜主体（回车）"
+        clearable
+        @keyup.enter="onFilterChange"
+        @clear="onFilterChange"
+      />
+      <el-select
+        v-model="principalTypeFilter"
+        class="w-32! mr-2!"
+        placeholder="主体类型"
+        @change="onFilterChange"
+      >
+        <el-option
+          v-for="opt in principalTypeOptions"
+          :key="opt.value"
+          :label="opt.label"
+          :value="opt.value"
         />
-        <el-select
-          v-model="principalTypeFilter"
-          class="w-32! mr-2!"
-          placeholder="主体类型"
-          @change="onFilterChange"
-        >
-          <el-option
-            v-for="opt in principalTypeOptions"
-            :key="opt.value"
-            :label="opt.label"
-            :value="opt.value"
-          />
-        </el-select>
-        <el-select
-          v-model="scopeTypeFilter"
-          class="w-32! mr-2!"
-          placeholder="生效范围"
-          @change="onFilterChange"
-        >
-          <el-option
-            v-for="opt in scopeTypeOptions"
-            :key="opt.value"
-            :label="opt.label"
-            :value="opt.value"
-          />
-        </el-select>
-        <el-select
-          v-model="statusFilter"
-          class="w-28! mr-2!"
-          placeholder="状态"
-          @change="onFilterChange"
-        >
-          <el-option
-            v-for="opt in statusOptions"
-            :key="opt.value"
-            :label="opt.label"
-            :value="opt.value"
-          />
-        </el-select>
-        <el-checkbox
-          v-model="includeExpired"
-          class="mr-2!"
-          @change="onFilterChange"
-        >
-          含历史
-        </el-checkbox>
-        <el-button
-          v-if="canExplain"
-          :icon="useRenderIcon(Guide)"
-          @click="explainVisible = true"
-        >
-          权限诊断
-        </el-button>
-        <el-button
-          v-if="canCreate"
-          type="primary"
-          :icon="useRenderIcon(AddFill)"
-          @click="openCreateDialog"
-        >
-          新建绑定
-        </el-button>
-      </template>
-      <template v-slot="{ size, dynamicColumns }">
-        <pure-table
-          row-key="id"
-          adaptive
-          :adaptiveConfig="{ offsetBottom: 108 }"
-          align-whole="center"
-          table-layout="auto"
-          :loading="loading"
-          :size="size"
-          :data="dataList"
-          :columns="dynamicColumns"
-          :pagination="pagination"
-          :paginationSmall="size === 'small' ? true : false"
-          :header-cell-style="{
-            background: 'var(--el-fill-color-light)',
-            color: 'var(--el-text-color-primary)'
-          }"
-          @page-size-change="handleSizeChange"
-          @page-current-change="handleCurrentChange"
-        >
-          <template #scopeType="{ row }">
-            <el-tag type="info">{{ scopeTypeLabel(row.scopeType) }}</el-tag>
-          </template>
-          <template #status="{ row }">
-            <el-tag :type="statusMeta(row.status).type">
-              {{ statusMeta(row.status).text }}
-            </el-tag>
-          </template>
-          <template #operation="{ row }">
-            <el-button
-              v-if="canUpdate"
-              class="reset-margin"
-              link
-              :size="size"
-              :icon="useRenderIcon(EditPen)"
-              @click="openEditDialog(row)"
-            >
-              备注
-            </el-button>
-            <el-button
-              v-if="canUpdate && row.status !== 'ENDED'"
-              class="reset-margin"
-              link
-              :type="row.status === 'SUSPENDED' ? 'success' : 'warning'"
-              :size="size"
-              @click="handleToggleSuspend(row)"
-            >
-              {{ row.status === "SUSPENDED" ? "恢复" : "暂停" }}
-            </el-button>
-            <el-button
-              v-if="canDelete && row.status !== 'ENDED'"
-              class="reset-margin"
-              link
-              type="danger"
-              :size="size"
-              :icon="useRenderIcon(Delete)"
-              @click="handleDelete(row)"
-            >
-              删除
-            </el-button>
-          </template>
-        </pure-table>
-      </template>
-    </PureTableBar>
-    <SrvfPermEmpty
-      v-else
-      action="查看角色绑定"
-      code="role-binding.read.record"
-    />
-    <AuthzExplainDrawer v-model="explainVisible" />
-  </div>
+      </el-select>
+      <el-select
+        v-model="scopeTypeFilter"
+        class="w-32! mr-2!"
+        placeholder="生效范围"
+        @change="onFilterChange"
+      >
+        <el-option
+          v-for="opt in scopeTypeOptions"
+          :key="opt.value"
+          :label="opt.label"
+          :value="opt.value"
+        />
+      </el-select>
+      <el-select
+        v-model="statusFilter"
+        class="w-28! mr-2!"
+        placeholder="状态"
+        @change="onFilterChange"
+      >
+        <el-option
+          v-for="opt in statusOptions"
+          :key="opt.value"
+          :label="opt.label"
+          :value="opt.value"
+        />
+      </el-select>
+      <el-checkbox
+        v-model="includeExpired"
+        class="mr-2!"
+        @change="onFilterChange"
+      >
+        含历史
+      </el-checkbox>
+      <el-button
+        v-if="canExplain"
+        :icon="useRenderIcon(Guide)"
+        @click="explainVisible = true"
+      >
+        权限诊断
+      </el-button>
+      <el-button
+        v-if="canCreate"
+        type="primary"
+        :icon="useRenderIcon(AddFill)"
+        @click="openCreateDialog"
+      >
+        新建绑定
+      </el-button>
+    </template>
+    <template #scopeType="{ row }">
+      <el-tag type="info">{{ scopeTypeLabel(row.scopeType) }}</el-tag>
+    </template>
+    <template #status="{ row }">
+      <el-tag :type="statusMeta(row.status).type">
+        {{ statusMeta(row.status).text }}
+      </el-tag>
+    </template>
+    <template #operation="{ row, size }">
+      <el-button
+        v-if="canUpdate"
+        class="reset-margin"
+        link
+        :size="size"
+        :icon="useRenderIcon(EditPen)"
+        @click="openEditDialog(row)"
+      >
+        备注
+      </el-button>
+      <el-button
+        v-if="canUpdate && row.status !== 'ENDED'"
+        class="reset-margin"
+        link
+        :type="row.status === 'SUSPENDED' ? 'success' : 'warning'"
+        :size="size"
+        @click="handleToggleSuspend(row)"
+      >
+        {{ row.status === "SUSPENDED" ? "恢复" : "暂停" }}
+      </el-button>
+      <el-button
+        v-if="canDelete && row.status !== 'ENDED'"
+        class="reset-margin"
+        link
+        type="danger"
+        :size="size"
+        :icon="useRenderIcon(Delete)"
+        @click="handleDelete(row)"
+      >
+        删除
+      </el-button>
+    </template>
+  </SrvfListPage>
+  <AuthzExplainDrawer v-model="explainVisible" />
 </template>
-
-<style scoped lang="scss">
-.main {
-  margin: 24px 24px 0 !important;
-}
-</style>
