@@ -303,6 +303,9 @@ onMounted(() => {
             >
               刷新摘要
             </el-button>
+            <el-button link @click="router.push('/srvf/help')">
+              使用手册
+            </el-button>
           </div>
         </div>
       </template>
