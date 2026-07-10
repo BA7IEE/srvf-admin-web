@@ -39,8 +39,8 @@ const { title } = useNav();
 const { VITE_ENABLE_TENANT } = import.meta.env;
 
 const ruleForm = reactive({
-  tenant: "pure-admin",
-  username: "admin",
+  tenant: "",
+  username: "",
   password: ""
 });
 
