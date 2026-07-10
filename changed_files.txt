@@ -12,3 +12,6 @@ docs/handoff/12_task_board.md
 docs/handoff/13_code_map.md
 docs/handoff/17_test_evidence.md
 docs/handoff/20_doc_sync_checklist.md
+# docs/handoff/10_package_manifest.md — 本轮无包/依赖变更,核对后未改
+# T-013 追加(2026-07-10):
+scripts/check_handoff_docs.py

@@ -26,11 +26,10 @@
 
 - [x] 每个代码 PR:`pnpm lint` / `pnpm typecheck` / `pnpm build` 全绿（worktree 直跑）。
 - [x] 每个代码 PR::8849 + live :3000 浏览器实测（证据见 17）。
-- [ ] handoff strict 自检:脚本仍误扫依赖目录（T-013,遗留）。
+- [x] handoff strict 自检:T-013 已修复(排除依赖/工具目录+跨仓引用豁免),普通+strict 双 0 error/0 warning PASS(2026-07-10)。
 - [ ] 五任务无提示测试（真人,T-018）。
 
 ## 四、当前未完成但不阻塞本次 docs sync 的事项
 
-- [ ] 修复 `scripts/check_handoff_docs.py` 排除规则（T-013）。
 - [ ] 字典数据技术文案人工修订（T-019）。
 - [ ] 旧 perm-empty 垫片文件人工删除（T-020）。
