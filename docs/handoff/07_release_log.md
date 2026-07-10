@@ -1,5 +1,34 @@
 # 07 发布记录
 
+## main@075eded — 2026-07-10 交接清理 + 后端 v0.39.0 档案掩码适配（#94~#98）
+
+| 项             | 内容                                                                   |
+| -------------- | ---------------------------------------------------------------------- |
+| 日期           | 2026-07-10                                                             |
+| 类型           | fix + refactor + docs_state_sync                                       |
+| Git 基准       | `main@075eded` / `origin/main`                                         |
+| 相对旧 handoff | `2cca7a3..075eded`，#94~#98，40 文件，+351/-189                        |
+| 验证状态       | BUILD_PASS（#94~#98 typecheck/eslint/build 绿;#98 掩码 UI 待浏览器验） |
+| 包状态         | 未重新打包；以当前 checkout 为准                                       |
+
+### 本轮内容
+
+- #94 docs:交接文件刷新至最新主线基线（VERSION/project_state.json/changed_files.txt + 交接文档）。
+- #95 refactor:移除旧权限空态转发垫片——删除 `src/views/srvf/components/perm-empty.vue`,残余 15 处 import 切到 `@/srvf-kit`（全站权限空态单一实现;**T-020 完结**）。
+- #96 fix:交接自检脚本排除依赖目录误扫——`check_handoff_docs.py` 排除 `.git`/`node_modules`/`.claude` 等 + 跨仓 `../` 引用不校验存在性;普通 + strict 双 0/0 PASS（**T-013 完结**）。
+- #97 docs:清扫交接文档残留旧基线表述。
+- **#98 fix:队员档案证件号/手机掩码回写防护——适配后端 v0.39.0 §F&A-3**。后端三端点（`GET/POST/PATCH .../members/:memberId/profile`）默认掩码 `documentNumber`（`110101********1234`）/ `mobile`（`138****1234`）,明文需 `member-profile.read.sensitive`（绑 biz-admin;org-admin 等 scoped 角色见掩码）。前端修掉编辑弹窗「掩码回写覆盖真值」隐患:
+  - `profile/utils/hook.ts` 新增 `canReadSensitive` + `buildUpdateBody`,编辑提交时无该权限或值含 `*` 则剔除 `documentNumber`/`mobile`,靠后端「PATCH 不发某字段=保留原值」保全真值。
+  - `profile/form.vue` 新增 `canReadSensitive` prop,编辑态无权限时禁用两输入 + 脱敏提示;新建态与持权者不受影响。
+  - `api/srvf-member-profile.ts` 契约注释 true-up（掩码规则 + 回写陷阱）。
+  - 影响面:0 新端点 / 0 契约 / 0 schema;仅编辑面行为收紧,读展示/新建/持权者逐字不变。typecheck / eslint(--max-warnings 0) / prettier 三门绿;squash `075eded`,PR #98。
+
+### 已知遗留
+
+- 字典**数据**里的技术文案（如考勤状态「待 APD 审核」、字典类型「Demo work nature」）在「队务设置 → 字典管理」页人工修改,不涉代码（T-019）。
+- 蓝图 §6 五任务无提示测试待真人执行（T-018;第 ⑤ 条授权链已具备向导支撑）。
+- #98 档案掩码编辑锁待浏览器实机验（需一个不含 `member-profile.read.sensitive` 的角色 + live 后端）。
+
 ## main@2cca7a3 — 2026-07-10 UX 产品化系列（#81~#93）
 
 | 项             | 内容                                                         |
@@ -27,16 +56,7 @@
 - #92 chore:harness——src/layout/\*\* 编辑闸 deny→ask（逐次人工确认）。
 - #93 refactor:19 个列表页迁移 SrvfListPage（kit 采用率 20/29,hook 未动,列插槽逐字保留）;外壳新增 #banner 槽位;6 个结构不适配页明确豁免。
 
-### 同日后续增量(基线 2cca7a3 之后)
-
-- #95 refactor:移除旧权限空态转发垫片(T-020,用户手打路径授权;删除前核验发现并切换残余 15 处 import 到 @/srvf-kit)。
-- #96 fix:交接自检脚本排除依赖目录误扫(T-013;普通+strict 双 0/0 PASS)。
-
-### 已知遗留
-
-- 旧权限空态垫片 `src/views/srvf/components/perm-empty.vue` 已零引用,文件删除待人工（harness 删除闸）。
-- 字典**数据**里的技术文案（如考勤状态「待 APD 审核」、字典类型「Demo work nature」）在「队务设置 → 字典管理」页人工修改,不涉代码。
-- 蓝图 §6 五任务无提示测试待真人执行（第 ⑤ 条授权链已具备向导支撑）。
+> #94~#98（含 #95/#96 及后端 v0.39.0 档案掩码适配 #98）已提升为顶部独立发布节,见本文件最上方 `main@075eded` 一节;`perm-empty.vue` 已于 #95 实删,不再是遗留。
 
 ## main@1aba0da — 2026-07-10 handoff refresh
 

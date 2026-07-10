@@ -4,7 +4,7 @@
 
 `srvf-admin-web` 是 SRVF 后台管理前端，基于私有 `u-admin-web-starter` 派生，技术栈为 Vue 3、Vite、TypeScript、Pinia、Element Plus、Pure Admin 生态组件。
 
-真实后端为 `srvf-nest-api`，当前权威状态为 v0.37.0。后端是 NestJS + Prisma + PostgreSQL 的 API 服务，前端通过 Vite proxy `/api -> http://localhost:3000` 联调。
+真实后端为 `srvf-nest-api`，当前权威状态为 v0.39.0（2026-07-10）。后端是 NestJS + Prisma + PostgreSQL 的 API 服务，前端通过 Vite proxy `/api -> http://localhost:3000` 联调。
 
 ## 二、运行时主链
 

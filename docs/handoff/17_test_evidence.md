@@ -1,5 +1,16 @@
 # 17 测试证据
 
+## main@075eded 交接清理 + 后端 v0.39.0 档案掩码适配（#94~#98,2026-07-10）
+
+| PR / 项        | 验证证据                                                                                                                                 |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| #95            | 移除 `perm-empty.vue` 后全站 typecheck/build 绿;残余 15 处 import 已切 `@/srvf-kit`,权限空态单一实现                                     |
+| #96            | `check_handoff_docs.py` 普通 + strict 双 0/0 PASS（排除依赖目录 + 跨仓 `../` 不校验存在性）                                              |
+| #98            | `vue-tsc --noEmit --skipLibCheck` 0 error;`eslint --max-warnings 0`（三改动文件）exit 0;`prettier` 已符合;PR #98 squash `075eded` MERGED |
+| 本 re-baseline | `check_handoff_docs.py --root .` 与 `--strict` 双 0/0 PASS（2026-07-10 复跑）                                                            |
+
+> ⚠️ **#98 档案掩码编辑锁尚未浏览器实机验**:需一个**不含** `member-profile.read.sensitive` 的角色（如 org-admin）+ live 后端,验证队员档案「编辑」弹窗证件号/手机禁用 + 保存后真实值不被掩码覆盖。列 08 P1「#98 档案掩码编辑锁浏览器验」。
+
 ## main@2cca7a3 UX 产品化系列（2026-07-10,:8849 + live :3000,SUPER_ADMIN=admin）
 
 | PR  | 实测证据                                                                                                                                                                                                                                                 |
