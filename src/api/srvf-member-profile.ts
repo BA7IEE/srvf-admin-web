@@ -19,6 +19,12 @@ export type MedicalNoteItem = {
  * 字段以 live `/api/docs-json` 为准，勿前端臆造。可选字段后端以 `null` 表「未填」。
  * 多处字段为高敏感（证件号 / 手机 / 医疗身高体重病史）——前端按后端返回原样展示，
  * 可见级由后端 RBAC 裁决（前端不前端定义敏感字段可见级）。
+ *
+ * **后端 v0.39.0 §F&A-3 敏感字段分级**：`documentNumber`（证件号）与 `mobile`（本人手机）
+ * 在 GET / POST / PATCH 三出口**默认掩码返回**（`110101********1234` / `138****1234`）；
+ * 明文需 `member-profile.read.sensitive`（绑 biz-admin，org-admin/group-manager 等 scoped 角色见掩码）。
+ * **字段名 / 类型不变**（掩码是值变换，非新增 `*Masked` 字段），故读展示无需改绑定；
+ * 但**写回时**须防掩码回写覆盖真实值——见 `UpdateMemberProfileBody`。
  */
 export type MemberProfileItem = {
   /** 主键（cuid） */
@@ -34,9 +40,9 @@ export type MemberProfileItem = {
   birthDate: string;
   /** 证件类型字典 code（字典 document_type） */
   documentTypeCode: string;
-  /** 证件号（高敏感） */
+  /** 证件号（高敏感；无 `read.sensitive` 时后端返掩码 `110101********1234`，字段仍 string） */
   documentNumber: string;
-  /** 本人手机（高敏感） */
+  /** 本人手机（高敏感；无 `read.sensitive` 时后端返掩码 `138****1234`，字段仍 string） */
   mobile: string;
   /** 邮箱 */
   email: string;
@@ -214,6 +220,11 @@ export type CreateMemberProfileBody = {
 /**
  * 部分更新队员档案入参（后端 `UpdateMemberProfileDto`；全字段 optional）。
  * 后端**禁止** id / memberId / 系统字段入参；本轮同样不提交 medicalNotes。
+ *
+ * ⚠️ **掩码回写陷阱（后端 v0.39.0 §F&A-3）**：读响应里的 `documentNumber` / `mobile` 对无
+ * `member-profile.read.sensitive` 者是掩码值。表单按读响应回填后，若把掩码值原样 PATCH 回来，
+ * 会用 `110101********1234` / `138****1234` **覆盖后端真实值**。后端「不发某字段 = 保留原值」，
+ * 故编辑时对无该权限者须**剔除** `documentNumber` / `mobile`（调用方已处理，见 profile hook）。
  */
 export type UpdateMemberProfileBody = Partial<CreateMemberProfileBody>;
 

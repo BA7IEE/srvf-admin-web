@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import ReCol from "@/components/ReCol";
 import type { FormRules } from "element-plus";
 
@@ -80,8 +80,15 @@ const props = withDefaults(
     formInline?: ProfileFormModel;
     /** 字典下拉集合：typeCode → options（空 = 单选退化文本 / 多选退化 allow-create） */
     dictOptions?: Record<string, ProfileOption[]>;
+    /**
+     * 是否持敏感明文权限（member-profile.read.sensitive）。后端 v0.39.0 §F&A-3：无此权限者，
+     * 编辑回填的 documentNumber / mobile 是掩码值——编辑态禁用这两输入并提示，避免掩码回写。
+     * 默认 true：新建态 / 未传时不误禁（新建须录入真实值；掩码回写剔除已在 hook 侧兜底）。
+     */
+    canReadSensitive?: boolean;
   }>(),
   {
+    canReadSensitive: true,
     formInline: () => ({
       isEdit: false,
       realName: "",
@@ -128,6 +135,15 @@ const props = withDefaults(
 
 const ruleFormRef = ref();
 const newFormInline = ref(props.formInline);
+
+/**
+ * 敏感字段锁：仅「编辑态 且 无敏感明文权限」时为 true。此时 documentNumber / mobile 的回填值是
+ * 后端掩码（110101********1234 / 138****1234），禁用输入并提示，提交侧再剔除避免掩码回写覆盖真值。
+ * 新建态恒 false（须录入真实值）；持 read.sensitive 者恒 false（见明文可正常编辑）。
+ */
+const sensitiveLocked = computed(
+  () => newFormInline.value.isEdit && !props.canReadSensitive
+);
 
 /** typeCode → options（空数组时单选退化为文本输入，多选退化为 allow-create 自由码） */
 const opts = (type: string): ProfileOption[] => props.dictOptions?.[type] ?? [];
@@ -257,10 +273,14 @@ defineExpose({ getRef });
         <el-form-item label="证件号" prop="documentNumber">
           <el-input
             v-model="newFormInline.documentNumber"
+            :disabled="sensitiveLocked"
             clearable
             maxlength="64"
             placeholder="证件号（必填；≤ 64；高敏感）"
           />
+          <div v-if="sensitiveLocked" class="sensitive-field-hint">
+            已脱敏显示，需「敏感信息查看」权限方可编辑；保存不会覆盖后端真实值
+          </div>
         </el-form-item>
       </re-col>
 
@@ -268,10 +288,14 @@ defineExpose({ getRef });
         <el-form-item label="本人手机" prop="mobile">
           <el-input
             v-model="newFormInline.mobile"
+            :disabled="sensitiveLocked"
             clearable
             maxlength="32"
             placeholder="本人手机（必填；≤ 32；高敏感）"
           />
+          <div v-if="sensitiveLocked" class="sensitive-field-hint">
+            已脱敏显示，需「敏感信息查看」权限方可编辑；保存不会覆盖后端真实值
+          </div>
         </el-form-item>
       </re-col>
 
@@ -839,3 +863,13 @@ defineExpose({ getRef });
     </el-row>
   </el-form>
 </template>
+
+<style scoped>
+.sensitive-field-hint {
+  width: 100%;
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--el-color-info);
+}
+</style>

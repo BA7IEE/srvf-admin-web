@@ -11,7 +11,8 @@ import {
   createMemberProfile,
   updateMemberProfile,
   type MemberProfileItem,
-  type CreateMemberProfileBody
+  type CreateMemberProfileBody,
+  type UpdateMemberProfileBody
 } from "@/api/srvf-member-profile";
 import { useSrvfDictStoreHook } from "@/store/modules/srvfDict";
 
@@ -55,6 +56,12 @@ export function useMemberProfile(externalMemberId: string) {
   const canRead = hasPerms("member-profile.read.record");
   const canCreate = hasPerms("member-profile.create.record");
   const canUpdate = hasPerms("member-profile.update.record");
+  /**
+   * 敏感明文闸（后端 v0.39.0 §F&A-3）：无此码者，读响应里的 documentNumber / mobile 是掩码值
+   * （110101********1234 / 138****1234）。前端据此在编辑弹窗禁用这两字段并在提交时剔除，
+   * 避免把掩码回写覆盖后端真实值。与后端 rbac.can('member-profile.read.sensitive') 同码同义。
+   */
+  const canReadSensitive = hasPerms("member-profile.read.sensitive");
 
   /** 共享字典：14 个档案字典类型预热（读回显 + T2 下拉共用；查不到 / 无权 → 退化原 code） */
   const dict = useSrvfDictStoreHook();
@@ -222,6 +229,24 @@ export function useMemberProfile(externalMemberId: string) {
   }
 
   /**
+   * 编辑提交体 = buildBody 再剔除「掩码回写」风险字段（后端 v0.39.0 §F&A-3）。
+   * 无 member-profile.read.sensitive 者，表单回填的 documentNumber / mobile 是后端下发的掩码值
+   * （110101********1234 / 138****1234）；若原样 PATCH 回写，会用掩码覆盖后端真实值。
+   * 契约「PATCH 不发某字段 = 保留原值」，故此处剔除这两字段（编辑面已禁用其输入）。
+   * 双保险：即便前端权限缓存漂移，凡值仍含 "*"（掩码特征，真实证件号 / 手机绝不含）也一并剔除。
+   */
+  function buildUpdateBody(m: ProfileFormModel): UpdateMemberProfileBody {
+    const body: UpdateMemberProfileBody = buildBody(m);
+    if (!canReadSensitive || body.documentNumber?.includes("*")) {
+      delete body.documentNumber;
+    }
+    if (!canReadSensitive || body.mobile?.includes("*")) {
+      delete body.mobile;
+    }
+    return body;
+  }
+
+  /**
    * 新建 / 编辑档案弹窗（memberId 由作战室固定；编辑按读响应字段回填，日期归一为选择器格式）。
    * 14 字典先 `ensureTypes` 确保下拉就绪后再开弹窗（查不到 → 单选退化文本 / 多选退化 allow-create）。
    */
@@ -291,7 +316,9 @@ export function useMemberProfile(externalMemberId: string) {
             : "",
           volunteerNo: current?.volunteerNo ?? ""
         } as ProfileFormModel,
-        dictOptions
+        dictOptions,
+        // §F&A-3:编辑面据此禁用 documentNumber / mobile 并提示脱敏（无该码时值为掩码）
+        canReadSensitive
       },
       contentRenderer: () => h(ProfileForm, { ref: formRef }),
       beforeSure: (done, { options, closeLoading }) => {
@@ -304,7 +331,10 @@ export function useMemberProfile(externalMemberId: string) {
           }
           try {
             if (isEdit) {
-              await updateMemberProfile(memberId.value, buildBody(curData));
+              await updateMemberProfile(
+                memberId.value,
+                buildUpdateBody(curData)
+              );
               message("修改成功", { type: "success" });
             } else {
               await createMemberProfile(memberId.value, buildBody(curData));
@@ -346,6 +376,7 @@ export function useMemberProfile(externalMemberId: string) {
     canRead,
     canCreate,
     canUpdate,
+    canReadSensitive,
     loading,
     profile,
     displayRows,
