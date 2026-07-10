@@ -16,3 +16,8 @@
 1. 旧 zip 包口径仍散落在历史 handoff/README 记录中；新聊天应以 `main@1aba0da` 为准。
 2. `.agents/`、`.codex/` 当前未跟踪，可能来自 Codex/Claude 工具层；本次未纳入交接修改。
 3. 参考包和完整版目录只能只读参考，不进入交付链。
+
+## 附:自动化验证已知陷阱（2026-07-10,非产品缺陷）
+
+- **EP `.hidden-columns` 幽灵按钮**:Element Plus 会把每个 `<el-table-column>` 的插槽内容在内部隐藏容器 `div.hidden-columns` 里用空 scope 渲染一份副本,且排在表格 DOM 最前。用脚本按文本 `.find()` 定位行操作按钮会点中该副本——表现为「跳 /undefined、编辑弹空表单、事件双触发」,酷似真 bug（曾被排查数小时后证伪:真实用户点的可见行内按钮一直正常）。**规避**:行操作探针一律限定 `tbody tr` 祖先,如 `.el-table tbody tr .el-button`。
+- **worktree dev 三坑**（详见 Claude 项目记忆 srvf-preview-stale-hmr-error-logs）:日志缓冲回放旧编译错误;开着 dev 切分支会毒化 vite optimizer 缓存(`rm -rf node_modules/.vite` 后重启);截图工具可能发白幽灵而 DOM 正常——以 typecheck/build+DOM 查询为准。

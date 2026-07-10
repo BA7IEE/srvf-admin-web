@@ -58,3 +58,21 @@
 | handoff 自检 | 修复脚本排除规则后跑 `python3 scripts/check_handoff_docs.py --root . --strict` |
 | 字典主从     | 浏览器检查左侧类型导航、右侧条目树表、分组行视觉                               |
 | Auth 专线    | 登录、refresh 过期、40100 重试、logout 后后端 refresh token 撤销               |
+
+## 2026-07-10 UX 产品化系列新增/重构（#81~#93）
+
+| 路径                                                   | 说明                                                                      |
+| ------------------------------------------------------ | ------------------------------------------------------------------------- |
+| `docs/srvf-admin-ux-upgrade-blueprint.md`              | 产品化升级蓝图（体验路线单一来源;CLAUDE.md §3 必读第 9 项）               |
+| `src/views/srvf/settings-center/index.vue`             | 「队务设置」设置中心（四分区卡片,14 个配置运维页统一入口,权限同口径裁剪） |
+| `src/views/srvf/help/index.vue`                        | 使用手册（七篇任务指南;隐藏路由,入口=工作台页头+首页卡）                  |
+| `src/views/srvf/recruitment-domain/overview/index.vue` | 招新总览两道门漏斗（招新组落地页;门一 stats/门二列表 total）              |
+| `src/views/srvf/components/grant-wizard.vue`           | 授权向导（三步翻译器;preview 预演;三入口:队员档案/系统账号/组织架构）     |
+| `src/views/srvf/components/form-label-tip.vue`         | 表单字段级提示（label 旁问号,用于三张规则表单 15 处）                     |
+| `src/views/srvf/workbench/setup-progress-card.vue`     | 启用进度卡（五类基础数据探测,读码门控,全就绪隐身）                        |
+| `src/srvf-kit/components/SrvfFlowSteps.vue`            | 流程步骤条原语（活动生命周期条/考勤审批条/向导头共用;仅展示不承载流转）   |
+| `src/srvf-kit/components/SrvfListPage.vue`             | 列表外壳（本轮新增 intro prop 与 #banner 槽位;采用率 20/29）              |
+| `src/layout/components/lay-notice/index.vue`           | 铃铛→真实待办入口（dashboard-summary 角标;layout 文件,ask 闸）            |
+| 路由模块 `src/router/modules/srvf-*.ts`                | IA v3:一级菜单 7 组;12+2 配置页 showLink:false 收进设置中心;招新组含总览  |
+
+> 迁移未动 hook 层;旧 `src/views/srvf/components/perm-empty.vue` 零引用待人工删除。
