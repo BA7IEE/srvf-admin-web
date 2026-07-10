@@ -3,6 +3,7 @@ import { ref } from "vue";
 import ReCol from "@/components/ReCol";
 import type { FormRules } from "element-plus";
 import type { ContributionRuleStatus } from "@/api/srvf-contribution-rule";
+import FormLabelTip from "@/views/srvf/components/form-label-tip.vue";
 
 /** 弹窗表单模型（字段对齐后端 Create/Update DTO，见 @/api/srvf-contribution-rule） */
 export type ContributionRuleFormModel = {
@@ -76,7 +77,13 @@ defineExpose({ getRef });
         </el-form-item>
       </re-col>
       <re-col>
-        <el-form-item label="考勤角色" prop="attendanceRoleCode">
+        <el-form-item prop="attendanceRoleCode">
+          <template #label>
+            <FormLabelTip
+              label="考勤角色"
+              tip="同一场活动里不同分工（如指挥、队员）可以按不同标准记分"
+            />
+          </template>
           <el-input
             v-model="newFormInline.attendanceRoleCode"
             :disabled="newFormInline.isEdit"
@@ -86,7 +93,13 @@ defineExpose({ getRef });
         </el-form-item>
       </re-col>
       <re-col>
-        <el-form-item label="时长门槛(小时)">
+        <el-form-item>
+          <template #label>
+            <FormLabelTip
+              label="时长门槛(小时)"
+              tip="服务时长的分界线：不超过它记「门槛内得分」，超过记「超出门槛得分」；留空表示不分档"
+            />
+          </template>
           <el-input-number
             v-model="newFormInline.durationThreshold"
             :disabled="newFormInline.isEdit"
@@ -100,7 +113,13 @@ defineExpose({ getRef });
         </el-form-item>
       </re-col>
       <re-col>
-        <el-form-item label="门槛内得分" prop="pointsBelow">
+        <el-form-item prop="pointsBelow">
+          <template #label>
+            <FormLabelTip
+              label="门槛内得分"
+              tip="服务时长未超过门槛（或未设门槛）时记的分"
+            />
+          </template>
           <el-input-number
             v-model="newFormInline.pointsBelow"
             :min="0"
@@ -113,7 +132,13 @@ defineExpose({ getRef });
         </el-form-item>
       </re-col>
       <re-col>
-        <el-form-item label="超出门槛得分">
+        <el-form-item>
+          <template #label>
+            <FormLabelTip
+              label="超出门槛得分"
+              tip="服务时长超过门槛时记的分；须大于门槛内得分"
+            />
+          </template>
           <el-input-number
             v-model="newFormInline.pointsAbove"
             :min="0"
@@ -126,7 +151,13 @@ defineExpose({ getRef });
         </el-form-item>
       </re-col>
       <re-col>
-        <el-form-item label="每日上限">
+        <el-form-item>
+          <template #label>
+            <FormLabelTip
+              label="每日上限"
+              tip="同一人同一天最多累计的分数，超出部分不再累计"
+            />
+          </template>
           <el-input-number
             v-model="newFormInline.dailyCap"
             :min="0"
