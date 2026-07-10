@@ -78,7 +78,7 @@ const activeTab = ref<
   | "registrations-history"
   | "attendance-records"
   | "contribution"
->("certificates");
+>("profile");
 
 /* ----------------------------- 头部：队员基本信息 ----------------------------- */
 const detail = ref<MemberItem | null>(null);
@@ -494,6 +494,253 @@ onMounted(() => {
 
       <!-- Tab：证书（复用证书 list hook，无需再选队员） -->
       <el-tabs v-model="activeTab" class="cockpit-tabs">
+        <!-- Tab：档案（1:1 扩展档案，读 + 新建/编辑；字典字段已翻中文；无档案 → 空态 + 新建） -->
+        <el-tab-pane label="档案" name="profile">
+          <template v-if="profileCanRead">
+            <el-card v-loading="profileLoading" shadow="never">
+              <template v-if="profileData">
+                <div v-if="profileCanUpdate" class="profile-pane__actions">
+                  <el-button
+                    type="primary"
+                    :icon="useRenderIcon(EditPen)"
+                    @click="profileOpenDialog('编辑', profileData)"
+                  >
+                    编辑档案
+                  </el-button>
+                </div>
+                <el-descriptions :column="2" border>
+                  <el-descriptions-item
+                    v-for="row in profileDisplayRows"
+                    :key="row.label"
+                    :label="row.label"
+                    :span="row.span ?? 1"
+                  >
+                    {{ row.value }}
+                  </el-descriptions-item>
+                </el-descriptions>
+              </template>
+              <el-empty
+                v-else-if="!profileLoading"
+                description="该队员暂无扩展档案"
+              >
+                <el-button
+                  v-if="profileCanCreate"
+                  type="primary"
+                  :icon="useRenderIcon(AddFill)"
+                  @click="profileOpenDialog('新建')"
+                >
+                  新建档案
+                </el-button>
+              </el-empty>
+            </el-card>
+          </template>
+          <SrvfPermEmpty
+            v-else
+            action="查看队员档案"
+            code="member-profile.read.record"
+          />
+        </el-tab-pane>
+
+        <!-- Tab：组织归属（memberships 多归属;组织名经 resolveLabels 解析；新增/编辑/结束/迁移写操作） -->
+        <el-tab-pane label="组织归属" name="memberships">
+          <template v-if="msCanRead">
+            <PureTableBar
+              title="组织归属（多归属）"
+              :columns="msColumns"
+              @refresh="msOnSearch"
+            >
+              <template #buttons>
+                <el-button
+                  v-if="msCanSet"
+                  type="primary"
+                  :icon="useRenderIcon(AddFill)"
+                  @click="msOpenDialog('新增')"
+                >
+                  新增归属
+                </el-button>
+              </template>
+              <template v-slot="{ size, dynamicColumns }">
+                <pure-table
+                  row-key="id"
+                  adaptive
+                  :adaptiveConfig="{ offsetBottom: 108 }"
+                  align-whole="center"
+                  table-layout="auto"
+                  :loading="msLoading"
+                  :size="size"
+                  :data="msDataList"
+                  :columns="dynamicColumns"
+                  :header-cell-style="{
+                    background: 'var(--el-fill-color-light)',
+                    color: 'var(--el-text-color-primary)'
+                  }"
+                >
+                  <template #organization="{ row }">
+                    {{ msOrgLabel(row.organizationId) }}
+                  </template>
+                  <template #membershipType="{ row }">
+                    <el-tag
+                      :type="
+                        row.membershipType === 'PRIMARY' ? 'primary' : 'info'
+                      "
+                    >
+                      {{ msTypeLabel(row.membershipType) }}
+                    </el-tag>
+                  </template>
+                  <template #status="{ row }">
+                    <SrvfStatusTag
+                      :value="row.status"
+                      :label-dict="MEMBERSHIP_STATUS_LABEL"
+                      :tag-dict="MEMBERSHIP_STATUS_TAG"
+                    />
+                  </template>
+                  <template #operation="{ row }">
+                    <el-button
+                      v-if="msCanSet"
+                      class="reset-margin"
+                      link
+                      :size="size"
+                      :icon="useRenderIcon(EditPen)"
+                      @click="msOpenDialog('编辑', row)"
+                    >
+                      编辑
+                    </el-button>
+                    <el-button
+                      v-if="msCanTransfer && row.status === 'ACTIVE'"
+                      class="reset-margin"
+                      link
+                      type="warning"
+                      :size="size"
+                      @click="msOpenTransferDialog(row)"
+                    >
+                      迁移
+                    </el-button>
+                    <el-button
+                      v-if="msCanEnd && row.status === 'ACTIVE'"
+                      class="reset-margin"
+                      link
+                      type="danger"
+                      :size="size"
+                      @click="msHandleEnd(row)"
+                    >
+                      结束
+                    </el-button>
+                  </template>
+                </pure-table>
+              </template>
+            </PureTableBar>
+          </template>
+          <SrvfPermEmpty
+            v-else
+            action="查看组织归属"
+            code="membership.list.record"
+          />
+        </el-tab-pane>
+
+        <!-- Tab：任职（队员轴,只读全历史;任命/撤销在组织架构页「在任职务」面板） -->
+        <el-tab-pane label="任职" name="position-assignments">
+          <template v-if="paCanRead">
+            <PureTableBar
+              title="任职历史（ACTIVE/ENDED/REVOKED 全量）"
+              :columns="paColumns"
+              @refresh="paOnSearch"
+            >
+              <template v-slot="{ size, dynamicColumns }">
+                <pure-table
+                  row-key="id"
+                  adaptive
+                  :adaptiveConfig="{ offsetBottom: 108 }"
+                  align-whole="center"
+                  table-layout="auto"
+                  :loading="paLoading"
+                  :size="size"
+                  :data="paDataList"
+                  :columns="dynamicColumns"
+                  :header-cell-style="{
+                    background: 'var(--el-fill-color-light)',
+                    color: 'var(--el-text-color-primary)'
+                  }"
+                >
+                  <template #position="{ row }">
+                    {{ paPositionLabel(row.positionId) }}
+                  </template>
+                  <template #organization="{ row }">
+                    {{ paOrgLabel(row.organizationId) }}
+                  </template>
+                  <template #status="{ row }">
+                    <el-tag :type="paStatusMeta(row.status).type">
+                      {{ paStatusMeta(row.status).text }}
+                    </el-tag>
+                  </template>
+                  <template #isConcurrent="{ row }">
+                    <el-tag :type="row.isConcurrent ? 'warning' : 'info'">
+                      {{ row.isConcurrent ? "是" : "否" }}
+                    </el-tag>
+                  </template>
+                </pure-table>
+              </template>
+            </PureTableBar>
+          </template>
+          <SrvfPermEmpty
+            v-else
+            action="查看任职"
+            code="position-assignment.read.record"
+          />
+        </el-tab-pane>
+
+        <!-- Tab：分管范围（该队员若是分管人,只读;新建/撤销在分管总表页） -->
+        <el-tab-pane label="分管范围" name="supervision-scope">
+          <template v-if="ssCanRead">
+            <PureTableBar
+              title="分管范围（若无记录,说明该队员当前无分管职责）"
+              :columns="ssColumns"
+              @refresh="ssOnSearch"
+            >
+              <template v-slot="{ size, dynamicColumns }">
+                <pure-table
+                  row-key="supervisionAssignmentId"
+                  adaptive
+                  :adaptiveConfig="{ offsetBottom: 108 }"
+                  align-whole="center"
+                  table-layout="auto"
+                  :loading="ssLoading"
+                  :size="size"
+                  :data="ssDataList"
+                  :columns="dynamicColumns"
+                  :header-cell-style="{
+                    background: 'var(--el-fill-color-light)',
+                    color: 'var(--el-text-color-primary)'
+                  }"
+                >
+                  <template #scopeMode="{ row }">
+                    <el-tag
+                      :type="row.scopeMode === 'TREE' ? 'primary' : 'info'"
+                    >
+                      {{ ssScopeModeLabel(row.scopeMode) }}
+                    </el-tag>
+                  </template>
+                </pure-table>
+                <p v-if="ssDataList.length" class="ss-expanded-hint">
+                  <template
+                    v-for="(row, i) in ssDataList"
+                    :key="row.supervisionAssignmentId"
+                  >
+                    展开覆盖：{{ ssExpandedLabels(row)
+                    }}<template v-if="i < ssDataList.length - 1"
+                      ><br
+                    /></template>
+                  </template>
+                </p>
+              </template>
+            </PureTableBar>
+          </template>
+          <SrvfPermEmpty
+            v-else
+            action="查看分管范围"
+            code="supervision-assignment.read.record"
+          />
+        </el-tab-pane>
+
         <el-tab-pane label="证书" name="certificates">
           <template v-if="certCanRead">
             <el-card shadow="never" class="mb-4">
@@ -742,348 +989,6 @@ onMounted(() => {
           />
         </el-tab-pane>
 
-        <!-- Tab：组织归属（memberships 多归属;组织名经 resolveLabels 解析；新增/编辑/结束/迁移写操作） -->
-        <el-tab-pane label="组织归属" name="memberships">
-          <template v-if="msCanRead">
-            <PureTableBar
-              title="组织归属（多归属）"
-              :columns="msColumns"
-              @refresh="msOnSearch"
-            >
-              <template #buttons>
-                <el-button
-                  v-if="msCanSet"
-                  type="primary"
-                  :icon="useRenderIcon(AddFill)"
-                  @click="msOpenDialog('新增')"
-                >
-                  新增归属
-                </el-button>
-              </template>
-              <template v-slot="{ size, dynamicColumns }">
-                <pure-table
-                  row-key="id"
-                  adaptive
-                  :adaptiveConfig="{ offsetBottom: 108 }"
-                  align-whole="center"
-                  table-layout="auto"
-                  :loading="msLoading"
-                  :size="size"
-                  :data="msDataList"
-                  :columns="dynamicColumns"
-                  :header-cell-style="{
-                    background: 'var(--el-fill-color-light)',
-                    color: 'var(--el-text-color-primary)'
-                  }"
-                >
-                  <template #organization="{ row }">
-                    {{ msOrgLabel(row.organizationId) }}
-                  </template>
-                  <template #membershipType="{ row }">
-                    <el-tag
-                      :type="
-                        row.membershipType === 'PRIMARY' ? 'primary' : 'info'
-                      "
-                    >
-                      {{ msTypeLabel(row.membershipType) }}
-                    </el-tag>
-                  </template>
-                  <template #status="{ row }">
-                    <SrvfStatusTag
-                      :value="row.status"
-                      :label-dict="MEMBERSHIP_STATUS_LABEL"
-                      :tag-dict="MEMBERSHIP_STATUS_TAG"
-                    />
-                  </template>
-                  <template #operation="{ row }">
-                    <el-button
-                      v-if="msCanSet"
-                      class="reset-margin"
-                      link
-                      :size="size"
-                      :icon="useRenderIcon(EditPen)"
-                      @click="msOpenDialog('编辑', row)"
-                    >
-                      编辑
-                    </el-button>
-                    <el-button
-                      v-if="msCanTransfer && row.status === 'ACTIVE'"
-                      class="reset-margin"
-                      link
-                      type="warning"
-                      :size="size"
-                      @click="msOpenTransferDialog(row)"
-                    >
-                      迁移
-                    </el-button>
-                    <el-button
-                      v-if="msCanEnd && row.status === 'ACTIVE'"
-                      class="reset-margin"
-                      link
-                      type="danger"
-                      :size="size"
-                      @click="msHandleEnd(row)"
-                    >
-                      结束
-                    </el-button>
-                  </template>
-                </pure-table>
-              </template>
-            </PureTableBar>
-          </template>
-          <SrvfPermEmpty
-            v-else
-            action="查看组织归属"
-            code="membership.list.record"
-          />
-        </el-tab-pane>
-
-        <!-- Tab：任职（队员轴,只读全历史;任命/撤销在组织架构页「在任职务」面板） -->
-        <el-tab-pane label="任职" name="position-assignments">
-          <template v-if="paCanRead">
-            <PureTableBar
-              title="任职历史（ACTIVE/ENDED/REVOKED 全量）"
-              :columns="paColumns"
-              @refresh="paOnSearch"
-            >
-              <template v-slot="{ size, dynamicColumns }">
-                <pure-table
-                  row-key="id"
-                  adaptive
-                  :adaptiveConfig="{ offsetBottom: 108 }"
-                  align-whole="center"
-                  table-layout="auto"
-                  :loading="paLoading"
-                  :size="size"
-                  :data="paDataList"
-                  :columns="dynamicColumns"
-                  :header-cell-style="{
-                    background: 'var(--el-fill-color-light)',
-                    color: 'var(--el-text-color-primary)'
-                  }"
-                >
-                  <template #position="{ row }">
-                    {{ paPositionLabel(row.positionId) }}
-                  </template>
-                  <template #organization="{ row }">
-                    {{ paOrgLabel(row.organizationId) }}
-                  </template>
-                  <template #status="{ row }">
-                    <el-tag :type="paStatusMeta(row.status).type">
-                      {{ paStatusMeta(row.status).text }}
-                    </el-tag>
-                  </template>
-                  <template #isConcurrent="{ row }">
-                    <el-tag :type="row.isConcurrent ? 'warning' : 'info'">
-                      {{ row.isConcurrent ? "是" : "否" }}
-                    </el-tag>
-                  </template>
-                </pure-table>
-              </template>
-            </PureTableBar>
-          </template>
-          <SrvfPermEmpty
-            v-else
-            action="查看任职"
-            code="position-assignment.read.record"
-          />
-        </el-tab-pane>
-
-        <!-- Tab：分管范围（该队员若是分管人,只读;新建/撤销在分管总表页） -->
-        <el-tab-pane label="分管范围" name="supervision-scope">
-          <template v-if="ssCanRead">
-            <PureTableBar
-              title="分管范围（若无记录,说明该队员当前无分管职责）"
-              :columns="ssColumns"
-              @refresh="ssOnSearch"
-            >
-              <template v-slot="{ size, dynamicColumns }">
-                <pure-table
-                  row-key="supervisionAssignmentId"
-                  adaptive
-                  :adaptiveConfig="{ offsetBottom: 108 }"
-                  align-whole="center"
-                  table-layout="auto"
-                  :loading="ssLoading"
-                  :size="size"
-                  :data="ssDataList"
-                  :columns="dynamicColumns"
-                  :header-cell-style="{
-                    background: 'var(--el-fill-color-light)',
-                    color: 'var(--el-text-color-primary)'
-                  }"
-                >
-                  <template #scopeMode="{ row }">
-                    <el-tag
-                      :type="row.scopeMode === 'TREE' ? 'primary' : 'info'"
-                    >
-                      {{ ssScopeModeLabel(row.scopeMode) }}
-                    </el-tag>
-                  </template>
-                </pure-table>
-                <p v-if="ssDataList.length" class="ss-expanded-hint">
-                  <template
-                    v-for="(row, i) in ssDataList"
-                    :key="row.supervisionAssignmentId"
-                  >
-                    展开覆盖：{{ ssExpandedLabels(row)
-                    }}<template v-if="i < ssDataList.length - 1"
-                      ><br
-                    /></template>
-                  </template>
-                </p>
-              </template>
-            </PureTableBar>
-          </template>
-          <SrvfPermEmpty
-            v-else
-            action="查看分管范围"
-            code="supervision-assignment.read.record"
-          />
-        </el-tab-pane>
-
-        <!-- Tab：档案（1:1 扩展档案，读 + 新建/编辑；字典字段已翻中文；无档案 → 空态 + 新建） -->
-        <el-tab-pane label="档案" name="profile">
-          <template v-if="profileCanRead">
-            <el-card v-loading="profileLoading" shadow="never">
-              <template v-if="profileData">
-                <div v-if="profileCanUpdate" class="profile-pane__actions">
-                  <el-button
-                    type="primary"
-                    :icon="useRenderIcon(EditPen)"
-                    @click="profileOpenDialog('编辑', profileData)"
-                  >
-                    编辑档案
-                  </el-button>
-                </div>
-                <el-descriptions :column="2" border>
-                  <el-descriptions-item
-                    v-for="row in profileDisplayRows"
-                    :key="row.label"
-                    :label="row.label"
-                    :span="row.span ?? 1"
-                  >
-                    {{ row.value }}
-                  </el-descriptions-item>
-                </el-descriptions>
-              </template>
-              <el-empty
-                v-else-if="!profileLoading"
-                description="该队员暂无扩展档案"
-              >
-                <el-button
-                  v-if="profileCanCreate"
-                  type="primary"
-                  :icon="useRenderIcon(AddFill)"
-                  @click="profileOpenDialog('新建')"
-                >
-                  新建档案
-                </el-button>
-              </el-empty>
-            </el-card>
-          </template>
-          <SrvfPermEmpty
-            v-else
-            action="查看队员档案"
-            code="member-profile.read.record"
-          />
-        </el-tab-pane>
-
-        <!-- Tab：账号（队员账号闭环；字段随头部详情一并到手，开号/绑定归 ops-admin，启停复用用户管理码） -->
-        <el-tab-pane label="账号" name="account">
-          <el-card v-loading="detailLoading" shadow="never">
-            <template v-if="detail">
-              <el-descriptions :column="1" border>
-                <el-descriptions-item label="账号状态">
-                  <el-tag v-if="!detail.hasAccount" type="info">未开通</el-tag>
-                  <el-tag
-                    v-else
-                    :type="
-                      detail.accountStatus === 'ACTIVE' ? 'success' : 'danger'
-                    "
-                  >
-                    {{
-                      detail.accountStatus === "ACTIVE"
-                        ? "已开通 · 正常"
-                        : "已开通 · 已停用"
-                    }}
-                  </el-tag>
-                  <span v-if="detail.userId" class="account-id-caption">
-                    账号 ID：{{ detail.userId }}
-                  </span>
-                </el-descriptions-item>
-                <el-descriptions-item
-                  v-if="detail.hasAccount && linkedAccountLastLoginAt"
-                  label="最近登录"
-                >
-                  {{
-                    dayjs(linkedAccountLastLoginAt).format("YYYY-MM-DD HH:mm")
-                  }}
-                </el-descriptions-item>
-              </el-descriptions>
-              <div class="account-actions">
-                <template v-if="!detail.hasAccount">
-                  <el-button
-                    v-if="canGrantAccount && detail.status === 'ACTIVE'"
-                    type="primary"
-                    @click="handleGrantAccount"
-                  >
-                    开通账号
-                  </el-button>
-                  <el-button
-                    v-if="canBindAccount"
-                    @click="openBindAccountDialog"
-                  >
-                    绑定既有账号
-                  </el-button>
-                </template>
-                <template v-else>
-                  <el-button
-                    v-if="canUpdateAccountStatus"
-                    :type="
-                      detail.accountStatus === 'ACTIVE' ? 'warning' : 'success'
-                    "
-                    @click="handleToggleAccountStatus"
-                  >
-                    {{
-                      detail.accountStatus === "ACTIVE"
-                        ? "停用账号"
-                        : "启用账号"
-                    }}
-                  </el-button>
-                  <el-button
-                    v-if="canGrantAccount && detail.status === 'ACTIVE'"
-                    @click="handleReopenAccount"
-                  >
-                    作废并重新开通
-                  </el-button>
-                  <el-button
-                    v-if="canBindAccount"
-                    type="danger"
-                    @click="handleUnbindAccount"
-                  >
-                    解绑账号
-                  </el-button>
-                  <el-button
-                    v-if="canViewAccountAuthz"
-                    link
-                    @click="goAccountAuthz"
-                  >
-                    查看授权
-                  </el-button>
-                </template>
-              </div>
-              <p v-if="!canManageAccountInCurrentState" class="account-hint">
-                账号操作需要账号管理权限（开号/绑定归系统管理员），如需操作请联系拥有相应权限的管理员。
-              </p>
-            </template>
-            <el-empty
-              v-else-if="!detailLoading"
-              description="未找到该队员或无权查看"
-            />
-          </el-card>
-        </el-tab-pane>
-
         <!-- Tab：活动履历（队员跨活动报名,只读;状态可过滤） -->
         <el-tab-pane label="活动履历" name="registrations-history">
           <template v-if="regCanRead">
@@ -1203,6 +1108,101 @@ onMounted(() => {
             action="查看贡献值"
             code="attendance.read.sheet"
           />
+        </el-tab-pane>
+
+        <!-- Tab：账号（队员账号闭环；字段随头部详情一并到手，开号/绑定归 ops-admin，启停复用用户管理码） -->
+        <el-tab-pane label="账号" name="account">
+          <el-card v-loading="detailLoading" shadow="never">
+            <template v-if="detail">
+              <el-descriptions :column="1" border>
+                <el-descriptions-item label="账号状态">
+                  <el-tag v-if="!detail.hasAccount" type="info">未开通</el-tag>
+                  <el-tag
+                    v-else
+                    :type="
+                      detail.accountStatus === 'ACTIVE' ? 'success' : 'danger'
+                    "
+                  >
+                    {{
+                      detail.accountStatus === "ACTIVE"
+                        ? "已开通 · 正常"
+                        : "已开通 · 已停用"
+                    }}
+                  </el-tag>
+                  <span v-if="detail.userId" class="account-id-caption">
+                    账号 ID：{{ detail.userId }}
+                  </span>
+                </el-descriptions-item>
+                <el-descriptions-item
+                  v-if="detail.hasAccount && linkedAccountLastLoginAt"
+                  label="最近登录"
+                >
+                  {{
+                    dayjs(linkedAccountLastLoginAt).format("YYYY-MM-DD HH:mm")
+                  }}
+                </el-descriptions-item>
+              </el-descriptions>
+              <div class="account-actions">
+                <template v-if="!detail.hasAccount">
+                  <el-button
+                    v-if="canGrantAccount && detail.status === 'ACTIVE'"
+                    type="primary"
+                    @click="handleGrantAccount"
+                  >
+                    开通账号
+                  </el-button>
+                  <el-button
+                    v-if="canBindAccount"
+                    @click="openBindAccountDialog"
+                  >
+                    绑定既有账号
+                  </el-button>
+                </template>
+                <template v-else>
+                  <el-button
+                    v-if="canUpdateAccountStatus"
+                    :type="
+                      detail.accountStatus === 'ACTIVE' ? 'warning' : 'success'
+                    "
+                    @click="handleToggleAccountStatus"
+                  >
+                    {{
+                      detail.accountStatus === "ACTIVE"
+                        ? "停用账号"
+                        : "启用账号"
+                    }}
+                  </el-button>
+                  <el-button
+                    v-if="canGrantAccount && detail.status === 'ACTIVE'"
+                    @click="handleReopenAccount"
+                  >
+                    作废并重新开通
+                  </el-button>
+                  <el-button
+                    v-if="canBindAccount"
+                    type="danger"
+                    @click="handleUnbindAccount"
+                  >
+                    解绑账号
+                  </el-button>
+                  <el-button
+                    v-if="canViewAccountAuthz"
+                    link
+                    @click="goAccountAuthz"
+                  >
+                    查看授权
+                  </el-button>
+                </template>
+              </div>
+              <p v-if="!canManageAccountInCurrentState" class="account-hint">
+                账号操作需要账号管理权限（开号/绑定归系统管理员），如需操作请联系拥有相应权限的管理员。
+              </p>
+            </template>
+            <el-empty
+              v-else-if="!detailLoading"
+              description="未找到该队员或无权查看"
+            />
+          </el-card>
         </el-tab-pane>
       </el-tabs>
     </SrvfDetailShell>
