@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { bizErrorMessage } from "@/api/srvf-error";
 import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
-import { ref, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import dayjs from "dayjs";
 import { ElMessageBox } from "element-plus";
@@ -10,7 +10,7 @@ import { hasPerms } from "@/utils/auth";
 import { PureTableBar } from "@/components/RePureTableBar";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
 import { useSrvfDictStoreHook } from "@/store/modules/srvfDict";
-import { SrvfDetailShell } from "@/srvf-kit";
+import { SrvfDetailShell, SrvfFlowSteps } from "@/srvf-kit";
 import {
   getActivity,
   publishActivity,
@@ -31,6 +31,43 @@ defineOptions({
 const route = useRoute();
 const router = useRouter();
 const activityId = route.params.id as string;
+
+/**
+ * 活动生命周期条（UX 升级蓝图 §4.5-A）：把契约状态机 draft → published → completed
+ * （cancelled 为分支态）画在页头。步骤标题查 activity_status 字典（不臆造状态名）,
+ * 仅做展示——流转仍走「发布/取消」按钮与后端裁决。
+ */
+const lifecycle = computed(() => {
+  const code = detail.value?.statusCode;
+  const cancelled = code === "cancelled";
+  const steps = [
+    {
+      title: dict.label("activity_status", "draft"),
+      description: "完善信息后发布"
+    },
+    {
+      title: dict.label("activity_status", "published"),
+      description: "审核报名、组织活动"
+    },
+    cancelled
+      ? {
+          title: dict.label("activity_status", "cancelled"),
+          description: "活动已取消"
+        }
+      : {
+          title: dict.label("activity_status", "completed"),
+          description: "提交考勤单并完成两级审核"
+        }
+  ];
+  if (code === "completed")
+    return { steps, active: 3, status: "success" as const };
+  if (cancelled) return { steps, active: 2, status: "error" as const };
+  return {
+    steps,
+    active: code === "published" ? 1 : 0,
+    status: "process" as const
+  };
+});
 
 /** 共享字典：活动类型 / 活动状态 code → 中文 */
 const dict = useSrvfDictStoreHook();
@@ -226,6 +263,12 @@ onMounted(() => {
         </el-button>
       </template>
       <template #overview>
+        <SrvfFlowSteps
+          class="mt-2"
+          :steps="lifecycle.steps"
+          :active="lifecycle.active"
+          :process-status="lifecycle.status"
+        />
         <el-descriptions :column="3" border class="mt-3">
           <el-descriptions-item label="活动类型">
             {{ dict.label("activity_type", detail.activityTypeCode) }}

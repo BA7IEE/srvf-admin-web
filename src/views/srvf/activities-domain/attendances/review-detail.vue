@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import dayjs from "dayjs";
-import { ref, watch } from "vue";
+import { ref, computed, watch } from "vue";
 import { useSrvfDictStoreHook } from "@/store/modules/srvfDict";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
 import { resolveLabelMap } from "@/api/srvf-meta";
+import { SrvfFlowSteps } from "@/srvf-kit";
 import type {
   AttendanceSheetReviewDetail,
   AttendanceReviewMember
@@ -38,6 +39,46 @@ watch(
   },
   { immediate: true }
 );
+
+/**
+ * 考勤审批步骤条（UX 升级蓝图 §4.5-B）：把契约状态机
+ * pending → pending_final_review → approved（rejected / final_rejected 为驳回分支）
+ * 画成 提交 → 一级审核 → 终审 → 生效 四步;仅展示,不承载流转。
+ * 终审节点固定提示「提交人本人不能终审」(后端 22074 约束的预防面)。
+ */
+const sheetFlow = computed(() => {
+  const sheet = props.detail?.sheet;
+  const steps = [
+    {
+      title: "提交",
+      description: sheet?.submittedAt
+        ? dayjs(sheet.submittedAt).format("MM-DD HH:mm")
+        : undefined
+    },
+    {
+      title: "一级审核",
+      description: sheet?.reviewedAt
+        ? dayjs(sheet.reviewedAt).format("MM-DD HH:mm")
+        : "待一级审核"
+    },
+    { title: "终审", description: "提交人本人不能终审" },
+    { title: "生效", description: "贡献值正式落分" }
+  ];
+  switch (sheet?.statusCode) {
+    case "pending":
+      return { steps, active: 1, status: "process" as const };
+    case "pending_final_review":
+      return { steps, active: 2, status: "process" as const };
+    case "approved":
+      return { steps, active: 4, status: "success" as const };
+    case "rejected":
+      return { steps, active: 1, status: "error" as const };
+    case "final_rejected":
+      return { steps, active: 2, status: "error" as const };
+    default:
+      return { steps, active: 0, status: "process" as const };
+  }
+});
 
 const SHEET_STATUS_TAG: Record<
   string,
@@ -93,6 +134,14 @@ function handlePrint() {
           {{ fmt(detail.activity.endAt) }}
         </el-descriptions-item>
       </el-descriptions>
+
+      <!-- 审批进度 -->
+      <SrvfFlowSteps
+        class="mt-4"
+        :steps="sheetFlow.steps"
+        :active="sheetFlow.active"
+        :process-status="sheetFlow.status"
+      />
 
       <!-- 单据详情 -->
       <el-descriptions

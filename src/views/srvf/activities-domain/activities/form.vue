@@ -116,6 +116,11 @@ defineExpose({ getRef });
   >
     <el-row :gutter="30">
       <re-col>
+        <el-divider content-position="left" class="form-section">
+          基本信息
+        </el-divider>
+      </re-col>
+      <re-col>
         <el-form-item label="活动标题" prop="title">
           <el-input
             v-model="newFormInline.title"
@@ -213,6 +218,11 @@ defineExpose({ getRef });
         </el-form-item>
       </re-col>
 
+      <re-col>
+        <el-divider content-position="left" class="form-section">
+          报名设置
+        </el-divider>
+      </re-col>
       <re-col :value="12">
         <el-form-item label="名额上限">
           <el-input-number
@@ -286,6 +296,11 @@ defineExpose({ getRef });
       </re-col>
 
       <re-col>
+        <el-divider content-position="left" class="form-section">
+          说明文字
+        </el-divider>
+      </re-col>
+      <re-col>
         <el-form-item label="短说明">
           <el-input
             v-model="newFormInline.description"
@@ -313,3 +328,11 @@ defineExpose({ getRef });
     </el-row>
   </el-form>
 </template>
+
+<style scoped>
+.form-section {
+  margin: 4px 0 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
+</style>
