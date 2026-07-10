@@ -38,16 +38,20 @@ defineEmits<{
   (e: "selection-change", rows: T[]): void;
 }>();
 
-/** 除 buttons（工具栏，走 PureTableBar 自己的 #buttons）外，其余具名插槽原样转发给 pure-table（各页自定义列渲染） */
+/** 除 buttons（工具栏，走 PureTableBar 自己的 #buttons）与 banner（intro 与表格之间的
+ *  流内横幅区,如「按主体锁定筛选」提示条）外，其余具名插槽原样转发给 pure-table（各页自定义列渲染） */
 const slots = useSlots();
 const columnSlotNames = computed(() =>
-  Object.keys(slots).filter(name => name !== "buttons")
+  Object.keys(slots).filter(name => name !== "buttons" && name !== "banner")
 );
 </script>
 
 <template>
   <div class="main">
     <SrvfPageIntro v-if="intro && canRead" class="mb-2" :title="intro" />
+    <template v-if="canRead">
+      <slot name="banner" />
+    </template>
     <PureTableBar
       v-if="canRead"
       :title="title"
