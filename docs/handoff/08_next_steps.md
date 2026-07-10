@@ -5,7 +5,7 @@
 | 优先级 | 任务                       | 状态 | 说明                                                                                                                     |
 | ------ | -------------------------- | ---- | ------------------------------------------------------------------------------------------------------------------------ |
 | P0     | 五任务无提示测试（真人）   | NEXT | 蓝图 §6:请一位没用过系统的非技术干部完成 发布活动/清待办/查队员/发通知/任命+授权 五件事;卡壳点进 backlog                 |
-| P0     | 修复 handoff 自检脚本误扫  | TODO | 脚本扫 `.git`、`node_modules`、`.claude/worktrees/**/node_modules`,依赖 README 示例私钥误伤                              |
+| P0     | 修复 handoff 自检脚本误扫  | DONE | 2026-07-10 修复:排除 .git/node_modules/.claude 等目录;跨仓 ../ 引用不校验;普通+strict 双 0/0 PASS                        |
 | P1     | 字典数据技术文案人工修订   | TODO | 「队务设置→字典管理」改数据:考勤状态「待 APD 审核」等、字典类型「Demo work nature」;纯数据不涉代码                       |
 | P1     | 旧 perm-empty 垫片文件删除 | TODO | `src/views/srvf/components/perm-empty.vue` 已零引用;删除走 harness 人工闸                                                |
 | P1     | 当前主线 API/页面覆盖复盘  | TODO | 基于 live `/api/docs-json` 重跑结构级对账,更新蓝图附录                                                                   |

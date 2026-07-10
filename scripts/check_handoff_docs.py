@@ -73,6 +73,24 @@ ROOT_FILES = [
     "project_state.example.json",
 ]
 
+# 全仓递归扫描的排除目录（T-013,2026-07-10）:依赖与工具目录不属于交接内容,
+# 其内的 README 示例密钥/示例赋值会造成大量误报(如 dotenv 文档),一律跳过。
+EXCLUDED_DIR_PARTS = {
+    ".git",
+    "node_modules",
+    "dist",
+    ".claude",
+    ".agents",
+    ".codex",
+    ".husky",
+    "coverage",
+}
+
+
+def is_excluded(rel: str) -> bool:
+    return any(part in EXCLUDED_DIR_PARTS for part in rel.split("/"))
+
+
 SECRET_ASSIGNMENT_RE = re.compile(
     r"(?i)\b(password|passwd|secret|token|api[_-]?key|access[_-]?key|private[_-]?key|db_pass|db_password|jwt_secret|app_key)\b\s*[:=]\s*['\"]?([^'\"\s#]{8,})"
 )
@@ -156,6 +174,10 @@ def check_project_state(root: Path, template: bool, errors: list[str], warnings:
             add_error(errors, f"project_state.json 缺少字段：{key}")
 
     for doc in state.get("must_read_docs", []):
+        # 跨仓引用(如 ../srvf-nest-api/docs/handoff/admin-web.md)取决于兄弟目录是否
+        # 检出,worktree/CI 环境常不存在——不在本仓校验存在性(T-013)。
+        if str(doc).startswith("../"):
+            continue
         if not (root / doc).exists():
             add_error(errors, f"project_state.json must_read_docs 指向不存在文件：{doc}")
 
@@ -208,6 +230,8 @@ def check_sensitive_files(root: Path, errors: list[str], warnings: list[str]) ->
         if not path.is_file():
             continue
         rel = path.relative_to(root).as_posix()
+        if is_excluded(rel):
+            continue
         if ALLOW_ENV_EXAMPLE.search(rel):
             continue
         if re.match(r"(^|/)\.env($|\.)", rel):
@@ -224,6 +248,8 @@ def check_text_security(root: Path, template: bool, errors: list[str], warnings:
         if not path.is_file():
             continue
         rel = path.relative_to(root).as_posix()
+        if is_excluded(rel):
+            continue
         if path.suffix.lower() not in {".md", ".txt", ".json", ".env", ".example", ""}:
             continue
         try:

@@ -18,6 +18,8 @@
 
 每 PR 另附 `pnpm lint` / `pnpm typecheck` / `pnpm build` 全绿（worktree 内直跑,无 pnpm TTY 问题）。
 
+| T-013 | `python3 scripts/check_handoff_docs.py --root .`(普通与 --strict)双 **0 error / 0 warning PASS**(2026-07-10 修复后;修复前 6 error/48 warning,噪音源=node_modules dotenv 文档+worktree 中不存在的跨仓 ../ 引用) |
+
 ### 自动化验证防坑（重要,给后续会话）
 
 用 DOM 脚本按文本定位行操作按钮必须限定 `tbody tr` 祖先（`.el-table tbody tr .el-button`）——Element Plus 把每个列插槽在 `.hidden-columns` 内部容器以空 scope 渲染一份副本且排 DOM 最前,直接 `.find(文本)` 会点中幽灵,表现为「跳 undefined/弹空表单」,曾被误判为真 bug。真实用户不受影响。
