@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { bizErrorMessage } from "@/api/srvf-error";
-import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
+import { SrvfPermEmpty } from "@/srvf-kit";
 import dayjs from "dayjs";
 import { h, ref, watch } from "vue";
 import { ElMessageBox } from "element-plus";

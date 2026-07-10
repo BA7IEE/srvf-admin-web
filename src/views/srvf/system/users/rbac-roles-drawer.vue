@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
 import { ref, watch } from "vue";
 import dayjs from "dayjs";
 import { ElMessageBox } from "element-plus";
 import { message } from "@/utils/message";
 import { hasPerms } from "@/utils/auth";
-import { SrvfPageIntro } from "@/srvf-kit";
+import { SrvfPageIntro, SrvfPermEmpty } from "@/srvf-kit";
 import {
   getUserRbacRoles,
   assignUserRbacRole,

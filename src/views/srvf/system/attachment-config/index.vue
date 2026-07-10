@@ -1,12 +1,11 @@
 <script setup lang="ts">
-import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
 import { onMounted, ref } from "vue";
 import { PureTableBar } from "@/components/RePureTableBar";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
 import { useAttachmentConfigs } from "./utils/hook";
 
 import AddFill from "~icons/ri/add-circle-line";
-import { SrvfPageIntro } from "@/srvf-kit";
+import { SrvfPageIntro, SrvfPermEmpty } from "@/srvf-kit";
 
 defineOptions({
   name: "SrvfAttachmentConfig"

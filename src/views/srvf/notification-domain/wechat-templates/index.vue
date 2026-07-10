@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
 import { onMounted } from "vue";
 import { PureTableBar } from "@/components/RePureTableBar";
 import { useWechatTemplates } from "./utils/hook";
-import { SrvfPageIntro } from "@/srvf-kit";
+import { SrvfPageIntro, SrvfPermEmpty } from "@/srvf-kit";
 
 defineOptions({
   name: "SrvfNotificationWechatTemplates"

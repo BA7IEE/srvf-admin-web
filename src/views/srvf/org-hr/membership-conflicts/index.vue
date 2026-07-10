@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
+import { SrvfPermEmpty } from "@/srvf-kit";
 import { onMounted } from "vue";
 import { PureTableBar } from "@/components/RePureTableBar";
 import { useMembershipConflicts } from "./utils/hook";
