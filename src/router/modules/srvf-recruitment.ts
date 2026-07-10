@@ -5,13 +5,24 @@ export default [
     path: "/srvf/recruitment-domain",
     name: "SrvfRecruitmentDomain",
     component: Layout,
-    redirect: "/srvf/recruitment-domain/cycles",
+    redirect: "/srvf/recruitment-domain/overview",
     meta: {
       icon: "ri/user-add-line",
       title: "招新",
       rank: 5
     },
     children: [
+      {
+        // 招新总览（UX 升级蓝图 §4.5-C）：两道门 funnel 看板,把招新→入队连成一条链路。
+        path: "/srvf/recruitment-domain/overview",
+        name: "SrvfRecruitmentOverview",
+        component: () =>
+          import("@/views/srvf/recruitment-domain/overview/index.vue"),
+        meta: {
+          icon: "ri/funds-line",
+          title: "招新总览"
+        }
+      },
       {
         path: "/srvf/recruitment-domain/cycles",
         name: "SrvfRecruitmentCycles",

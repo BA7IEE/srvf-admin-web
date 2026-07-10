@@ -162,8 +162,8 @@ export const TJ_CYCLE_STATUS_LABEL: Record<string, string> = {
 /** 入队申请状态码 → 中文（后端 APP_STATUS_*）。 */
 export const TJ_APP_STATUS_LABEL: Record<string, string> = {
   joining: "考核中",
-  pending_evaluation: "待综合评估",
-  approved: "综合评估通过(待入队)",
+  pending_evaluation: "待综合评定",
+  approved: "综合评定通过(待入队)",
   joined: "已入队",
   rejected: "已拒"
 };
