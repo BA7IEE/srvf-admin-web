@@ -42,7 +42,7 @@
   },
   "current_status": "BUILD_PASS",
   "latest_full_package": {
-    "filename": "not_packaged_git_checkout_main_1aba0da_20260710",
+    "filename": "not_packaged_git_checkout_main_2cca7a3_20260710",
     "sha256": "pending_external_manifest",
     "package_type": "git_checkout",
     "validation_status": "BUILD_PASS",
@@ -50,7 +50,7 @@
     "notes": "No zip package was created in this turn. Use current Git checkout main@1aba0da as the source baseline."
   },
   "latest_delta_package": {
-    "filename": "not_packaged_handoff_delta_main_1aba0da_20260710",
+    "filename": "not_packaged_handoff_delta_main_2cca7a3_20260710",
     "sha256": "pending_external_manifest",
     "package_type": "docs_state_sync",
     "validation_status": "BUILD_PASS",
