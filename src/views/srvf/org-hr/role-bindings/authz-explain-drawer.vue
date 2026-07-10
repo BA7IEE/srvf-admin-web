@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { bizErrorMessage } from "@/api/srvf-error";
-import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
+import { SrvfPermEmpty } from "@/srvf-kit";
 import { computed, nextTick, reactive, ref, watch } from "vue";
 import type { FormInstance, FormRules } from "element-plus";
 import { message } from "@/utils/message";

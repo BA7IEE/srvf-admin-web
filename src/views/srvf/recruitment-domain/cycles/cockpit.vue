@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { bizErrorMessage } from "@/api/srvf-error";
-import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
 import { h, ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { ElMessageBox } from "element-plus";
@@ -10,7 +9,7 @@ import { hasPerms } from "@/utils/auth";
 import { addDialog } from "@/components/ReDialog";
 import { PureTableBar } from "@/components/RePureTableBar";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
-import { SrvfDetailShell } from "@/srvf-kit";
+import { SrvfDetailShell, SrvfPermEmpty } from "@/srvf-kit";
 import {
   getRecruitmentCycle,
   updateRecruitmentCycle,

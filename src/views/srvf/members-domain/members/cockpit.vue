@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { bizErrorMessage } from "@/api/srvf-error";
-import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
 import { ref, computed, onMounted, h } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import dayjs from "dayjs";
@@ -12,7 +11,7 @@ import { addDialog } from "@/components/ReDialog";
 import { PureTableBar } from "@/components/RePureTableBar";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
 import { useSrvfDictStoreHook } from "@/store/modules/srvfDict";
-import { SrvfStatusTag, SrvfDetailShell } from "@/srvf-kit";
+import { SrvfStatusTag, SrvfDetailShell, SrvfPermEmpty } from "@/srvf-kit";
 import GrantWizard from "@/views/srvf/components/grant-wizard.vue";
 import {
   MEMBERSHIP_STATUS_LABEL,

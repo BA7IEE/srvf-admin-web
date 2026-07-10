@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
 import { onMounted, ref } from "vue";
 import { useOrganizations } from "./utils/hook";
 import { PureTableBar } from "@/components/RePureTableBar";
@@ -13,7 +12,7 @@ import Delete from "~icons/ep/delete";
 import EditPen from "~icons/ep/edit-pen";
 import AddFill from "~icons/ri/add-circle-line";
 import More from "~icons/ep/more-filled";
-import { SrvfPageIntro } from "@/srvf-kit";
+import { SrvfPageIntro, SrvfPermEmpty } from "@/srvf-kit";
 import GrantWizard from "@/views/srvf/components/grant-wizard.vue";
 import { hasPerms } from "@/utils/auth";
 

@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { bizErrorMessage } from "@/api/srvf-error";
-import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
 import { ref, computed, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import dayjs from "dayjs";
@@ -10,7 +9,7 @@ import { hasPerms } from "@/utils/auth";
 import { PureTableBar } from "@/components/RePureTableBar";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
 import { useSrvfDictStoreHook } from "@/store/modules/srvfDict";
-import { SrvfDetailShell, SrvfFlowSteps } from "@/srvf-kit";
+import { SrvfDetailShell, SrvfFlowSteps, SrvfPermEmpty } from "@/srvf-kit";
 import {
   getActivity,
   publishActivity,

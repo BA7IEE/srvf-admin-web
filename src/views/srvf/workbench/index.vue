@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { bizErrorMessage } from "@/api/srvf-error";
-import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
+import { SrvfPermEmpty } from "@/srvf-kit";
 import { computed, ref, watch, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { dayjs } from "element-plus";
