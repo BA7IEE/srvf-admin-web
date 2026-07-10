@@ -1,5 +1,38 @@
 # 07 发布记录
 
+## main@2cca7a3 — 2026-07-10 UX 产品化系列（#81~#93）
+
+| 项             | 内容                                                         |
+| -------------- | ------------------------------------------------------------ |
+| 日期           | 2026-07-10                                                   |
+| 类型           | feature_series + docs_state_sync                             |
+| Git 基准       | `main@2cca7a3` / `origin/main`                               |
+| 相对旧 handoff | `1aba0da..2cca7a3`，#81~#93，106 文件，+5854/-3691           |
+| 验证状态       | BUILD_PASS + 逐 PR 浏览器/dev 后端冒烟（:8849 + live :3000） |
+| 包状态         | 未重新打包；以当前 checkout 为准                             |
+
+### 本轮内容（每 PR 均 lint/typecheck/build + 实测后 squash 合并）
+
+- #81 docs:产品化升级蓝图（体验路线单一来源,读 §4.1 军规与 §8 拍板清单后再动菜单/文案/交互）。
+- #82 fix:止血三修——个人中心角色码中文化、考勤「提交人 ID/版本」列改姓名（resolve-labels）、招新详情枚举兜底「未知状态」。
+- #83 feat:术语人话化（横扫/作战室/会籍/督导/悬空多主/一键发号/重载权限缓存/阈值三件套等 ~20 词,仅展示层）+ SrvfListPage intro prop + 22 页 PageIntro。
+- #84 feat:IA v3——一级菜单 10 组→7 组;14 个配置运维页收进「队务设置」设置中心（新页,四分区卡片,权限同口径裁剪）;内容+通知合组;招新组改名;工作台快捷发起（?create=1 直开新建弹窗）+ 最近访问行。
+- #85 feat:SrvfFlowSteps 原语;活动详情生命周期条（draft→published→completed,cancelled 分支红显）;考勤复核四步条（含「提交人本人不能终审」预防提示）;队员档案 11 页签分组重排、默认落「档案」;活动表单三分区。
+- #86 feat:招新总览两道门漏斗页（门一=cycles/:id/stats,门二=各状态列表 total 自拼,零新端点）,设为招新组落地页;入队状态标签「评估→评定」统一。
+- #87 feat:使用手册页（七篇「怎么做 X」任务指南,贴真实按钮名）,入口=工作台页头+首页卡。
+- #88 fix:登录框 demo 预填清除（auth 文件 src/views/login/index.vue,ask 闸人工批准;仅表单初值,不触 token/守卫）。
+- #89 fix:铃铛假消息（「小铭 评论了你」demo 数据）改真实待办入口（layout 文件;dashboard-summary 角标+我的待办面板+直达工作台;块级权限裁剪 key 缺失≠0）。
+- #90 feat:授权向导——选人→选场景→预演确认;场景 A 任命（preview 预演,真实拦过违规）、场景 B 考勤终审权（POSITION_ASSIGNMENT 绑定+resolvedScope 回显+scoped 边界红线）、场景 C 业务角色（user-roles 通道,4 个派生角色剔除);三入口。
+- #91 feat:工作台启用进度卡（字典/组织/职务/职务规则/贡献值规则五项探测,读码门控,全就绪隐身）+ 职务规则/贡献值规则/角色绑定表单 15 处字段提示（FormLabelTip）。
+- #92 chore:harness——src/layout/\*\* 编辑闸 deny→ask（逐次人工确认）。
+- #93 refactor:19 个列表页迁移 SrvfListPage（kit 采用率 20/29,hook 未动,列插槽逐字保留）;外壳新增 #banner 槽位;6 个结构不适配页明确豁免。
+
+### 已知遗留
+
+- 旧权限空态垫片 `src/views/srvf/components/perm-empty.vue` 已零引用,文件删除待人工（harness 删除闸）。
+- 字典**数据**里的技术文案（如考勤状态「待 APD 审核」、字典类型「Demo work nature」）在「队务设置 → 字典管理」页人工修改,不涉代码。
+- 蓝图 §6 五任务无提示测试待真人执行（第 ⑤ 条授权链已具备向导支撑）。
+
 ## main@1aba0da — 2026-07-10 handoff refresh
 
 | 项             | 内容                                             |

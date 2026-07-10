@@ -1,33 +1,14 @@
-# srvf-admin-web handoff refresh for main@1aba0da
-
-## Scope
-
-Docs/state refresh only. No `src/**`, dependency, env, route, or auth-source edits in this handoff sync.
-
-## Updated handoff files
-
-README.md
-USAGE.md
+# handoff refresh git-main-2cca7a3-handoff-20260710（2026-07-10 第二次,UX 产品化系列收官）
 VERSION
-changed_files.txt
 project_state.json
-project_state.example.json
+changed_files.txt
 docs/handoff/00_new_chat_start.md
 docs/handoff/01_current_state.md
 docs/handoff/07_release_log.md
 docs/handoff/08_next_steps.md
 docs/handoff/09_known_issues.md
-docs/handoff/10_package_manifest.md
 docs/handoff/11_decision_log.md
 docs/handoff/12_task_board.md
 docs/handoff/13_code_map.md
-docs/handoff/15_api_contracts.md
-docs/handoff/16_environment_snapshot.md
 docs/handoff/17_test_evidence.md
-docs/handoff/18_rollback_and_recovery.md
 docs/handoff/20_doc_sync_checklist.md
-docs/handoff/23_package_lineage.md
-docs/handoff/24_validation_matrix.md
-docs/handoff/28_user_feedback_log.md
-docs/handoff/29_doc_conflict_map.md
-docs/handoff/30_handoff_self_check.md

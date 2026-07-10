@@ -2,14 +2,14 @@
   "schema_version": "3.0",
   "project_name": "srvf-admin-web",
   "project_type": "Vue 3 + Vite + TypeScript + Pinia + Element Plus admin frontend",
-  "current_version": "git-main-1aba0da-handoff-20260710",
+  "current_version": "git-main-2cca7a3-handoff-20260710",
   "frontend_package_json_version": "7.0.0",
   "git_baseline": {
     "branch": "main",
-    "head": "1aba0da",
+    "head": "2cca7a3",
     "remote": "origin/main",
-    "head_subject": "feat(layout): navbar 挂全局实体搜索入口 (#80)",
-    "previous_handoff_baseline": "c2001c9",
+    "head_subject": "refactor(srvf): 十九个列表页统一迁移到列表外壳 (#93)",
+    "previous_handoff_baseline": "1aba0da",
     "range_since_previous_handoff": "c2001c9..1aba0da",
     "merged_prs_since_previous_handoff": "#34..#80",
     "diff_summary": "256 files changed, 21957 insertions(+), 6030 deletions(-)"

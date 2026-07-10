@@ -8,14 +8,17 @@ TODO / IN_PROGRESS / CODE_DONE / BUILD_PASS / LOCAL_TEST_PASS / DEPLOY_PASS / US
 
 ## 当前任务表
 
-| ID    | 任务                           | 优先级 | 状态       | 关联范围                        | 测试状态                 | 备注                                                 |
-| ----- | ------------------------------ | ------ | ---------- | ------------------------------- | ------------------------ | ---------------------------------------------------- |
-| T-010 | 刷新 handoff 至 `main@1aba0da` | P0     | CODE_DONE  | `docs/handoff/**`、根状态文件   | 见 `17_test_evidence.md` | 本次任务                                             |
-| T-011 | 直接类型检查                   | P0     | BUILD_PASS | 全项目                          | `vue-tsc` PASS           | 直接用本地 binary，未走 pnpm 脚本                    |
-| T-012 | 生产构建                       | P0     | BUILD_PASS | 全项目                          | `vite build` PASS        | 生成 `dist/`，未产生 git diff                        |
-| T-013 | handoff 自检脚本排除规则修复   | P0     | TODO       | `scripts/check_handoff_docs.py` | 当前 FAIL_NOISY          | 需排除 `.git` / `node_modules` / `.claude/worktrees` |
-| T-014 | 当前主线浏览器/dev 冒烟        | P0     | TODO       | 登录、菜单、关键 SRVF 页面      | 未运行                   | #34~#80 后必须补                                     |
-| T-015 | 字典主从布局验收               | P1     | CODE_DONE  | #71/#72                         | 待浏览器复核             | 代码已在主线                                         |
+| ID    | 任务                           | 优先级 | 状态            | 关联范围                                        | 测试状态                                       | 备注                                                  |
+| ----- | ------------------------------ | ------ | --------------- | ----------------------------------------------- | ---------------------------------------------- | ----------------------------------------------------- |
+| T-016 | UX 产品化系列 #81~#93          | P0     | LOCAL_TEST_PASS | 蓝图+13 个 PR（IA v3/术语/流程/向导/手册/迁移） | 逐 PR :8849+live 实测,见 `17_test_evidence.md` | 2026-07-10 收官;体验路线单一来源=ux-upgrade-blueprint |
+| T-017 | 刷新 handoff 至 `main@2cca7a3` | P0     | CODE_DONE       | `docs/handoff/**`、根状态文件                   | 见 `17_test_evidence.md`                       | 本次任务                                              |
+| T-018 | 五任务无提示测试（真人）       | P0     | TODO            | 蓝图 §6 验收                                    | 待执行                                         | 非技术干部;卡壳点进 backlog                           |
+| T-013 | handoff 自检脚本排除规则修复   | P0     | TODO            | `scripts/check_handoff_docs.py`                 | 当前 FAIL_NOISY                                | 需排除 `.git` / `node_modules` / `.claude/worktrees`  |
+| T-019 | 字典数据技术文案人工修订       | P1     | TODO            | 字典管理页（纯数据）                            | —                                              | 「待 APD 审核」「Demo work nature」等                 |
+| T-020 | 旧 perm-empty 垫片文件删除     | P1     | TODO            | `src/views/srvf/components/perm-empty.vue`      | 已零引用                                       | 删除走 harness 人工闸                                 |
+| T-010 | 刷新 handoff 至 `main@1aba0da` | P0     | ARCHIVED        | 上一轮                                          | —                                              | 已被 T-017 取代                                       |
+| T-014 | 当前主线浏览器/dev 冒烟        | P0     | ARCHIVED        | —                                               | —                                              | 已由 T-016 逐 PR 冒烟覆盖                             |
+| T-015 | 字典主从布局验收               | P1     | ARCHIVED        | #71/#72                                         | 本轮 UX 系列已在浏览器多次经过该页             | —                                                     |
 
 ## 已完成主线任务（按 PR 组）
 
