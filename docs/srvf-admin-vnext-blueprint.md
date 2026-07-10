@@ -4,6 +4,7 @@
 > **性质**：本仓当前的**开发路线单一来源**（现状判定 · 差距矩阵 · IA v2 · Phase 0~3 路线图）。任何新业务页动工前，先在本文件找到它的定位与阶段，再按 `CLAUDE.md` §6 / `02-ai-rules.md` §13.4 走 preflight。
 > **数据源**：live `/api/docs-json`（v0.37.0 · 232 paths / 320 operations / 195 权限码）+ `../srvf-nest-api` 源码与 `docs/handoff/admin-web.md`（轴模型/踩坑/缺口台账）+ 本仓 main(`88ab63a`) 全量盘点 + ChatGPT 平行轨两个包（v7.1.0-p1 zip、v7.11.0 fork）+ 参考库（vue-pure-admin / pure-admin-thin-max-ts / SRVF UI 设计稿）。
 > **对账快照**：2026-07-06 结构级对账（方法+路径逐条比对 live 契约），方法与局限见附录 A，未消费清单见附录 B。快照会过期——执行各 Phase 时以当时的 live `/api/docs-json` 复核。
+> **体验层后续**：本文 Phase 0~3 与 67 条差距已全部落地（2026-07-10）；体验层的下一程（IA v3 / 工作台 v2 / 流程显性化 / 术语系统）见 **`srvf-admin-ux-upgrade-blueprint.md`**（产品化升级蓝图）。
 
 ---
 
