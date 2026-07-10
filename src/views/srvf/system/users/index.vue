@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import SrvfPermEmpty from "@/views/srvf/components/perm-empty.vue";
-import { onMounted } from "vue";
+import { ref, onMounted } from "vue";
 import { useUserAccounts } from "./utils/hook";
 import { PureTableBar } from "@/components/RePureTableBar";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
@@ -9,10 +9,19 @@ import RbacRolesDrawer from "./rbac-roles-drawer.vue";
 import AddFill from "~icons/ri/add-circle-line";
 import More from "~icons/ep/more-filled";
 import { SrvfPageIntro } from "@/srvf-kit";
+import GrantWizard from "@/views/srvf/components/grant-wizard.vue";
+import { hasPerms } from "@/utils/auth";
 
 defineOptions({
   name: "SrvfUsers"
 });
+
+/** 授权向导（任一授权类写码即可见;向导内部再按场景细分门控） */
+const grantWizardVisible = ref(false);
+const canOpenGrantWizard =
+  hasPerms("position-assignment.create.record") ||
+  hasPerms("role-binding.create.record") ||
+  hasPerms("rbac.user-role.create");
 
 const {
   canRead,
@@ -112,6 +121,9 @@ onMounted(() => {
           @click="openDialog('新建')"
         >
           新建用户
+        </el-button>
+        <el-button v-if="canOpenGrantWizard" @click="grantWizardVisible = true">
+          授权向导
         </el-button>
       </template>
       <template v-slot="{ size, dynamicColumns }">
@@ -268,6 +280,7 @@ onMounted(() => {
     <SrvfPermEmpty v-else action="查看用户" code="user.read.account" />
 
     <RbacRolesDrawer v-model="rbacRolesDrawerVisible" :user="activeUser" />
+    <GrantWizard v-model="grantWizardVisible" />
   </div>
 </template>
 

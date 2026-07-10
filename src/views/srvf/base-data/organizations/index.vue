@@ -14,10 +14,25 @@ import EditPen from "~icons/ep/edit-pen";
 import AddFill from "~icons/ri/add-circle-line";
 import More from "~icons/ep/more-filled";
 import { SrvfPageIntro } from "@/srvf-kit";
+import GrantWizard from "@/views/srvf/components/grant-wizard.vue";
+import { hasPerms } from "@/utils/auth";
 
 defineOptions({
   name: "SrvfOrganizations"
 });
+
+/** 授权向导（行内「更多」进入,预填本组织;任一授权类写码即可见） */
+const grantWizardVisible = ref(false);
+const grantWizardOrgId = ref("");
+const canOpenGrantWizard =
+  hasPerms("position-assignment.create.record") ||
+  hasPerms("role-binding.create.record") ||
+  hasPerms("rbac.user-role.create");
+
+function openGrantWizard(row: { id: string }) {
+  grantWizardOrgId.value = row.id;
+  grantWizardVisible.value = true;
+}
 
 /** 成员面板（组织轴 memberships drawer;默认仅在册,踩坑 #9 见 drawer 内注释） */
 const membersVisible = ref(false);
@@ -152,6 +167,16 @@ onMounted(() => {
               />
               <template #dropdown>
                 <el-dropdown-menu>
+                  <el-dropdown-item v-if="canOpenGrantWizard">
+                    <el-button
+                      class="reset-margin!"
+                      link
+                      :size="size"
+                      @click="openGrantWizard(row)"
+                    >
+                      授权向导
+                    </el-button>
+                  </el-dropdown-item>
                   <el-dropdown-item v-if="canAssignments">
                     <el-button
                       class="reset-margin!"
@@ -239,6 +264,10 @@ onMounted(() => {
       v-model="supervisorsVisible"
       :org-id="supervisorsOrg.id"
       :org-name="supervisorsOrg.name"
+    />
+    <GrantWizard
+      v-model="grantWizardVisible"
+      :preset-org-id="grantWizardOrgId"
     />
   </div>
 </template>

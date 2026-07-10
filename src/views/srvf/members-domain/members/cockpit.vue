@@ -13,6 +13,7 @@ import { PureTableBar } from "@/components/RePureTableBar";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
 import { useSrvfDictStoreHook } from "@/store/modules/srvfDict";
 import { SrvfStatusTag, SrvfDetailShell } from "@/srvf-kit";
+import GrantWizard from "@/views/srvf/components/grant-wizard.vue";
 import {
   MEMBERSHIP_STATUS_LABEL,
   MEMBERSHIP_STATUS_TAG
@@ -83,6 +84,13 @@ const activeTab = ref<
 /* ----------------------------- 头部：队员基本信息 ----------------------------- */
 const detail = ref<MemberItem | null>(null);
 const detailLoading = ref(false);
+
+/** 授权向导（任一授权类写码即可见;向导内部再按场景细分门控） */
+const grantWizardVisible = ref(false);
+const canOpenGrantWizard =
+  hasPerms("position-assignment.create.record") ||
+  hasPerms("role-binding.create.record") ||
+  hasPerms("rbac.user-role.create");
 
 /** 拉队员详情（GET /members/{id}，rbac member.read.record；404 / 无权 → 头部退化为空态提示） */
 async function fetchDetail() {
@@ -467,6 +475,16 @@ onMounted(() => {
         >
           账号：{{ detail.accountStatus === "ACTIVE" ? "已开通" : "已停用" }}
         </el-tag>
+      </template>
+      <template #actions>
+        <el-button
+          v-if="canOpenGrantWizard"
+          type="primary"
+          plain
+          @click="grantWizardVisible = true"
+        >
+          授权
+        </el-button>
       </template>
       <template #overview>
         <el-descriptions :column="3" border class="mt-3">
@@ -1206,6 +1224,12 @@ onMounted(() => {
         </el-tab-pane>
       </el-tabs>
     </SrvfDetailShell>
+
+    <GrantWizard
+      v-if="detail"
+      v-model="grantWizardVisible"
+      :preset-member="{ id: memberId, label: detail.displayName }"
+    />
   </div>
 </template>
 
