@@ -9,7 +9,7 @@
 
 ## 必须先读
 
-- `02-ai-rules.md` §13.1 文件改动矩阵（路由相关文件几乎全是 ❌）
+- `02-ai-rules.md` §13.1 文件改动矩阵（`router/index.ts` + `asyncRoutes.ts` 是 ❌；`router/utils.ts` 是 ⚠️ ask；`modules/home·error·remaining.ts` 是 🟡 纪律区；业务 `modules/srvf-*.ts` 是 ✅）
 - 主入口 §0.5 红线 2（不从 mock 反推 API、不为前端动态菜单倒逼后端）
 - `types/router.d.ts`（`CustomizeRouteMeta` 全字段）
 
@@ -31,7 +31,7 @@
 - `src/router/asyncRoutes.ts`（**第一阶段禁用**）
 - `src/router/modules/home.ts / error.ts / remaining.ts`
 - `src/views/login/index.vue`（登录后 `initRouter()` 调用点）
-- `src/utils/http/index.ts:74`（请求白名单）
+- `src/utils/http/index.ts:75`（请求白名单，实值 `["/api/auth/v1/login", "/api/auth/v1/refresh"]`）
 - `types/router.d.ts`（`CustomizeRouteMeta`）
 
 ---
@@ -49,11 +49,12 @@
   - 当前包含：
     - `home.ts`：`/`（Layout）+ `/welcome`
     - `error.ts`：`/error/403,404,500`
-  - 想加"永远存在 / 不依赖后端权限"的菜单，请加到这里。
+    - 业务静态菜单 `srvf-*.ts`（`srvf-workbench` / `srvf-org-hr` / `srvf-base-data` / `srvf-content` / `srvf-notification` / `srvf-recruitment` / `srvf-account`）+ 详情作战室载体 `srvf.ts`
+  - 想加"永远存在 / 不依赖后端权限"的业务菜单，新建 `srvf-*.ts`（✅ 自由区）；`home/error/remaining` 仅在新增绝对静态路由时追加。
   - **加载顺序**：`home.ts` → `error.ts` → 最后 `remaining.ts`（被 `src/router/index.ts:79` 用 `concat(...remainingRouter)` 追加在最后）。`remaining.ts` 必须最后注册，否则 `/redirect/:path(.*)` 等通配会过早匹配业务路由。
 - **不参与菜单的路由**：`src/router/modules/remaining.ts`
   - `/login` `/access-denied` `/server-error` `/redirect/:path`
-- **动态路由（默认实现）**：通过 `src/router/utils.ts:initRouter()` 在登录后异步加载，请求 `getAsyncRoutes()`（`src/api/routes.ts`，对应 mock `/get-async-routes`）。
+- **动态路由（本仓已中性化）**：`src/router/utils.ts:initRouter()`（约 :196）**固定用前端静态菜单 + 真实 RBAC 过滤**，只调 `handleAsyncRoutes([])`、**不发任何网络请求**（原 starter 的 `getAsyncRoutes()` / `src/api/routes.ts` / mock `/get-async-routes` 在本仓均不存在）。
   - `src/views/login/index.vue` 引用的就是这一份（`import { initRouter } from "@/router/utils"`）。
 - **动态路由（Max-Ts 前端展开版，第一阶段禁止启用）**：`src/router/asyncRoutes.ts:initRouter()`，会请求 `getMenuList` → `menuDataToRoutes` + `cleanObject` 自动从一维菜单列表生成树状路由。
 
@@ -79,10 +80,10 @@
 
 项目存在**两套独立 whiteList**，作用完全不同：
 
-| 名字 | 位置 | 作用 | 默认值 |
-| --- | --- | --- | --- |
-| **路由白名单** | `src/router/index.ts:118` `const whiteList = ["/login"]` | 未登录时可访问的路由路径；其他路由都会被守卫拦截重定向到 `/login` | `["/login"]` |
-| **请求免 token 白名单** | `src/utils/http/index.ts:74` `const whiteList = ["/refresh-token", "/login"]` | 哪些请求 URL **跳过 token 注入**（避免循环刷新） | `["/refresh-token", "/login"]` |
+| 名字                    | 位置                                                                                                    | 作用                                                              | 默认值                                           |
+| ----------------------- | ------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- | ------------------------------------------------ |
+| **路由白名单**          | `src/router/index.ts:118` `const whiteList = ["/login"]`                                                | 未登录时可访问的路由路径；其他路由都会被守卫拦截重定向到 `/login` | `["/login"]`                                     |
+| **请求免 token 白名单** | `src/utils/http/index.ts:75`、`:156` `const whiteList = ["/api/auth/v1/login", "/api/auth/v1/refresh"]` | 哪些请求 URL **跳过 token 注入**（避免循环刷新）                  | `["/api/auth/v1/login", "/api/auth/v1/refresh"]` |
 
 业务新增"免 token 接口"（如公开公告、健康检查、验证码）时：
 
@@ -110,31 +111,31 @@ export const constantRoutes = formatTwoStageRoutes(
 
 来源：`types/router.d.ts:CustomizeRouteMeta`。常用字段：
 
-| 字段 | 类型 | 说明 |
-| --- | --- | --- |
-| `title` | `string` 必填 | 菜单/标签页标题 |
-| `icon` | `string \| FunctionalComponent` | 菜单图标（支持 iconify `ep/ri/...` 名） |
-| `extraIcon` | 同上 | 菜单右侧图标 |
-| `rank` | `number` | **只对顶级路由有效**，菜单升序排序 |
-| `showLink` | `boolean` | 是否显示在菜单（默认 true） |
-| `showParent` | `boolean` | 是否显示父级菜单 |
-| `roles` | `string[]` | 页面级权限（角色名） |
-| `auths` | `string[]` | 按钮级权限（meta-based） |
-| `keepAlive` | `boolean` | 缓存页面（注意拍平到二级） |
-| `frameSrc` | `string` | iframe 内嵌外链 |
-| `frameLoading` | `boolean` | iframe 首加载动画 |
-| `transition` | `{ name?, enterTransition?, leaveTransition? }` | 进出场动画（推荐 animate.css 写法） |
-| `hiddenTag` | `boolean` | 不出现在多标签 |
-| `fixedTag` | `boolean` | 固定在多标签且不可关 |
-| `dynamicLevel` | `number` | 同名路由最大打开数 |
-| `activePath` | `string` | 用 query/params 传参时高亮哪个菜单 |
-| `loaded` | `boolean` | 框架内部用，业务不要写 |
+| 字段           | 类型                                            | 说明                                    |
+| -------------- | ----------------------------------------------- | --------------------------------------- |
+| `title`        | `string` 必填                                   | 菜单/标签页标题                         |
+| `icon`         | `string \| FunctionalComponent`                 | 菜单图标（支持 iconify `ep/ri/...` 名） |
+| `extraIcon`    | 同上                                            | 菜单右侧图标                            |
+| `rank`         | `number`                                        | **只对顶级路由有效**，菜单升序排序      |
+| `showLink`     | `boolean`                                       | 是否显示在菜单（默认 true）             |
+| `showParent`   | `boolean`                                       | 是否显示父级菜单                        |
+| `roles`        | `string[]`                                      | 页面级权限（角色名）                    |
+| `auths`        | `string[]`                                      | 按钮级权限（meta-based）                |
+| `keepAlive`    | `boolean`                                       | 缓存页面（注意拍平到二级）              |
+| `frameSrc`     | `string`                                        | iframe 内嵌外链                         |
+| `frameLoading` | `boolean`                                       | iframe 首加载动画                       |
+| `transition`   | `{ name?, enterTransition?, leaveTransition? }` | 进出场动画（推荐 animate.css 写法）     |
+| `hiddenTag`    | `boolean`                                       | 不出现在多标签                          |
+| `fixedTag`     | `boolean`                                       | 固定在多标签且不可关                    |
+| `dynamicLevel` | `number`                                        | 同名路由最大打开数                      |
+| `activePath`   | `string`                                        | 用 query/params 传参时高亮哪个菜单      |
+| `loaded`       | `boolean`                                       | 框架内部用，业务不要写                  |
 
 ### 5.5 name 唯一性
 
 - `vue-router` 4+ 要求每个路由 `name` 唯一。
 - 在动态路由拼装中（`src/router/utils.ts:328-330`），如果父级没有 `name`，框架会自动取**第一个子级 name + "Parent"** 作为父级 name，避免重复。
-- 页面组件的 `defineOptions({ name: "..." })` **必须与路由 name 完全一致**，否则 `keep-alive` / 标签页关闭后无法精确清理（参考 `src/views/dict/index.vue` 的 `name: "SystemDict"` 对应 mock 的 `name: "SystemDict"`）。
+- 页面组件的 `defineOptions({ name: "..." })` **必须与路由 name 完全一致**，否则 `keep-alive` / 标签页关闭后无法精确清理（参考 `src/router/modules/srvf-base-data.ts` 的 `name: "SrvfDictionaries"` 对应 `src/views/srvf/base-data/dictionaries/index.vue` 的 `defineOptions({ name })`）。
 
 ### 5.6 Max-Ts "前端处理动态路由格式"（理解性，禁止启用）
 

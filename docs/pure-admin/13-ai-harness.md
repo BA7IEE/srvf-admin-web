@@ -10,7 +10,7 @@ CLAUDE.md / AGENTS.md / `02-ai-rules.md` 已经把红线写得很全，但这些
 
 行业结论（《How Claude Code works in large codebases》）：**「harness 与模型同样重要」**，且 **hooks 让规则确定性执行，比依赖模型记忆更可靠**。本 harness 的目标，是把 §13.1 矩阵与命令禁令**从纸面规则变成机械护栏**——让「错误路径」直接不可达，而不只是「不被鼓励」（呼应《I'm going back to writing code by hand》：把护栏写进模型每次都读的地方）。
 
-设计原则（《Harness design for long-running apps》）：**用最简方案，仅在必要时增加复杂度**。本仓当前处于 PR-4 暂停 / 纯静态阶段，因此**刻意不引入** planner / generator / evaluator 等长任务编排，只做「护栏 + 校验 + 就近上下文」三件事。
+设计原则（《Harness design for long-running apps》）：**用最简方案，仅在必要时增加复杂度**。本仓真实 3-call 登录已上线（2026-06-22）、30+ 业务页真接后端，但 harness 仍**刻意不引入** planner / generator / evaluator 等长任务编排，只做「护栏 + 校验 + 就近上下文」三件事——无人值守自驱由 goal+loop 文本（`srvf-goal-author`）承载，不做常驻编排层。
 
 ## 13A.2 组成清单
 

@@ -1,6 +1,6 @@
 # CLAUDE.md — Claude Code 入口(Harness 2.0-FE)
 
-> **恒读 = 根 [`AGENTS.md`](./AGENTS.md)**(唯一规则入口:读取协议 §0 / 铁律速查 §1 / 决策锁 §2 / 红区与机器闸 §3 / 后端协作 §4 / 流程验证 §5 / 索引与 v1 重定向 §6)。本文件只承载 Claude Code 专属事项,体积由 `node .claude/hooks/readtax.mjs` 守护(≤2,000 字符);v1 全文冻结于 [`docs/archive/harness-v1/`](./docs/archive/harness-v1/)。
+> **恒读 = 根 [`AGENTS.md`](./AGENTS.md)**(唯一规则入口:读取协议 §0 / 铁律速查 §1 / 决策锁 §2 / 红区与机器闸 §3 / 后端协作 §4 / 流程验证 §5 / 文档索引 §6)。本文件只承载 Claude Code 专属事项,体积由 `node .claude/hooks/readtax.mjs` 守护(≤2,000 字符);v1 全文冻结于 [`docs/archive/harness-v1/`](./docs/archive/harness-v1/)。
 
 ## Claude Code 专属
 
