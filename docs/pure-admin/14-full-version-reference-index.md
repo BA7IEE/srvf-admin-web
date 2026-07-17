@@ -92,7 +92,7 @@
 | 滑块                         | `components/slider/*`                                              | 滑块            | —                                             |
 | 多选卡片                     | `components/check-card`                                            | 多选卡片        | —                                             |
 | 图标选择器                   | `components/icon-select`                                           | 图标选择器      | ✅ `ReIcon` 内含 IconSelect                   |
-| 表单校验范式                 | `login/utils/rule.ts`                                              | —               | ✅ 本仓 login/dict/tenant 均有                |
+| 表单校验范式                 | `login/utils/rule.ts`                                              | —               | ✅ 本仓 login 与 `src/views/srvf/**` 表单均有 |
 
 ### 1.3 树 / 组织架构
 
