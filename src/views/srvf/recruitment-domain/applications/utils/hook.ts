@@ -1,11 +1,11 @@
 import { bizErrorMessage } from "@/api/srvf-error";
 import dayjs from "dayjs";
-import { ref, reactive, computed } from "vue";
+import { ref, computed } from "vue";
 import { useRouter } from "vue-router";
-import type { PaginationProps } from "@pureadmin/table";
 import { ElMessageBox } from "element-plus";
 import { message } from "@/utils/message";
 import { hasPerms } from "@/utils/auth";
+import { useSrvfList } from "@/srvf-kit";
 import {
   getRecruitmentApplications,
   getRecruitmentApplication,
@@ -17,7 +17,8 @@ import {
   APP_STATUS_TAG,
   THRESHOLD_CODES,
   type RecruitmentApplication,
-  type MarkThresholdBody
+  type MarkThresholdBody,
+  type ApplicationListQuery
 } from "@/api/srvf-recruitment";
 
 /** 可标门槛态(后端:仅 verified/pending_evaluation) */
@@ -38,15 +39,25 @@ export function useRecruitmentApplications(cycleId: string) {
   const canEvaluate = hasPerms("recruitment-application.evaluate.assessment");
   const canResolve = hasPerms("recruitment-application.resolve.manual");
 
-  const dataList = ref<RecruitmentApplication[]>([]);
-  const loading = ref(false);
   /** statusCode 过滤（默认空 = 全部该轮报名） */
   const statusFilter = ref<string>("");
-  const pagination = reactive<PaginationProps>({
-    total: 0,
-    pageSize: 10,
-    currentPage: 1,
-    background: true
+
+  const {
+    dataList,
+    loading,
+    pagination,
+    onSearch,
+    onFilterChange,
+    handleSizeChange,
+    handleCurrentChange
+  } = useSrvfList<RecruitmentApplication, ApplicationListQuery>({
+    fetch: getRecruitmentApplications,
+    buildParams: () => ({
+      cycleId,
+      ...(statusFilter.value ? { statusCode: statusFilter.value } : {})
+    }),
+    errorMessage: "加载报名列表失败",
+    canRead: canRead && Boolean(cycleId)
   });
 
   /** 详情 drawer（全 PII + 门槛开关）；详情走 getRecruitmentApplication(全显,读记审计) */
@@ -128,47 +139,6 @@ export function useRecruitmentApplications(cycleId: string) {
   }
   function canDoResolve(row: RecruitmentApplication) {
     return canResolve && RESOLVE_STATUS.includes(row.statusCode);
-  }
-
-  async function onSearch() {
-    if (!canRead || !cycleId) {
-      dataList.value = [];
-      return;
-    }
-    loading.value = true;
-    try {
-      const { code, data } = await getRecruitmentApplications({
-        cycleId,
-        page: pagination.currentPage,
-        pageSize: pagination.pageSize,
-        ...(statusFilter.value ? { statusCode: statusFilter.value } : {})
-      });
-      if (code === 0) {
-        dataList.value = data.items;
-        pagination.total = data.total;
-        pagination.pageSize = data.pageSize;
-        pagination.currentPage = data.page;
-      }
-    } catch (error: any) {
-      message(bizErrorMessage(error, "加载报名列表失败"), {
-        type: "error"
-      });
-    } finally {
-      loading.value = false;
-    }
-  }
-
-  function onFilterChange() {
-    pagination.currentPage = 1;
-    onSearch();
-  }
-  function handleSizeChange(val: number) {
-    pagination.pageSize = val;
-    onSearch();
-  }
-  function handleCurrentChange(val: number) {
-    pagination.currentPage = val;
-    onSearch();
   }
 
   /** 查看详情（drawer 内全 PII + 门槛开关）；走详情端点拿全显字段（读 PII 后端记审计） */

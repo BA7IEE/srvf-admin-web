@@ -1,13 +1,13 @@
 import { bizErrorMessage } from "@/api/srvf-error";
 import dayjs from "dayjs";
-import { h, ref, reactive, watch } from "vue";
+import { h, ref, watch } from "vue";
 import { useRoute } from "vue-router";
-import type { PaginationProps } from "@pureadmin/table";
 import { ElMessageBox } from "element-plus";
 import { deviceDetection } from "@pureadmin/utils";
 import { message } from "@/utils/message";
 import { hasPerms } from "@/utils/auth";
 import { addDialog } from "@/components/ReDialog";
+import { useSrvfList } from "@/srvf-kit";
 import { getRoleOptions, type RoleOptionItem } from "@/api/srvf-role";
 import { getUserOptions, type UserOptionItem } from "@/api/srvf-user";
 import {
@@ -34,7 +34,8 @@ import {
   type RoleBindingItem,
   type PrincipalType,
   type ScopeType,
-  type BindingStatus
+  type BindingStatus,
+  type RoleBindingListQuery
 } from "@/api/srvf-role-binding";
 import RoleBindingForm, { type RoleBindingFormModel } from "../form.vue";
 
@@ -52,8 +53,6 @@ export function useRoleBindings() {
   const canUpdate = hasPerms("role-binding.update.record");
   const canDelete = hasPerms("role-binding.delete.record");
 
-  const dataList = ref<RoleBindingItem[]>([]);
-  const loading = ref(false);
   const principalTypeFilter = ref<"" | PrincipalType>("");
   const scopeTypeFilter = ref<"" | ScopeType>("");
   const statusFilter = ref<"" | BindingStatus>("");
@@ -95,11 +94,31 @@ export function useRoleBindings() {
     }
   );
   const formRef = ref();
-  const pagination = reactive<PaginationProps>({
-    total: 0,
-    pageSize: 10,
-    currentPage: 1,
-    background: true
+  const {
+    dataList,
+    loading,
+    pagination,
+    onSearch,
+    onFilterChange,
+    handleSizeChange,
+    handleCurrentChange
+  } = useSrvfList<RoleBindingItem, RoleBindingListQuery>({
+    fetch: getRoleBindingsPage,
+    buildParams: () => ({
+      expand: "role,principal",
+      ...(principalTypeFilter.value
+        ? { principalType: principalTypeFilter.value }
+        : {}),
+      ...(principalIdFilter.value
+        ? { principalId: principalIdFilter.value }
+        : {}),
+      ...(scopeTypeFilter.value ? { scopeType: scopeTypeFilter.value } : {}),
+      ...(statusFilter.value ? { status: statusFilter.value } : {}),
+      ...(includeExpired.value ? { includeExpired: true } : {}),
+      ...(keyword.value.trim() ? { q: keyword.value.trim() } : {})
+    }),
+    errorMessage: "加载角色绑定失败",
+    canRead
   });
 
   const principalTypeOptions = [
@@ -233,48 +252,6 @@ export function useRoleBindings() {
     };
   }
 
-  async function onSearch() {
-    if (!canRead) {
-      dataList.value = [];
-      return;
-    }
-    loading.value = true;
-    try {
-      const { code, data } = await getRoleBindingsPage({
-        page: pagination.currentPage,
-        pageSize: pagination.pageSize,
-        expand: "role,principal",
-        ...(principalTypeFilter.value
-          ? { principalType: principalTypeFilter.value }
-          : {}),
-        ...(principalIdFilter.value
-          ? { principalId: principalIdFilter.value }
-          : {}),
-        ...(scopeTypeFilter.value ? { scopeType: scopeTypeFilter.value } : {}),
-        ...(statusFilter.value ? { status: statusFilter.value } : {}),
-        ...(includeExpired.value ? { includeExpired: true } : {}),
-        ...(keyword.value.trim() ? { q: keyword.value.trim() } : {})
-      });
-      if (code === 0) {
-        dataList.value = data.items;
-        pagination.total = data.total;
-        pagination.pageSize = data.pageSize;
-        pagination.currentPage = data.page;
-      }
-    } catch (error: any) {
-      message(bizErrorMessage(error, "加载角色绑定失败"), {
-        type: "error"
-      });
-    } finally {
-      loading.value = false;
-    }
-  }
-
-  function onFilterChange() {
-    pagination.currentPage = 1;
-    onSearch();
-  }
-
   /** 解除按主体锁定，回到全量角色绑定列表 */
   function clearPrincipalFilter() {
     principalIdFilter.value = "";
@@ -282,15 +259,6 @@ export function useRoleBindings() {
     principalLocked.value = false;
     principalTypeFilter.value = "";
     onFilterChange();
-  }
-
-  function handleSizeChange(val: number) {
-    pagination.pageSize = val;
-    onSearch();
-  }
-  function handleCurrentChange(val: number) {
-    pagination.currentPage = val;
-    onSearch();
   }
 
   /** 新建：预检不通过时把 conflicts 写回同一份 ReDialog options.props（P1-C 同款两段式）。 */

@@ -1,13 +1,13 @@
 import { bizErrorMessage } from "@/api/srvf-error";
 import dayjs from "dayjs";
-import { h, ref, reactive } from "vue";
+import { h, ref } from "vue";
 import { useRouter } from "vue-router";
-import type { PaginationProps } from "@pureadmin/table";
 import { ElMessageBox } from "element-plus";
 import { deviceDetection } from "@pureadmin/utils";
 import { message } from "@/utils/message";
 import { hasPerms } from "@/utils/auth";
 import { addDialog } from "@/components/ReDialog";
+import { useSrvfList } from "@/srvf-kit";
 import { getMemberOptions } from "@/api/srvf-position-assignment";
 import { getOrgOptions, type OrgOptionItem } from "@/api/srvf-organization";
 import { resolveLabels } from "@/api/srvf-meta";
@@ -21,7 +21,8 @@ import {
   SUPERVISION_STATUS_TAG,
   type SupervisionAssignmentItem,
   type SupervisionScopeMode,
-  type SupervisionStatus
+  type SupervisionStatus,
+  type SupervisionListQuery
 } from "@/api/srvf-supervision";
 import type { MemberOptionItem } from "@/api/srvf-position-assignment";
 import SupervisionForm, { type SupervisionFormModel } from "../form.vue";
@@ -36,17 +37,28 @@ export function useSupervisionAssignments() {
   const canCreate = hasPerms("supervision-assignment.create.record");
   const canRevoke = hasPerms("supervision-assignment.revoke.record");
 
-  const dataList = ref<SupervisionAssignmentItem[]>([]);
-  const loading = ref(false);
   const scopeModeFilter = ref<"" | SupervisionScopeMode>("");
   const statusFilter = ref<"" | SupervisionStatus>("ACTIVE");
   const keyword = ref("");
   const formRef = ref();
-  const pagination = reactive<PaginationProps>({
-    total: 0,
-    pageSize: 10,
-    currentPage: 1,
-    background: true
+  const {
+    dataList,
+    loading,
+    pagination,
+    onSearch,
+    onFilterChange,
+    handleSizeChange,
+    handleCurrentChange
+  } = useSrvfList<SupervisionAssignmentItem, SupervisionListQuery>({
+    fetch: getSupervisionAssignmentsPage,
+    buildParams: () => ({
+      expand: "supervisor,organization",
+      ...(scopeModeFilter.value ? { scopeMode: scopeModeFilter.value } : {}),
+      ...(statusFilter.value ? { status: statusFilter.value } : {}),
+      ...(keyword.value.trim() ? { q: keyword.value.trim() } : {})
+    }),
+    errorMessage: "加载分管总表失败",
+    canRead
   });
 
   const scopeModeOptions = [
@@ -128,49 +140,6 @@ export function useSupervisionAssignments() {
       text: SUPERVISION_STATUS_LABEL[code] ?? code,
       type: SUPERVISION_STATUS_TAG[code] ?? ("info" as const)
     };
-  }
-
-  async function onSearch() {
-    if (!canRead) {
-      dataList.value = [];
-      return;
-    }
-    loading.value = true;
-    try {
-      const { code, data } = await getSupervisionAssignmentsPage({
-        page: pagination.currentPage,
-        pageSize: pagination.pageSize,
-        expand: "supervisor,organization",
-        ...(scopeModeFilter.value ? { scopeMode: scopeModeFilter.value } : {}),
-        ...(statusFilter.value ? { status: statusFilter.value } : {}),
-        ...(keyword.value.trim() ? { q: keyword.value.trim() } : {})
-      });
-      if (code === 0) {
-        dataList.value = data.items;
-        pagination.total = data.total;
-        pagination.pageSize = data.pageSize;
-        pagination.currentPage = data.page;
-      }
-    } catch (error: any) {
-      message(bizErrorMessage(error, "加载分管总表失败"), {
-        type: "error"
-      });
-    } finally {
-      loading.value = false;
-    }
-  }
-
-  function onFilterChange() {
-    pagination.currentPage = 1;
-    onSearch();
-  }
-  function handleSizeChange(val: number) {
-    pagination.pageSize = val;
-    onSearch();
-  }
-  function handleCurrentChange(val: number) {
-    pagination.currentPage = val;
-    onSearch();
   }
 
   /** 新建：coverage-preview 是展示型,写回同一份 options.props,不阻塞提交。 */

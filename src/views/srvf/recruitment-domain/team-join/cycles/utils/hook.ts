@@ -1,13 +1,13 @@
 import { bizErrorMessage } from "@/api/srvf-error";
-import { h, ref, reactive } from "vue";
+import { h, ref } from "vue";
 import { useRouter } from "vue-router";
 import dayjs from "dayjs";
-import type { PaginationProps } from "@pureadmin/table";
 import { ElMessageBox } from "element-plus";
 import { deviceDetection } from "@pureadmin/utils";
 import { message } from "@/utils/message";
 import { hasPerms } from "@/utils/auth";
 import { addDialog } from "@/components/ReDialog";
+import { useSrvfList } from "@/srvf-kit";
 import { useMultiTagsStoreHook } from "@/store/modules/multiTags";
 import TjCycleForm, { type TjCycleFormModel } from "../form.vue";
 import {
@@ -25,14 +25,19 @@ export function useTeamJoinCycles() {
   const canCreate = hasPerms("team-join-cycle.create.record");
   const canUpdate = hasPerms("team-join-cycle.update.record");
 
-  const dataList = ref<TeamJoinCycle[]>([]);
-  const loading = ref(false);
   const formRef = ref();
-  const pagination = reactive<PaginationProps>({
-    total: 0,
-    pageSize: 10,
-    currentPage: 1,
-    background: true
+  const {
+    dataList,
+    loading,
+    pagination,
+    onSearch,
+    handleSizeChange,
+    handleCurrentChange
+  } = useSrvfList<TeamJoinCycle>({
+    fetch: getTeamJoinCycles,
+    buildParams: () => ({}),
+    errorMessage: "加载入队轮失败",
+    canRead
   });
 
   const columns: TableColumnList = [
@@ -54,41 +59,6 @@ export function useTeamJoinCycles() {
       text: TJ_CYCLE_STATUS_LABEL[code] ?? code,
       type: code === "open" ? ("success" as const) : ("info" as const)
     };
-  }
-
-  async function onSearch() {
-    if (!canRead) {
-      dataList.value = [];
-      return;
-    }
-    loading.value = true;
-    try {
-      const { code, data } = await getTeamJoinCycles({
-        page: pagination.currentPage,
-        pageSize: pagination.pageSize
-      });
-      if (code === 0) {
-        dataList.value = data.items;
-        pagination.total = data.total;
-        pagination.pageSize = data.pageSize;
-        pagination.currentPage = data.page;
-      }
-    } catch (error: any) {
-      message(bizErrorMessage(error, "加载入队轮失败"), {
-        type: "error"
-      });
-    } finally {
-      loading.value = false;
-    }
-  }
-
-  function handleSizeChange(val: number) {
-    pagination.pageSize = val;
-    onSearch();
-  }
-  function handleCurrentChange(val: number) {
-    pagination.currentPage = val;
-    onSearch();
   }
 
   /** 新建 / 编辑（create:year/name；edit:name） */
