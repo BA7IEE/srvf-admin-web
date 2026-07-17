@@ -27,34 +27,31 @@
 
 ## 1. 铁律速查(主题 → 一句话;多数已机械化,见 §3)
 
-| 主题         | 一句话                                                                                                                                                                                                                                     |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 依赖         | human-only:禁 `pnpm add/remove/update/clean:cache`、禁改 `package.json` 依赖区(guard 拦;需求写进 PR 描述由人执行)                                                                                                                          |
-| 绕闸         | 禁 `--no-verify` / `HUSKY=0` / `git commit -n`(guard 拦);禁新增 `@ts-ignore`/`@ts-nocheck`/`@ts-expect-error`/`eslint-disable`(guard 拦,修真错;真误报输出评估交人裁)                                                                       |
-| 配置         | 禁源码硬编码 `VITE_*` fallback(guard 拦);`public/platform-config.json` 只可改值,增删顶层字段 human-only(guard 动态判)                                                                                                                      |
-| 框架         | 禁启用 `asyncRoutes`、禁补 `getMenuList`、禁恢复租户菜单;mock 非契约(演示 URL/字段/角色名全不作数)                                                                                                                                         |
-| 红线 1~4     | 禁前端反推/发明后端字段、schema、RBAC 码、状态机;缺接口 → 后端 gap-ledger 登记后 STOP                                                                                                                                                      |
-| 私有         | 本仓永不公开(上游 Max-Ts license);业务改动不回流 starter                                                                                                                                                                                   |
-| 轴模型       | 页面按**任务**设计不按资源:沿轴下钻(`activityId`/`memberId` 走路由进详情页)≠「选择父级下拉看子资源」拍平反模式(doctor [3] 会 WARN)                                                                                                         |
-| 掩码回写     | 无 `*.read.sensitive` 码时敏感字段返**掩码串或 null**(档案证件号/手机、紧急联系人等);编辑表单提交前必须剔除无权字段(值含 `*` 或 null),靠后端「不发 = 保留」;原样回写 = 掩码覆盖真值                                                        |
-| options 上限 | `*/options` 类选择器端点 limit 后端硬上限 **100**(docs-json 未标注);`permissionCodes` 等批量入参同样 ≤100/次分片                                                                                                                           |
-| 依赖恢复     | `pnpm install --frozen-lockfile` 必须**裸命令**(尾随管道/重定向会被 guard 当包名拦);fresh worktree 先跑它再 typecheck/commit                                                                                                               |
-| 端口         | `:8848` = 主 checkout 的 dev;worktree 自起 `pnpm dev` 自动落 `:8849`(`--port` 不透传,别硬指定);渲染验证用 `tests/render/` 的 uv+Playwright harness                                                                                         |
-| 后端进程     | 本地 `:3000` 是用户自己的进程,502/连接拒绝时**不自启**:收尾已完成代码 → commit+push+开 PR 不合并 → 报告等用户拉起,续跑从被阻步骤开始                                                                                                       |
-| 提交头       | commitlint 现拒绝提交头里任何拉丁 token:header 纯中文,标识符进 body;拿不准先 `pnpm exec commitlint --edit <tmp文件>` 验,别烧 lint-staged 轮次                                                                                              |
-| dev 验证     | 日志是缓冲区,会回放已修复的旧错(先看时间戳);跑着 dev 切分支会毒化 vite 缓存(停服 → `rm -rf node_modules/.vite` → 重启);截图可能白幽灵、el-table 有 hidden-columns 幽灵按钮(行内探针限定 `tbody tr`)——判定以 typecheck/build + DOM 查询为准 |
-| 收尾         | 判断给证据(路径:行号);goal 外发现记录上报不顺手修;必须输出「本次未做」;不确定不写成事实                                                                                                                                                    |
+- **依赖**:human-only——禁 `pnpm add/remove/update/clean:cache`、禁改 `package.json` 依赖区(guard 拦;需求写进 PR 描述由人执行)。
+- **绕闸**:禁 `--no-verify` / `HUSKY=0` / `git commit -n`(guard 拦);禁新增 `@ts-ignore` / `@ts-nocheck` / `@ts-expect-error` / `eslint-disable`(guard 拦,修真错;真误报输出评估交人裁)。
+- **配置**:禁源码硬编码 `VITE_*` fallback(guard 拦);`public/platform-config.json` 只可改值,增删顶层字段 human-only(guard 动态判)。
+- **框架**:禁启用 `asyncRoutes`、禁补 `getMenuList`、禁恢复租户菜单;mock 非契约(演示 URL/字段/角色名全不作数)。
+- **红线 1~4**:禁前端反推/发明后端字段、schema、RBAC 码、状态机;缺接口 → 后端 gap-ledger 登记后 STOP。
+- **私有**:本仓永不公开(上游 Max-Ts license);业务改动不回流 starter。
+- **轴模型**:页面按**任务**设计不按资源——沿轴下钻(`activityId`/`memberId` 走路由进详情页)≠「选择父级下拉看子资源」拍平反模式(doctor [3] 会 WARN)。
+- **掩码回写**:无 `*.read.sensitive` 码时敏感字段返**掩码串或 null**(档案证件号/手机、紧急联系人等);编辑表单提交前必须剔除无权字段(值含 `*` 或 null),靠后端「不发 = 保留」;原样回写 = 掩码覆盖真值。
+- **options 上限**:`*/options` 类选择器端点 limit 后端硬上限 **100**(docs-json 未标注);`permissionCodes` 等批量入参同样 ≤100/次分片。
+- **依赖恢复**:`pnpm install --frozen-lockfile` 必须**裸命令**(尾随管道/重定向会被 guard 当包名拦);fresh worktree 先跑它再 typecheck/commit。
+- **端口**:`:8848` = 主 checkout 的 dev;worktree 自起 `pnpm dev` 自动落 `:8849`(`--port` 不透传,别硬指定);渲染验证用 `tests/render/` 的 uv+Playwright harness。
+- **后端进程**:本地 `:3000` 是用户自己的进程,502/连接拒绝时**不自启**——收尾已完成代码 → commit+push+开 PR 不合并 → 报告等用户拉起,续跑从被阻步骤开始。
+- **提交头**:commitlint 现拒绝提交头里任何拉丁 token——header 纯中文,标识符进 body;拿不准先 `pnpm exec commitlint --edit <tmp文件>` 验,别烧 lint-staged 轮次。
+- **提交钩子路径**:worktree 里 `git commit` 执行的是**主 checkout** 的 `.husky/`(`core.hooksPath` 绝对路径)——改 hook 要合并进 main 才对全部 checkout 生效。
+- **dev 验证**:日志是缓冲区,会回放已修复的旧错(先看时间戳);跑着 dev 切分支会毒化 vite 缓存(停服 → `rm -rf node_modules/.vite` → 重启);截图可能白幽灵、el-table 有 hidden-columns 幽灵按钮(行内探针限定 `tbody tr`)——判定以 typecheck/build + DOM 查询为准。
+- **收尾**:判断给证据(路径:行号);goal 外发现记录上报不顺手修;必须输出「本次未做」;不确定不写成事实。
 
 ## 2. 决策锁(重开任一条前,必须先暂停声明本节存在)
 
-| 锁              | 内容                                                                                                                                                                                                                                                                 |
-| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 3-call 登录     | 真实登录 = `POST /api/auth/v1/login` → `GET /api/admin/v1/me` + `GET /api/system/v1/rbac/me/permissions`(PR #6 上线 2026-06-22);禁回 mock 登录流                                                                                                                     |
-| auth 申报制     | 5 个 auth 文件(`src/api/user.ts` / `src/utils/auth.ts` / `src/utils/http/index.ts` / `src/store/modules/user.ts` / `src/views/login/index.vue`)可随业务 PR 改,但每次必须显式申报:改了哪个 / 改了什么 / 影响面(登录态 · token 生命周期 · 路由守卫);未申报的改动不允许 |
-| platform-config | 只改值;增删顶层字段 human-only(guard 机械执行)                                                                                                                                                                                                                       |
-| 依赖 human-only | 全部依赖变更(含核心库升级、UI 库/构建器替换)由人执行,AI 只能提案                                                                                                                                                                                                     |
-| 私有仓          | 永不公开、永不反向流 starter(同步只 starter → 本仓 cherry-pick)                                                                                                                                                                                                      |
-| 演示角色名      | `admin` / `common` / `*:*:*` / `permission:btn:*` 类演示码永不作正式 RBAC 码;真码逐端点查 live 契约(有的端点仅登录态无码)                                                                                                                                            |
+- **3-call 登录**:真实登录 = `POST /api/auth/v1/login` → `GET /api/admin/v1/me` + `GET /api/system/v1/rbac/me/permissions`(PR #6 上线 2026-06-22);禁回 mock 登录流。
+- **auth 申报制**:5 个 auth 文件(`src/api/user.ts` / `src/utils/auth.ts` / `src/utils/http/index.ts` / `src/store/modules/user.ts` / `src/views/login/index.vue`)可随业务 PR 改,但每次必须显式申报——改了哪个 / 改了什么 / 影响面(登录态 · token 生命周期 · 路由守卫);未申报的改动不允许。
+- **platform-config**:只改值;增删顶层字段 human-only(guard 机械执行)。
+- **依赖 human-only**:全部依赖变更(含核心库升级、UI 库/构建器替换)由人执行,AI 只能提案。
+- **私有仓**:永不公开、永不反向流 starter(同步只 starter → 本仓 cherry-pick)。
+- **演示角色名**:`admin` / `common` / `*:*:*` / `permission:btn:*` 类演示码永不作正式 RBAC 码;真码逐端点查 live 契约(有的端点仅登录态无码)。
 
 ## 3. 红区与机器闸(`.claude/settings.json` + hooks 的文档版)
 
@@ -62,7 +59,7 @@
 
 - 🔴 **deny(框架内核;人改版本化 settings 才能动)**:既有 store 五件(permission/multiTags/app/settings/epTheme)、`router/index.ts` + `asyncRoutes.ts`、`components/Re*/**`、`plugins/**`、`main.ts` / `App.vue` / `config/index.ts`、`vite.config.ts` / `tsconfig.json` / `build/**`、eslint/stylelint/prettier/commitlint/postcss 配置、`.lintstagedrc`、`.env*`、`pnpm-lock.yaml`(含 Read)、`dist`(Read);Bash 面:force push 全变体。
 - 🟡 **ask(真敏感;人在场逐次批,无人值守等同拒绝)**:`src/utils/http/**`、`src/utils/auth.ts`、`src/views/login/**`、`src/router/utils.ts`、`package.json`(scripts 区有合法需求,依赖区仍被 guard 拦)、`.husky/**`、`.claude/**`(harness 自保护)、`docs/pure-admin/13-ai-harness.md`;Bash 面:`git branch -D`。
-- 🟢 **allow(日常开发面,零弹窗)**:git 常规读写(push 非 force)、`gh pr`(merge 仅 `--squash`)、`pnpm dev/build/preview/typecheck/lint*/install --frozen-lockfile`、harness 自检脚本。`views/**`、`layout` 之外的业务面(views/业务路由 modules/api/store 业务件/mock)均为自由区——仍受 guard 内容规则与本文件纪律约束。
+- 🟢 **allow(日常开发面,零弹窗)**:git 常规读写(push 非 force)、`gh pr`(merge 仅 `--squash`)、`pnpm dev/build/preview/typecheck/lint*/install --frozen-lockfile`、harness 自检脚本。views / layout 之外的业务面(views / 业务路由 modules / api / store 业务件 / mock)均为自由区——仍受 guard 内容规则与本文件纪律约束。
 
 **hooks**(全部 fail-open,静态 deny 是硬底线):`guard.mjs`(PreToolUse:§1「依赖/绕闸/配置」行)· `verify.mjs`(Stop:会话改过 `src/**` 代码则 `pnpm typecheck` 不绿不让收工)· `readtax.mjs`(husky pre-commit:恒读双文档字符预算)。手动巡检:`node .claude/hooks/harness.test.mjs`(改 hooks 后必跑,全绿 = 未削弱)、`node .claude/hooks/harness-doctor.mjs`(§13.1↔settings 漂移巡检)。
 
@@ -83,14 +80,12 @@
 
 ## 6. 文档索引与 v1 重定向
 
-| 文档                                                                             | 何时读                                                                    |
-| -------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| `docs/pure-admin/02-ai-rules.md`                                                 | 每次动手前(§13.1 矩阵 / §13.4 checklist / §16 任务→必读映射)              |
-| `docs/pure-admin/03-router-menu.md`                                              | 改路由/菜单                                                               |
-| `docs/pure-admin/13-ai-harness.md`                                               | 改 harness / 权限 / hooks(为什么这样设计的权威说明)                       |
-| `docs/pure-admin/14-full-version-reference-index.md`                             | 建新页前查范式(208 演示页 / 26 个 `Re*` 组件能力速查;完整版只读,只抄交互) |
-| `docs/srvf-admin-vnext-blueprint.md` · `docs/srvf-admin-ux-upgrade-blueprint.md` | 新业务规划定位(差距矩阵 / IA / 七条军规;与 handoff 冲突按 §0 处理)        |
-| `docs/pure-admin-max-ts-baseline.md` · `docs/pure-admin/` 其余各篇               | starter 底座专题(项目图 / http / mock 风险 / 模块 / 上游同步 / 官方索引)  |
-| `docs/srvf-frontend-derivation.md` · `docs/srvf-api-contract-readiness.md`       | 追溯派生记录 / PR-4 决策史                                                |
+- `docs/pure-admin/02-ai-rules.md` —— 每次动手前(§13.1 矩阵 / §13.4 checklist / §16 任务→必读映射)。
+- `docs/pure-admin/03-router-menu.md` —— 改路由/菜单。
+- `docs/pure-admin/13-ai-harness.md` —— 改 harness / 权限 / hooks(「为什么这样设计」的权威说明;§13A.8 为 2.0-FE 反转记录)。
+- `docs/pure-admin/14-full-version-reference-index.md` —— 建新页前查范式(208 演示页 / 26 个 `Re*` 组件能力速查;完整版只读,只抄交互)。
+- `docs/srvf-admin-vnext-blueprint.md` · `docs/srvf-admin-ux-upgrade-blueprint.md` —— 新业务规划定位(差距矩阵 / IA / 七条军规;与 handoff 冲突按 §0 处理)。
+- `docs/pure-admin-max-ts-baseline.md` 与 `docs/pure-admin/` 其余各篇 —— starter 底座专题(项目图 / http / mock 风险 / 模块 / 上游同步 / 官方索引)。
+- `docs/srvf-frontend-derivation.md` · `docs/srvf-api-contract-readiness.md` —— 追溯派生记录 / PR-4 决策史。
 
-**v1 重定向**(v1 全文见 [`docs/archive/harness-v1/`](docs/archive/harness-v1/);v1 `CLAUDE.md` 与 `AGENTS.md` 同构):v1 §1 仓库身份 → 本文件头注 + §0;§2 现状 → §2(版本类事实改以后端 handoff 为准);§3 必读清单 → §0 分层读取;§4 核心禁令 → §1 + §2(guard 报错引用的「CLAUDE.md §4」即 v1 编号,按本行解析);§5 允许工作 → §1 自由区 + §4;§6 动手前声明 → §5;§7 派生源 / §8 快查图 → §6 表 derivation 行;§9 完整版参考规则 → §6 表 14-index 行(禁抄契约/RBAC/动态路由的细则在该索引与 `07-max-ts-modules.md`)。
+**v1 重定向**(v1 全文见 [`docs/archive/harness-v1/`](docs/archive/harness-v1/);v1 `CLAUDE.md` 与 `AGENTS.md` 同构):v1 §1 仓库身份 → 本文件头注 + §0;§2 现状 → §2(版本类事实改以后端 handoff 为准);§3 必读清单 → §0 分层读取;§4 核心禁令 → §1 + §2(guard 报错引用的「CLAUDE.md §4」即 v1 编号,按本行解析);§5 允许工作 → §1 自由区 + §4;§6 动手前声明 → §5;§7 派生源 / §8 快查图 → §6 derivation 行;§9 完整版参考规则 → §6 的 14-index 行(禁抄契约/RBAC/动态路由细则在该索引与 `07-max-ts-modules.md`)。
