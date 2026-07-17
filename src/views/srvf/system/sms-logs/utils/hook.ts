@@ -1,26 +1,34 @@
-import { bizErrorMessage } from "@/api/srvf-error";
 import dayjs from "dayjs";
-import { ref, reactive } from "vue";
-import type { PaginationProps } from "@pureadmin/table";
-import { message } from "@/utils/message";
+import { ref } from "vue";
 import { hasPerms } from "@/utils/auth";
+import { useSrvfList } from "@/srvf-kit";
 import {
   getSmsSendLogs,
   SMS_STATUS_TAG,
   SMS_STATUS_LABEL,
-  type SmsSendLog
+  type SmsSendLog,
+  type SmsSendLogListQuery
 } from "@/api/srvf-system-settings";
 
 export function useSmsLogs() {
   const canRead = hasPerms("sms-send-log.read.list");
-  const dataList = ref<SmsSendLog[]>([]);
-  const loading = ref(false);
   const phone = ref<string>("");
-  const pagination = reactive<PaginationProps>({
-    total: 0,
-    pageSize: 10,
-    currentPage: 1,
-    background: true
+
+  const {
+    dataList,
+    loading,
+    pagination,
+    onSearch,
+    onFilterChange,
+    handleSizeChange,
+    handleCurrentChange
+  } = useSrvfList<SmsSendLog, SmsSendLogListQuery>({
+    fetch: getSmsSendLogs,
+    buildParams: () => ({
+      ...(phone.value ? { phone: phone.value } : {})
+    }),
+    errorMessage: "加载短信日志失败",
+    canRead
   });
 
   const columns: TableColumnList = [
@@ -49,46 +57,6 @@ export function useSmsLogs() {
 
   function statusLabel(code: string) {
     return SMS_STATUS_LABEL[code] ?? code;
-  }
-
-  async function onSearch() {
-    if (!canRead) {
-      dataList.value = [];
-      return;
-    }
-    loading.value = true;
-    try {
-      const { code, data } = await getSmsSendLogs({
-        page: pagination.currentPage,
-        pageSize: pagination.pageSize,
-        ...(phone.value ? { phone: phone.value } : {})
-      });
-      if (code === 0) {
-        dataList.value = data.items;
-        pagination.total = data.total;
-        pagination.pageSize = data.pageSize;
-        pagination.currentPage = data.page;
-      }
-    } catch (error: any) {
-      message(bizErrorMessage(error, "加载短信日志失败"), {
-        type: "error"
-      });
-    } finally {
-      loading.value = false;
-    }
-  }
-
-  function onFilterChange() {
-    pagination.currentPage = 1;
-    onSearch();
-  }
-  function handleSizeChange(val: number) {
-    pagination.pageSize = val;
-    onSearch();
-  }
-  function handleCurrentChange(val: number) {
-    pagination.currentPage = val;
-    onSearch();
   }
 
   return {
