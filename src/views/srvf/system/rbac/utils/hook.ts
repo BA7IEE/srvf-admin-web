@@ -1,12 +1,12 @@
 import { bizErrorMessage } from "@/api/srvf-error";
 import dayjs from "dayjs";
-import { h, ref, reactive } from "vue";
-import type { PaginationProps } from "@pureadmin/table";
+import { h, ref } from "vue";
 import { ElMessageBox } from "element-plus";
 import { deviceDetection } from "@pureadmin/utils";
 import { message } from "@/utils/message";
 import { hasPerms } from "@/utils/auth";
 import { addDialog } from "@/components/ReDialog";
+import { useSrvfList } from "@/srvf-kit";
 import RoleForm, { type RoleFormModel } from "../form.vue";
 import {
   getRoles,
@@ -15,12 +15,11 @@ import {
   updateRole,
   deleteRole,
   roleBizErrorMessage,
-  type RoleItem
+  type RoleItem,
+  type RoleListQuery
 } from "@/api/srvf-role";
 
 export function useRoles() {
-  const dataList = ref<RoleItem[]>([]);
-  const loading = ref(false);
   const formRef = ref();
   /** 读权限（后端真实 RBAC 码）；无权限不请求、不渲染表格 */
   const canRead = hasPerms("rbac.role.read");
@@ -38,11 +37,18 @@ export function useRoles() {
   const permissionsDrawerVisible = ref(false);
   const activeRole = ref<RoleItem | null>(null);
 
-  const pagination = reactive<PaginationProps>({
-    total: 0,
-    pageSize: 10,
-    currentPage: 1,
-    background: true
+  const {
+    dataList,
+    loading,
+    pagination,
+    onSearch,
+    handleSizeChange,
+    handleCurrentChange
+  } = useSrvfList<RoleItem, RoleListQuery>({
+    fetch: getRoles,
+    buildParams: () => ({}),
+    errorMessage: "加载角色列表失败",
+    canRead
   });
 
   const columns: TableColumnList = [
@@ -72,39 +78,6 @@ export function useRoles() {
         ]
       : [])
   ];
-
-  async function onSearch() {
-    if (!canRead) return;
-    loading.value = true;
-    try {
-      const { code, data } = await getRoles({
-        page: pagination.currentPage,
-        pageSize: pagination.pageSize
-      });
-      if (code === 0) {
-        dataList.value = data.items;
-        pagination.total = data.total;
-        pagination.pageSize = data.pageSize;
-        pagination.currentPage = data.page;
-      }
-    } catch (error: any) {
-      message(bizErrorMessage(error, "加载角色列表失败"), {
-        type: "error"
-      });
-    } finally {
-      loading.value = false;
-    }
-  }
-
-  function handleSizeChange(val: number) {
-    pagination.pageSize = val;
-    onSearch();
-  }
-
-  function handleCurrentChange(val: number) {
-    pagination.currentPage = val;
-    onSearch();
-  }
 
   /** 重载 RBAC 缓存(全量;改完绑定后即时生效) */
   function handleReload() {

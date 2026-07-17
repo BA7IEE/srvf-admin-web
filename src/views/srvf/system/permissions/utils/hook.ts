@@ -1,12 +1,11 @@
-import { bizErrorMessage } from "@/api/srvf-error";
 import dayjs from "dayjs";
 import { h, ref, reactive } from "vue";
-import type { PaginationProps } from "@pureadmin/table";
 import { ElMessageBox } from "element-plus";
 import { deviceDetection } from "@pureadmin/utils";
 import { message } from "@/utils/message";
 import { hasPerms } from "@/utils/auth";
 import { addDialog } from "@/components/ReDialog";
+import { useSrvfList } from "@/srvf-kit";
 import PermissionForm, { type PermissionFormModel } from "../form.vue";
 import {
   getPermissions,
@@ -14,12 +13,11 @@ import {
   updatePermission,
   deletePermission,
   permissionBizErrorMessage,
-  type PermissionItem
+  type PermissionItem,
+  type PermissionListQuery
 } from "@/api/srvf-permission";
 
 export function usePermissions() {
-  const dataList = ref<PermissionItem[]>([]);
-  const loading = ref(false);
   const formRef = ref();
   /** 读权限（后端真实 RBAC 码）；无权限不请求、不渲染表格 */
   const canRead = hasPerms("rbac.permission.read");
@@ -33,11 +31,24 @@ export function usePermissions() {
     resourceType: ""
   });
 
-  const pagination = reactive<PaginationProps>({
-    total: 0,
-    pageSize: 10,
-    currentPage: 1,
-    background: true
+  const {
+    dataList,
+    loading,
+    pagination,
+    onSearch,
+    onFilterChange,
+    handleSizeChange,
+    handleCurrentChange
+  } = useSrvfList<PermissionItem, PermissionListQuery>({
+    fetch: getPermissions,
+    buildParams: () => ({
+      ...(filterForm.module ? { module: filterForm.module } : {}),
+      ...(filterForm.resourceType
+        ? { resourceType: filterForm.resourceType }
+        : {})
+    }),
+    errorMessage: "加载权限点列表失败",
+    canRead
   });
 
   const columns: TableColumnList = [
@@ -70,54 +81,15 @@ export function usePermissions() {
       : [])
   ];
 
-  async function onSearch() {
-    if (!canRead) return;
-    loading.value = true;
-    try {
-      const { code, data } = await getPermissions({
-        page: pagination.currentPage,
-        pageSize: pagination.pageSize,
-        ...(filterForm.module ? { module: filterForm.module } : {}),
-        ...(filterForm.resourceType
-          ? { resourceType: filterForm.resourceType }
-          : {})
-      });
-      if (code === 0) {
-        dataList.value = data.items;
-        pagination.total = data.total;
-        pagination.pageSize = data.pageSize;
-        pagination.currentPage = data.page;
-      }
-    } catch (error: any) {
-      message(bizErrorMessage(error, "加载权限点列表失败"), {
-        type: "error"
-      });
-    } finally {
-      loading.value = false;
-    }
-  }
-
   function handleFilterReset() {
     filterForm.module = "";
     filterForm.resourceType = "";
-    pagination.currentPage = 1;
     onSearch();
   }
 
   /** 应用新筛选条件时回到第 1 页——否则停留在旧页码，筛选后结果页数变少时表格会误显示"暂无数据"。 */
   function handleFilterSearch() {
-    pagination.currentPage = 1;
-    onSearch();
-  }
-
-  function handleSizeChange(val: number) {
-    pagination.pageSize = val;
-    onSearch();
-  }
-
-  function handleCurrentChange(val: number) {
-    pagination.currentPage = val;
-    onSearch();
+    onFilterChange();
   }
 
   /** 新建 / 编辑权限点（create：code+module+action+resourceType+description；edit：仅 description） */

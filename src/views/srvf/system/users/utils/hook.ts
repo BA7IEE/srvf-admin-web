@@ -2,12 +2,12 @@ import { bizErrorMessage } from "@/api/srvf-error";
 import dayjs from "dayjs";
 import { h, ref, reactive } from "vue";
 import { useRouter } from "vue-router";
-import type { PaginationProps } from "@pureadmin/table";
 import { ElMessageBox } from "element-plus";
 import { deviceDetection } from "@pureadmin/utils";
 import { message } from "@/utils/message";
 import { hasPerms } from "@/utils/auth";
 import { addDialog } from "@/components/ReDialog";
+import { useSrvfList } from "@/srvf-kit";
 import { useMultiTagsStoreHook } from "@/store/modules/multiTags";
 import RoleForm, { type RoleFormModel } from "../role-form.vue";
 import UserForm, { type UserFormModel } from "../user-form.vue";
@@ -22,6 +22,7 @@ import {
   clearUserWechat,
   deleteUserAccount,
   type UserAccountItem,
+  type UserAccountListQuery,
   type AccountRole,
   type AccountStatus
 } from "@/api/srvf-user";
@@ -42,8 +43,6 @@ const ROLE_META: Record<
 
 export function useUserAccounts() {
   const router = useRouter();
-  const dataList = ref<UserAccountItem[]>([]);
-  const loading = ref(false);
   const formRef = ref();
 
   /** 列表筛选（均为契约既有参数：q 模糊 username+nickname+email+phone；role/status 精确枚举） */
@@ -82,11 +81,23 @@ export function useUserAccounts() {
   const rbacRolesDrawerVisible = ref(false);
   const activeUser = ref<UserAccountItem | null>(null);
 
-  const pagination = reactive<PaginationProps>({
-    total: 0,
-    pageSize: 10,
-    currentPage: 1,
-    background: true
+  const {
+    dataList,
+    loading,
+    pagination,
+    onSearch,
+    onFilterChange,
+    handleSizeChange,
+    handleCurrentChange
+  } = useSrvfList<UserAccountItem, UserAccountListQuery>({
+    fetch: getUserAccounts,
+    buildParams: () => ({
+      ...(searchForm.q.trim() ? { q: searchForm.q.trim() } : {}),
+      ...(searchForm.role ? { role: searchForm.role } : {}),
+      ...(searchForm.status ? { status: searchForm.status } : {})
+    }),
+    errorMessage: "加载用户列表失败",
+    canRead
   });
 
   const columns: TableColumnList = [
@@ -129,48 +140,6 @@ export function useUserAccounts() {
   /** 系统角色 code → 展示元数据（中文 + 颜色；未知 → 原 code + info 灰） */
   function roleMeta(code: string) {
     return ROLE_META[code] ?? { text: code, type: "info" as const };
-  }
-
-  async function onSearch() {
-    if (!canRead) return;
-    loading.value = true;
-    try {
-      const { code, data } = await getUserAccounts({
-        page: pagination.currentPage,
-        pageSize: pagination.pageSize,
-        ...(searchForm.q.trim() ? { q: searchForm.q.trim() } : {}),
-        ...(searchForm.role ? { role: searchForm.role } : {}),
-        ...(searchForm.status ? { status: searchForm.status } : {})
-      });
-      if (code === 0) {
-        dataList.value = data.items;
-        pagination.total = data.total;
-        pagination.pageSize = data.pageSize;
-        pagination.currentPage = data.page;
-      }
-    } catch (error: any) {
-      message(bizErrorMessage(error, "加载用户列表失败"), {
-        type: "error"
-      });
-    } finally {
-      loading.value = false;
-    }
-  }
-
-  /** 筛选条件变化：回到第一页重查 */
-  function onFilterChange() {
-    pagination.currentPage = 1;
-    onSearch();
-  }
-
-  function handleSizeChange(val: number) {
-    pagination.pageSize = val;
-    onSearch();
-  }
-
-  function handleCurrentChange(val: number) {
-    pagination.currentPage = val;
-    onSearch();
   }
 
   /** 新建 / 编辑用户（create:username/password/email/nickname/role；edit:仅 email/nickname） */
