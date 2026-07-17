@@ -91,7 +91,7 @@ This repository is the SRVF-specific admin frontend derived from the private `u-
 
 GitHub 参考：[pure-admin/vue-pure-admin](https://github.com/pure-admin/vue-pure-admin)
 
-本地路径：`/Users/dengwang/Documents/coding/SRVF-web-admin参考/vue-pure-admin`
+本地路径：`<refs-root>/vue-pure-admin`（占位符见 `docs/external-refs.md`）
 
 说明：
 

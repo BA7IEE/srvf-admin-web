@@ -111,7 +111,7 @@ Every AI task must state BEFORE editing:
 - Official docs index synced from starter commit: `ebcddc0`
 - Latest starter sync record: see `docs/srvf-frontend-derivation.md` §1 + `docs/pure-admin/11-upstream-sync.md`
 
-When in doubt about a starter-level concern: go look at the starter repo (`/Users/dengwang/Documents/coding/u-admin-web-starter` or `BA7IEE/u-admin-web-starter`) — but **do not** push starter-level changes from this repo back to starter.
+When in doubt about a starter-level concern: go look at the starter repo (`<coding-root>/u-admin-web-starter` or `BA7IEE/u-admin-web-starter`; `<coding-root>` is a path placeholder — see `docs/external-refs.md`) — but **do not** push starter-level changes from this repo back to starter.
 
 ## 8. Quick Map
 
@@ -134,7 +134,7 @@ When in doubt: `docs/srvf-api-contract-readiness.md` is the historical single so
 
 Local full-version reference path:
 
-`/Users/dengwang/Documents/coding/SRVF-web-admin参考/vue-pure-admin`
+`<refs-root>/vue-pure-admin`
 
 This is the **open-source full version of vue-pure-admin**. It contains 60+ demo pages (table / form / editor / chart / flowchart / Excel / upload / dept / role / user / dict / log / etc.) that the Max-Ts starter does not ship. It exists purely as a **UI / component / page-pattern read-only reference**.
 

@@ -155,7 +155,7 @@ V2 第一阶段 + V2.x 增量已落地 model：`User / Role(enum) / UserStatus(e
 
 ## 4. Full Version Reference Notes（降低决策权重）
 
-完整版位于 `/Users/dengwang/Documents/coding/SRVF-web-admin参考/vue-pure-admin`。本 PR 已扫描：
+完整版位于 `<refs-root>/vue-pure-admin`（占位符见 `docs/external-refs.md`）。本 PR 已扫描：
 
 - `src/router/modules/`（24 个静态模块文件）
 - `src/views/`（多个顶级目录：`system/dept`、`system/role`、`system/user`、`monitor/logs` 等）
@@ -551,7 +551,7 @@ PR-5-B 完成判定（必须全部满足）：
 - 本 PR **不动业务代码、不动 mock、不动配置 / 依赖**；
 - 本 PR **不执行 `pnpm` / `npm` / `yarn`**；
 - 本 PR **不接 NestJS、不重启 PR-4**；
-- 本 PR **不动后端仓库**任何文件（`/Users/dengwang/Documents/coding/srvf-nest-api` 只读）；
+- 本 PR **不动后端仓库**任何文件（`<coding-root>/srvf-nest-api` 只读）；
 - 本 PR **不 force push / 不 reset**；
 - 后续 PR-5-B 实施必须以本文件 v0.2 为**唯一边界**，凡越界即视为违反硬规则。
 

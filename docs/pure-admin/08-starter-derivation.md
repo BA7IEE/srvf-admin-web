@@ -25,9 +25,9 @@
 
 ## 相关关键文件路径
 
-- 本 starter：`/Users/dengwang/Documents/coding/u-admin-web-starter`
-- 上游母版（只读）：`/Users/dengwang/Documents/coding/SRVF-web-admin参考/pure-admin-thin-max-ts`
-- 完整版参考（只读）：`/Users/dengwang/Documents/coding/SRVF-web-admin参考/vue-pure-admin`
+- 本 starter：`<coding-root>/u-admin-web-starter`（占位符见 `docs/external-refs.md`）
+- 上游母版（只读）：`<refs-root>/pure-admin-thin-max-ts`
+- 完整版参考（只读）：`<refs-root>/vue-pure-admin`
 - 派生项目时的关键文件：`package.json`、`README.md`、`.env*`、`vite.config.ts`、`src/router/modules/<业务>-*.ts`
 
 ---
@@ -179,7 +179,7 @@
 
 ```bash
 # Step 1：clone starter 到新目录（全英文路径）
-cd /Users/dengwang/Documents/coding
+cd <coding-root>
 git clone git@github.com:BA7IEE/u-admin-web-starter.git <业务项目名>
 cd <业务项目名>
 
@@ -271,7 +271,7 @@ gh repo view BA7IEE/<业务项目名> --json visibility,isEmpty,defaultBranchRef
 
 ### 17.4.6 完整版参考库使用约束（派生项目同样适用）
 
-派生项目可以读取本地 `vue-pure-admin` **开源完整版**（路径 `/Users/dengwang/Documents/coding/SRVF-web-admin参考/vue-pure-admin`）作为 **UI 范式参考**，但**必须遵守 starter 的 Full Version Reference Rule**（见 starter `CLAUDE.md` §9 + `AGENTS.md` §9 + `07-max-ts-modules.md` §12.4）：
+派生项目可以读取本地 `vue-pure-admin` **开源完整版**（路径 `<refs-root>/vue-pure-admin`）作为 **UI 范式参考**，但**必须遵守 starter 的 Full Version Reference Rule**（见 starter `CLAUDE.md` §9 + `AGENTS.md` §9 + `07-max-ts-modules.md` §12.4）：
 
 - ✅ 允许：读取页面结构 / 组件组合 / UI 交互 / 路由 meta 写法 / 目录范式；
 - ⛔ 禁止：把完整版的**业务**（API / mock / RBAC / tenant / 动态菜单 / 业务字段 / 状态机 / 菜单名）迁入派生项目；

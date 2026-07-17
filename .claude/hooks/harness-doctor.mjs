@@ -13,8 +13,13 @@
 //       A lag only WARNs (re-verify the §6 checklist before PR-4) — it never flips
 //       the exit code, because the freeze is meant to lag the live backend.
 //
+//   [4] Advisory: resolve the placeholder paths registered in docs/external-refs.md
+//       (<coding-root> / <refs-root>) and check each still exists on this machine.
+//       A missing asset only WARNs — restore/backup guidance lives in the registry
+//       itself — it never flips the exit code.
+//
 // Path inputs can be overridden via env (SRVF_DOCTOR_SETTINGS / _RULES / _READINESS
-// / _NESTAPI) so the logic is testable against fixtures.
+// / _NESTAPI / _EXTREFS) so the logic is testable against fixtures.
 import process from "node:process";
 import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { execSync } from "node:child_process";
@@ -29,6 +34,8 @@ const READINESS =
   process.env.SRVF_DOCTOR_READINESS || path.join(ROOT, "docs", "srvf-api-contract-readiness.md");
 // [3] task-vs-resource smell scan root (overridable for tests).
 const VIEWS = process.env.SRVF_DOCTOR_VIEWS || path.join(ROOT, "src", "views", "srvf");
+// [4] external reference registry (overridable for tests).
+const EXTREFS = process.env.SRVF_DOCTOR_EXTREFS || path.join(ROOT, "docs", "external-refs.md");
 
 // ---- glob helpers ----------------------------------------------------------------
 // Single left-to-right pass so `**` -> `.*` and a lone `*` -> `[^/]*` without any
@@ -219,6 +226,37 @@ function scanFlattenSmell() {
   return hits;
 }
 
+// ---- [4] external reference existence ---------------------------------------------
+// docs/external-refs.md is the single registry of out-of-repo assets (reference
+// folder, fork, validated zip, starter, sibling backend). It declares the machine
+// value of <coding-root> exactly once; every backtick `<coding-root>/…` /
+// `<refs-root>/…` token in it is a registered core path. Resolve each and existsSync.
+// WARN-only (like [2]): a missing asset means "restore per the registry row", never a
+// harness drift, so it must not flip the exit code.
+function scanExternalRefs() {
+  if (!existsSync(EXTREFS)) return { registry: false, codingRoot: null, entries: [] };
+  const text = readFileSync(EXTREFS, "utf8");
+  const rootM = text.match(/`<coding-root>`\s*=\s*`([^`]+)`/);
+  if (!rootM) return { registry: true, codingRoot: null, entries: [] };
+  const codingRoot = rootM[1].replace(/\/+$/, "");
+  const refsM = text.match(/`<refs-root>`\s*=\s*`<coding-root>\/([^`]+)`/);
+  const refsRoot = refsM ? `${codingRoot}/${refsM[1].replace(/\/+$/, "")}` : null;
+  const entries = new Map(); // resolved path -> placeholder token (dedupes table repeats)
+  for (const m of text.matchAll(/`(<(?:coding|refs)-root>[^`]*)`/g)) {
+    const token = m[1].replace(/\/+$/, "");
+    let p;
+    if (token.startsWith("<refs-root>")) {
+      if (!refsRoot) continue;
+      p = refsRoot + token.slice("<refs-root>".length);
+    } else {
+      p = codingRoot + token.slice("<coding-root>".length);
+    }
+    if (p.includes("<")) continue; // unresolved leftovers — not a checkable path
+    if (!entries.has(p)) entries.set(p, token);
+  }
+  return { registry: true, codingRoot, entries: [...entries] };
+}
+
 function main() {
   const settings = loadSettings();
   const editable = settings.filter((e) => e.tool !== "Read");
@@ -311,6 +349,22 @@ function main() {
       console.log(`  WARN  ${f}  — 疑似把嵌套子资源拍平成「菜单 + 手选父级」;改父级详情页 tab 内嵌(handoff admin-web.md §1)`);
     }
     console.log(`  (${smells.length} 处;启发式,需 el-select 且 请先选择 并存——合法状态过滤下拉不命中)`);
+  }
+
+  console.log("\n[4] external references (docs/external-refs.md · WARN-only)");
+  const ext = scanExternalRefs();
+  if (!ext.registry) {
+    console.log(`  WARN  registry missing: ${path.relative(ROOT, EXTREFS)} — 仓外资产未登记,无从核对存在性。`);
+  } else if (!ext.codingRoot) {
+    console.log("  WARN  registry has no <coding-root> declaration — cannot resolve placeholder paths.");
+  } else {
+    const absent = ext.entries.filter(([p]) => !existsSync(p));
+    for (const [p, token] of absent) {
+      console.log(`  WARN  missing ${token}  →  ${p}  — 按登记表该行「恢复方式」处理;不可再生件丢失即上报维护者。`);
+    }
+    if (!absent.length) {
+      console.log(`  all ${ext.entries.length} registered path(s) present (coding-root: ${ext.codingRoot}).`);
+    }
   }
 
   const drift = missing.length > 0;

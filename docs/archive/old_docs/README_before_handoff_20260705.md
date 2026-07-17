@@ -69,7 +69,7 @@ This repository is the SRVF-specific admin frontend derived from the private `u-
 
 ## 完整版参考库
 
-本地路径：`/Users/dengwang/Documents/coding/SRVF-web-admin参考/vue-pure-admin`
+本地路径：`<refs-root>/vue-pure-admin`（占位符见 `docs/external-refs.md`）
 
 说明：
 
