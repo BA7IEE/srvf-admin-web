@@ -79,13 +79,15 @@ pnpm install
 > u-admin-web-starter@7.0.0 lint:eslint
 > eslint --cache --max-warnings 0 src mock build --fix
 
-/Users/dengwang/Documents/coding/u-admin-web-starter/mock/asyncRoutes.ts
+<coding-root>/u-admin-web-starter/mock/asyncRoutes.ts
   97:7  error  'tenantManagementRouter' is assigned a value but never used.
               Allowed unused vars must match /^_/u
               @typescript-eslint/no-unused-vars
 
 ✖ 1 problem (1 error, 0 warnings)
 ```
+
+（日志中 `<coding-root>` 为路径占位符，定义见 `docs/external-refs.md`）
 
 - 退出码：**1**
 - 失败阶段：`lint:eslint`（`lint:prettier` 与 `lint:stylelint` 未执行）

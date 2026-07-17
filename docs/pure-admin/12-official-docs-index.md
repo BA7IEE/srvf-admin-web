@@ -165,7 +165,7 @@
 3. **提交 / 打包前必须跑** `pnpm typecheck` 与 `pnpm lint`：`02-ai-rules.md §13.3 第 8 条`；提交前再 `pnpm build`。
 4. **husky 不删除**：husky 钩子（commit-msg / pre-commit）在 `node_modules` 安装后会自动启用。不允许 `git commit --no-verify` 绕过（`02-ai-rules.md §13.3 第 12 条`）。
 5. **不走 monorepo**：starter + 多业务仓库独立 clone 派生（`08-starter-derivation.md §17.3`）。
-6. **正式项目目录路径不要使用中文**：FAQ 明确建议中文路径可能导致 vite / pnpm / 部分工具识别异常。本仓库 starter / srvf-admin-web / srvf-nest-api 均在英文路径下；唯一例外是上游参考目录 `/Users/dengwang/Documents/coding/SRVF-web-admin参考/`，仅用于历史只读，**不在该路径下做长期项目开发**。
+6. **正式项目目录路径不要使用中文**：FAQ 明确建议中文路径可能导致 vite / pnpm / 部分工具识别异常。本仓库 starter / srvf-admin-web / srvf-nest-api 均在英文路径下；唯一例外是上游参考目录 `<refs-root>/`（占位符见 `docs/external-refs.md`），仅用于历史只读，**不在该路径下做长期项目开发**。
 7. **第一阶段禁用 asyncRoutes**：FAQ 关于动态路由的章节**只作为排错参考**；本仓库 + 派生项目第一阶段一律不启用（裁决 2、`03-router-menu.md §5.2.1`）。即便人类后续启用，前端字段也**不得反推后端菜单表**（红线 2）。
 8. **`rank: 0` 仅 home 可用**：FAQ 明确规则。后续业务静态菜单（`src/router/modules/<业务>-*.ts`）`meta.rank` **必须从非 0 开始**（如 1、2、3…）；同一层级 rank 不重复。同等规则见 `03-router-menu.md §5.4` meta 字段表。
 9. **Node / pnpm 版本要求**：FAQ 给出 Node 与 pnpm 版本下限；本项目 `package.json: engines` 是事实来源（`node ^20.19.0 || >=22.13.0`、`pnpm >=9`）。`setup-notes.md` 已记录验证环境（Node v22.15.0 / pnpm 10.14.0）。如 FAQ 后续要求升级，按 `02-ai-rules.md §13.2.1` 由人类决定是否升 `engines` 字段。
@@ -200,11 +200,11 @@
 ### 路径
 
 - ✅ **正式长期项目目录全英文路径**：
-  - `/Users/dengwang/Documents/coding/u-admin-web-starter`
-  - `/Users/dengwang/Documents/coding/srvf-admin-web`
-  - `/Users/dengwang/Documents/coding/srvf-nest-api`
+  - `<coding-root>/u-admin-web-starter`
+  - `<coding-root>/srvf-admin-web`
+  - `<coding-root>/srvf-nest-api`
 - ⚠️ **历史参考目录可有中文**（不在该路径下做长期开发）：
-  - `/Users/dengwang/Documents/coding/SRVF-web-admin参考/`（上游母版只读 + vue-pure-admin 完整版只读，仅作历史参考）
+  - `<refs-root>/`（上游母版只读 + vue-pure-admin 完整版只读，仅作历史参考）
 - ⛔ **不要把正式项目放在带中文路径的目录下**（FAQ 明确建议）。
 
 ### Node / pnpm 版本
@@ -262,11 +262,11 @@
 
 ### 8.1 两个来源的定位
 
-| 来源                           | 路径 / URL                                                                               | 用途                                                                            | 不可用作            |
-| ------------------------------ | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | ------------------- |
-| **官方文档**                   | `https://pure-admin.cn/pages/*`（30 条真实链接见 §2）                                    | 理解 Pure Admin **框架机制**（路由、菜单、布局、主题、Tailwind、构建插件、FAQ） | 业务需求 / 后端契约 |
-| **完整版参考库**               | `/Users/dengwang/Documents/coding/SRVF-web-admin参考/vue-pure-admin`                     | 观察 **页面 / 组件 / UI 交互范式**                                              | 业务需求 / 后端契约 |
-| **Pure Admin Max-Ts 上游母版** | `/Users/dengwang/Documents/coding/SRVF-web-admin参考/pure-admin-thin-max-ts`（付费私有） | starter 的派生来源；通过 cherry-pick 同步（见 `11-upstream-sync.md`）           | 业务需求 / 后端契约 |
+| 来源                           | 路径 / URL                                            | 用途                                                                            | 不可用作            |
+| ------------------------------ | ----------------------------------------------------- | ------------------------------------------------------------------------------- | ------------------- |
+| **官方文档**                   | `https://pure-admin.cn/pages/*`（30 条真实链接见 §2） | 理解 Pure Admin **框架机制**（路由、菜单、布局、主题、Tailwind、构建插件、FAQ） | 业务需求 / 后端契约 |
+| **完整版参考库**               | `<refs-root>/vue-pure-admin`                          | 观察 **页面 / 组件 / UI 交互范式**                                              | 业务需求 / 后端契约 |
+| **Pure Admin Max-Ts 上游母版** | `<refs-root>/pure-admin-thin-max-ts`（付费私有）      | starter 的派生来源；通过 cherry-pick 同步（见 `11-upstream-sync.md`）           | 业务需求 / 后端契约 |
 
 ### 8.2 共同禁止
 

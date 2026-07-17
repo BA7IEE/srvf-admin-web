@@ -28,7 +28,7 @@
 
 ## 相关关键文件路径
 
-- 完整版根：`/Users/dengwang/Documents/coding/SRVF-web-admin参考/vue-pure-admin`
+- 完整版根：`<refs-root>/vue-pure-admin`（占位符见 `docs/external-refs.md`）
 - 演示页：`<完整版>/src/views/**`（本文 §1 / §2 枚举）
 - 组件：`<完整版>/src/components/Re*/`（本文 §3 枚举）
 - 路由意图来源：`<完整版>/src/router/modules/*.ts` + `<完整版>/locales/zh-CN.yaml`
@@ -376,7 +376,7 @@
 - 完整版本机为**只读参考库**，理论上不随本仓变动；若将来人类更新了参考库、出现新演示页/组件，按下面只读命令复核并补本文 §1~§4：
 
 ```bash
-REF="/Users/dengwang/Documents/coding/SRVF-web-admin参考/vue-pure-admin"
+REF="<refs-root>/vue-pure-admin"
 find "$REF/src/views" -type d | sort                       # 模块结构
 find "$REF/src/views" -name "*.vue" | wc -l                # 页数核对（基线 208）
 ls "$REF/src/components"                                    # Re* 组件（基线 26）

@@ -264,7 +264,7 @@
 
 ### 12.4.1 完整版路径
 
-`/Users/dengwang/Documents/coding/SRVF-web-admin参考/vue-pure-admin`
+`<refs-root>/vue-pure-admin`（占位符见 `docs/external-refs.md`）
 
 - 这是**开源 vue-pure-admin 完整版**（与 Pure Admin Max-Ts 同一作者，但功能更完整：60+ 演示页）；
 - 在本机以**只读参考库**身份长期存在；
@@ -276,13 +276,13 @@
 
 ```bash
 # 1. 关键字搜索（找候选页面）
-grep -rln "el-tree\|PureTable\|ReDialog" /Users/dengwang/Documents/coding/SRVF-web-admin参考/vue-pure-admin/src/views | head
+grep -rln "el-tree\|PureTable\|ReDialog" <refs-root>/vue-pure-admin/src/views | head
 
 # 2. 列出对应目录结构（看交互范式）
-find /Users/dengwang/Documents/coding/SRVF-web-admin参考/vue-pure-admin/src/views/<候选模块>/ -type f
+find <refs-root>/vue-pure-admin/src/views/<候选模块>/ -type f
 
 # 3. 读单个文件（只看交互结构，不照搬接口）
-head -100 /Users/dengwang/Documents/coding/SRVF-web-admin参考/vue-pure-admin/src/views/<候选模块>/index.vue
+head -100 <refs-root>/vue-pure-admin/src/views/<候选模块>/index.vue
 ```
 
 ⛔ 禁止 `cp -R` 整段复制；必须**手敲重写**，因为字段 / API / 角色 / 权限都要换。
@@ -359,13 +359,13 @@ head -100 /Users/dengwang/Documents/coding/SRVF-web-admin参考/vue-pure-admin/s
 
 ### 12.4.5 完整版与上游 Pure Admin Max-Ts 的区别（避免混淆）
 
-| 维度                                        | Pure Admin Max-Ts（上游母版）                                                                           | vue-pure-admin（完整版参考）                                                     |
-| ------------------------------------------- | ------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| 路径                                        | `/Users/dengwang/Documents/coding/SRVF-web-admin参考/pure-admin-thin-max-ts`（**付费私有，purchased**） | `/Users/dengwang/Documents/coding/SRVF-web-admin参考/vue-pure-admin`（**开源**） |
-| 与 starter 关系                             | starter 直接派生（仍可 cherry-pick 升级）                                                               | 仅作 UI 范式只读参考                                                             |
-| 同步策略                                    | 参见 `11-upstream-sync.md` §11-2.1                                                                      | 不同步，只读                                                                     |
-| 可参考代码                                  | 整套（仅 starter 自身）                                                                                 | 仅 UI / 组件 / 页面范式                                                          |
-| API / mock / RBAC / tenant / dynamic routes | 不能反推后端                                                                                            | **更不能**反推后端（红线 1~4）                                                   |
+| 维度                                        | Pure Admin Max-Ts（上游母版）                                   | vue-pure-admin（完整版参考）             |
+| ------------------------------------------- | --------------------------------------------------------------- | ---------------------------------------- |
+| 路径                                        | `<refs-root>/pure-admin-thin-max-ts`（**付费私有，purchased**） | `<refs-root>/vue-pure-admin`（**开源**） |
+| 与 starter 关系                             | starter 直接派生（仍可 cherry-pick 升级）                       | 仅作 UI 范式只读参考                     |
+| 同步策略                                    | 参见 `11-upstream-sync.md` §11-2.1                              | 不同步，只读                             |
+| 可参考代码                                  | 整套（仅 starter 自身）                                         | 仅 UI / 组件 / 页面范式                  |
+| API / mock / RBAC / tenant / dynamic routes | 不能反推后端                                                    | **更不能**反推后端（红线 1~4）           |
 
 ### 12.4.6 完整版作为参考的"最值得抄"清单
 

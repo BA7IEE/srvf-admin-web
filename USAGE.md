@@ -16,7 +16,7 @@
 - 当前 Git HEAD：`1aba0da` (`feat(layout): navbar 挂全局实体搜索入口 (#80)`)。
 - 当前包状态：未重新打包，以 Git checkout `main@1aba0da` 为准。
 - 当前验证状态：`BUILD_PASS`，已直接通过 `vue-tsc` 与 `vite build`。
-- 历史 validated 包：`srvf-admin-web_v7.1.0-p1.meta-workbench_validated_full_20260705.zip` 只作历史，不再作为当前下一步入口。
+- 历史 validated 包：`srvf-admin-web_v7.1.0-p1.meta-workbench_validated_full_20260705.zip` 只作历史，不再作为当前下一步入口（原件已迁存 `<refs-root>/`，登记与占位符见 `docs/external-refs.md`）。
 - 主线增量：相对 `c2001c9` 已合入 #34~#80，包括组织人事、RBAC 治理、Auth 专线、队员账号闭环、字典主从布局、srvf-kit 原语层。
 - 本次未改：`src/**`、`package.json`、`pnpm-lock.yaml`、`.env*`、路由主链、权限主链、后端契约。
 

@@ -25,9 +25,9 @@
 
 ## 相关关键文件路径
 
-- 上游母版（只读）：`/Users/dengwang/Documents/coding/SRVF-web-admin参考/pure-admin-thin-max-ts`
-- 本 starter：`/Users/dengwang/Documents/coding/u-admin-web-starter`（GitHub：`BA7IEE/u-admin-web-starter`，Private）
-- 完整版参考（只读）：`/Users/dengwang/Documents/coding/SRVF-web-admin参考/vue-pure-admin`
+- 上游母版（只读）：`<refs-root>/pure-admin-thin-max-ts`（占位符见 `docs/external-refs.md`）
+- 本 starter：`<coding-root>/u-admin-web-starter`（GitHub：`BA7IEE/u-admin-web-starter`，Private）
+- 完整版参考（只读）：`<refs-root>/vue-pure-admin`
 - 派生业务项目：分别独立 clone（如 `srvf-admin-web` / `u-studio-admin-web` / `token-admin-web` / `health-admin-web`）
 
 ---
@@ -53,7 +53,7 @@ pure-admin-thin-max-ts        →        u-admin-web-starter            →     
 
 **严格只读评估流程**：
 
-1. 在另一目录里把上游 `pure-admin-thin-max-ts` 拉到最新（如直接读 `/Users/dengwang/Documents/coding/SRVF-web-admin参考/pure-admin-thin-max-ts`，不要 push 改动回去）。
+1. 在另一目录里把上游 `pure-admin-thin-max-ts` 拉到最新（如直接读 `<refs-root>/pure-admin-thin-max-ts`，不要 push 改动回去）。
 2. 用 `git diff` 或 `diff -ru` 对比上游与 starter 的差异（仅看，不动）。
 3. 按 §11-3 高风险文件清单 + §11-4 分类，逐项判定每个变化的处置。
 4. **由人类决定**哪些可同步、哪些禁同步、哪些需要单独 PR。
@@ -100,13 +100,13 @@ pure-admin-thin-max-ts        →        u-admin-web-starter            →     
 
 ## 11-4. 同步分类（评估每条上游变化）
 
-| 类型 | 判定标准 | 操作 |
-| --- | --- | --- |
-| **可安全同步** | 仅文档 / 注释 / 微小 typo 修正 / 不影响行为 | 直接 cherry-pick（仍由人类执行）|
-| **可参考但不同步** | 上游引入了演示能力（如 tenant / dict / asyncRoutes 演示扩展）、上游加了新的 i18n 翻译条目、上游加了一个新的演示页 | **不同步**；如确需该能力，业务侧重写并适配后端契约 |
-| **高风险单独 PR** | 命中 §11-3 高风险文件清单 | 单独 PR；按 `02-ai-rules.md` §13.2.2 输出 4 项；人类审 + 人类合 |
-| **禁止同步** | 任何违反主入口红线 1~4 的变更（如上游强化了多租户、扩了 `MenuData` 字段、改了 mock 权限字符串"约定"等） | 拒绝；记录在 `10-review-log.md` 下次升级时回顾 |
-| **需要人类决策** | 介于以上类别之间，或涉及业务 schema 模型 | 暂缓；列入待决清单，由人类拍板 |
+| 类型               | 判定标准                                                                                                          | 操作                                                            |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| **可安全同步**     | 仅文档 / 注释 / 微小 typo 修正 / 不影响行为                                                                       | 直接 cherry-pick（仍由人类执行）                                |
+| **可参考但不同步** | 上游引入了演示能力（如 tenant / dict / asyncRoutes 演示扩展）、上游加了新的 i18n 翻译条目、上游加了一个新的演示页 | **不同步**；如确需该能力，业务侧重写并适配后端契约              |
+| **高风险单独 PR**  | 命中 §11-3 高风险文件清单                                                                                         | 单独 PR；按 `02-ai-rules.md` §13.2.2 输出 4 项；人类审 + 人类合 |
+| **禁止同步**       | 任何违反主入口红线 1~4 的变更（如上游强化了多租户、扩了 `MenuData` 字段、改了 mock 权限字符串"约定"等）           | 拒绝；记录在 `10-review-log.md` 下次升级时回顾                  |
+| **需要人类决策**   | 介于以上类别之间，或涉及业务 schema 模型                                                                          | 暂缓；列入待决清单，由人类拍板                                  |
 
 ## 11-5. 上游 → starter → 业务项目 各级污染防御
 
@@ -139,14 +139,14 @@ pure-admin-thin-max-ts        →        u-admin-web-starter            →     
 ### 评估上游单文件差异（只读）
 
 ```bash
-diff -u "/Users/dengwang/Documents/coding/SRVF-web-admin参考/pure-admin-thin-max-ts/<file>" \
-        "/Users/dengwang/Documents/coding/u-admin-web-starter/<file>"
+diff -u "<refs-root>/pure-admin-thin-max-ts/<file>" \
+        "<coding-root>/u-admin-web-starter/<file>"
 ```
 
 ### 在 starter 仓库内查上游 hash（只读）
 
 ```bash
-cd /Users/dengwang/Documents/coding/u-admin-web-starter
+cd <coding-root>/u-admin-web-starter
 git log --oneline --all   # 只看，不要 push 任何上游 ref
 ```
 
