@@ -1,12 +1,12 @@
 import { bizErrorMessage } from "@/api/srvf-error";
-import { h, ref, reactive } from "vue";
+import { h, ref } from "vue";
 import dayjs from "dayjs";
-import type { PaginationProps } from "@pureadmin/table";
 import { ElMessageBox } from "element-plus";
 import { deviceDetection } from "@pureadmin/utils";
 import { message } from "@/utils/message";
 import { hasPerms } from "@/utils/auth";
 import { addDialog } from "@/components/ReDialog";
+import { useSrvfList } from "@/srvf-kit";
 import { getDictTypes, getDictItems } from "@/api/srvf-dict";
 import { getOrganizations } from "@/api/srvf-organization";
 import NotificationForm, { type NotificationFormModel } from "../form.vue";
@@ -25,7 +25,8 @@ import {
   VISIBILITY_LABEL,
   CHANNEL_LABEL,
   type NotificationChannel,
-  type NotificationListItem
+  type NotificationListItem,
+  type NotificationListQuery
 } from "@/api/srvf-notification";
 import { useSrvfDictStoreHook } from "@/store/modules/srvfDict";
 
@@ -42,16 +43,25 @@ export function useNotifications() {
   const canPublish = hasPerms("notification.publish.record");
   const canSendSms = hasPerms("notification.send.sms");
 
-  const dataList = ref<NotificationListItem[]>([]);
-  const loading = ref(false);
   const statusFilter = ref<string>("");
   const typeFilter = ref<string>("");
   const formRef = ref();
-  const pagination = reactive<PaginationProps>({
-    total: 0,
-    pageSize: 10,
-    currentPage: 1,
-    background: true
+  const {
+    dataList,
+    loading,
+    pagination,
+    onSearch,
+    onFilterChange,
+    handleSizeChange,
+    handleCurrentChange
+  } = useSrvfList<NotificationListItem, NotificationListQuery>({
+    fetch: getNotifications,
+    buildParams: () => ({
+      ...(statusFilter.value ? { statusCode: statusFilter.value } : {}),
+      ...(typeFilter.value ? { notificationTypeCode: typeFilter.value } : {})
+    }),
+    errorMessage: "加载通知列表失败",
+    canRead
   });
 
   /** notification_type 字典下拉(过滤 + 表单)+ 可见部门下拉(懒加载;空 → 退化) */
@@ -116,47 +126,6 @@ export function useNotifications() {
       text: NOTIFICATION_STATUS_LABEL[code] ?? code,
       type: NOTIFICATION_STATUS_TAG[code] ?? ("info" as const)
     };
-  }
-
-  async function onSearch() {
-    if (!canRead) {
-      dataList.value = [];
-      return;
-    }
-    loading.value = true;
-    try {
-      const { code, data } = await getNotifications({
-        page: pagination.currentPage,
-        pageSize: pagination.pageSize,
-        ...(statusFilter.value ? { statusCode: statusFilter.value } : {}),
-        ...(typeFilter.value ? { notificationTypeCode: typeFilter.value } : {})
-      });
-      if (code === 0) {
-        dataList.value = data.items;
-        pagination.total = data.total;
-        pagination.pageSize = data.pageSize;
-        pagination.currentPage = data.page;
-      }
-    } catch (error: any) {
-      message(bizErrorMessage(error, "加载通知列表失败"), {
-        type: "error"
-      });
-    } finally {
-      loading.value = false;
-    }
-  }
-
-  function onFilterChange() {
-    pagination.currentPage = 1;
-    onSearch();
-  }
-  function handleSizeChange(val: number) {
-    pagination.pageSize = val;
-    onSearch();
-  }
-  function handleCurrentChange(val: number) {
-    pagination.currentPage = val;
-    onSearch();
   }
 
   async function ensureTypeOptions() {
