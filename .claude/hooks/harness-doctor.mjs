@@ -9,7 +9,7 @@
 //       removed) -> non-zero exit. Extra settings entries beyond the matrix are
 //       reported as INFO (additive protection is never drift).
 //   [2] Advisory: compare the frozen backend baseline recorded in
-//       srvf-api-contract-readiness.md against the live ../srvf-nest-api version.
+//       docs/archive/srvf-api-contract-readiness.md against the live ../srvf-nest-api version.
 //       A lag only WARNs (re-verify the §6 checklist before PR-4) — it never flips
 //       the exit code, because the freeze is meant to lag the live backend.
 //
@@ -31,7 +31,8 @@ const ROOT = path.resolve(HERE, "..", ".."); // .claude/hooks -> project root
 const SETTINGS = process.env.SRVF_DOCTOR_SETTINGS || path.join(ROOT, ".claude", "settings.json");
 const RULES = process.env.SRVF_DOCTOR_RULES || path.join(ROOT, "docs", "pure-admin", "02-ai-rules.md");
 const READINESS =
-  process.env.SRVF_DOCTOR_READINESS || path.join(ROOT, "docs", "srvf-api-contract-readiness.md");
+  process.env.SRVF_DOCTOR_READINESS ||
+  path.join(ROOT, "docs", "archive", "srvf-api-contract-readiness.md");
 // [3] task-vs-resource smell scan root (overridable for tests).
 const VIEWS = process.env.SRVF_DOCTOR_VIEWS || path.join(ROOT, "src", "views", "srvf");
 // [4] external reference registry (overridable for tests).
