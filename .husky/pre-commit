@@ -1,1 +1,2 @@
 pnpm exec lint-staged
+node .claude/hooks/readtax.mjs
