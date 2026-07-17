@@ -24,6 +24,11 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
+      # 守门者也要被机器守（13A.11）：护栏回归自测 / 矩阵漂移巡检 / 恒读层预算,
+      # 全部零依赖纯 Node,放在装依赖之前秒级快挂。
+      - run: node .claude/hooks/harness.test.mjs
+      - run: node .claude/hooks/harness-doctor.mjs
+      - run: node .claude/hooks/readtax.mjs
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
       - run: git diff --exit-code

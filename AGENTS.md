@@ -58,7 +58,7 @@
 **权限三档**(deny > ask > allow,先匹配先赢;头注列有 never-allow 清单):
 
 - 🔴 **deny(框架内核;人改版本化 settings 才能动)**:既有 store 五件(permission/multiTags/app/settings/epTheme)、`router/index.ts` + `asyncRoutes.ts`、`components/Re*/**`、`plugins/**`、`main.ts` / `App.vue` / `config/index.ts`、`vite.config.ts` / `tsconfig.json` / `build/**`、eslint/stylelint/prettier/commitlint/postcss 配置、`.lintstagedrc`、`.env*`、`pnpm-lock.yaml`(含 Read)、`dist`(Read);Bash 面:force push 全变体。
-- 🟡 **ask(真敏感;人在场逐次批,无人值守等同拒绝)**:`src/utils/http/**`、`src/utils/auth.ts`、`src/views/login/**`、`src/router/utils.ts`、`.husky/**`、`.claude/**`(harness 自保护)、`docs/pure-admin/13-ai-harness.md`;Bash 面:`git branch -D`。`package.json` 由 guard 动态守:仅 scripts 区变 allow / 依赖区变 deny / 其余 ask(13A.10)。
+- 🟡 **ask(真敏感;人在场逐次批,无人值守等同拒绝)**:`src/utils/http/**`、`src/utils/auth.ts`、`src/views/login/**`、`src/router/utils.ts`、`.husky/**`、`.claude/**`(harness 自保护)、`docs/pure-admin/13-ai-harness.md`;Bash 面:`git branch -D|--delete`。`package.json` 由 guard 动态守:仅 scripts 区变 allow / 依赖区变 deny / 其余 ask(13A.10)。
 - 🟢 **allow(日常开发面,零弹窗)**:git 常规读写(push 非 force)、`gh pr`(merge 仅 `--squash`)、`pnpm dev/build/preview/typecheck/lint*/install --frozen-lockfile`、harness 自检脚本。views / layout 之外的业务面(views / 业务路由 modules / api / store 业务件 / mock)均为自由区——仍受 guard 内容规则与本文件纪律约束。
 
 **hooks**(全部 fail-open,静态 deny 是硬底线):`guard.mjs`(PreToolUse:§1「依赖/绕闸/配置」行)· `verify.mjs`(Stop:会话改过 `src/**` 代码则 `pnpm typecheck` 不绿不让收工)· `readtax.mjs`(husky pre-commit:恒读双文档字符预算)。手动巡检:`node .claude/hooks/harness.test.mjs`(改 hooks 后必跑,全绿 = 未削弱)、`node .claude/hooks/harness-doctor.mjs`(§13.1↔settings 漂移巡检)。

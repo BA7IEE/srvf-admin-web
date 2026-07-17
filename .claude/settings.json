@@ -72,14 +72,20 @@
       "Edit(./docs/pure-admin/13-ai-harness.md)",
       "Write(./docs/pure-admin/13-ai-harness.md)",
       "Bash(git branch -D*)",
-      "Bash(git branch * -D*)"
+      "Bash(git branch * -D*)",
+      "Bash(git branch --delete*)",
+      "Bash(git branch * --delete*)"
     ],
     "allow": [
       "Bash(git status*)",
       "Bash(git diff*)",
       "Bash(git log*)",
       "Bash(git show*)",
-      "Bash(git branch*)",
+      "Bash(git branch)",
+      "Bash(git branch --list*)",
+      "Bash(git branch -v*)",
+      "Bash(git branch -a*)",
+      "Bash(git branch --show-current*)",
       "Bash(git tag*)",
       "Bash(git fetch)",
       "Bash(git fetch *)",
