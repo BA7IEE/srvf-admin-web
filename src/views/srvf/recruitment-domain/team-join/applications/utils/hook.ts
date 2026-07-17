@@ -1,13 +1,13 @@
 import { bizErrorMessage } from "@/api/srvf-error";
 import dayjs from "dayjs";
-import { h, ref, reactive, computed } from "vue";
+import { h, ref, computed } from "vue";
 import { useRouter } from "vue-router";
-import type { PaginationProps } from "@pureadmin/table";
 import { ElMessageBox } from "element-plus";
 import { deviceDetection } from "@pureadmin/utils";
 import { message } from "@/utils/message";
 import { hasPerms } from "@/utils/auth";
 import { addDialog } from "@/components/ReDialog";
+import { useSrvfList } from "@/srvf-kit";
 import { getOrganizations } from "@/api/srvf-organization";
 import {
   getTeamJoinApplications,
@@ -17,7 +17,8 @@ import {
   joinTeam,
   TJ_APP_STATUS_LABEL,
   TJ_APP_STATUS_TAG,
-  type TeamJoinApplication
+  type TeamJoinApplication,
+  type TjApplicationListQuery
 } from "@/api/srvf-team-join";
 import GateForm, { type GateFormModel } from "../gate-form.vue";
 import JoinForm, { type JoinFormModel } from "../join-form.vue";
@@ -40,14 +41,24 @@ export function useTeamJoinApplications(cycleId: string) {
   const canEvaluate = hasPerms("team-join-application.evaluate.assessment");
   const canJoin = hasPerms("team-join-application.join.member");
 
-  const dataList = ref<TeamJoinApplication[]>([]);
-  const loading = ref(false);
   const statusFilter = ref<string>("");
-  const pagination = reactive<PaginationProps>({
-    total: 0,
-    pageSize: 10,
-    currentPage: 1,
-    background: true
+
+  const {
+    dataList,
+    loading,
+    pagination,
+    onSearch,
+    onFilterChange,
+    handleSizeChange,
+    handleCurrentChange
+  } = useSrvfList<TeamJoinApplication, TjApplicationListQuery>({
+    fetch: getTeamJoinApplications,
+    buildParams: () => ({
+      cycleId,
+      ...(statusFilter.value ? { statusCode: statusFilter.value } : {})
+    }),
+    errorMessage: "加载入队申请失败",
+    canRead: canRead && Boolean(cycleId)
   });
 
   const detailVisible = ref(false);
@@ -122,47 +133,6 @@ export function useTeamJoinApplications(cycleId: string) {
   }
   function canDoJoin(row: TeamJoinApplication) {
     return canJoin && JOIN_STATUS.includes(row.statusCode);
-  }
-
-  async function onSearch() {
-    if (!canRead || !cycleId) {
-      dataList.value = [];
-      return;
-    }
-    loading.value = true;
-    try {
-      const { code, data } = await getTeamJoinApplications({
-        cycleId,
-        page: pagination.currentPage,
-        pageSize: pagination.pageSize,
-        ...(statusFilter.value ? { statusCode: statusFilter.value } : {})
-      });
-      if (code === 0) {
-        dataList.value = data.items;
-        pagination.total = data.total;
-        pagination.pageSize = data.pageSize;
-        pagination.currentPage = data.page;
-      }
-    } catch (error: any) {
-      message(bizErrorMessage(error, "加载入队申请失败"), {
-        type: "error"
-      });
-    } finally {
-      loading.value = false;
-    }
-  }
-
-  function onFilterChange() {
-    pagination.currentPage = 1;
-    onSearch();
-  }
-  function handleSizeChange(val: number) {
-    pagination.pageSize = val;
-    onSearch();
-  }
-  function handleCurrentChange(val: number) {
-    pagination.currentPage = val;
-    onSearch();
   }
 
   /** 查看详情（drawer 内 gates 实况 + 贡献值 + 候选/选定部门） */

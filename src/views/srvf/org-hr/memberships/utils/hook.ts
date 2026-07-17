@@ -1,16 +1,15 @@
-import { bizErrorMessage } from "@/api/srvf-error";
 import dayjs from "dayjs";
-import { ref, reactive } from "vue";
+import { ref } from "vue";
 import { useRouter } from "vue-router";
-import type { PaginationProps } from "@pureadmin/table";
-import { message } from "@/utils/message";
 import { hasPerms } from "@/utils/auth";
+import { useSrvfList } from "@/srvf-kit";
 import {
   getMemberships,
   MEMBERSHIP_TYPE_LABEL,
   MEMBERSHIP_STATUS_LABEL,
   MEMBERSHIP_STATUS_TAG,
-  type MembershipItem
+  type MembershipItem,
+  type MembershipListQuery
 } from "@/api/srvf-membership";
 
 /**
@@ -24,16 +23,28 @@ export function useMembershipList() {
   const router = useRouter();
   const canRead = hasPerms("membership.list.record");
 
-  const dataList = ref<MembershipItem[]>([]);
-  const loading = ref(false);
   const statusFilter = ref<string>("ACTIVE");
   const typeFilter = ref<string>("");
   const keyword = ref<string>("");
-  const pagination = reactive<PaginationProps>({
-    total: 0,
-    pageSize: 10,
-    currentPage: 1,
-    background: true
+
+  const {
+    dataList,
+    loading,
+    pagination,
+    onSearch,
+    onFilterChange,
+    handleSizeChange,
+    handleCurrentChange
+  } = useSrvfList<MembershipItem, MembershipListQuery>({
+    fetch: getMemberships,
+    buildParams: () => ({
+      expand: "member,organization",
+      ...(statusFilter.value ? { status: statusFilter.value } : {}),
+      ...(typeFilter.value ? { membershipType: typeFilter.value } : {}),
+      ...(keyword.value.trim() ? { q: keyword.value.trim() } : {})
+    }),
+    errorMessage: "加载归属总表失败",
+    canRead
   });
 
   const statusOptions = [
@@ -104,49 +115,6 @@ export function useMembershipList() {
       text: MEMBERSHIP_STATUS_LABEL[code] ?? code,
       type: MEMBERSHIP_STATUS_TAG[code] ?? ("info" as const)
     };
-  }
-
-  async function onSearch() {
-    if (!canRead) {
-      dataList.value = [];
-      return;
-    }
-    loading.value = true;
-    try {
-      const { code, data } = await getMemberships({
-        page: pagination.currentPage,
-        pageSize: pagination.pageSize,
-        expand: "member,organization",
-        ...(statusFilter.value ? { status: statusFilter.value } : {}),
-        ...(typeFilter.value ? { membershipType: typeFilter.value } : {}),
-        ...(keyword.value.trim() ? { q: keyword.value.trim() } : {})
-      });
-      if (code === 0) {
-        dataList.value = data.items;
-        pagination.total = data.total;
-        pagination.pageSize = data.pageSize;
-        pagination.currentPage = data.page;
-      }
-    } catch (error: any) {
-      message(bizErrorMessage(error, "加载归属总表失败"), {
-        type: "error"
-      });
-    } finally {
-      loading.value = false;
-    }
-  }
-
-  function onFilterChange() {
-    pagination.currentPage = 1;
-    onSearch();
-  }
-  function handleSizeChange(val: number) {
-    pagination.pageSize = val;
-    onSearch();
-  }
-  function handleCurrentChange(val: number) {
-    pagination.currentPage = val;
-    onSearch();
   }
 
   /** 跳队员档案（跨轴横扫 → 沿队员轴下钻） */
