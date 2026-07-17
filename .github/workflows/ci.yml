@@ -1,0 +1,31 @@
+# SRVF harness · CI（P1 ③ · 2026-07-17 维护者拍板，13-ai-harness §13A.10）
+# 「PR 合并前 lint+typecheck+build 三绿」的独立机械把关：与本地 AI 自证解耦，
+# PR 页面的绿勾/红叉即客观证据，合并前 `gh pr checks` 须全绿。
+# 本仓 lint 脚本是 autofix 模式（--fix / --write），云端跑完后用
+# `git diff --exit-code` 拦下「本该被格式化却没格式化」的漂移。
+name: ci
+on:
+  pull_request:
+  push:
+    branches: [main]
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: git diff --exit-code
+      - run: pnpm typecheck
+      - run: pnpm build

@@ -6,7 +6,7 @@
 
 - **skills**:开工先 `/srvf-preflight <任务一句话>`(按 02-ai-rules §13.4 分级产出 preflight);下发无人值守任务用 `srvf-goal-author` 起草 goal。
 - **权限三档**:`.claude/settings.json`(deny > ask > allow;修改本文件时不得把头注 never-allow 清单中的模式移入 allow)。allow 已覆盖日常 git / gh / pnpm;弹窗多半说明正触碰真敏感面,先自查是否越界再请求放行。
-- **hooks**:PreToolUse `guard.mjs`(依赖 human-only / 绕闸 / 抑制注释 / VITE\_\* fallback / platform-config 值域),Stop `verify.mjs`(改过 `src/**` 代码则 typecheck 不绿不收工),husky pre-commit `readtax.mjs`。动 `.claude/hooks/**` 后必跑 `node .claude/hooks/harness.test.mjs`。
+- **hooks**:PreToolUse `guard.mjs`(依赖 human-only / 绕闸 / 抑制注释 / VITE\_\* fallback / platform-config 值域 / package.json scripts 区),Stop `verify.mjs`(改过 `src/**` 代码则 typecheck 不绿不收工),husky pre-commit `readtax.mjs`。动 `.claude/hooks/**` 后必跑 `node .claude/hooks/harness.test.mjs`。
 - **memory**:Claude Code 自身 `memory/` 机制与仓库铁律无关;仓库级约束只写权威源文档,不依赖个人记忆。
 - 本文件与 `AGENTS.md` 冲突时,以 `AGENTS.md` 为准。
 
