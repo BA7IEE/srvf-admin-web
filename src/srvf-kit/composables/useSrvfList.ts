@@ -26,6 +26,12 @@ export interface UseSrvfListOptions<T, P extends SrvfListFetchParams> {
   errorMessage: string;
   /** 读权限门；传 false 时 onSearch 直接 no-op（不发请求，不清空已有数据） */
   canRead?: boolean;
+  /**
+   * 每次拉列表前的预取钩子（如懒加载筛选下拉、名称解析字典）。在 loading 置真后、
+   * fetch 前 await；异常并入列表加载的错误兜底。幂等性由调用方保证（通常带 resolved 标志位，
+   * 只真正加载一次）。取代各页 onSearch 里手写的「await ensureXOptions()」。
+   */
+  beforeFetch?: () => Promise<void>;
 }
 
 /**
@@ -50,6 +56,7 @@ export function useSrvfList<
     if (options.canRead === false) return;
     loading.value = true;
     try {
+      if (options.beforeFetch) await options.beforeFetch();
       const { code, data } = await options.fetch({
         page: pagination.currentPage,
         pageSize: pagination.pageSize,

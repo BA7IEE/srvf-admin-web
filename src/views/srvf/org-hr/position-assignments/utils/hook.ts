@@ -1,12 +1,12 @@
 import { bizErrorMessage } from "@/api/srvf-error";
 import dayjs from "dayjs";
-import { h, ref, reactive } from "vue";
+import { h, ref } from "vue";
 import { useRouter } from "vue-router";
-import type { PaginationProps } from "@pureadmin/table";
 import { ElMessageBox } from "element-plus";
 import { message } from "@/utils/message";
 import { hasPerms } from "@/utils/auth";
 import { addDialog } from "@/components/ReDialog";
+import { useSrvfList } from "@/srvf-kit";
 import {
   getPositionOptions,
   type PositionOptionItem
@@ -18,7 +18,8 @@ import {
   getPositionAssignmentHistory,
   ASSIGNMENT_STATUS_LABEL,
   ASSIGNMENT_STATUS_TAG,
-  type PositionAssignmentItem
+  type PositionAssignmentItem,
+  type PositionAssignmentListQuery
 } from "@/api/srvf-position-assignment";
 import AssignmentHistory from "../assignment-history.vue";
 
@@ -33,19 +34,11 @@ export function usePositionAssignmentList() {
   const canRevoke = hasPerms("position-assignment.revoke.record");
   const canHistory = hasPerms("position-assignment.read.history");
 
-  const dataList = ref<PositionAssignmentItem[]>([]);
-  const loading = ref(false);
   const statusFilter = ref<string>("ACTIVE");
   const positionFilter = ref<string>("");
   const orgFilter = ref<string>("");
   const includeDescendants = ref(false);
   const keyword = ref<string>("");
-  const pagination = reactive<PaginationProps>({
-    total: 0,
-    pageSize: 10,
-    currentPage: 1,
-    background: true
-  });
 
   const statusOptions = [
     { value: "", label: "全部（含历史）" },
@@ -73,6 +66,33 @@ export function usePositionAssignmentList() {
       // 无读权限 → 过滤下拉为空,不阻塞总表本身
     }
   }
+
+  const {
+    dataList,
+    loading,
+    pagination,
+    onSearch,
+    onFilterChange,
+    handleSizeChange,
+    handleCurrentChange
+  } = useSrvfList<PositionAssignmentItem, PositionAssignmentListQuery>({
+    fetch: getPositionAssignments,
+    beforeFetch: ensureFilterOptions,
+    buildParams: () => ({
+      expand: "member,position,organization",
+      ...(statusFilter.value ? { status: statusFilter.value } : {}),
+      ...(positionFilter.value ? { positionId: positionFilter.value } : {}),
+      ...(orgFilter.value
+        ? {
+            organizationId: orgFilter.value,
+            ...(includeDescendants.value ? { includeDescendants: true } : {})
+          }
+        : {}),
+      ...(keyword.value.trim() ? { q: keyword.value.trim() } : {})
+    }),
+    errorMessage: "加载任命记录失败",
+    canRead
+  });
 
   const columns: TableColumnList = [
     {
@@ -119,56 +139,6 @@ export function usePositionAssignmentList() {
       text: ASSIGNMENT_STATUS_LABEL[code] ?? code,
       type: ASSIGNMENT_STATUS_TAG[code] ?? ("info" as const)
     };
-  }
-
-  async function onSearch() {
-    if (!canRead) {
-      dataList.value = [];
-      return;
-    }
-    loading.value = true;
-    try {
-      await ensureFilterOptions();
-      const { code, data } = await getPositionAssignments({
-        page: pagination.currentPage,
-        pageSize: pagination.pageSize,
-        expand: "member,position,organization",
-        ...(statusFilter.value ? { status: statusFilter.value } : {}),
-        ...(positionFilter.value ? { positionId: positionFilter.value } : {}),
-        ...(orgFilter.value
-          ? {
-              organizationId: orgFilter.value,
-              ...(includeDescendants.value ? { includeDescendants: true } : {})
-            }
-          : {}),
-        ...(keyword.value.trim() ? { q: keyword.value.trim() } : {})
-      });
-      if (code === 0) {
-        dataList.value = data.items;
-        pagination.total = data.total;
-        pagination.pageSize = data.pageSize;
-        pagination.currentPage = data.page;
-      }
-    } catch (error: any) {
-      message(bizErrorMessage(error, "加载任命记录失败"), {
-        type: "error"
-      });
-    } finally {
-      loading.value = false;
-    }
-  }
-
-  function onFilterChange() {
-    pagination.currentPage = 1;
-    onSearch();
-  }
-  function handleSizeChange(val: number) {
-    pagination.pageSize = val;
-    onSearch();
-  }
-  function handleCurrentChange(val: number) {
-    pagination.currentPage = val;
-    onSearch();
   }
 
   function rowSubject(row: PositionAssignmentItem) {
