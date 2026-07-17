@@ -1,181 +1,91 @@
-# AGENTS.md
+# AGENTS.md — SRVF 前端 AI 协作铁律(Harness 2.0-FE)
 
-> This file is the standard AI entry for non-Claude agents (ChatGPT, Codex, Cursor, Copilot, etc.).
-> It **mirrors** `CLAUDE.md` and must stay in sync with it.
-> Claude Code agents should read `CLAUDE.md` first; other agents may start here.
->
-> **All AI agents must obey both `CLAUDE.md` and `AGENTS.md`. Where they ever diverge, `CLAUDE.md` is authoritative — but they should not diverge.**
->
-> If you are working from an exported copy of this repository (e.g. a zip handed to you outside of git), the same rules below still apply. Any code you produce will be reconciled back into this git repository by a human + Claude Code, which enforces the file-level restrictions in §4 mechanically — do not assume a restriction here is "just a suggestion" because you personally cannot see the enforcement.
+> 所有 AI 编码助手(Claude Code / Codex / Cursor / 其他 Agent)在本仓的**唯一恒读规则入口**。
+> Harness 2.0-FE 起(维护者 2026-07-17 拍板):细则留在 `docs/`(触碰才读,§6 索引);v1 双文档全文冻结于 [`docs/archive/harness-v1/`](docs/archive/harness-v1/)。
+> 本文件与 `CLAUDE.md` 体积由 `node .claude/hooks/readtax.mjs` 守护(≤12,000 / ≤2,000 字符,husky pre-commit 拦超限);**决策语义零放宽,只改投递方式**。
 
-## 1. Repository Identity
+## 0. 读取协议与权威源
 
-- This repository is the **SRVF-specific admin frontend** (深圳公益救援队 SRVF 内部管理后台).
-- It is **derived from `u-admin-web-starter`** (Private starter).
-- It is a **business project**, **not** the starter — do not develop starter-level changes here.
-- Backend contracts come from **`srvf-nest-api`** (Swagger at `http://localhost:3000/api/docs`), **not** from Pure Admin demo pages.
-- This repository must remain **private** forever (upstream Pure Admin Max-Ts license forbids public distribution).
+**恒读层**(每会话开工必读):本文件;Claude Code 另读 `CLAUDE.md`(Claude 专属事项)。
+**触碰才读**(改到哪个主题读哪篇;§6 全索引):
 
-## 2. ⚠️ Current Critical Status
+- 动手前流程:`docs/pure-admin/02-ai-rules.md`(§13.1 文件矩阵 · §13.4 8 步 checklist)
+- 新业务页:后端能力图 `../srvf-nest-api/docs/handoff/admin-web.md`(**必读**,见 §4)→ 仓内两份蓝图(§6)→ 完整版范式索引 `docs/pure-admin/14-full-version-reference-index.md`(先查范式再动手,只抄交互不抄契约)
+- 路由/菜单:`docs/pure-admin/03-router-menu.md`(§5.2.1 asyncRoutes 禁令)
+- harness 本体:`docs/pure-admin/13-ai-harness.md`
 
-### PR-4 NestJS login integration is **LIVE** (上线 2026-06-22)
+**背景层**(不主动读):`docs/archive/**`(历史证据,不当当前事实)、derivation / readiness 两篇(PR-4 历史决策记录)。
 
-- PR-4 was restarted after `docs/srvf-api-contract-readiness.md` §6 Readiness Checklist was fully confirmed (10/10) and humans explicitly approved (2026-06-22), then shipped to `main` via PR #6.
-- Real login is the **3-call** flow: `POST /api/auth/v1/login` → `GET /api/admin/v1/me` + `GET /api/system/v1/rbac/me/permissions`. Verified live at ship time; re-verify against current `/api/docs-json` before relying on exact counts. Backend current-state on 2026-07-05 records v0.37.0 / 195 permission codes.
-- The auth files are now **active code** (see §4). As of 2026-07-05 they are **no longer limited to a mandatory separate PR** — changes are allowed as long as the changed files / what changed / impact area are explicitly declared (see §4).
+**权威源冲突顺序**(高 → 低):
 
-### Where the original PR-4 attempt is (historical)
+1. 后端 live `/api/docs-json` + 代码现状 + GitHub 现状(字段/枚举/RBAC 码唯一真相)
+2. 后端 handoff `admin-web.md`(任务设计权威:任务→端点图 / 轴模型 / 踩坑 / gap-ledger)
+3. 本文件(长期铁律)> `02-ai-rules.md` 等专题文档
+4. 两份蓝图(路线图,非圣经)> `archive/**`(仅历史)
 
-- Branch: `archive/pr-4-login-attempt-b81afec` (preserved locally + on `origin`) — the _first_ attempt (commit `b81afec`), reverted at the time and later **superseded** by the shipped PR #6. Kept for history only.
+发现文档-代码冲突 / 蓝图-handoff 互冲 → **暂停上报,不擅自调和**(先例:公告导入页,蓝图要建常规页、handoff 判一次性工具,问过用户才动)。
 
-### What is allowed now
+## 1. 铁律速查(主题 → 一句话;多数已机械化,见 §3)
 
-- ✅ Vite proxy is configured: `/api → http://localhost:3000`.
-- ✅ Real data-driven SRVF pages are allowed (see §5) — this is no longer a placeholder-only, pre-contract-readiness project.
+- **依赖**:human-only——禁 `pnpm add/remove/update/clean:cache`、禁改 `package.json` 依赖区(guard 拦;需求写进 PR 描述由人执行)。
+- **绕闸**:禁 `--no-verify` / `HUSKY=0` / `git commit -n`(guard 拦);禁新增 `@ts-ignore` / `@ts-nocheck` / `@ts-expect-error` / `eslint-disable`(guard 拦,修真错;真误报输出评估交人裁)。
+- **配置**:禁源码硬编码 `VITE_*` fallback(guard 拦);`public/platform-config.json` 只可改值,增删顶层字段 human-only(guard 动态判)。
+- **框架**:禁启用 `asyncRoutes`、禁补 `getMenuList`、禁恢复租户菜单;mock 非契约(演示 URL/字段/角色名全不作数)。
+- **红线 1~4**:禁前端反推/发明后端字段、schema、RBAC 码、状态机;缺接口 → 后端 gap-ledger 登记后 STOP。
+- **私有**:本仓永不公开(上游 Max-Ts license);业务改动不回流 starter。
+- **轴模型**:页面按**任务**设计不按资源——沿轴下钻(`activityId`/`memberId` 走路由进详情页)≠「选择父级下拉看子资源」拍平反模式(doctor [3] 会 WARN)。
+- **掩码回写**:无 `*.read.sensitive` 码时敏感字段返**掩码串或 null**(档案证件号/手机、紧急联系人等);编辑表单提交前必须剔除无权字段(值含 `*` 或 null),靠后端「不发 = 保留」;原样回写 = 掩码覆盖真值。
+- **options 上限**:`*/options` 类选择器端点 limit 后端硬上限 **100**(docs-json 未标注);`permissionCodes` 等批量入参同样 ≤100/次分片。
+- **依赖恢复**:`pnpm install --frozen-lockfile` 必须**裸命令**(尾随管道/重定向会被 guard 当包名拦);fresh worktree 先跑它再 typecheck/commit。
+- **端口**:`:8848` = 主 checkout 的 dev;worktree 自起 `pnpm dev` 自动落 `:8849`(`--port` 不透传,别硬指定);渲染验证用 `tests/render/` 的 uv+Playwright harness。
+- **后端进程**:本地 `:3000` 是用户自己的进程,502/连接拒绝时**不自启**——收尾已完成代码 → commit+push+开 PR 不合并 → 报告等用户拉起,续跑从被阻步骤开始。
+- **提交头**:commitlint 现拒绝提交头里任何拉丁 token——header 纯中文,标识符进 body;拿不准先 `pnpm exec commitlint --edit <tmp文件>` 验,别烧 lint-staged 轮次。
+- **提交钩子路径**:worktree 里 `git commit` 执行的是**主 checkout** 的 `.husky/`(`core.hooksPath` 绝对路径)——改 hook 要合并进 main 才对全部 checkout 生效。
+- **dev 验证**:日志是缓冲区,会回放已修复的旧错(先看时间戳);跑着 dev 切分支会毒化 vite 缓存(停服 → `rm -rf node_modules/.vite` → 重启);截图可能白幽灵、el-table 有 hidden-columns 幽灵按钮(行内探针限定 `tbody tr`)——判定以 typecheck/build + DOM 查询为准。
+- **收尾**:判断给证据(路径:行号);goal 外发现记录上报不顺手修;必须输出「本次未做」;不确定不写成事实。
 
-### Alignment vs backend v0.37.0 (2026-07-06 重估)
+## 2. 决策锁(重开任一条前,必须先暂停声明本节存在)
 
-- 后端已演进至 **v0.37.0**（232 paths / 320 operations / 195 权限码 · handoff gap-ledger 全关）。
-- 结构级对账（2026-07-06 · live `/api/docs-json`）：前端现有 SRVF 业务调用 **105/105 命中现行契约**——已接页面不存在"接口过时"；差距是**覆盖面**（admin/system 面 67 条路径未消费，集中在组织·职务·任职·分管·角色绑定·分域授权 + 附件链 + 权限治理）。
-- 差距矩阵、IA v2 与 Phase 0~3 路线图见 **`docs/srvf-admin-vnext-blueprint.md`**（当前开发路线单一来源）。
+- **3-call 登录**:真实登录 = `POST /api/auth/v1/login` → `GET /api/admin/v1/me` + `GET /api/system/v1/rbac/me/permissions`(PR #6 上线 2026-06-22);禁回 mock 登录流。
+- **auth 申报制**:5 个 auth 文件(`src/api/user.ts` / `src/utils/auth.ts` / `src/utils/http/index.ts` / `src/store/modules/user.ts` / `src/views/login/index.vue`)可随业务 PR 改,但每次必须显式申报——改了哪个 / 改了什么 / 影响面(登录态 · token 生命周期 · 路由守卫);未申报的改动不允许。
+- **platform-config**:只改值;增删顶层字段 human-only(guard 机械执行)。
+- **依赖 human-only**:全部依赖变更(含核心库升级、UI 库/构建器替换)由人执行,AI 只能提案。
+- **私有仓**:永不公开、永不反向流 starter(同步只 starter → 本仓 cherry-pick)。
+- **演示角色名**:`admin` / `common` / `*:*:*` / `permission:btn:*` 类演示码永不作正式 RBAC 码;真码逐端点查 live 契约(有的端点仅登录态无码)。
 
-## 3. Must Read First
+## 3. 红区与机器闸(`.claude/settings.json` + hooks 的文档版)
 
-Every AI task in this repository must read these documents first, in order:
+**权限三档**(deny > ask > allow,先匹配先赢;头注列有 never-allow 清单):
 
-1. `docs/pure-admin-max-ts-baseline.md` (main entry inherited from starter · v0.3)
-2. `docs/pure-admin/02-ai-rules.md` (AI hard rules · §13.1 file matrix · §13.4 8-step checklist)
-3. **`docs/srvf-frontend-derivation.md`** (SRVF derivation record · §1 starter base commit · §4 backend Q1~Q5 conclusions · §6 PR order table)
-4. **`docs/srvf-api-contract-readiness.md`** (PR-4 readiness + decision record · §6 checklist 10/10 · §3–§5 historical pause context)
-5. `docs/pure-admin/12-official-docs-index.md` (Pure Admin official docs index with verified URLs)
-6. `docs/pure-admin/13-ai-harness.md` (AI harness · `.claude/` deny+ask rules and guard/verify hooks that mechanically enforce §13.1 / §13.3 · how a human grants an exception by editing `settings.json` — `deny` always beats `allow`; this harness only runs inside Claude Code, but the restrictions it encodes still apply to you)
-7. **后端交接能力图**：`../srvf-nest-api/docs/handoff/admin-web.md`（对接前必读 — 按任务设计页面，不是按资源；字段真相 = 后端 live `/api/docs-json`。缺接口在该文件 gap-ledger 登记）
+- 🔴 **deny(框架内核;人改版本化 settings 才能动)**:既有 store 五件(permission/multiTags/app/settings/epTheme)、`router/index.ts` + `asyncRoutes.ts`、`components/Re*/**`、`plugins/**`、`main.ts` / `App.vue` / `config/index.ts`、`vite.config.ts` / `tsconfig.json` / `build/**`、eslint/stylelint/prettier/commitlint/postcss 配置、`.lintstagedrc`、`.env*`、`pnpm-lock.yaml`(含 Read)、`dist`(Read);Bash 面:force push 全变体。
+- 🟡 **ask(真敏感;人在场逐次批,无人值守等同拒绝)**:`src/utils/http/**`、`src/utils/auth.ts`、`src/views/login/**`、`src/router/utils.ts`、`package.json`(scripts 区有合法需求,依赖区仍被 guard 拦)、`.husky/**`、`.claude/**`(harness 自保护)、`docs/pure-admin/13-ai-harness.md`;Bash 面:`git branch -D`。
+- 🟢 **allow(日常开发面,零弹窗)**:git 常规读写(push 非 force)、`gh pr`(merge 仅 `--squash`)、`pnpm dev/build/preview/typecheck/lint*/install --frozen-lockfile`、harness 自检脚本。views / layout 之外的业务面(views / 业务路由 modules / api / store 业务件 / mock)均为自由区——仍受 guard 内容规则与本文件纪律约束。
 
-8. **`docs/srvf-admin-vnext-blueprint.md`**（v0.37.0 重估蓝图 · 差距矩阵 · IA v2 · Phase 0~3 路线图——新业务页动工前先在此定位）
+**hooks**(全部 fail-open,静态 deny 是硬底线):`guard.mjs`(PreToolUse:§1「依赖/绕闸/配置」行)· `verify.mjs`(Stop:会话改过 `src/**` 代码则 `pnpm typecheck` 不绿不让收工)· `readtax.mjs`(husky pre-commit:恒读双文档字符预算)。手动巡检:`node .claude/hooks/harness.test.mjs`(改 hooks 后必跑,全绿 = 未削弱)、`node .claude/hooks/harness-doctor.mjs`(§13.1↔settings 漂移巡检)。
 
-For route / menu work also read:
+## 4. 与后端协作
 
-- `docs/pure-admin/03-router-menu.md` (especially §5.2.1 asyncRoutes P0 prohibition)
+- **任务设计权威** = `../srvf-nest-api/docs/handoff/admin-web.md`:按任务→端点图设计页面,先判「任务页 vs 资源页」;轴模型、踩坑、gap-ledger 都在里面;改哪个域读哪节。
+- **字段真相** = 后端 live `/api/docs-json`(dev 代理 `/api → :3000`)。禁凭记忆/蓝图写字段名,写 API 封装前先直连核对(先例:猜 `thresholdCode`,真名是 `code`)。
+- **缺接口** → 在 handoff gap-ledger 登记后 STOP;不得前端代定任何后端概念(红线 1~4)。
+- 后端版本号/权限码数量**不写进本文件**,以 handoff 与 live 契约为准。
 
-## 4. Core Prohibitions
+## 5. 流程与验证
 
-These apply to ALL AI tasks in this repository, no exceptions:
+- **开工**:按 `02-ai-rules.md` §13.4 走 8 步 checklist(Claude 可用 `/srvf-preflight`);声明允许/禁触文件清单;C 档 goal 内自决连续推进,goal 外新发现记录不顺手修。
+- **并行**:一任务 = 一 worktree 分支 = 一 PR,写集不相交;不动别人的 worktree。fresh worktree 先 `pnpm install --frozen-lockfile`(裸命令)。
+- **验证**:`pnpm lint && pnpm typecheck` 零错零警 → 提交前 `pnpm build`;UI 改动起本 worktree 的 dev(→:8849)真验,登录用后端 docs §8 dev 默认账号(不读姊妹仓 `.env`)。
+- **提交/合并**:husky = lint-staged + commitlint(头纯中文)+ readtax;PR 走 squash;验证净的单 PR 可直接合,**多 PR brief 的显式 stop-gate 优先于「不问就合」**。
+- **harness 改动**:动 `.claude/hooks/**` 后必跑 `node .claude/hooks/harness.test.mjs`;`guard.mjs` / `verify.mjs` 语义变更 = 维护者拍板级,不得顺手改。
 
-- ✅ **PR-4 is shipped** (§2); it is no longer paused. The auth files (`src/api/user.ts`, `src/utils/auth.ts`, `src/utils/http/index.ts`, `src/store/modules/user.ts`, `src/views/login/index.vue`) are now **active code**. **(松绑 2026-07-05)** They are no longer restricted to a mandatory fully-separate PR — changes are allowed, but every such change must explicitly declare:
-  1. which of these files changed;
-  2. what changed;
-  3. the impact area (does it affect login state, token lifecycle, or route guards).
+## 6. 文档索引与 v1 重定向
 
-  Undeclared / unstated changes to these files are still not allowed. On the Claude Code / git side, two of the five files (`src/utils/auth.ts`, `src/store/modules/user.ts`) are currently reachable with a declared change; the other three (`src/api/user.ts`, `src/utils/http/**`, `src/views/login/**`) still require a human to manually lift a hard block before that side can write to them — if you are not working through Claude Code, this distinction doesn't block you, but the declaration requirement still does.
+- `docs/pure-admin/02-ai-rules.md` —— 每次动手前(§13.1 矩阵 / §13.4 checklist / §16 任务→必读映射)。
+- `docs/pure-admin/03-router-menu.md` —— 改路由/菜单。
+- `docs/pure-admin/13-ai-harness.md` —— 改 harness / 权限 / hooks(「为什么这样设计」的权威说明;§13A.8 为 2.0-FE 反转记录)。
+- `docs/pure-admin/14-full-version-reference-index.md` —— 建新页前查范式(208 演示页 / 26 个 `Re*` 组件能力速查;完整版只读,只抄交互)。
+- `docs/srvf-admin-vnext-blueprint.md` · `docs/srvf-admin-ux-upgrade-blueprint.md` —— 新业务规划定位(差距矩阵 / IA / 七条军规;与 handoff 冲突按 §0 处理)。
+- `docs/pure-admin-max-ts-baseline.md` 与 `docs/pure-admin/` 其余各篇 —— starter 底座专题(项目图 / http / mock 风险 / 模块 / 上游同步 / 官方索引)。
+- `docs/srvf-frontend-derivation.md` · `docs/srvf-api-contract-readiness.md` —— 追溯派生记录 / PR-4 决策史。
 
-- ⛔ **Do not enable `asyncRoutes`** (`src/router/asyncRoutes.ts` · do not switch `src/views/login/index.vue` import).
-- ⛔ **Do not add or implement `getMenuList`** (intentionally absent · not a bug).
-- ⛔ **Do not treat mock as backend contract** (mock URLs, fields, role names like `admin / common / *:*:*` are demo-only).
-- ⛔ **Do not define backend fields / schema / RBAC / activity state machine from frontend** (red lines 1~4).
-- ⛔ **Do not add dependencies** (`pnpm add / remove / update / clean:cache` forbidden) and **do not modify `package.json` `dependencies / devDependencies / engines / pnpm` fields**.
-- ⛔ **Do not restore the tenant management menu** (`tenantManagementRouter` must stay hidden; `_tenantManagementRouter` source kept as reference only).
-- ⛔ **Do not make this repository public**.
-- ⛔ Do not use `// eslint-disable` / `// @ts-ignore` / `--no-verify` to bypass checks.
-- ⛔ Do not hardcode `import.meta.env.VITE_*` fallbacks in source code.
-- ⛔ Do not flow business-specific changes back into starter (see `docs/pure-admin/11-upstream-sync.md` §11-2.4).
-
-## 5. Allowed Current Work
-
-API contract readiness is met (§2) and PR-4 is shipped, so **real data-driven pages are allowed**, not just placeholders:
-
-- ✅ **Real SRVF list / detail pages** wired to `/api/admin/v1/*` · `/api/system/v1/*` through `@/utils/http` (dev proxy `/api → :3000`), gated by **real RBAC codes** via `hasPerms("<code>")`. Reuse the `Re*` components + the 队员页 three-piece paradigm (`src/views/srvf/members-domain/members/` `index.vue` + `utils/hook.ts` + `src/api/srvf-member.ts`).
-- ✅ Static menu skeleton (`src/router/modules/srvf-*.ts`). Placeholder pages are **no longer the default** — the v0.37.0 contract is fully shipped (backend gap-ledger closed); a placeholder is acceptable only for a genuinely missing backend capability that has first been registered in the backend gap-ledger.
-- ✅ Layout-only UI work and documentation updates (under `docs/`).
-- ✅ Organization / activity-domain UIs.
-- ✅ `pnpm dev / build / lint / typecheck / preview`.
-
-Types come from live **`/api/docs-json`** (the single contract source). You still must **NOT** invent backend fields / enums / states / RBAC codes frontend-side (red lines 1–4); if a needed endpoint genuinely doesn't exist, register it in the backend gap-ledger (`../srvf-nest-api/docs/handoff/admin-web.md`) and STOP rather than "decide" a backend-side concern frontend-side. Roadmap & priorities: `docs/srvf-admin-vnext-blueprint.md`.
-
-## 6. Before Modifying Files
-
-Every AI task must state BEFORE editing:
-
-- task type;
-- documents read (must include items from §3);
-- allowed files to modify;
-- forbidden files that this task could accidentally touch (must be empty diff at the end);
-- **PR-4 boundary**: does this task touch the auth mainline (login / token / `/api/auth/v1/login` / `/api/admin/v1/me` / refresh / role mapping)? If yes → it may be included, but you must explicitly state which auth files changed, what changed, and the impact area (§4);
-- **backend impact**: does this task derive / define / require backend fields / tables / API paths? If yes → STOP, that violates red lines 1~4;
-- whether dependencies are touched (if yes → STOP, this is not allowed);
-- rollback plan.
-
-## 7. Derivation Source
-
-- Starter: `BA7IEE/u-admin-web-starter` (Private)
-- Starter base commit at derivation time: `fd24cd4`
-- Official docs index synced from starter commit: `ebcddc0`
-- Latest starter sync record: see `docs/srvf-frontend-derivation.md` §1 + `docs/pure-admin/11-upstream-sync.md`
-
-When in doubt about a starter-level concern: go look at the starter repo (`/Users/dengwang/Documents/coding/u-admin-web-starter` or `BA7IEE/u-admin-web-starter`) — but **do not** push starter-level changes from this repo back to starter.
-
-## 8. Quick Map
-
-```
-┌────────────────────────┐        cherry-pick      ┌────────────────────────┐
-│ u-admin-web-starter    │  ─────────────────────► │ srvf-admin-web (this)  │
-│ (private starter)      │                         │ (private business)     │
-└────────────────────────┘                         │                        │
-                                                   │  archive/pr-4-...      │
-                                                   │  (PR-4 attempt saved)  │
-                                                   └────────────────────────┘
-```
-
-- starter → srvf 同步：`git cherry-pick`（never merge）
-- srvf → starter 反向流：**禁止**（见 `11-upstream-sync.md` §11-2.4）
-
-When in doubt: `docs/srvf-api-contract-readiness.md` is the historical single source of truth for the **PR-4 decision record**; for what is allowed **now**, read §5 + `docs/srvf-admin-vnext-blueprint.md`.
-
-## 9. Full Version Reference Rule
-
-Local full-version reference path:
-
-`/Users/dengwang/Documents/coding/SRVF-web-admin参考/vue-pure-admin`
-
-This is the **open-source full version of vue-pure-admin**. It contains 60+ demo pages (table / form / editor / chart / flowchart / Excel / upload / dept / role / user / dict / log / etc.) that the Max-Ts starter does not ship. It exists purely as a **UI / component / page-pattern read-only reference**.
-
-> 📑 **Searchable complete index**: `docs/pure-admin/14-full-version-reference-index.md` — full enumeration of all 208 demo pages + 26 `Re*` components + a 「capability → path」 quick-search + a heavy-dependency list. Before building any new page, **search §14 by capability first**, then follow the Workflow below (copy interaction only; swap API / fields / roles / permission codes).
-
-### Allowed use
-
-- ✅ **read-only reference** — never write to this directory;
-- ✅ UI **layout patterns**;
-- ✅ **component composition** (how `<PureTable>` / `<ReDialog>` / Schema Form / Drawer / etc. are composed);
-- ✅ **table / form / dialog** patterns;
-- ✅ **route module** examples (`src/router/modules/*`);
-- ✅ **page directory naming** conventions;
-- ✅ **icon / menu meta** examples (`meta.icon` / `meta.rank` / `meta.title`);
-- ✅ **dictionary / organization / calendar** UI patterns.
-
-### Forbidden use
-
-- ⛔ Do **not** modify the full-version repository (it is local read-only reference, not a git workspace for us);
-- ⛔ Do **not** copy backend API contracts from full-version `src/api/*`;
-- ⛔ Do **not** copy mock API as real contract;
-- ⛔ Do **not** copy RBAC model;
-- ⛔ Do **not** copy tenant model;
-- ⛔ Do **not** copy dynamic routing implementation (`asyncRoutes` / `getMenuList` / `MenuData` schema);
-- ⛔ Do **not** derive backend schema from full-version pages;
-- ⛔ Do **not** treat full-version menus as business requirements (e.g. "完整版有 system/role 页 → 我们也要做" is wrong);
-- ⛔ Do **not** import full-version code blindly — every copied page must have its API / fields / roles / permissions adapted to the actual backend (Swagger / Prisma).
-
-### Workflow
-
-1. **Search first** — check `docs/pure-admin/14-full-version-reference-index.md` (capability → path) to locate the pattern, then confirm in `vue-pure-admin/src/views/` (e.g. `grep -r "el-tree"` for tree examples).
-2. **Read** the matching file, understand the layout / composition / interaction.
-3. **Recreate** in the derived business project, but:
-   - replace API calls with backend-aligned `src/api/<biz>-*.ts`;
-   - replace fields / enums / roles with backend types;
-   - replace permission codes (avoid `permission:btn:add` / `*:*:*` style);
-   - reuse the starter-side `Re*` components when possible (do not import full-version-specific components).
-4. **Never** open a PR against the full-version repo; it is **not** ours.
-
-See `docs/pure-admin/14-full-version-reference-index.md` for the complete searchable index, and `docs/pure-admin/07-max-ts-modules.md` §Full Version Reference Strategy for PR-5 ~ PR-8 specific guidance.
-
----
-
-**Authority**: this file mirrors `CLAUDE.md`. If you find them out of sync, treat the stricter version as authoritative; default: `CLAUDE.md` wins. Last synced to `CLAUDE.md`: 2026-07-06.
+**v1 重定向**(v1 全文见 [`docs/archive/harness-v1/`](docs/archive/harness-v1/);v1 `CLAUDE.md` 与 `AGENTS.md` 同构):v1 §1 仓库身份 → 本文件头注 + §0;§2 现状 → §2(版本类事实改以后端 handoff 为准);§3 必读清单 → §0 分层读取;§4 核心禁令 → §1 + §2(guard 报错引用的「CLAUDE.md §4」即 v1 编号,按本行解析);§5 允许工作 → §1 自由区 + §4;§6 动手前声明 → §5;§7 派生源 / §8 快查图 → §6 derivation 行;§9 完整版参考规则 → §6 的 14-index 行(禁抄契约/RBAC/动态路由细则在该索引与 `07-max-ts-modules.md`)。
