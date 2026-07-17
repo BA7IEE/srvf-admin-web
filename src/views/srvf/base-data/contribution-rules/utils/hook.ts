@@ -1,11 +1,11 @@
 import { bizErrorMessage } from "@/api/srvf-error";
-import { h, ref, reactive } from "vue";
-import type { PaginationProps } from "@pureadmin/table";
+import { h, ref } from "vue";
 import { ElMessageBox } from "element-plus";
 import { deviceDetection } from "@pureadmin/utils";
 import { message } from "@/utils/message";
 import { hasPerms } from "@/utils/auth";
 import { addDialog } from "@/components/ReDialog";
+import { useSrvfList } from "@/srvf-kit";
 import ContributionRuleForm, {
   type ContributionRuleFormModel
 } from "../form.vue";
@@ -14,7 +14,8 @@ import {
   createContributionRule,
   updateContributionRule,
   deleteContributionRule,
-  type ContributionRuleItem
+  type ContributionRuleItem,
+  type ContributionRuleListQuery
 } from "@/api/srvf-contribution-rule";
 import { useSrvfDictStoreHook } from "@/store/modules/srvfDict";
 
@@ -23,8 +24,6 @@ export function useContributionRules() {
   const dict = useSrvfDictStoreHook();
   dict.ensureTypes(["activity_type", "attendance_role"]);
 
-  const dataList = ref<ContributionRuleItem[]>([]);
-  const loading = ref(false);
   const formRef = ref();
   /** 读权限（后端真实 RBAC 码）；无权限不请求、不渲染表格 */
   const canRead = hasPerms("contribution.read.rule");
@@ -33,11 +32,18 @@ export function useContributionRules() {
   const canUpdate = hasPerms("contribution.update.rule");
   const canDelete = hasPerms("contribution.delete.rule");
 
-  const pagination = reactive<PaginationProps>({
-    total: 0,
-    pageSize: 10,
-    currentPage: 1,
-    background: true
+  const {
+    dataList,
+    loading,
+    pagination,
+    onSearch,
+    handleSizeChange,
+    handleCurrentChange
+  } = useSrvfList<ContributionRuleItem, ContributionRuleListQuery>({
+    fetch: getContributionRules,
+    buildParams: () => ({}),
+    errorMessage: "加载贡献值规则失败",
+    canRead
   });
 
   const columns: TableColumnList = [
@@ -80,39 +86,6 @@ export function useContributionRules() {
         ]
       : [])
   ];
-
-  async function onSearch() {
-    if (!canRead) return;
-    loading.value = true;
-    try {
-      const { code, data } = await getContributionRules({
-        page: pagination.currentPage,
-        pageSize: pagination.pageSize
-      });
-      if (code === 0) {
-        dataList.value = data.items;
-        pagination.total = data.total;
-        pagination.pageSize = data.pageSize;
-        pagination.currentPage = data.page;
-      }
-    } catch (error: any) {
-      message(bizErrorMessage(error, "加载贡献值规则失败"), {
-        type: "error"
-      });
-    } finally {
-      loading.value = false;
-    }
-  }
-
-  function handleSizeChange(val: number) {
-    pagination.pageSize = val;
-    onSearch();
-  }
-
-  function handleCurrentChange(val: number) {
-    pagination.currentPage = val;
-    onSearch();
-  }
 
   /** 新建 / 编辑弹窗（编辑时仅提交后端白名单字段） */
   function openDialog(title: "新建" | "编辑", row?: ContributionRuleItem) {

@@ -1,11 +1,11 @@
 import { bizErrorMessage } from "@/api/srvf-error";
-import { h, ref, reactive } from "vue";
-import type { PaginationProps } from "@pureadmin/table";
+import { h, ref } from "vue";
 import { ElMessageBox } from "element-plus";
 import { deviceDetection } from "@pureadmin/utils";
 import { message } from "@/utils/message";
 import { hasPerms } from "@/utils/auth";
 import { addDialog } from "@/components/ReDialog";
+import { useSrvfList } from "@/srvf-kit";
 import PositionForm, { type PositionFormModel } from "../form.vue";
 import {
   getPositions,
@@ -15,6 +15,7 @@ import {
   POSITION_CATEGORY_LABEL,
   type PositionItem,
   type PositionCategory,
+  type PositionListQuery,
   type PolicyStatus
 } from "@/api/srvf-position";
 
@@ -28,16 +29,26 @@ export function usePositions() {
   const canUpdate = hasPerms("position.update.definition");
   const canDelete = hasPerms("position.delete.definition");
 
-  const dataList = ref<PositionItem[]>([]);
-  const loading = ref(false);
   const categoryFilter = ref<"" | PositionCategory>("");
   const statusFilter = ref<"" | PolicyStatus>("");
   const formRef = ref();
-  const pagination = reactive<PaginationProps>({
-    total: 0,
-    pageSize: 10,
-    currentPage: 1,
-    background: true
+
+  const {
+    dataList,
+    loading,
+    pagination,
+    onSearch,
+    onFilterChange,
+    handleSizeChange,
+    handleCurrentChange
+  } = useSrvfList<PositionItem, PositionListQuery>({
+    fetch: getPositions,
+    buildParams: () => ({
+      ...(categoryFilter.value ? { categoryCode: categoryFilter.value } : {}),
+      ...(statusFilter.value ? { status: statusFilter.value } : {})
+    }),
+    errorMessage: "加载职务定义失败",
+    canRead
   });
 
   const categoryOptions = [
@@ -92,47 +103,6 @@ export function usePositions() {
     },
     { label: "操作", fixed: "right" as const, width: 220, slot: "operation" }
   ];
-
-  async function onSearch() {
-    if (!canRead) {
-      dataList.value = [];
-      return;
-    }
-    loading.value = true;
-    try {
-      const { code, data } = await getPositions({
-        page: pagination.currentPage,
-        pageSize: pagination.pageSize,
-        ...(categoryFilter.value ? { categoryCode: categoryFilter.value } : {}),
-        ...(statusFilter.value ? { status: statusFilter.value } : {})
-      });
-      if (code === 0) {
-        dataList.value = data.items;
-        pagination.total = data.total;
-        pagination.pageSize = data.pageSize;
-        pagination.currentPage = data.page;
-      }
-    } catch (error: any) {
-      message(bizErrorMessage(error, "加载职务定义失败"), {
-        type: "error"
-      });
-    } finally {
-      loading.value = false;
-    }
-  }
-
-  function onFilterChange() {
-    pagination.currentPage = 1;
-    onSearch();
-  }
-  function handleSizeChange(val: number) {
-    pagination.pageSize = val;
-    onSearch();
-  }
-  function handleCurrentChange(val: number) {
-    pagination.currentPage = val;
-    onSearch();
-  }
 
   function openDialog(title: "新建" | "编辑", row?: PositionItem) {
     const isEdit = title === "编辑";
