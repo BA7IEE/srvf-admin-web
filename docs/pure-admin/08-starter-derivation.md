@@ -58,9 +58,9 @@
 | **登录 / Token**               | ✅ `src/views/login/`、`src/api/user.ts`、`src/utils/auth.ts`、`src/utils/http/index.ts` | **必做**：接 NestJS `/auth/login`；适配返回结构与 `expires`；按 `05-http-api.md` §7.6 决定 refresh 适配 | 否（已具备）                                                    | 见 `09-pr-roadmap.md` PR-4                                                    |
 | **当前用户信息**               | ✅ Pinia `user` store + setToken 写入                                                    | **必做**：把登录返回字段映射到 store                                                                    | 后端返回结构                                                    | 注意角色名替换（`04-auth-permission.md` §6.6.2）                              |
 | **用户管理（列表/详情/启停）** | ⚠️ 无（thin-max-ts 不带 `system/user` 页）                                               | **暂缓**第一阶段；可参考 vue-pure-admin `src/views/system/user/` 作为范式                               | 后端 `/users` CRUD API + Prisma `User` 模型                     | 字段以后端为准；分页参数 (`page/pageSize` 与否) 也以后端为准                  |
-| **字典管理**                   | ✅ `src/views/dict/` + mock `/dict-*`（演示）                                            | **暂缓**接真接口；菜单先隐藏；UI 占位用 `*.demo.ts` 常量                                                | 后端 `dict_types / dict_items` schema                           | 见 `07-max-ts-modules.md` §10.1、裁决 6                                       |
+| **字典管理**                   | starter 演示 `src/views/dict/` 已删 → 本仓真页 `src/views/srvf/base-data/dictionaries/`  | **已上线**（主从布局，真接后端）；字段以 live `/api/docs-json` 为准                                     | 已接（`dict_types / dict_items` 等以后端为准）                  | 见 `07-max-ts-modules.md` §10.1                                               |
 | **组织架构（队伍/分队/队员）** | ❌ 无                                                                                    | **可前移 UI 骨架**（裁决 8）；只做菜单 + 占位页                                                         | 后端"组织 / 部门 / 分队 / 岗位"模型（由 NestJS 设计）           | 不硬编码真实层级；不固定字段；参考 vue-pure-admin `system/dept/` 仅作交互范式 |
-| **活动 / 训练 / 出勤日历**     | ⚠️ `src/views/schedule/` 是简化排班演示                                                  | **可前移 UI 占位**（裁决 7）；只做菜单 + 静态页                                                         | 后端 `Activity / Event / Attendance` 模型                       | 不设计活动数据库；不定义状态流；接真 API 前不引入真实数据                     |
+| **活动 / 训练 / 出勤日历**     | starter 演示 `src/views/schedule/` 已删 → 本仓真页 `src/views/srvf/activities-domain/**` | **已上线**（活动列表 + 作战室内嵌报名 / 考勤 tab，真接后端）                                            | 已接（`Activity / Registration / Attendance` 以后端为准）       | 字段 / 状态一律查 live `/api/docs-json`，勿照 starter 排班字段臆造            |
 | **附件 / 文件管理**            | ❌ 无（无 upload 组件）                                                                  | **不前移**；待后端附件 API + 对象存储确定后再做                                                         | 后端 `Attachment / FileObject` 模型 + 上传策略                  | 可参考 vue-pure-admin `src/views/components/upload/` 作为范式                 |
 | **审计日志**                   | ❌ 无                                                                                    | **不前移**                                                                                              | 后端 `AuditLog` 模型                                            | 可参考 vue-pure-admin `src/views/monitor/logs/system/` 作为范式               |
 | **角色 / 权限管理**            | ❌ 无对应管理页（仅 mock 演示）                                                          | **不前移**；前端只消费登录返回                                                                          | 后端 RBAC 模型（红线 4）                                        | 不允许提前定义按钮 code 体系                                                  |
@@ -72,15 +72,15 @@
 - `UserResult.data` 字段同 NestJS 真实返回（如 `accessToken / refreshToken / expiresIn / user.{id,username,roles[],permissions[]}`），**改前端类型不改后端**；
 - `src/utils/auth.ts:setToken` 按 `05-http-api.md` §7.5 适配 `expires` / `expiresIn`；
 - 决定 refresh 策略后按 `05-http-api.md` §7.6 处理；
-- 关 `mock/login.ts`（不删，仍可作演示参考）；
+- 真实 3-call 登录已上线（2026-06-22），`mock/login.ts` 已删；
 - 配 `vite.config.ts: server.proxy` 把 `/auth/*`、`/users/*` 等代理到 NestJS。
 
-### 11.4 字典对接（暂缓但要明确边界，裁决 6）
+### 11.4 字典对接（已上线，裁决 6 边界仍在）
 
-- **现阶段**：菜单隐藏 `dictManagementRouter`，源码保留；
-- **如需 UI 占位**：建立 `src/constants/<模块>.demo.ts` 临时常量，文件头注释清楚 `TEMPORARY / DEMO`；
-- **接真接口时**：API 路径、字段、状态值全部来自 NestJS Swagger，**前端 mapper 适配 mock 风格 → 后端真实结构**；
-- **禁止**：把 demo 常量当成正式字典；把 mock `dictId/label/value/status/color/sort/remark/createTime` 当成后端字段。
+- **现状**：字典页 `src/views/srvf/base-data/dictionaries/` 已真接后端（starter 演示 `src/views/dict/` 与 `dictManagementRouter` 已删）；
+- **如仍需 UI 占位**：建立 `src/constants/<模块>.demo.ts` 临时常量，文件头注释清楚 `TEMPORARY / DEMO`；
+- **字段真相**：API 路径、字段、状态值全部来自 live `/api/docs-json`；
+- **禁止**：把 demo 常量当成正式字典；把 starter 旧 mock 的 `dictId/label/value/status` 当成后端字段。
 
 ### 11.5 组织架构对接（裁决 8）
 
@@ -88,10 +88,11 @@
 - **禁止**：硬编码真实队伍层级；提前固定"部门/分队/岗位"字段；引入"多租户 + 多部门"双层级。
 - **接真接口**：后端给"部门树"接口（一维 + parentId 或直接树），前端 `handleTree` 转树。
 
-### 11.6 活动日历对接（裁决 7）
+### 11.6 活动日历对接（已上线，裁决 7 边界仍在）
 
-- **现阶段**：建立 `src/views/<业务>-calendar/` 菜单 + 静态占位（参考 `src/views/schedule/`）；
-- **禁止**：设计真实活动数据库 schema；定义正式活动状态机；硬编码真实活动数据。
+- **现状**：活动域 `src/views/srvf/activities-domain/**` 已真接后端（列表 + 作战室内嵌报名 / 考勤 tab；starter 演示 `src/views/schedule/` 已删）；
+- **字段真相**：活动 / 事件 / 出勤字段、状态一律以 live `/api/docs-json` 为准；
+- **禁止**：照 starter 排班字段臆造活动 schema / 状态机；硬编码活动数据。
 - **接真接口**：后端 `Activity / Event / Attendance` 模型确认后，API 推荐 `GET /activities?start=YYYY-MM-DD&end=...`，字段以 Swagger 为准。
 
 ### 11.7 附件 / 审计 / 角色 / 菜单管理

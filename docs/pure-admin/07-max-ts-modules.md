@@ -6,27 +6,27 @@
 - 评估某个 Max-Ts 模块（字典 / 租户 / 排班 / 动态路由 / 主题 / 按钮权限演示）在第一阶段如何处理
 - 决定是去 vue-pure-admin 完整版抄一份还是从 thin-max-ts 范式起步
 
+> **⚠️ 目录现况（2026-07 拍板）**：本文原描述 thin-max-ts starter 自带的 `dict / tenant / schedule / permission` 演示模块，这些目录**已物理删除**（`src/views/` 现仅 `error / login / srvf / welcome`；原裁决 1「源码保留」被取代）。下文凡**不带 `vue-pure-admin/` 前缀**的 `src/views/dict|tenant|schedule|permission` 引用均为**历史残影**：本仓范式改看 `src/views/srvf/**`（范式 A 三件套 / 范式 B 作战室，见 `src/views/srvf/CLAUDE.md`），更丰富的 UI 范式改看完整版 `vue-pure-admin/src/views/`（§14 索引）。演示字段反推后端的**红线约束不变**。
+
 ## 必须先读
 
 - 主入口 §0.5 后端 4 大红线（特别是不反推后端字段 / 模型）
-- `02-ai-rules.md` §13.1 文件改动矩阵（演示模块属 ⚠️，改前先评估）
-- `06-mock-risk.md`（裁决 1 / 4：tenant 源码保留但禁启用、mock 禁新增）
+- `02-ai-rules.md` §13.1 文件改动矩阵（layout / style / mock 属 🟡 纪律区，改前先评估）
+- `06-mock-risk.md`（裁决 4：mock 禁新增）
 
 ## 禁止事项
 
-- ⛔ 禁止**物理删除** Max-Ts 演示模块源码（裁决 1：保留作参考，是否删由后续单独 PR 决策）
 - ⛔ 禁止启用多租户运行入口（`VITE_ENABLE_TENANT=true` 视同启用）
-- ⛔ 禁止根据 schedule / dict / tenant 演示字段反推后端模型
+- ⛔ 禁止根据 schedule / dict / tenant 演示字段（完整版参考里仍在）反推后端模型
 - ⛔ 禁止"为了发挥 Max-Ts 演示能力"启用 asyncRoutes（详见 `03-router-menu.md` §5.2.1）
 - ⛔ 全量复制 vue-pure-admin 完整版的 `package.json`（会带 60+ 演示依赖）
 
 ## 相关关键文件路径
 
-- `src/views/welcome / login / error / permission / dict / tenant / schedule`
-- `src/components/Re*`、`src/components/RePureTableBar`、`src/components/ReDialog`
-- `mock/system.ts`、`mock/asyncRoutes.ts`
+- `src/views/srvf/**`（本仓业务页与范式 A/B）、`src/views/welcome / login / error`
+- `src/components/Re*`、`src/components/RePureTableBar`、`src/components/ReDialog`、`@/srvf-kit`
 - `src/router/asyncRoutes.ts`（禁启用）
-- 完整版参考库：`vue-pure-admin/src/views/<对应模块>`
+- 完整版参考库：`vue-pure-admin/src/views/<对应模块>`（演示 dict/tenant/schedule 等的只读参考在此）
 
 ---
 
@@ -34,28 +34,28 @@
 
 ### 9.1 表格列表页（最常用）
 
-参考：`src/views/dict/index.vue`、`src/views/tenant/list/index.vue`。
+本仓范式 A（三件套）参考：`src/views/srvf/members-domain/members/`（`index.vue` + `utils/hook.ts` + `form.vue`）。
 
 - 模板拆分：
   - `index.vue`：搜索表单 + `<PureTableBar>`（来自 `@/components/RePureTableBar`）+ 表格 + 分页。
-  - `utils/hook.tsx`：`columns / pagination / dataList / loading / onSearch / openDialog / handleDelete / ...`。
-  - `utils/types.ts`：表单 props 类型。
-  - `utils/rule.ts`：Element Plus 表单校验。
-- 表格组件用 `@pureadmin/table` 的 `<PureTable>`，列内可用 JSX `cellRenderer`（参见 `src/views/dict/utils/hook.tsx`）。
+  - `utils/hook.ts`：`columns / pagination / dataList / loading / onSearch / openDialog / handleDelete / ...`。
+  - `form.vue`：表单组件，通过 props 接收初始值。
+- 更省事的做法：直接用 `@/srvf-kit` 的 `SrvfListPage` + `useSrvfList` 原语（已封装搜索 / 分页 / 空态 / 权限门）。
+- 表格组件用 `@pureadmin/table` 的 `<PureTable>`，列内可用 JSX `cellRenderer`（参见 `src/views/srvf/members-domain/members/utils/hook.ts`）。
 
 ### 9.2 搜索表单
 
-- 顶部 `el-form inline` 形式，提交触发 `onSearch()` → 重置触发 `resetForm()`（参见 `src/views/tenant/list/index.vue` 模板部分）。
+- 顶部 `el-form inline` 形式，提交触发 `onSearch()` → 重置触发 `resetForm()`（参见 `src/views/srvf/members-domain/members/index.vue` 模板部分，或 `@/srvf-kit` `SrvfListPage` 的 search 插槽）。
 
 ### 9.3 新增 / 编辑弹窗
 
 - 用 `addDialog`（来自 `@/components/ReDialog`）以**函数式**打开 dialog，避免每个页面写 `el-dialog`。
-- 表单组件单独放在 `views/<模块>/form/index.vue`，通过 props 接收初始值。
-- 参考：`src/views/dict/utils/hook.tsx` → `openDialog` 系列函数。
+- 表单组件单独放在 `views/srvf/<域>/<模块>/form.vue`，通过 props 接收初始值。
+- 参考：`src/views/srvf/members-domain/members/utils/hook.ts` → `openDialog` 系列函数。
 
 ### 9.4 树形
 
-- 字典页（`src/views/dict/tree.vue`）和租户套餐菜单都是 `el-tree`。
+- 字典页（`src/views/srvf/base-data/dictionaries/index.vue`，左类型导航 + 右条目树表）是 `el-tree` + 主从布局的本仓范式。
 - 树数据建议用 `@/utils/tree.ts:handleTree(data, "id", "parentId", "children")` 把一维列表转树。
 
 ### 9.5 详情页 / Drawer / Dialog
@@ -68,32 +68,31 @@
 
 ### 9.6 状态开关 / Tag 颜色
 
-参考 `src/views/tenant/hooks.ts:usePublicHooks()` —— 暗色 / 亮色下 `el-switch` 与 `el-tag` 的统一配色，可直接复用。
+状态标签统一走 `@/srvf-kit` 的 `SrvfStatusTag`（按枚举给语义色，暗 / 亮自适应）；`el-switch` 直接用 Element 默认态即可。（starter 旧 `src/views/tenant/hooks.ts:usePublicHooks()` 随 tenant 目录删除，不复存在。）
 
 ### 9.7 Tabs / Drawer / Dialog / 日历 / 上传 / 权限按钮 / 图表看板
 
-| 范式       | thin-max-ts 内                                | vue-pure-admin 完整版补丁                             |
-| ---------- | --------------------------------------------- | ----------------------------------------------------- |
-| Tabs       | 顶部多标签自带                                | `src/views/components/tabs/*`（演示）                 |
-| Drawer     | `el-drawer` 直接用                            | `src/views/schema-form/form/drawer.vue`               |
-| Dialog     | `@/components/ReDialog` 函数式                | `src/views/schema-form/form/dialog.vue`               |
-| 日历       | `src/views/schedule/` Element Calendar        | 无                                                    |
-| 上传       | 无（需自封装）                                | `src/views/components/upload/*`                       |
-| 权限按钮   | `Auth / Perms` 组件 + `v-auth / v-perms` 指令 | 同上                                                  |
-| 图表       | `ECharts` 已引入但 `main.ts` 默认注释         | `src/views/components/echarts/*`                      |
-| Excel 导出 | 无                                            | `src/views/table/high/excel/index.vue`（需要 `xlsx`） |
+| 范式       | thin-max-ts 内                                           | vue-pure-admin 完整版补丁                             |
+| ---------- | -------------------------------------------------------- | ----------------------------------------------------- |
+| Tabs       | 顶部多标签自带                                           | `src/views/components/tabs/*`（演示）                 |
+| Drawer     | `el-drawer` 直接用                                       | `src/views/schema-form/form/drawer.vue`               |
+| Dialog     | `@/components/ReDialog` 函数式                           | `src/views/schema-form/form/dialog.vue`               |
+| 日历       | 无（starter schedule 演示已删）；用 `el-calendar` 自封装 | 无                                                    |
+| 上传       | 无（需自封装）                                           | `src/views/components/upload/*`                       |
+| 权限按钮   | `Auth / Perms` 组件 + `v-auth / v-perms` 指令            | 同上                                                  |
+| 图表       | `ECharts` 已引入但 `main.ts` 默认注释                    | `src/views/components/echarts/*`                      |
+| Excel 导出 | 无                                                       | `src/views/table/high/excel/index.vue`（需要 `xlsx`） |
 
 ### 9.8 新页面应优先参考的文件
 
-| 想做的事                | 先看                                                                   |
-| ----------------------- | ---------------------------------------------------------------------- |
-| 列表 + 搜索 + 弹窗 CRUD | `src/views/tenant/list/index.vue` + `utils/hook.tsx`                   |
-| 树 + 表格联动           | `src/views/dict/index.vue` + `tree.vue`                                |
-| 日历 / 时间轴           | `src/views/schedule/index.vue`                                         |
-| 按钮权限                | `src/views/permission/button/index.vue` 与 `perms.vue`                 |
-| 页面权限                | `src/views/permission/page/index.vue`                                  |
-| Element Plus 风格       | `src/views/login/index.vue`                                            |
-| 表单校验                | `src/views/login/utils/rule.ts`、`src/views/tenant/list/utils/rule.ts` |
+| 想做的事                  | 先看（本仓现存）                                                                                                  |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| 列表 + 搜索 + 弹窗 CRUD   | `src/views/srvf/members-domain/members/`（范式 A 三件套）或 `@/srvf-kit` `SrvfListPage`                           |
+| 树 + 表格联动             | `src/views/srvf/base-data/dictionaries/index.vue`（主从：类型树 + 条目表）                                        |
+| 详情页 / 作战室（范式 B） | `src/views/srvf/activities-domain/activities/cockpit.vue`（头部 + 多 tab 复用 list hook）                         |
+| 按钮 / 页面权限           | `v-auth` / `hasPerms` + `@/srvf-kit` `SrvfPermEmpty`（空态）；完整版演示见 `vue-pure-admin/src/views/permission/` |
+| Element Plus 风格         | `src/views/login/index.vue`                                                                                       |
+| 表单校验                  | `src/views/login/utils/rule.ts`、`src/views/srvf/members-domain/members/` 的表单 rules                            |
 
 ---
 
@@ -102,11 +101,11 @@
 > 每个模块给出：「**第一阶段处理**」、「**是否允许影响后端设计**」、「**风险级别**」、「**处理建议**」。
 > 第一阶段处理类目：`启用` / `隐藏保留` / `禁止启用` / `UI 占位`。
 
-### 10.1 字典管理（`src/views/dict/`）
+### 10.1 字典管理（starter `src/views/dict/` 已删 → 本仓 `src/views/srvf/base-data/dictionaries/`）
 
-- 路径：`src/views/dict/` + `src/api/system.ts:getDictTree/getDictDetail` + `mock/system.ts:/dict-tree, /dict-detail`
-- **第一阶段处理**：`隐藏保留`。菜单暂不挂出，源码作为字典页范式参考；若 UI 临时需要字典枚举，**只能使用 demo/placeholder 命名**（裁决 6）。
-- **是否允许影响后端设计**：❌ 不允许。`dictId / label / value / status / color / sort / remark / createTime` 字段是 mock 演示，**不是**后端字典 schema。
+- 现况：starter 演示 `src/views/dict/` + `mock/system.ts:/dict-tree` **已物理删除**；本仓字典页是真接后端的 `src/views/srvf/base-data/dictionaries/`（主从布局），字段以 live `/api/docs-json` 为准。
+- **第一阶段处理**：`已上线真页`。若 UI 临时需要字典枚举占位，**只能使用 demo/placeholder 命名**（裁决 6）。
+- **是否允许影响后端设计**：❌ 不允许。starter 旧 mock 的 `dictId / label / value / status / color / sort` 字段是演示，**不是**后端字典 schema。
 - **风险级别**：🟠 中高（容易被 AI 套字段反推后端字典表）。
 - **处理建议**：
   - 正式字典以后端 `dict_types / dict_items`（或同等 schema）为准，由 NestJS 单独设计；
@@ -114,35 +113,28 @@
   - 如确需 UI 占位，文件命名 `*.demo.ts` 或在文件头注释 `// TEMPORARY / DEMO – replace once backend dict API ready`；
   - 第二阶段后端字典 API 就绪后才接入。
 
-### 10.2 多租户管理（`src/views/tenant/*`，⛔ P0 红线 3）
+### 10.2 多租户管理（starter `src/views/tenant/*` 已删，⛔ P0 红线 3 仍在）
 
-- 路径：`src/views/tenant/list/`、`src/views/tenant/package/`、`.env: VITE_ENABLE_TENANT=true`、`mock/system.ts:/tenant-*`、`mock/asyncRoutes.ts:tenantManagementRouter`
-- **第一阶段处理**：`禁止启用`，但**保留源码**（裁决 1）。具体动作：
-  - 改 `.env: VITE_ENABLE_TENANT=false`；
-  - 在 `mock/asyncRoutes.ts` 中**隐藏**（注释或从 `data` 数组移除）`tenantManagementRouter`；
-  - `src/views/tenant/*` 源码保留作为参考范式；
-  - 是否物理删除 → 后续单独 PR 决策，**第一阶段不要顺手删**。
-- **是否允许影响后端设计**：❌ 严禁。后端不是多租户架构，前端启用 / 反推都违反红线 3。
+- 现况：starter 演示 `src/views/tenant/list|package/` 与 `mock/system.ts:/tenant-*` **已于 2026-07 物理删除**（原裁决 1「保留源码」被维护者拍板取代）；`.env: VITE_ENABLE_TENANT=false` 保持。
+- **第一阶段处理**：`已删除`。租户模型是**永不启用**方向；如日后真需 SaaS 多组织能力（不在本阶段），由后端先定模型。
+- **是否允许影响后端设计**：❌ 严禁。后端不是多租户架构，前端启用 / 反推都违反红线 3（完整版参考仓 `vue-pure-admin/src/views/` 里的 tenant 演示更不可反推）。
 - **风险级别**：🔴 高（最容易污染后端的模块）。
 - **处理建议**：第一阶段就把"是否多租户"问题钉死为「单租户」；后续若真需要 SaaS 多组织能力（不在第一阶段范围），由后端先确定模型再回头看此模块。
 
-### 10.3 租户套餐菜单 RBAC（`mock/system.ts:/tenant-package-menu*`）
+### 10.3 租户套餐菜单 RBAC（starter `mock/system.ts:/tenant-package-menu*` 已删）
 
-- **第一阶段处理**：`禁止启用`，随租户管理一同隐藏。
+- **第一阶段处理**：`已删除`，随租户管理一同移除；红线 3 + 4 约束不变。
 - **是否允许影响后端设计**：❌ 严禁（红线 3 + 红线 4）。
 - **风险级别**：🔴 高。
 - **处理建议**：连同 §10.2 一起处理。
 
-### 10.4 日历排班（`src/views/schedule/`）
+### 10.4 日历排班（starter `src/views/schedule/` 已删 → 本仓活动域已真接）
 
-- 路径：`src/views/schedule/` + `mock/asyncRoutes.ts:scheduleRouter`
-- **第一阶段处理**：`UI 占位`。可前移为业务"活动 / 训练 / 出勤"日历入口（裁决 7）。
-- **是否允许影响后端设计**：❌ 不允许。schedule mock 字段（上午/中午/晚上的简单排班）与真实活动模型差距很大。
-- **风险级别**：🟠 中。
-- **处理建议**：
-  - 可建立 `src/views/<业务>-calendar/`（或参考 schedule 直接改造其内容），仅做**静态 UI 占位**；
-  - 不设计真实活动数据库 schema、不定义正式活动状态机；
-  - 字段、状态、关系等待 NestJS Activity / Event / Attendance 等真实模型确定后再接入。
+- 现况：starter 演示 `src/views/schedule/` **已物理删除**；活动 / 出勤已由 `src/views/srvf/activities-domain/**` 真接后端（活动列表 + 作战室 cockpit 内嵌报名 / 考勤 tab）。
+- **第一阶段处理**：`已上线真页`。
+- **是否允许影响后端设计**：❌ 不允许。starter schedule 演示字段（上午/中午/晚上）与真实活动模型无关。
+- **风险级别**：🟠 中（历史遗留，勿再照 starter 排班字段臆造）。
+- **处理建议**：活动 / 事件 / 出勤字段、状态、关系一律以 live `/api/docs-json` 为准；日历型 UI 若需更强交互，参考完整版 `vue-pure-admin/src/views/` 的日历 / 甘特演示（只抄交互）。
 
 ### 10.5 前端处理动态路由格式（`src/router/asyncRoutes.ts`，⛔ P0 红线，裁决 2）
 
@@ -151,13 +143,12 @@
 - **风险级别**：🔴 高。
 - **处理建议**：详见 `03-router-menu.md` §5.2.1。
 
-### 10.6 按钮 / 页面权限演示（`src/views/permission/`）
+### 10.6 按钮 / 页面权限演示（starter `src/views/permission/` 已删）
 
-- 路径：`src/views/permission/page/`、`src/views/permission/button/`
-- **第一阶段处理**：`隐藏保留`。第一阶段用 meta.roles + `<Perms>` 已够。
+- 现况：starter 演示 `src/views/permission/page|button/` **已物理删除**；本仓按钮 / 页面显隐用 `v-auth` / `hasPerms` + 真实 RBAC 码（`@/srvf-kit` `SrvfPermEmpty` 出空态），演示见完整版 `vue-pure-admin/src/views/permission/`。
+- **第一阶段处理**：`已删除`。meta.roles + `hasPerms` + 真码已够。
 - **是否允许影响后端设计**：❌ 不允许（红线 4）。
-- **风险级别**：🟠 中。
-- **处理建议**：作为权限 UI 范式参考，不挂菜单；待后端权限模型稳定后再决定是否需要等价页面。
+- **风险级别**：🟢 低（已有真实权限门取代）。
 
 ### 10.7 新款菜单布局（vertical / horizontal / mix / double）
 
@@ -218,7 +209,7 @@
        d. 改权限标识为后端 BizCode / Permission；
        e. 用 thin-max-ts 已有的 ReDialog / PureTableBar / Auth / Perms 替换示例里的组件。
   ③ 没有完全相似的：找相似 CRUD 范式（user/role/menu/dept 任选）。
-  ④ 还不行：在 thin-max-ts 现有 dict/tenant/schedule 中找最近的范式。
+  ④ 还不行：在本仓 `src/views/srvf/**` 现有范式（范式 A 三件套 / 范式 B 作战室 / `@/srvf-kit` 原语）中找最近的。
   ⑤ 都不行：才允许新创建范式，并把新范式纳入本文件 §9。
 ```
 
@@ -348,8 +339,8 @@ head -100 <refs-root>/vue-pure-admin/src/views/<候选模块>/index.vue
 
 **可参考**：
 
-- Pure Admin 自带 `src/views/schedule/`（Max-Ts 已携带）的 Element Calendar 用法；
-- 完整版若有更高级的日历 / 甘特，仅作交互参考。
+- 本仓活动域已真接（`src/views/srvf/activities-domain/**`，作战室内嵌报名 / 考勤 tab）——优先看它；
+- 完整版 `vue-pure-admin/src/views/` 的日历 / 甘特，仅作交互参考（starter 自带的 `src/views/schedule/` 已删）。
 
 **禁止**：
 
