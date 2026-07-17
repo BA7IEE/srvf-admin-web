@@ -1,13 +1,13 @@
 import { bizErrorMessage } from "@/api/srvf-error";
-import { h, ref, reactive } from "vue";
+import { h, ref } from "vue";
 import { useRouter } from "vue-router";
 import dayjs from "dayjs";
-import type { PaginationProps } from "@pureadmin/table";
 import { ElMessageBox } from "element-plus";
 import { deviceDetection } from "@pureadmin/utils";
 import { message } from "@/utils/message";
 import { hasPerms } from "@/utils/auth";
 import { addDialog } from "@/components/ReDialog";
+import { useSrvfList } from "@/srvf-kit";
 import { useMultiTagsStoreHook } from "@/store/modules/multiTags";
 import ActivityForm, {
   type ActivityFormModel,
@@ -21,6 +21,7 @@ import {
   publishActivity,
   cancelActivity,
   type ActivityItem,
+  type ActivityListQuery,
   type CreateActivityBody
 } from "@/api/srvf-activity";
 import { getDictTypes, getDictItems } from "@/api/srvf-dict";
@@ -47,8 +48,6 @@ export function useActivities() {
   const dict = useSrvfDictStoreHook();
   dict.ensureTypes(["activity_type", "activity_status"]);
 
-  const dataList = ref<ActivityItem[]>([]);
-  const loading = ref(false);
   const formRef = ref();
 
   // 活动列表端点是 [auth]-only、无 RBAC 读码 → 不设 hasPerms 读码门;
@@ -68,11 +67,17 @@ export function useActivities() {
   const organizationOptions = ref<ActivityOption[]>([]);
   let optionsResolved = false;
 
-  const pagination = reactive<PaginationProps>({
-    total: 0,
-    pageSize: 10,
-    currentPage: 1,
-    background: true
+  const {
+    dataList,
+    loading,
+    pagination,
+    onSearch,
+    handleSizeChange,
+    handleCurrentChange
+  } = useSrvfList<ActivityItem, ActivityListQuery>({
+    fetch: getActivities,
+    buildParams: () => ({}),
+    errorMessage: "加载活动列表失败"
   });
 
   const columns: TableColumnList = [
@@ -113,38 +118,6 @@ export function useActivities() {
       text: dict.label("activity_status", code),
       type: STATUS_TAG_TYPE[code] ?? ("info" as const)
     };
-  }
-
-  async function onSearch() {
-    loading.value = true;
-    try {
-      const { code, data } = await getActivities({
-        page: pagination.currentPage,
-        pageSize: pagination.pageSize
-      });
-      if (code === 0) {
-        dataList.value = data.items;
-        pagination.total = data.total;
-        pagination.pageSize = data.pageSize;
-        pagination.currentPage = data.page;
-      }
-    } catch (error: any) {
-      message(bizErrorMessage(error, "加载活动列表失败"), {
-        type: "error"
-      });
-    } finally {
-      loading.value = false;
-    }
-  }
-
-  function handleSizeChange(val: number) {
-    pagination.pageSize = val;
-    onSearch();
-  }
-
-  function handleCurrentChange(val: number) {
-    pagination.currentPage = val;
-    onSearch();
   }
 
   /**

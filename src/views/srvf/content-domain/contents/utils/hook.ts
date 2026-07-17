@@ -1,12 +1,12 @@
 import { bizErrorMessage } from "@/api/srvf-error";
-import { h, ref, reactive } from "vue";
+import { h, ref } from "vue";
 import dayjs from "dayjs";
-import type { PaginationProps } from "@pureadmin/table";
 import { ElMessageBox } from "element-plus";
 import { deviceDetection } from "@pureadmin/utils";
 import { message } from "@/utils/message";
 import { hasPerms } from "@/utils/auth";
 import { addDialog } from "@/components/ReDialog";
+import { useSrvfList } from "@/srvf-kit";
 import { getDictTypes, getDictItems } from "@/api/srvf-dict";
 import { getOrganizations } from "@/api/srvf-organization";
 import ContentForm, { type ContentFormModel } from "../form.vue";
@@ -22,7 +22,8 @@ import {
   CONTENT_STATUS_LABEL,
   CONTENT_STATUS_TAG,
   VISIBILITY_LABEL,
-  type ContentListItem
+  type ContentListItem,
+  type ContentListQuery
 } from "@/api/srvf-content";
 import { useSrvfDictStoreHook } from "@/store/modules/srvfDict";
 
@@ -38,19 +39,28 @@ export function useContents() {
   const canDelete = hasPerms("content.delete.record");
   const canPublish = hasPerms("content.publish.record");
 
-  const dataList = ref<ContentListItem[]>([]);
-  const loading = ref(false);
   const statusFilter = ref<string>("");
   const keyword = ref<string>("");
   const formRef = ref();
   /** 封面/附件管理 drawer（仅对已存在内容开放） */
   const mediaVisible = ref(false);
   const mediaContentId = ref<string>("");
-  const pagination = reactive<PaginationProps>({
-    total: 0,
-    pageSize: 10,
-    currentPage: 1,
-    background: true
+  const {
+    dataList,
+    loading,
+    pagination,
+    onSearch,
+    onFilterChange,
+    handleSizeChange,
+    handleCurrentChange
+  } = useSrvfList<ContentListItem, ContentListQuery>({
+    fetch: getContents,
+    buildParams: () => ({
+      ...(statusFilter.value ? { statusCode: statusFilter.value } : {}),
+      ...(keyword.value ? { keyword: keyword.value } : {})
+    }),
+    errorMessage: "加载内容列表失败",
+    canRead
   });
 
   /** content_type 字典下拉 + 可见部门下拉(懒加载;空 → 退化) */
@@ -106,47 +116,6 @@ export function useContents() {
       text: CONTENT_STATUS_LABEL[code] ?? code,
       type: CONTENT_STATUS_TAG[code] ?? ("info" as const)
     };
-  }
-
-  async function onSearch() {
-    if (!canRead) {
-      dataList.value = [];
-      return;
-    }
-    loading.value = true;
-    try {
-      const { code, data } = await getContents({
-        page: pagination.currentPage,
-        pageSize: pagination.pageSize,
-        ...(statusFilter.value ? { statusCode: statusFilter.value } : {}),
-        ...(keyword.value ? { keyword: keyword.value } : {})
-      });
-      if (code === 0) {
-        dataList.value = data.items;
-        pagination.total = data.total;
-        pagination.pageSize = data.pageSize;
-        pagination.currentPage = data.page;
-      }
-    } catch (error: any) {
-      message(bizErrorMessage(error, "加载内容列表失败"), {
-        type: "error"
-      });
-    } finally {
-      loading.value = false;
-    }
-  }
-
-  function onFilterChange() {
-    pagination.currentPage = 1;
-    onSearch();
-  }
-  function handleSizeChange(val: number) {
-    pagination.pageSize = val;
-    onSearch();
-  }
-  function handleCurrentChange(val: number) {
-    pagination.currentPage = val;
-    onSearch();
   }
 
   async function ensureTypeOptions() {
