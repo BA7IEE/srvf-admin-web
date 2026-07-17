@@ -9,7 +9,7 @@
 **恒读层**(每会话开工必读):本文件;Claude Code 另读 `CLAUDE.md`(Claude 专属事项)。
 **触碰才读**(改到哪个主题读哪篇;§6 全索引):
 
-- 动手前流程:`docs/pure-admin/02-ai-rules.md`(§13.1 文件矩阵 · §13.4 8 步 checklist)
+- 动手前流程:`docs/pure-admin/02-ai-rules.md`(§13.1 文件矩阵 · §13.4 分级 preflight)
 - 新业务页:后端能力图 `../srvf-nest-api/docs/handoff/admin-web.md`(**必读**,见 §4)→ 仓内蓝图(§6)→ 完整版范式索引 `docs/pure-admin/14-full-version-reference-index.md`(先查范式再动手,只抄交互不抄契约)
 - 路由/菜单:`docs/pure-admin/03-router-menu.md`(§5.2.1 asyncRoutes 禁令)
 - harness 本体:`docs/pure-admin/13-ai-harness.md`
@@ -72,19 +72,17 @@
 
 ## 5. 流程与验证
 
-- **开工**:按 `02-ai-rules.md` §13.4 走 8 步 checklist(Claude 可用 `/srvf-preflight`);声明允许/禁触文件清单;C 档 goal 内自决连续推进,goal 外新发现记录不顺手修。
+- **开工**:按 `02-ai-rules.md` §13.4 **分级 preflight**——新页/契约/敏感面走全量八步,常规小改红线自查+收尾验证,零码任务声明即可,无人值守一律全量(Claude 可用 `/srvf-preflight`);全量档声明允许/禁触文件清单;C 档 goal 内自决连续推进,goal 外新发现记录不顺手修。
 - **并行**:一任务 = 一 worktree 分支 = 一 PR,写集不相交;不动别人的 worktree。fresh worktree 先 `pnpm install --frozen-lockfile`(裸命令)。
 - **验证**:`pnpm lint && pnpm typecheck` 零错零警 → 提交前 `pnpm build`;UI 改动起本 worktree 的 dev(→:8849)真验,登录用后端 docs §8 dev 默认账号(不读姊妹仓 `.env`)。
 - **提交/合并**:husky = lint-staged + commitlint(头纯中文)+ readtax;PR 走 squash;验证净的单 PR 可直接合,**多 PR brief 的显式 stop-gate 优先于「不问就合」**。
 - **harness 改动**:动 `.claude/hooks/**` 后必跑 `node .claude/hooks/harness.test.mjs`;`guard.mjs` / `verify.mjs` 语义变更 = 维护者拍板级,不得顺手改。
 
-## 6. 文档索引与 v1 重定向
+## 6. 文档索引
 
-- `docs/pure-admin/02-ai-rules.md` —— 每次动手前(§13.1 矩阵 / §13.4 checklist / §16 任务→必读映射)。
+- `docs/pure-admin/02-ai-rules.md` —— 每次动手前(§13.1 矩阵 / §13.4 分级 preflight / §16 任务→必读映射)。
 - `docs/pure-admin/03-router-menu.md` —— 改路由/菜单。
-- `docs/pure-admin/13-ai-harness.md` —— 改 harness / 权限 / hooks(「为什么这样设计」的权威说明;§13A.8 为 2.0-FE 反转记录)。
+- `docs/pure-admin/13-ai-harness.md` —— 改 harness / 权限 / hooks(「为什么这样设计」的权威说明;§13A.8 反转记录 · §13A.9 复审记录)。
 - `docs/pure-admin/14-full-version-reference-index.md` —— 建新页前查范式(208 演示页 / 26 个 `Re*` 组件能力速查;完整版只读,只抄交互)。
 - `docs/srvf-admin-ux-upgrade-blueprint.md` —— 新业务规划定位(IA v3 / 工作台 v2 / 七条军规;与 handoff 冲突按 §0 处理;前作 vnext 蓝图已入 archive)。
 - `docs/pure-admin-max-ts-baseline.md` 与 `docs/pure-admin/` 其余各篇 —— starter 底座专题(项目图 / http / mock 风险 / 模块 / 上游同步 / 官方索引)。
-
-**v1 重定向**(v1 全文见 [`docs/archive/harness-v1/`](docs/archive/harness-v1/);v1 `CLAUDE.md` 与 `AGENTS.md` 同构):v1 §1 仓库身份 → 本文件头注 + §0;§2 现状 → §2(版本类事实改以后端 handoff 为准);§3 必读清单 → §0 分层读取;§4 核心禁令 → §1 + §2(guard 报错引用的「CLAUDE.md §4」即 v1 编号,按本行解析);§5 允许工作 → §1 自由区 + §4;§6 动手前声明 → §5;§7 派生源 / §8 快查图 → §6 derivation 行;§9 完整版参考规则 → §6 的 14-index 行(禁抄契约/RBAC/动态路由细则在该索引与 `07-max-ts-modules.md`)。
