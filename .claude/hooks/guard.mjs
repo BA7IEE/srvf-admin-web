@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // SRVF AI harness · PreToolUse guard
-// Enforces the prohibitions in CLAUDE.md / docs/pure-admin/02-ai-rules.md that
+// Enforces the prohibitions in AGENTS.md / docs/pure-admin/02-ai-rules.md that
 // file-path deny rules cannot express (Bash command patterns + edited content).
 // Fails OPEN on any internal error — the static permissions.deny rules in
 // .claude/settings.json remain the hard backstop for protected files.
@@ -63,6 +63,54 @@ function checkBash(cmd) {
       "Blocked: husky/commitlint bypass (--no-verify / HUSKY=0). Per AGENTS.md §1 + 02-ai-rules.md §13.3.12, fix the lint/type error instead of bypassing the commit hook."
     );
   }
+  // R4-b (13A.11): flag-tolerant dependency mutation — `pnpm -C dir add x`,
+  // `pnpm --filter web add x`, `npm --prefix dir install x` slip past the
+  // adjacent-subcommand regexes above. Flags (each optionally followed by one
+  // separate value token) may sit between the binary and the subcommand.
+  // `pnpm run add-user` stays clean: `run` is not a flag, so the group never starts.
+  if (
+    /\b(npm|yarn|bun|pnpm)\s+(?:-{1,2}[^\s|;&]+(?:\s+[^-\s|;&][^\s|;&]*)?\s+)+(add|remove|rm|update|up|install|i)\b/.test(
+      c
+    )
+  ) {
+    deny(
+      "Blocked: dependency mutation via flagged package-manager invocation (e.g. `pnpm -C dir add` / `pnpm --filter x add`). Per AGENTS.md §1 + 02-ai-rules.md §13.2.1, dependency changes are human-only."
+    );
+  }
+  // R4-c (13A.11): `npm|pnpm pkg set/delete` writes package.json fields directly.
+  // Parity with the Edit-path rule: scripts.* => allow, protected roots => deny,
+  // anything else => ask (safe floor).
+  const pkgCmd = c.match(/\b(?:npm|pnpm|yarn|bun)\b[^|;&\n]*?\bpkg\s+(?:set|delete)\b([^|;&\n]*)/);
+  if (pkgCmd) {
+    const args = String(pkgCmd[1] || "");
+    if (
+      /(^|[\s"'])(dependencies|devdependencies|peerdependencies|optionaldependencies|bundleddependencies|engines|pnpm|overrides|resolutions|packagemanager)([.=\s"'[]|$)/.test(
+        args
+      )
+    ) {
+      deny(
+        "Blocked: `pkg set/delete` on a package.json dependency-area field. Per AGENTS.md §1 + 02-ai-rules.md §13.2.1, these fields are human-only."
+      );
+    }
+    const toks = args.trim().split(/\s+/).filter((t) => t && !t.startsWith("-"));
+    if (toks.length && toks.every((t) => /^["']?scripts[.[]/.test(t))) {
+      decide(
+        "allow",
+        "Allowed: `pkg set/delete` limited to scripts.* — parity with the Edit-path scripts-only rule (13-ai-harness §13A.11)."
+      );
+    }
+    decide(
+      "ask",
+      "package.json `pkg set/delete` outside scripts — deferring to a human (safe floor, 13-ai-harness §13A.11)."
+    );
+  }
+  // R4-d (13A.11): raw-write side doors into package.json. Use the Edit tool so the
+  // scripts-vs-dependency gate can inspect the change.
+  if (/\bsed\b[^|;&\n]*\s-[a-z]*i[^|;&\n]*package\.json/.test(c) || />>?\s*(?:[^\s|;&]*\/)?package\.json\b/.test(c)) {
+    deny(
+      "Blocked: raw write to package.json (sed -i / shell redirection). Edit it with the Edit tool so the scripts-vs-dependency gate applies (02-ai-rules.md §13.1 / 13-ai-harness §13A.11)."
+    );
+  }
 }
 
 // §13.1 — public/platform-config.json: AI may change VALUES, never the field set.
@@ -71,16 +119,42 @@ function checkBash(cmd) {
 // (read/parse error) => ask (safe floor). This replaces the file's static ask rule.
 function applyEdits(text, tool, ti) {
   if (tool === "Write") return String(ti.content || "");
-  // String#replace with a function replacement treats new text literally ($ is not special).
-  if (tool === "Edit") return text.replace(String(ti.old_string ?? ""), () => String(ti.new_string ?? ""));
+  // R4-a: honor replace_all — the real Edit/MultiEdit replaces EVERY occurrence when
+  // the flag is set; simulating only the first occurrence let a cross-area edit look
+  // "scripts-only" (reviewed & reproduced 2026-07-18, 13A.11). String#replace(All)
+  // with a function replacement treats new text literally ($ is not special).
+  const applyOne = (t, e) => {
+    const oldS = String((e && e.old_string) ?? "");
+    const newS = String((e && e.new_string) ?? "");
+    if (!oldS) return t; // the real Edit rejects empty old_string — never simulate insertion
+    return e && e.replace_all ? t.replaceAll(oldS, () => newS) : t.replace(oldS, () => newS);
+  };
+  if (tool === "Edit") return applyOne(text, ti);
   if (tool === "MultiEdit") {
     let t = text;
-    for (const e of Array.isArray(ti.edits) ? ti.edits : []) {
-      t = t.replace(String((e && e.old_string) ?? ""), () => String((e && e.new_string) ?? ""));
-    }
+    for (const e of Array.isArray(ti.edits) ? ti.edits : []) t = applyOne(t, e);
     return t;
   }
   return text;
+}
+// R4-a: when an old_string is absent from the on-disk text, the simulation cannot
+// reproduce the real edit — the caller must fall to the ask safe floor instead of
+// letting "before === after" read as a harmless no-op. MultiEdit is checked
+// sequentially so a later edit may legitimately match text produced by an earlier one.
+function editsUnverifiable(text, tool, ti) {
+  if (tool === "Edit") {
+    const oldS = String(ti.old_string ?? "");
+    return !!oldS && !text.includes(oldS);
+  }
+  if (tool === "MultiEdit") {
+    let t = text;
+    for (const e of Array.isArray(ti.edits) ? ti.edits : []) {
+      const oldS = String((e && e.old_string) ?? "");
+      if (oldS && !t.includes(oldS)) return true;
+      t = applyEdits(t, "Edit", e);
+    }
+  }
+  return false;
 }
 function checkPlatformConfig(tool, ti) {
   const fp = String(ti.file_path || "");
@@ -89,6 +163,12 @@ function checkPlatformConfig(tool, ti) {
     const root = process.env.CLAUDE_PROJECT_DIR || process.cwd();
     const abs = fp.startsWith("/") ? fp : `${root}/${fp.replace(/^\.\//, "")}`;
     const text = readFileSync(abs, "utf8");
+    if (editsUnverifiable(text, tool, ti)) {
+      decide(
+        "ask",
+        "public/platform-config.json: edit could not be reproduced against the on-disk file (old_string not found) — deferring to a human (safe floor, 13A.11)."
+      );
+    }
     const before = Object.keys(JSON.parse(text)).sort();
     const after = Object.keys(JSON.parse(applyEdits(text, tool, ti))).sort();
     if (JSON.stringify(before) === JSON.stringify(after)) {
@@ -132,6 +212,12 @@ function checkPackageJson(tool, ti) {
     const root = process.env.CLAUDE_PROJECT_DIR || process.cwd();
     const abs = fp.startsWith("/") ? fp : `${root}/${fp.replace(/^\.\//, "")}`;
     const text = readFileSync(abs, "utf8");
+    if (editsUnverifiable(text, tool, ti)) {
+      decide(
+        "ask",
+        "package.json: edit could not be reproduced against the on-disk file (old_string not found) — deferring to a human (safe floor, 13A.11)."
+      );
+    }
     const before = JSON.parse(text);
     const after = JSON.parse(applyEdits(text, tool, ti));
     const keys = new Set([...Object.keys(before), ...Object.keys(after)]);

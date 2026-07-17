@@ -253,6 +253,97 @@ try {
     runGuard("Write", { file_path: pkgFixture(pkgBase), content: "{ not json" }).decision === "ask"
   );
 
+  // ===== guard: R4 hardening — replace_all fidelity, MultiEdit, side doors (13A.11) =====
+  const spanBase = {
+    name: "x",
+    scripts: { dev: "vite" },
+    devDependencies: { vite: "^5.0.0", "vite-plugin-a": "^1.0.0" }
+  };
+  check(
+    "guard denies: package.json replace_all Edit spanning scripts+deps",
+    runGuard("Edit", {
+      file_path: pkgFixture(spanBase),
+      old_string: "vite",
+      new_string: "vitex",
+      replace_all: true
+    }).decision === "deny"
+  );
+  check(
+    "guard allows: package.json replace_all Edit confined to scripts",
+    runGuard("Edit", {
+      file_path: pkgFixture({
+        name: "x",
+        scripts: { dev: "vite --a", probe: "vite --b" },
+        dependencies: { vue: "^3.0.0" }
+      }),
+      old_string: "--",
+      new_string: "~~",
+      replace_all: true
+    }).decision === "allow"
+  );
+  check(
+    "guard denies: package.json MultiEdit adding a dependency",
+    runGuard("MultiEdit", {
+      file_path: pkgFixture(pkgBase),
+      edits: [{ old_string: '"vue": "^3.0.0"', new_string: '"vue": "^3.0.0",\n    "axios": "^1.0.0"' }]
+    }).decision === "deny"
+  );
+  check(
+    "guard allows: package.json MultiEdit scripts-only",
+    runGuard("MultiEdit", {
+      file_path: pkgFixture(pkgBase),
+      edits: [{ old_string: '"dev": "vite"', new_string: '"dev": "vite --host"' }]
+    }).decision === "allow"
+  );
+  check(
+    "guard asks: package.json Edit old_string not found (unverifiable)",
+    runGuard("Edit", {
+      file_path: pkgFixture(pkgBase),
+      old_string: "no-such-string",
+      new_string: "x"
+    }).decision === "ask"
+  );
+  check(
+    "guard denies: package.json devDependencies change",
+    pkgWrite({ ...pkgBase, devDependencies: { a: "1" } }, { ...pkgBase, devDependencies: { a: "2" } }).decision ===
+      "deny"
+  );
+  check(
+    "guard denies: package.json protected-key deletion (engines removed)",
+    (() => {
+      const noEngines = { ...pkgBase };
+      delete noEngines.engines;
+      return pkgWrite(pkgBase, noEngines).decision === "deny";
+    })()
+  );
+  check(
+    "guard denies: package.json mixed scripts+dependencies Write",
+    pkgWrite(pkgBase, { ...pkgBase, scripts: { dev: "vite2" }, dependencies: { vue: "^4.0.0" } }).decision === "deny"
+  );
+  check(
+    "guard denies: platform-config replace_all edit renaming a field",
+    runGuard("Edit", {
+      file_path: pcFixture({ A: "k", k: 1 }),
+      old_string: '"k"',
+      new_string: '"z"',
+      replace_all: true
+    }).decision === "deny"
+  );
+  check(
+    "guard asks: platform-config Edit old_string not found (unverifiable)",
+    runGuard("Edit", { file_path: pcFixture({ A: 1 }), old_string: "zzz", new_string: "y" }).decision === "ask"
+  );
+  check("guard denies: pnpm -C dir add (flagged bypass)", bash("pnpm -C . add axios").decision === "deny");
+  check("guard denies: pnpm --filter add (flagged bypass)", bash("pnpm --filter web add axios").decision === "deny");
+  check("guard denies: npm pkg set dependency field", bash("npm pkg set dependencies.express=^4.0.0").decision === "deny");
+  check("guard denies: pnpm pkg delete devDependency", bash("pnpm pkg delete devDependencies.vite").decision === "deny");
+  check("guard allows: npm pkg set scripts field", bash("npm pkg set scripts.probe=node").decision === "allow");
+  check("guard asks: npm pkg set non-scripts field", bash("npm pkg set version=2.0.0").decision === "ask");
+  check("guard denies: sed -i on package.json", bash("sed -i '' -e s/vite/x/ package.json").decision === "deny");
+  check("guard denies: redirection into package.json", bash("echo hi > package.json").decision === "deny");
+  check("guard allows: pnpm run add-user (not a dep mutation)", bash("pnpm run add-user").decision === "allow");
+  check("guard allows: git add package.json", bash("git add package.json").decision === "allow");
+
   // ===== verify: exported pure helpers (deterministic, no toolchain) ==============
   check("classifyCodeChange: src/.mts true", classifyCodeChange("?? src/x.mts") === true);
   check("classifyCodeChange: src/.cts true", classifyCodeChange(" M src/x.cts") === true);
