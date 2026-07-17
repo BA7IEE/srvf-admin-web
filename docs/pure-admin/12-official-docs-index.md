@@ -10,7 +10,7 @@
 ## 必须先读
 
 - 主入口 `docs/pure-admin-max-ts-baseline.md`（特别是 §0.5 后端 4 大红线）
-- `02-ai-rules.md`（§13.1 文件改动矩阵、§13.4 8 步 Checklist）
+- `02-ai-rules.md`（§13.1 文件改动矩阵、§13.4 分级 preflight）
 - `11-upstream-sync.md`（官方版本升级 / 同步策略）
 
 ## 禁止事项

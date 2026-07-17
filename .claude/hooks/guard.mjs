@@ -38,7 +38,7 @@ function checkBash(cmd) {
   // §13.2.1 — dependency mutation is human-only
   if (/\bpnpm\s+(add|remove|rm|update|up)\b/.test(c) || /\bpnpm\s+clean:cache\b/.test(c)) {
     deny(
-      "Blocked: dependency mutation (pnpm add/remove/update/clean:cache). Per CLAUDE.md §4 + 02-ai-rules.md §13.2.1, AI must not change dependencies — propose it in the PR for a human to run."
+      "Blocked: dependency mutation (pnpm add/remove/update/clean:cache). Per AGENTS.md §1 + 02-ai-rules.md §13.2.1, AI must not change dependencies — propose it in the PR for a human to run."
     );
   }
   // R1-a: installing/adding a *specific package* is human-only. Match `<pm> add|install|i`
@@ -60,7 +60,7 @@ function checkBash(cmd) {
     /\bgit\s+commit\b[^|;&\n]*\s-[a-z]*n[a-z]*\b/.test(c)
   ) {
     deny(
-      "Blocked: husky/commitlint bypass (--no-verify / HUSKY=0). Per CLAUDE.md §4 + 02-ai-rules.md §13.3.12, fix the lint/type error instead of bypassing the commit hook."
+      "Blocked: husky/commitlint bypass (--no-verify / HUSKY=0). Per AGENTS.md §1 + 02-ai-rules.md §13.3.12, fix the lint/type error instead of bypassing the commit hook."
     );
   }
 }
@@ -133,14 +133,14 @@ function checkEdit(tool, ti) {
     deny(
       "Blocked: suppression comment (" +
         SUPPRESS_TOKENS.join(" / ") +
-        "). Per CLAUDE.md §4 + 02-ai-rules.md §13.3.5 & §13.3.8, fix the real type/lint error. " +
+        "). Per AGENTS.md §1 + 02-ai-rules.md §13.3.5 & §13.3.8, fix the real type/lint error. " +
         "If it is a genuine false positive, output an assessment for a human to decide."
     );
   }
   // §13.3.13 — no hardcoded VITE_* fallback in source
   if (/import\.meta\.env\.VITE_[A-Z0-9_]+\s*(\|\||\?\?)/.test(added)) {
     deny(
-      'Blocked: hardcoded fallback for an import.meta.env.VITE_* value. Per CLAUDE.md §4 + 02-ai-rules.md §13.3.13, config defaults belong in .env / platform-config.json (human-owned), not as `|| "default"` in source.'
+      'Blocked: hardcoded fallback for an import.meta.env.VITE_* value. Per AGENTS.md §1 + 02-ai-rules.md §13.3.13, config defaults belong in .env / platform-config.json (human-owned), not as `|| "default"` in source.'
     );
   }
 }

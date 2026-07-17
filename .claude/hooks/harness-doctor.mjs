@@ -185,7 +185,7 @@ function cmpSemver(a, b) {
 
 // ---- run -------------------------------------------------------------------------
 function extraReason(glob, tool) {
-  if (/^src\/api\/user\.ts$|^src\/views\/login/.test(glob)) return "login/token guard (CLAUDE.md §4)";
+  if (/^src\/api\/user\.ts$|^src\/views\/login/.test(glob)) return "login/token guard (AGENTS.md §2)";
   if (glob.startsWith(".claude/") || /13-ai-harness/.test(glob)) return "harness self-protection (A)";
   if (tool === "Read") return "read-noise reduction";
   if (glob === "postcss.config.js") return "engineering config";

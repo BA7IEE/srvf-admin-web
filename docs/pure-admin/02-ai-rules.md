@@ -7,18 +7,15 @@
 - 决定改动是否需要单独 PR、是否要先输出风险评估
 - 决定本次任务必须先读哪几份文档 / 哪几个源码文件
 
-## 必须先读
+## 读取方式（Harness 2.0-FE 起）
 
-- 主入口 `docs/pure-admin-max-ts-baseline.md`（TL;DR、后端 4 大红线）
-- 本文件全文
-- 与本任务匹配的专题文档（见下文 §16 任务类型 → 必读映射）
+- **恒读层 = 根 `AGENTS.md`**（唯一规则入口；Claude Code 另读根 `CLAUDE.md`）。本文件是**触碰才读的细则层**：按 §13 各节与 §16 映射取用，不要求每会话通读。
+- 红线 1~4 全文见主入口 `docs/pure-admin-max-ts-baseline.md` §0.5。
 
-## 禁止事项
+## 禁止事项（文字单点在 AGENTS.md §1，机械闸兜底）
 
-- 禁止跳过 §13.4「8 步 Checklist」直接动手
-- 禁止用 `// eslint-disable` / `// @ts-ignore` 绕过 lint 与类型检查
-- 禁止以"提速 / 临时跑通"为理由违反 §13.3 任何一条硬规则
-- 禁止 `--no-verify` 绕过 husky / commitlint
+- 依赖变更 / husky 绕闸（`--no-verify` / `HUSKY=0`）/ 抑制注释（`@ts-*` / `eslint-disable`）/ 源码 `VITE_*` fallback 均由 `guard.mjs` + husky 机械拦截；细则见 §13.2.1 与 §13.3，禁止以「提速 / 临时跑通」为理由绕过或违反。
+- 全量档任务禁止跳过 §13.4 preflight（档位定义见 §13.4）。
 
 ## 相关关键文件路径
 
@@ -31,33 +28,43 @@
 
 ## 13. AI 开发硬规则
 
-### 13.1 文件改动矩阵
+### 13.1 文件改动矩阵（2.0-FE 对齐版 · 2026-07-17 true-up）
 
-| 文件 / 目录                                                                                                                                              | AI 可改？                                           | 备注                                                                                                                      |
-| -------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `src/views/<新业务模块>/`                                                                                                                                | ✅ 可自由新建                                       | 必须沿用 `01-project-map.md` §3.14 范式                                                                                   |
-| `src/api/<新业务模块>.ts`                                                                                                                                | ✅ 可自由新建                                       | 类型按后端 Swagger                                                                                                        |
-| `src/store/modules/<新业务模块>.ts`                                                                                                                      | ✅ 可自由新建                                       | **命名必须有业务前缀**（如 `srvfTeam.ts`、`uStudioApps.ts`），禁止用 `data.ts`、`state.ts` 等无意义命名；不可改既有 store |
-| `src/constants/<业务模块>.ts`、`src/types/business/` 等业务侧目录                                                                                        | ✅ 新建                                             | UI 临时占位常量必须 `*.demo.ts` 命名或文件头注 `TEMPORARY / DEMO`（裁决 6）                                               |
-| `src/views/welcome/index.vue`                                                                                                                            | ✅ 可改占位文案                                     | 不要改路由名                                                                                                              |
-| `src/router/modules/srvf-*.ts` / 业务静态路由                                                                                                            | ✅ 可新建                                           | meta.roles 用 NestJS 真实角色名                                                                                           |
-| `src/views/dict/* / tenant/* / schedule/* / permission/*`                                                                                                | ⚠️ 改前先评估                                       | Max-Ts 演示模块；裁决 1：源码保留为参考                                                                                   |
-| `src/router/modules/home.ts / error.ts / remaining.ts`                                                                                                   | ⚠️ 仅在新增"绝对静态路由"时追加                     | 不要改既有                                                                                                                |
-| `mock/**`                                                                                                                                                | ❌                                                  | 业务 mock 禁止新增；仅 `*.demo.ts` 临时占位、且 PR 描述明确"接真 API 后立即删除"时允许（裁决 4）                          |
-| `public/platform-config.json`                                                                                                                            | ⚠️ 改值可（guard 守）/ 增删字段不可                 | `guard.mjs` 动态判定：顶层字段不变=放行，增删字段=拒绝，存疑=询问；取代该文件的静态 ask（见 13-ai-harness §13A.7）        |
-| `src/components/Re*/`                                                                                                                                    | ❌ 不可改                                           | 底座组件，要扩展请 wrapper                                                                                                |
-| `src/layout/**`                                                                                                                                          | ❌ 不可改源码                                       | 改动等同破坏整套主题 / 多标签 / keep-alive；扩展用 mitt 事件 / 业务子组件                                                 |
-| `src/router/index.ts / utils.ts / asyncRoutes.ts`                                                                                                        | ❌ 不可改                                           | 影响登录、动态路由、白屏防护；asyncRoutes 第一阶段绝对禁用（裁决 2）                                                      |
-| `src/utils/http/**`                                                                                                                                      | ❌ 不可改（除接 NestJS 时的"一次性适配"由人类拍板） | 改动 = 全局副作用                                                                                                         |
-| `src/utils/auth.ts`                                                                                                                                      | ❌ 不可改（除 token 字段适配）                      | token 主流程                                                                                                              |
-| `src/store/modules/user.ts / permission.ts / multiTags.ts / app.ts / settings.ts / epTheme.ts`                                                           | ❌ 不可改                                           | 同上                                                                                                                      |
-| `src/style/**`                                                                                                                                           | ❌ 不可改                                           | 主题 / 暗黑 / 侧栏样式核心；Tailwind v4 与 v3 语法差异巨大                                                                |
-| `src/plugins/elementPlus.ts / echarts.ts`                                                                                                                | ❌ 不可改                                           | 升级才动                                                                                                                  |
-| `src/main.ts / App.vue / src/config/index.ts`                                                                                                            | ❌ 不可改                                           | 入口与全局配置                                                                                                            |
-| `package.json / pnpm-lock.yaml`                                                                                                                          | ❌ 不可改                                           | 依赖变更走人类（见 §13.2.1）                                                                                              |
-| `vite.config.ts / build/** / tsconfig.json / eslint.config.js / stylelint.config.js / .prettierrc.js / .lintstagedrc / .husky/** / commitlint.config.js` | ❌ 不可改                                           | 工程级；底座改动必须单独 PR                                                                                               |
-| `.env / .env.development / .env.production / .env.staging`                                                                                               | ❌ AI 不得直接改                                    | 由人类改；AI 也不得在源码中硬编码 `VITE_*` 默认值绕过                                                                     |
-| `docs/pure-admin-max-ts-baseline.md` 与 `docs/pure-admin/**`                                                                                             | ✅ 由人类批准后更新                                 | 必须保留章节结构                                                                                                          |
+四档标记，与 `.claude/settings.json` 三档 + guard 纪律一一对应（`harness-doctor.mjs` 机械核对 ⚠️/❌ 行与 settings 的覆盖一致性）：
+
+- ✅ **自由区**：可自由新建 / 修改，仍守 §13.3 纪律与红线；
+- 🟡 **纪律区**：无静态闸（2.0-FE 移出 deny/ask），由 guard 内容规则 + 文档纪律约束，改前按备注自查；
+- ⚠️ **逐次确认（ask）**：人在场逐条批；无人值守等同拒绝；
+- ❌ **拒绝（deny）**：AI 不可改；人改版本化 `settings.json` 才能动，走 §13.2.2 单独 PR。
+
+| 文件 / 目录                                                                                                                                                                      | AI 可改？                           | 备注                                                                                                                    |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `src/views/srvf/**` 业务页                                                                                                                                                       | ✅                                  | 两种被许可范式（A 列表三件套 / B 详情作战室），见 `src/views/srvf/CLAUDE.md`；优先复用 `@/srvf-kit` 原语                |
+| `src/api/srvf-*.ts`                                                                                                                                                              | ✅                                  | 类型对齐后端 live `/api/docs-json`                                                                                      |
+| `src/store/modules/srvf*.ts`                                                                                                                                                     | ✅                                  | **命名必须有业务前缀**（如 `srvfTeam.ts`），禁止 `data.ts` / `state.ts` 等无意义命名；不可改既有 store                  |
+| `src/constants/<业务模块>.ts`、`src/types/business/` 等业务侧目录                                                                                                                | ✅                                  | UI 临时占位常量必须 `*.demo.ts` 命名或文件头注 `TEMPORARY / DEMO`（裁决 6）                                             |
+| `src/views/welcome/index.vue`                                                                                                                                                    | ✅                                  | 可改占位文案，不要改路由名                                                                                              |
+| `src/router/modules/srvf-*.ts` / 业务静态路由                                                                                                                                    | ✅                                  | meta.roles 用后端真实角色名                                                                                             |
+| `docs/pure-admin-max-ts-baseline.md` 与 `docs/pure-admin/**`                                                                                                                     | ✅                                  | 由人类批准后更新，必须保留章节结构（`13-ai-harness.md` 除外，见 ⚠️ 行）                                                 |
+| `src/router/modules/home.ts`、`error.ts`、`remaining.ts`                                                                                                                         | 🟡                                  | 仅在新增「绝对静态路由」时追加，不改既有                                                                                |
+| `mock/**`                                                                                                                                                                        | 🟡                                  | 业务 mock 禁新增；仅 `*.demo.ts` 临时占位、且 PR 描述明确「接真 API 后立即删除」时允许（裁决 4）；mock 非契约           |
+| `src/layout/**`、`src/style/**`                                                                                                                                                  | 🟡                                  | 主题 / 多标签 / keep-alive / 暗黑核心，Tailwind v4 语法差异大；改前评估影响面并写进 PR，优先 mitt 事件 / 业务子组件扩展 |
+| `src/api/user.ts`、`src/store/modules/user.ts`                                                                                                                                   | 🟡                                  | auth 申报制（AGENTS.md §2）：可随业务 PR 改，但必须显式申报「改了哪个 / 改了什么 / 影响面」                             |
+| `public/platform-config.json`                                                                                                                                                    | ⚠️ 改值可（guard 守）/ 增删字段不可 | `guard.mjs` 动态判定：顶层字段不变=放行，增删字段=拒绝，存疑=询问（13-ai-harness §13A.7）                               |
+| `src/utils/http/**`、`src/utils/auth.ts`                                                                                                                                         | ⚠️                                  | 全局副作用面；ask + 申报制（AGENTS.md §2）                                                                              |
+| `src/views/login/**`                                                                                                                                                             | ⚠️                                  | 登录主线；ask + 申报制（AGENTS.md §2）                                                                                  |
+| `src/router/utils.ts`                                                                                                                                                            | ⚠️                                  | 动态路由 / 白屏防护核心                                                                                                 |
+| `package.json`                                                                                                                                                                   | ⚠️                                  | scripts 区有合法需求走 ask；依赖区仍被 guard 拦（§13.2.1）                                                              |
+| `.husky/**`                                                                                                                                                                      | ⚠️                                  | worktree 里 `git commit` 执行的是**主 checkout** 的 `.husky/`（AGENTS.md §1）                                           |
+| `.claude/**`、`docs/pure-admin/13-ai-harness.md`                                                                                                                                 | ⚠️                                  | harness 自保护（13-ai-harness §13A.6）；无人值守等同拒绝                                                                |
+| `src/store/modules/permission.ts` / `multiTags.ts` / `app.ts` / `settings.ts` / `epTheme.ts`                                                                                     | ❌                                  | 框架内核 store                                                                                                          |
+| `src/router/index.ts` / `asyncRoutes.ts`                                                                                                                                         | ❌                                  | 登录、动态路由、白屏防护；asyncRoutes 禁用（裁决 2，详见 `03-router-menu.md` §5.2.1）                                   |
+| `src/components/Re*/**`                                                                                                                                                          | ❌                                  | 底座组件，要扩展请 wrapper（整目录 deny 属 §13A.6 R3-b 有意加宽）                                                       |
+| `src/plugins/**`                                                                                                                                                                 | ❌                                  | 升级才动                                                                                                                |
+| `src/main.ts` / `App.vue` / `src/config/index.ts`                                                                                                                                | ❌                                  | 入口与全局配置                                                                                                          |
+| `pnpm-lock.yaml`                                                                                                                                                                 | ❌                                  | 依赖变更走人类（§13.2.1）；Read 亦拒（降噪）                                                                            |
+| `vite.config.ts` / `tsconfig.json` / `build/**` / `eslint.config.js` / `stylelint.config.js` / `.prettierrc.js` / `.lintstagedrc` / `commitlint.config.js` / `postcss.config.js` | ❌                                  | 工程级；底座改动必须单独 PR                                                                                             |
+| `.env` / `.env.development` / `.env.production` / `.env.staging`                                                                                                                 | ❌                                  | 由人类改；AI 也不得在源码中硬编码 `VITE_*` 默认值绕过                                                                   |
 
 ### 13.2 底座 / 工程文件改动规则
 
@@ -70,7 +77,7 @@
 - `pnpm update ...`
 - `pnpm clean:cache`（会清 `pnpm-lock.yaml`）
 - `rm pnpm-lock.yaml` / 任何会清除 lockfile 的命令
-- 修改 `package.json` 中的 `dependencies` / `devDependencies` / `engines` / `pnpm` 字段
+- 修改 `package.json` 中的 `dependencies / devDependencies / engines / pnpm` 字段
 - 升级核心依赖（Vue / Vite / Element Plus / Pinia / TypeScript / Tailwind / axios）
 - 替换 UI 库（element-plus → ant-design 等）/ 构建工具（vite → webpack 等）
 
@@ -82,7 +89,7 @@
 - `pnpm lint`（lint 检查）
 - `pnpm preview`（预览打包结果）
 
-**`pnpm install`**：仅允许在"首次安装"或"人类明确要求"时执行；不得用 `pnpm install` 间接更新依赖。
+**依赖恢复**：`pnpm install --frozen-lockfile`（**裸命令**——尾随管道 / 重定向会被 guard 当包名拦）随时可跑，fresh worktree 先跑它再 typecheck / commit；不带 `--frozen-lockfile` 的 `pnpm install` 仅允许在「首次安装」或「人类明确要求」时执行，不得用它间接更新依赖。
 
 所有依赖变动都必须以 PR 描述形式向人类提出，由**人类手动执行命令**。
 
@@ -103,61 +110,62 @@
 1. **新页面前必先扫 vue-pure-admin 完整版** + 本项目已有范式：先查 `14-full-version-reference-index.md`（能力速查 → 路径，全量枚举），范式策略与红线见 `07-max-ts-modules.md` §12。
 2. **不得反推后端**：所有字段、枚举、状态、API 路径、错误码以 NestJS Swagger 为准（主入口红线 1~4）。
 3. **不得把 mock 当真实接口**；**禁止新增业务 mock**；临时 UI 占位 mock 必须 `*.demo.ts` 命名（裁决 4，详见 `06-mock-risk.md`）。
-4. **不得每个页面发明新范式**：优先沿用 `dict / tenant/list / schedule` 的目录范式。
+4. **不得每个页面发明新范式**：优先沿用 `src/views/srvf/**` 的两种被许可范式（A 列表三件套 / B 详情作战室，见 `src/views/srvf/CLAUDE.md`）与 `@/srvf-kit` 原语。
 5. **TypeScript**：业务代码（`src/views/srvf*/`、`src/api/srvf*.ts`、`src/store/modules/srvf*.ts`）必须通过 `pnpm typecheck` 且**禁止 `any`**；如需绕过，先输出评估让人类决定（不靠 `// @ts-ignore`、`// eslint-disable` 一笔带过）。
 6. **路由 name 与组件 `defineOptions.name` 必须一致**（详见 `03-router-menu.md` §5.5）。
 7. **i18n 暂不启用**：业务文案直接写中文。**禁止**自行 `pnpm add vue-i18n`、自行启用 i18n 分支。
-8. **每次改动后必须跑**：`pnpm lint && pnpm typecheck`，零错误零警告（项目 lint 用 `--max-warnings 0`，禁止 `// eslint-disable` 绕过）；**提交前再跑 `pnpm build`**。
-9. **多租户模板不得启用**：`.env: VITE_ENABLE_TENANT=false`；`tenantManagementRouter` 必须隐藏；**源码保留（裁决 1，禁止物理删除）**。
+8. **改动收尾必须跑**：`pnpm lint && pnpm typecheck`，零错误零警告（项目 lint 用 `--max-warnings 0`，禁止 `// eslint-disable` 绕过；Stop 钩子会对 `src/**` 改动自动兜底 typecheck）；**PR 提交前再跑 `pnpm build`**。
+9. **多租户模板不得启用**：`.env: VITE_ENABLE_TENANT=false`；不得重新引入租户菜单 / 租户模型（演示 views 四目录已于 Phase 0-b 经维护者拍板物理删除，原裁决 1「源码保留」由该拍板取代）。
 10. **asyncRoutes 第一阶段禁止启用**（裁决 2）：不切 import、不补 `getMenuList`、不为前端动态菜单倒逼后端。`getMenuList` 不存在不是 bug，不允许补。详见 `03-router-menu.md` §5.2.1。
-11. **演示角色名不得作为正式角色**（裁决 3）：`admin / common / *:*:* / permission:btn:add` 等仅为演示，接 NestJS 时全量替换。详见 `04-auth-permission.md`。
+11. **演示角色名不得作为正式角色**（裁决 3）：`admin / common / *:*:* / permission:btn:add` 等仅为演示，真码逐端点查 live 契约。详见 `04-auth-permission.md`。
 12. **commit 必须符合 commitlint 规则**（`commitlint.config.js`）；不要用 `--no-verify` 绕过 husky。
 13. **不得在源码中硬编码 `VITE_*` 默认值**绕过 `.env`；配置必须读 `.env` 或 `public/platform-config.json`。任何 `import.meta.env.VITE_*` 取值不得在源码侧附带默认值 / fallback；若需默认值，写入 `.env` 并由人类确认。
 14. **底座升级走人类**：作者上游有更新时，**禁止直接 merge / pull 上游到 starter**；必须按 `11-upstream-sync.md` 流程评估，AI 不得自行 cherry-pick。
 
-### 13.4 AI 任务接入 8 步 Checklist（每次开工必做）
+### 13.4 开工 preflight（分级 · 2026-07-17 起）
 
-AI 接到任意前端任务后，**第一件事**是按下面 8 步走，并在 PR / 对话中显式列出每步的结论。跳步等同违反硬规则。
+先**分型**再走查（Claude 可用 `/srvf-preflight` 一键产出）：
 
-| Step  | 动作                                                                                                                                                                                                                                                                              | 输出                                                                                                                            |
-| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| **1** | 读主入口 §0 / §0.5、本文件 §13、§16 阅读清单（本文件下方），确认本任务不踩任何红线                                                                                                                                                                                                | 列出"本任务涉及的红线编号 + 风险等级"；并明确写：本任务是否涉及后端字段 / 表 / API 路径定义？若涉及，逐项列出。                 |
-| **2** | 用关键词在 `vue-pure-admin/src/views/` 全文搜索相似范式                                                                                                                                                                                                                           | 给出参考路径清单（即使没找到也要写"未找到，原因是 X"）                                                                          |
-| **3** | 在本仓库 `src/views/` 中找最相似的现有范式（dict/tenant/list/schedule/permission/login）。**并读后端 `../srvf-nest-api/docs/handoff/admin-web.md` 能力图判定任务范式**：沿轴下钻（详情页/作战室，`activityId`/`memberId` 走路由）还是跨轴横扫（工作台）——**不是默认套 CRUD 列表** | 给出参考路径 + 复用范式说明；**显式答："本页是任务页还是资源页?是否在用'选择父级'下拉看子资源?" 若是 → STOP，改父级详情页内嵌** |
-| **4** | 列出涉及的文件改动清单，每条标注 §13.1 矩阵中的 ✅ / ⚠️ / ❌                                                                                                                                                                                                                      | 若含 ❌ → 触发 §13.2.2 单独 PR 流程；含 ⚠️ → 写风险评估                                                                         |
-| **5** | 列出复用的 `Re*` 组件、`@pureadmin/table`、`ReDialog` 等；列出**不**新增的依赖                                                                                                                                                                                                    | 若需要新依赖 → 暂停等人类批准（§13.2.1）                                                                                        |
-| **6** | 列出新增 `src/api/<模块>.ts` 的接口与类型，逐条对照 NestJS Swagger（缺则写"待后端确认"）                                                                                                                                                                                          | 显式说明 mock 边界（裁决 4）                                                                                                    |
-| **7** | 执行 `pnpm lint && pnpm typecheck`，零错误零警告                                                                                                                                                                                                                                  | 贴执行结果                                                                                                                      |
-| **8** | 执行 `pnpm build` 验证产物；若涉及路由 / 菜单 / 权限，跑一遍 `pnpm dev` 自查                                                                                                                                                                                                      | 贴构建结果 + 自查描述                                                                                                           |
+| 档位       | 适用任务                                                         | 要求                                                                                                                                     |
+| ---------- | ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| **全量档** | 新业务页 / 契约对接 / 触 ⚠️·❌ 邻域 / **无人值守 goal 一律全量** | 下表 Step 1~8 全走并显式输出各步结论，外加 AGENTS.md §2 申报与回滚点声明                                                                 |
+| **轻量档** | 常规小改（文案 / 样式 / 局部逻辑，零契约面）                     | Step 1 一行红线自查 + Step 4 文件清单（标 §13.1 档位）；收尾跑 `pnpm lint && pnpm typecheck`（Stop 钩兜底）；`pnpm build` 留到 PR 提交前 |
+| **零码档** | 纯 docs / 分析 / 评审，零 `src/**` 代码改动                      | 声明「零码任务」+ 回滚点即可；Step 7~8 免（husky 与 Stop 钩自动兜底）                                                                    |
 
-如果任务很小（如只改一个文案、一个图标），可在 PR 描述里一句话说明"Step 1~6 评估结论：无风险"，但 Step 7~8 仍必须执行。
+**不变量**：任何 PR 合并前 `pnpm lint && pnpm typecheck && pnpm build` 三绿；guard / verify / husky 机械闸对所有档位一视同仁。
+
+全量档 8 步如下：
+
+| Step  | 动作                                                                                                                                                                                                                                                                                                             | 输出                                                                                                                                 |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| **1** | 读主入口 §0 / §0.5、本文件 §13、§16 阅读清单，确认本任务不踩任何红线                                                                                                                                                                                                                                             | 列出「本任务涉及的红线编号 + 风险等级」；并明确写：本任务是否涉及后端字段 / 表 / API 路径定义？若涉及，逐项列出。                    |
+| **2** | 用关键词在 `vue-pure-admin/src/views/` 全文搜索相似范式                                                                                                                                                                                                                                                          | 给出参考路径清单（即使没找到也要写「未找到，原因是 X」）                                                                             |
+| **3** | 在本仓 `src/views/srvf/**` 找最相似的现有范式（范式 A 列表三件套 / 范式 B 详情作战室，见 `src/views/srvf/CLAUDE.md`）。**并读后端 `../srvf-nest-api/docs/handoff/admin-web.md` 能力图判定任务范式**：沿轴下钻（详情页 / 作战室，`activityId`/`memberId` 走路由）还是跨轴横扫（工作台）——**不是默认套 CRUD 列表** | 给出参考路径 + 复用范式说明；**显式答：「本页是任务页还是资源页？是否在用『选择父级』下拉看子资源？」若是 → STOP，改父级详情页内嵌** |
+| **4** | 列出涉及的文件改动清单，每条标注 §13.1 矩阵中的 ✅ / 🟡 / ⚠️ / ❌                                                                                                                                                                                                                                                | 若含 ❌ → 触发 §13.2.2 单独 PR 流程；含 ⚠️ → 有人值守逐次批 + 风险评估；含 🟡 → 写明所循纪律                                         |
+| **5** | 列出复用的 `Re*` 组件、`@/srvf-kit` 原语、`@pureadmin/table`、`ReDialog` 等；列出**不**新增的依赖                                                                                                                                                                                                                | 若需要新依赖 → 暂停等人类批准（§13.2.1）                                                                                             |
+| **6** | 列出新增 `src/api/<模块>.ts` 的接口与类型，逐条对照 live `/api/docs-json`（缺则写「待后端确认」）                                                                                                                                                                                                                | 显式说明 mock 边界（裁决 4）                                                                                                         |
+| **7** | 执行 `pnpm lint && pnpm typecheck`，零错误零警告                                                                                                                                                                                                                                                                 | 贴执行结果                                                                                                                           |
+| **8** | 执行 `pnpm build` 验证产物；若涉及路由 / 菜单 / 权限，跑一遍 `pnpm dev` 自查                                                                                                                                                                                                                                     | 贴构建结果 + 自查描述                                                                                                                |
 
 ---
 
 ## 16. 后续 AI 最小阅读清单（分级）
 
-> 按"任意改动 / 相关任务 / 必要时参考"三级。AI 每次开工前，**至少**读 🔴 级。
+### 🔴 恒读层（所有任务）
 
-### 🔴 每次必读（不分任务类型）
-
-1. `docs/pure-admin-max-ts-baseline.md`（**主入口**，重点 §TL;DR、§红线、§专题索引、§PR 摘要）
-2. `docs/pure-admin/02-ai-rules.md`（**本文件**，重点 §13.1 矩阵、§13.4 Checklist）
-3. `.env`（确认 `VITE_ENABLE_TENANT` 当前值与 `VITE_HIDE_HOME`）
-4. `public/platform-config.json`
-5. `types/router.d.ts`（路由 meta 字段规范）
-6. `package.json`（确认依赖版本，**禁止**自行更改）
+根 `AGENTS.md`（唯一恒读源，§0 分层读取；Claude Code 另读根 `CLAUDE.md`）。本文件与其余专题文档**触碰才读**（按下表映射取用）；`.env`、`public/platform-config.json`、`types/router.d.ts`、`package.json` 在涉及配置 / 路由 meta / 依赖版本时按需查阅（依赖版本**禁改**，§13.2.1）。
 
 ### 🟡 相关任务必读（按任务类型选取）
 
-| 任务类型                       | 必读                                                                                                                                                                                                                                                                                                                                                                                                |
-| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **改路由 / 菜单**              | `03-router-menu.md`、`src/router/index.ts`、`src/router/utils.ts`、`src/router/modules/home.ts / remaining.ts / error.ts`（第一阶段**不读** `asyncRoutes.ts`，禁改）                                                                                                                                                                                                                                |
-| **改登录 / Token / 接 NestJS** | `04-auth-permission.md`、`05-http-api.md`、`08-starter-derivation.md`、`src/views/login/index.vue`、`src/api/user.ts`、`src/utils/auth.ts`、`src/utils/http/index.ts`、`src/utils/http/types.d.ts`、`src/store/modules/user.ts`、`mock/login.ts`、`mock/refreshToken.ts`                                                                                                                            |
-| **改权限 / 按钮显隐**          | `04-auth-permission.md`、`src/store/modules/permission.ts`、`src/components/ReAuth/src/auth.tsx`、`src/components/RePerms/src/perms.tsx`、`src/directives/auth/index.ts`、`src/directives/perms/index.ts`、`src/utils/auth.ts:hasPerms`                                                                                                                                                             |
-| **新增业务列表 / 表单页**      | **后端 `../srvf-nest-api/docs/handoff/admin-web.md`（任务→端点图 + 轴模型;先判任务页 vs 资源页）**、`14-full-version-reference-index.md`（完整版能力速查/全量枚举/重依赖）、`07-max-ts-modules.md` §9 范式表、`src/views/tenant/list/index.vue` + `utils/hook.tsx`、`src/views/dict/index.vue` + `utils/hook.tsx`、`src/components/ReDialog/index.vue`、`src/components/RePureTableBar/src/bar.tsx` |
-| **改 layout / 主题**           | 谨慎触碰；先读 `01-project-map.md` §3.7 + 本文件 §13.1 矩阵 ❌ 行；如确需修改，先输出 §13.2.2 单独 PR 评估                                                                                                                                                                                                                                                                                          |
-| **改 vite / 构建**             | 同上，禁止 AI 自行动手；走 §13.2.1 + §13.2.2 流程                                                                                                                                                                                                                                                                                                                                                   |
-| **同步上游**                   | `11-upstream-sync.md` 必读全文                                                                                                                                                                                                                                                                                                                                                                      |
+| 任务类型                       | 必读                                                                                                                                                                                                                                                                                                                                                                    |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **改路由 / 菜单**              | `03-router-menu.md`、`src/router/index.ts`、`src/router/utils.ts`、`src/router/modules/home.ts / remaining.ts / error.ts`（第一阶段**不读** `asyncRoutes.ts`，禁改）                                                                                                                                                                                                    |
+| **改登录 / Token / 接 NestJS** | `04-auth-permission.md`、`05-http-api.md`、`08-starter-derivation.md`、`src/views/login/index.vue`、`src/api/user.ts`、`src/utils/auth.ts`、`src/utils/http/index.ts`、`src/utils/http/types.d.ts`、`src/store/modules/user.ts`                                                                                                                                         |
+| **改权限 / 按钮显隐**          | `04-auth-permission.md`、`src/store/modules/permission.ts`、`src/components/ReAuth/src/auth.tsx`、`src/components/RePerms/src/perms.tsx`、`src/directives/auth/index.ts`、`src/directives/perms/index.ts`、`src/utils/auth.ts:hasPerms`                                                                                                                                 |
+| **新增业务列表 / 表单页**      | **后端 `../srvf-nest-api/docs/handoff/admin-web.md`（任务→端点图 + 轴模型；先判任务页 vs 资源页）**、`14-full-version-reference-index.md`（完整版能力速查 / 全量枚举 / 重依赖）、`src/views/srvf/CLAUDE.md`（范式 A/B）、范式 A 三件套先例（如 `src/views/srvf/members-domain/members/`）、`@/srvf-kit`（`ListPage` / `useSrvfList` 等原语）、`07-max-ts-modules.md` §9 |
+| **改 layout / 主题**           | 谨慎触碰（§13.1 🟡 纪律区）；先读 `01-project-map.md` §3.7 + §13.1 该行备注，评估主题 / 多标签 / keep-alive 影响面并写进 PR，优先 mitt 事件 / 业务子组件扩展                                                                                                                                                                                                            |
+| **改 vite / 构建**             | §13.1 ❌ 行，禁止 AI 自行动手；走 §13.2.1 + §13.2.2 流程                                                                                                                                                                                                                                                                                                                |
+| **同步上游**                   | `11-upstream-sync.md` 必读全文                                                                                                                                                                                                                                                                                                                                          |
 
 ### 🟢 必要时参考（视情况查阅）
 
