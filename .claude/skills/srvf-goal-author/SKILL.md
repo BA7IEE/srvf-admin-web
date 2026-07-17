@@ -6,23 +6,23 @@ description: 当用户要把 srvf-admin-web(前端)的一项工作交给 runner 
 # srvf-goal-author — 把前端工作固化为可自驱的 goal+loop 文本
 
 [定位]
-本仓现处 **PR-4 暂停 / 纯静态阶段**,能做的只有 PR-5 菜单骨架 / PR-7 组织占位 / PR-8 日历占位 / 占位页 / 文档(CLAUDE.md §5、srvf-api-contract-readiness §5)。协作模式:**goal+loop 文本 = 维护者立项 + 拍板 + 授权记录**;runner 会话在 `.claude/` harness 护栏内无人值守自驱,终版报告回传主会话核验。本 skill 只管起草侧:**只准备文本、不替用户下发、不替 runner 动代码**。用户是非职业开发者:决策用人话问、每题给推荐;工程细节自行代决并写进 goal。
+本仓已**全面接入真实后端**(3-call 登录 2026-06-22 上线、30+ 业务页真接、srvf-kit 原语层就绪);goal 常见范围 = 业务页新增/校准、文档、harness 增强(规则唯一入口 = 根 AGENTS.md)。协作模式:**goal+loop 文本 = 维护者立项 + 拍板 + 授权记录**;runner 会话在 `.claude/` harness 护栏内无人值守自驱,终版报告回传主会话核验。本 skill 只管起草侧:**只准备文本、不替用户下发、不替 runner 动代码**。用户是非职业开发者:决策用人话问、每题给推荐;工程细节自行代决并写进 goal。
 本仓没有后端那种 `process §7.1 循环` 可引用,所以 loop 纪律必须**内嵌进 goal 文本**——这正是"goal+**loop**"的由来。
 
 [第一性原则]
 
 1. **拍板先行**:goal 不留未决问题(runner 中途只能人话简报停)。"挑哪个先例 / 菜单层级与 rank / 占位字段口径 / 目录与路由命名"等未拍 → **逐题穷尽访谈,一次问一个,每题给推荐,能查代码或文档自答的先查再问**;纯占位无可拍之事则直接写。**严禁反推后端**:后端字段 / 枚举 / 状态 / 接口 / 角色一律标 `placeholder` 或"待后端确认",绝不替后端定义(红线 1~4)。
-2. **侦察先行**:写前核实况——`git` HEAD 与工作树、`gh pr list`、`docs/pure-admin/09-pr-roadmap.md`、`docs/srvf-static-menu-skeleton-plan.md`、`src/router/modules/`、`src/views/`;复用先例给精确 `file:line`;先去 `vue-pure-admin/src/views/` 找 UI 范式(只借布局 / 组合,不抄 API / RBAC / mock)。**若 goal 要"追加进某编号文档"(如 review-log),先扫现有小节编号、取下一个未用号,别撞号**。
+2. **侦察先行**:写前核实况——`git` HEAD 与工作树、`gh pr list`、`docs/srvf-admin-ux-upgrade-blueprint.md`、`docs/external-refs.md`、`src/router/modules/`、`src/views/`;复用先例给精确 `file:line`;先去 `vue-pure-admin/src/views/` 找 UI 范式(只借布局 / 组合,不抄 API / RBAC / mock)。**若 goal 要"追加进某编号文档"(如 review-log),先扫现有小节编号、取下一个未用号,别撞号**。
 3. **目标导向,不教过程**:goal 写"什么必须为真"(DoD)与"什么不许碰"(禁止域),执行打法交给内嵌 loop。规则不复述——点名引用 CLAUDE.md §4/§5/§6、02-ai-rules §13.1 矩阵 / §13.3 / §13.4、13-ai-harness;怪癖在仓库文档与项目 memory 里,runner 自取。
 4. **DoD 可自证**:每条终态用命令 / 产出物自证——`pnpm lint && pnpm typecheck`(零错零警)、`pnpm build`,必要时 `pnpm dev` 自查路由 / 菜单;外加"路由 name===组件 defineOptions.name""菜单出现在侧栏""页面纯布局、零 API 调用"等可核验判据。
 5. **探针驱动 + 幂等**:任务队列每项带"探针"(已完成判据,如"路由 srvf-xxx 已注册且 lint/typecheck 绿");探针已满足则跳过 → 同一 goal 文本中断后重跑即续命,不重复造。
-6. **边界要硬 + 借力 harness**:禁止域只写真实约束——§13.1 的 ❌ 文件、禁加依赖(pnpm add/remove/update)、禁开 asyncRoutes / 补 getMenuList、禁碰登录 / token(PR-4)、禁恢复 tenant 菜单、禁把 mock 当契约。这些 harness 已机械拦截:**撞到拦截 = 该停下发人话简报的信号,不是绕路的理由**(同理禁 --no-verify、禁 ts/eslint 抑制注释、禁给 VITE\_\* 在源码里写兜底)。
+6. **边界要硬 + 借力 harness**:禁止域只写真实约束——§13.1 的 ❌ 文件、禁加依赖(pnpm add/remove/update)、禁开 asyncRoutes / 补 getMenuList、auth 五件走申报制(AGENTS.md §2)、禁恢复 tenant 菜单、禁把 mock 当契约。这些 harness 已机械拦截:**撞到拦截 = 该停下发人话简报的信号,不是绕路的理由**(同理禁 --no-verify、禁 ts/eslint 抑制注释、禁给 VITE\_\* 在源码里写兜底)。
 
 [goal+loop 文本骨架](必填仅 ★;其余按信息量取舍,迷你 goal 三段即可)
-★ **背景**:已拍板事实 + 日期 + 当前阶段(PR-4 暂停)+ 本 goal 属 PR-几。
+★ **背景**:已拍板事实 + 日期 + 本 goal 的定位(属哪条线 / 哪个业务域)。
 ★ **DoD + 探针队列**:逐条终态各附自证命令 / 判据(原则 4);任务 T1…Tn,每项 = 做什么 + 触及的 ✅ 文件 + 探针(未满足才做)。
 ★ **授权域**:runner 可自由新建 / 改的 ✅ 文件——`src/router/modules/srvf-*.ts`、`src/views/srvf/**`(嵌套于单一 srvf/ 目录,与子目录 CLAUDE.md 一致)、`src/api/srvf-*.ts`(占位)、`src/store/modules/srvf*.ts`。
-★ **禁止域**:§13.1 ❌ + 禁依赖 / asyncRoutes / 反推后端 / mock 当契约 / PR-4(原则 6)。
+★ **禁止域**:§13.1 ❌ + 禁依赖 / asyncRoutes / 反推后端 / mock 当契约 / auth 未申报(原则 6)。
 **LOOP 协议**:整段抄进 goal(见下)。
 
 [LOOP 协议范式](内嵌进 goal,让 runner 自驱)

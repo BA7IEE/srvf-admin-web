@@ -31,8 +31,8 @@ Element Plus `<el-tabs>` 在**没有 `v-model` / `default-value`** 时，内部
 
 - 前端 dev server 已起：`pnpm dev`（默认 `:8848`）。
 - 后端已起并跑过 seed：`:3000`。
-- 登录用仓库 dev 默认账号（`admin` / `ChangeMe123456`，见
-  `docs/srvf-api-integration-guide.md` §8）。
+- 登录用仓库 dev 默认账号（`admin` / `ChangeMe123456`，见后端仓 docs §8；
+  历史接线记录已归档于 `docs/archive/srvf-api-integration-guide.md`）。
 - 三个作战室用例需库里至少各有一条 队员 / 招新轮次 / 入队轮次（脚本经 API 自动取
   第一条 id；取不到则该用例标 `SKIP`）。
 

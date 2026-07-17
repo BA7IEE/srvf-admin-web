@@ -12,8 +12,8 @@
 ## 必须先读
 
 - `docs/pure-admin-max-ts-baseline.md` 主入口
-- `docs/pure-admin/09-pr-roadmap.md` §17.2 PR-3 节
-- `docs/pure-admin/10-review-log.md` §18.5 PR-2 调整记录
+- `docs/archive/09-pr-roadmap.md` §17.2 PR-3 节
+- `docs/archive/10-review-log.md` §18.5 PR-2 调整记录
 
 ## 禁止事项
 

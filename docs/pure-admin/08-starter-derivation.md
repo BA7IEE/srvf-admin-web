@@ -163,7 +163,7 @@
 
 > 本节是 §17.3 多产品复用策略 + 上方"派生项目身份调整 checklist"的**端到端展开**。每次派生新业务项目（如 `u-studio-admin-web` / `token-admin-web` / `health-admin-web`）时**逐条执行**，不要跳步。
 >
-> 已有派生案例参考：`srvf-admin-web` 基于 `fd24cd4` 派生（详见该仓 `docs/srvf-frontend-derivation.md`）。
+> 已有派生案例参考：`srvf-admin-web` 基于 `fd24cd4` 派生（详见该仓 `docs/archive/srvf-frontend-derivation.md`）。
 
 ### 17.4.1 派生前置条件
 
@@ -264,10 +264,10 @@ gh repo view BA7IEE/<业务项目名> --json visibility,isEmpty,defaultBranchRef
 派生 `srvf-admin-web` 时：
 
 - Step 1~10 已完整执行，初始 commit `3056f1e chore: derive srvf admin web from starter`；
-- Step 7 派生记录文档 `docs/srvf-frontend-derivation.md` 详细记录了 starter base commit `fd24cd4`；
+- Step 7 派生记录文档 `docs/archive/srvf-frontend-derivation.md` 详细记录了 starter base commit `fd24cd4`；
 - 后续 PR-2.1 (Vite proxy)、PR-3 (验证)、PR-4 抢跑 + revert + 暂停 等全部按上述规则推进。
 
-新派生项目应参考 `srvf-admin-web` 的 `docs/srvf-frontend-derivation.md` 写法。
+新派生项目应参考 `srvf-admin-web` 的 `docs/archive/srvf-frontend-derivation.md` 写法。
 
 ### 17.4.6 完整版参考库使用约束（派生项目同样适用）
 

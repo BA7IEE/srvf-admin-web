@@ -10,11 +10,11 @@
 **触碰才读**(改到哪个主题读哪篇;§6 全索引):
 
 - 动手前流程:`docs/pure-admin/02-ai-rules.md`(§13.1 文件矩阵 · §13.4 8 步 checklist)
-- 新业务页:后端能力图 `../srvf-nest-api/docs/handoff/admin-web.md`(**必读**,见 §4)→ 仓内两份蓝图(§6)→ 完整版范式索引 `docs/pure-admin/14-full-version-reference-index.md`(先查范式再动手,只抄交互不抄契约)
+- 新业务页:后端能力图 `../srvf-nest-api/docs/handoff/admin-web.md`(**必读**,见 §4)→ 仓内蓝图(§6)→ 完整版范式索引 `docs/pure-admin/14-full-version-reference-index.md`(先查范式再动手,只抄交互不抄契约)
 - 路由/菜单:`docs/pure-admin/03-router-menu.md`(§5.2.1 asyncRoutes 禁令)
 - harness 本体:`docs/pure-admin/13-ai-harness.md`
 
-**背景层**(不主动读):`docs/archive/**`(历史证据,不当当前事实)、derivation / readiness 两篇(PR-4 历史决策记录)。
+**背景层**(不主动读):`docs/archive/**`(历史证据与已完成规划,不当当前事实;PR-4 决策史、vnext 蓝图、ChatGPT 轨墓碑等均冻结于此,索引见其 README)。
 
 **权威源冲突顺序**(高 → 低):
 
@@ -84,8 +84,7 @@
 - `docs/pure-admin/03-router-menu.md` —— 改路由/菜单。
 - `docs/pure-admin/13-ai-harness.md` —— 改 harness / 权限 / hooks(「为什么这样设计」的权威说明;§13A.8 为 2.0-FE 反转记录)。
 - `docs/pure-admin/14-full-version-reference-index.md` —— 建新页前查范式(208 演示页 / 26 个 `Re*` 组件能力速查;完整版只读,只抄交互)。
-- `docs/srvf-admin-vnext-blueprint.md` · `docs/srvf-admin-ux-upgrade-blueprint.md` —— 新业务规划定位(差距矩阵 / IA / 七条军规;与 handoff 冲突按 §0 处理)。
+- `docs/srvf-admin-ux-upgrade-blueprint.md` —— 新业务规划定位(IA v3 / 工作台 v2 / 七条军规;与 handoff 冲突按 §0 处理;前作 vnext 蓝图已入 archive)。
 - `docs/pure-admin-max-ts-baseline.md` 与 `docs/pure-admin/` 其余各篇 —— starter 底座专题(项目图 / http / mock 风险 / 模块 / 上游同步 / 官方索引)。
-- `docs/srvf-frontend-derivation.md` · `docs/srvf-api-contract-readiness.md` —— 追溯派生记录 / PR-4 决策史。
 
 **v1 重定向**(v1 全文见 [`docs/archive/harness-v1/`](docs/archive/harness-v1/);v1 `CLAUDE.md` 与 `AGENTS.md` 同构):v1 §1 仓库身份 → 本文件头注 + §0;§2 现状 → §2(版本类事实改以后端 handoff 为准);§3 必读清单 → §0 分层读取;§4 核心禁令 → §1 + §2(guard 报错引用的「CLAUDE.md §4」即 v1 编号,按本行解析);§5 允许工作 → §1 自由区 + §4;§6 动手前声明 → §5;§7 派生源 / §8 快查图 → §6 derivation 行;§9 完整版参考规则 → §6 的 14-index 行(禁抄契约/RBAC/动态路由细则在该索引与 `07-max-ts-modules.md`)。

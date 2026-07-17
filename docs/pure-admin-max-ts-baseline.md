@@ -5,7 +5,7 @@
 > 任何与本文档冲突的需求都应优先回到本文档对齐。
 
 当前版本：**v0.3**（专题拆分 + 渐进式加载；v0.2.1 的 10 条句级补丁全部继承）。
-版本历史与 review 沿革见 `docs/pure-admin/10-review-log.md`。
+版本历史与 review 沿革见 `docs/archive/10-review-log.md`。
 
 ---
 
@@ -121,7 +121,7 @@
 
 ---
 
-## 3. PR-1 ~ PR-8 路线摘要（详见 `docs/pure-admin/09-pr-roadmap.md`）
+## 3. PR-1 ~ PR-8 路线摘要（详见 `docs/archive/09-pr-roadmap.md`）
 
 > 每个 PR 都有「目标」「修改范围」「禁止范围」「DoD」。**按顺序、独立提，不得合并**。
 
@@ -154,7 +154,7 @@
 
 ## 4. Open Questions（卡住 PR-4 之后的关键问题）
 
-> 完整列表见 `docs/pure-admin/10-review-log.md` §18.1.5。以下 5 个是**第一阶段必答**。
+> 完整列表见 `docs/archive/10-review-log.md` §18.1.5。以下 5 个是**第一阶段必答**。
 
 1. **NestJS 返回结构**：`{ code, message, data }` / `{ data, meta }` / `{ success, data, error }` ？决定 `05-http-api.md` §7.5 拦截器适配代码 → **卡 PR-4**。
 2. **NestJS 是否有 refresh-token 机制**：决定 `05-http-api.md` §7.6 保留 / 降级 → **卡 PR-4**。
@@ -178,8 +178,8 @@
 | 06  | [`docs/pure-admin/06-mock-risk.md`](./pure-admin/06-mock-risk.md)                     | Mock 体系与硬规则（默认禁新增、`*.demo.ts` 限制、生产关闭）                                                              |
 | 07  | [`docs/pure-admin/07-max-ts-modules.md`](./pure-admin/07-max-ts-modules.md)           | 组件 / 页面范式 / Max-Ts 特有能力盘点 / vue-pure-admin 完整版参考策略                                                    |
 | 08  | [`docs/pure-admin/08-starter-derivation.md`](./pure-admin/08-starter-derivation.md)   | 从 starter 派生业务项目 / NestJS 后端对接策略 / 多产品复用                                                               |
-| 09  | [`docs/pure-admin/09-pr-roadmap.md`](./pure-admin/09-pr-roadmap.md)                   | 第一阶段落地路线 / PR-1 ~ PR-8 / DoD / 风险清单                                                                          |
-| 10  | [`docs/pure-admin/10-review-log.md`](./pure-admin/10-review-log.md)                   | Review 修订记录 v0.2 → v0.2.1 → v0.3 / 采纳与未采纳清单 / Open Questions                                                 |
+| 09  | [`docs/archive/09-pr-roadmap.md`](./archive/09-pr-roadmap.md)                         | 第一阶段落地路线 / PR-1 ~ PR-8 / DoD / 风险清单                                                                          |
+| 10  | [`docs/archive/10-review-log.md`](./archive/10-review-log.md)                         | Review 修订记录 v0.2 → v0.2.1 → v0.3 / 采纳与未采纳清单 / Open Questions                                                 |
 | 11  | [`docs/pure-admin/11-upstream-sync.md`](./pure-admin/11-upstream-sync.md)             | 上游 → starter → 业务项目 同步策略 / 高风险文件清单 / 同步分类                                                           |
 | 12  | [`docs/pure-admin/12-official-docs-index.md`](./pure-admin/12-official-docs-index.md) | Pure Admin 官方文档索引与 FAQ 裁决（不复制官网全文；任务类型 → 官方页 + 本地文档映射；禁止反推清单；路径与环境注意事项） |
 

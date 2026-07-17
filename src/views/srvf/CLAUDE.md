@@ -1,10 +1,10 @@
 # src/views/srvf — local rules (loaded on demand)
 
-SRVF business pages. PR-4 (login / real API) was **restarted & approved (2026-06-22)** — readiness
-§6 is 10/10 + human-approved and real login is wired — so pages here **may now call real backend
-endpoints** (`/api/admin/v1/*` · `/api/system/v1/*` via `@/utils/http`, dev proxy `/api → :3000`)
-and gate by **real RBAC codes**. Authoritative rules: `docs/srvf-api-contract-readiness.md` §6 +
-`docs/srvf-api-integration-guide.md` + `docs/pure-admin/07-max-ts-modules.md`.
+SRVF business pages. Real login (3-call) has been live since 2026-06-22 — pages here **call real
+backend endpoints** (`/api/admin/v1/*` · `/api/system/v1/*` via `@/utils/http`, dev proxy
+`/api → :3000`) and gate by **real RBAC codes**. Authoritative rules: root `AGENTS.md` §1/§4 +
+live `/api/docs-json` + backend `../srvf-nest-api/docs/handoff/admin-web.md` +
+`docs/pure-admin/07-max-ts-modules.md`.
 
 ## 两种被许可的页面范式（不要为每张表发明第三种）
 

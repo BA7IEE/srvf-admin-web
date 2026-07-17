@@ -38,6 +38,7 @@
 > 第一阶段定义：在派生业务项目里，把 starter 改成「业务后台最小可用版」。
 >
 > **第一阶段最小可用**的边界：
+>
 > - ✅ 能用 NestJS 真账号登录、获取真实角色 / 权限；
 > - ✅ 侧边栏只显示业务核心菜单（含组织 / 日历占位）；
 > - ✅ 业务列表 / 表单 / 弹窗范式可复用；
@@ -235,20 +236,20 @@
 
 ## 风险清单（沿用 v0.2）
 
-| # | 风险 | 来源 | 缓解 |
-| --- | --- | --- | --- |
-| R1 | 前端模板污染后端设计（多租户 / 套餐 / 字典字段反推） | `views/tenant`、`mock/system.ts` | 主入口红线 + `02-ai-rules.md` §13.3；隐藏 tenant 菜单 |
-| R2 | AI 乱改底座（layout / router / http / store） | AI 默认行为 | `02-ai-rules.md` §13.1 矩阵 + §13.2 强制评估 |
-| R3 | mock 误导（生产仍走 mock） | `build/plugins.ts:enableProd=true` | 上线前关 `enableProd` 或卸插件 |
-| R4 | 权限只做前端隐藏（v-auth / v-perms） | `src/components/ReAuth`, `RePerms` | 后端最终校验；`04-auth-permission.md` §6.7 |
-| R5 | 动态路由过早接入 | `src/router/asyncRoutes.ts` | 第一阶段不启用，见 `03-router-menu.md` §5.2.1 |
-| R6 | 多租户误启用 | `.env: VITE_ENABLE_TENANT=true` 默认 | 立即改为 false |
-| R7 | 国际化误启用 | starter 当前无 i18n | 不要随手 `pnpm add vue-i18n` |
-| R8 | 页面范式不统一 | 不同 AI 不同写法 | `07-max-ts-modules.md` §9.8 |
-| R9 | 依赖升级风险（vite 8 / vue 3.5 / tailwind 4 / typescript 6 / eslint 10 / element-plus 2.13） | `package.json` 均为较新版本 | 升级走人类；CI 跑 `lint + typecheck + build` |
-| R10 | 从完整版迁移代码时引入不兼容逻辑 | 复制 vue-pure-admin 页面时连组件 + 依赖一起带 | `07-max-ts-modules.md` §12.3 |
-| R11 | token 刷新风暴 | `src/utils/http/index.ts` 队列 | 后端 refresh 接口必须稳定，否则全站 logout |
-| R12 | 三级菜单 keep-alive 不生效 | `formatTwoStageRoutes` 拍平 | 业务避免依赖三级 keep-alive |
-| R13 | 自动收集 `router/modules/**/*.ts` | `import.meta.glob` 包含所有 ts 文件 | 不要在 `router/modules/` 放工具脚本 |
-| R14 | `responsive-storage` 命名空间冲突 | `responsivemaxts-` | 业务不要硬编码这个前缀 |
-| R15 | `vite-plugin-fake-server: enableProd: true` 在线上仍开 | `build/plugins.ts` | 接真后端前关闭 |
+| #   | 风险                                                                                         | 来源                                          | 缓解                                                  |
+| --- | -------------------------------------------------------------------------------------------- | --------------------------------------------- | ----------------------------------------------------- |
+| R1  | 前端模板污染后端设计（多租户 / 套餐 / 字典字段反推）                                         | `views/tenant`、`mock/system.ts`              | 主入口红线 + `02-ai-rules.md` §13.3；隐藏 tenant 菜单 |
+| R2  | AI 乱改底座（layout / router / http / store）                                                | AI 默认行为                                   | `02-ai-rules.md` §13.1 矩阵 + §13.2 强制评估          |
+| R3  | mock 误导（生产仍走 mock）                                                                   | `build/plugins.ts:enableProd=true`            | 上线前关 `enableProd` 或卸插件                        |
+| R4  | 权限只做前端隐藏（v-auth / v-perms）                                                         | `src/components/ReAuth`, `RePerms`            | 后端最终校验；`04-auth-permission.md` §6.7            |
+| R5  | 动态路由过早接入                                                                             | `src/router/asyncRoutes.ts`                   | 第一阶段不启用，见 `03-router-menu.md` §5.2.1         |
+| R6  | 多租户误启用                                                                                 | `.env: VITE_ENABLE_TENANT=true` 默认          | 立即改为 false                                        |
+| R7  | 国际化误启用                                                                                 | starter 当前无 i18n                           | 不要随手 `pnpm add vue-i18n`                          |
+| R8  | 页面范式不统一                                                                               | 不同 AI 不同写法                              | `07-max-ts-modules.md` §9.8                           |
+| R9  | 依赖升级风险（vite 8 / vue 3.5 / tailwind 4 / typescript 6 / eslint 10 / element-plus 2.13） | `package.json` 均为较新版本                   | 升级走人类；CI 跑 `lint + typecheck + build`          |
+| R10 | 从完整版迁移代码时引入不兼容逻辑                                                             | 复制 vue-pure-admin 页面时连组件 + 依赖一起带 | `07-max-ts-modules.md` §12.3                          |
+| R11 | token 刷新风暴                                                                               | `src/utils/http/index.ts` 队列                | 后端 refresh 接口必须稳定，否则全站 logout            |
+| R12 | 三级菜单 keep-alive 不生效                                                                   | `formatTwoStageRoutes` 拍平                   | 业务避免依赖三级 keep-alive                           |
+| R13 | 自动收集 `router/modules/**/*.ts`                                                            | `import.meta.glob` 包含所有 ts 文件           | 不要在 `router/modules/` 放工具脚本                   |
+| R14 | `responsive-storage` 命名空间冲突                                                            | `responsivemaxts-`                            | 业务不要硬编码这个前缀                                |
+| R15 | `vite-plugin-fake-server: enableProd: true` 在线上仍开                                       | `build/plugins.ts`                            | 接真后端前关闭                                        |
