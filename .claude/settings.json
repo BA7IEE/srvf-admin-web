@@ -1,5 +1,5 @@
 {
-  "_comment_never_allow": "永不收录进 allow(Harness 2.0-FE goal 2026-07-17 拍板;修改本文件时不得将以下模式移入 allow,只能落在 deny/ask):git push --force|-f 全词序变体 / git reset --hard / git branch -D|--delete --force / rm -rf(vite 缓存与构建产物外)/ gh repo delete / gh release delete / pnpm add|remove|update|clean:cache(guard.mjs 拦,依赖 human-only)。规则优先级 deny > ask > allow,先匹配先赢;复合命令(&& ; |)每个子命令须独立命中规则才放行。ask 面=真敏感清单(auth 主线 4 项 + package.json + .husky + .claude 自保护 + 13-ai-harness 文档);日常开发面(views/layout/style/mock/业务路由 modules/api/store 业务件)不设静态闸,由 guard.mjs 内容规则 + AGENTS.md 纪律约束。",
+  "_comment_never_allow": "永不收录进 allow(Harness 2.0-FE goal 2026-07-17 拍板;修改本文件时不得将以下模式移入 allow,只能落在 deny/ask):git push --force|-f 全词序变体 / git reset --hard / git branch -D|--delete --force / rm -rf(vite 缓存与构建产物外)/ gh repo delete / gh release delete / pnpm add|remove|update|clean:cache(guard.mjs 拦,依赖 human-only)。规则优先级 deny > ask > allow,先匹配先赢;复合命令(&& ; |)每个子命令须独立命中规则才放行。ask 面=真敏感清单(auth 主线 4 项 + .husky + .claude 自保护 + 13-ai-harness 文档;package.json 由 guard.mjs 动态守:scripts 区 allow / 依赖区 deny / 其余 ask,见 13A.10);日常开发面(views/layout/style/mock/业务路由 modules/api/store 业务件)不设静态闸,由 guard.mjs 内容规则 + AGENTS.md 纪律约束。",
   "permissions": {
     "deny": [
       "Edit(./src/store/modules/permission.ts)",
@@ -65,8 +65,6 @@
       "Write(./src/views/login/**)",
       "Edit(./src/router/utils.ts)",
       "Write(./src/router/utils.ts)",
-      "Edit(./package.json)",
-      "Write(./package.json)",
       "Edit(./.husky/**)",
       "Write(./.husky/**)",
       "Edit(./.claude/**)",

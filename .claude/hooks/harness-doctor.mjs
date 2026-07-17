@@ -269,10 +269,13 @@ function main() {
   // Rows whose protection is enforced dynamically by guard.mjs rather than by a static
   // deny/ask glob. They are intentionally absent from settings.json, so the Edit+Write
   // coverage rule below would otherwise misreport them as drift.
-  const GUARD_ENFORCED = new Set(["public/platform-config.json"]);
+  const GUARD_ENFORCED = new Map([
+    ["public/platform-config.json", "改值 allow / 增删字段 deny"],
+    ["package.json", "scripts 区 allow / 依赖区 deny / 其余 ask"]
+  ]);
   for (const spec of specs) {
     if (GUARD_ENFORCED.has(spec.path)) {
-      console.log(`  ok    ${spec.symbol.padEnd(4)} ${spec.path}  ← guard.mjs (改值 allow / 增删字段 deny)`);
+      console.log(`  ok    ${spec.symbol.padEnd(4)} ${spec.path}  ← guard.mjs (${GUARD_ENFORCED.get(spec.path)})`);
       continue;
     }
     // A ❌/⚠️ path needs BOTH Edit and Write blocked. One tool alone leaves a hole

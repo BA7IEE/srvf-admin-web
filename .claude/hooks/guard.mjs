@@ -108,6 +108,65 @@ function checkPlatformConfig(tool, ti) {
   }
 }
 
+// §13.2.1 + 13A.10 — package.json: scripts-only edits are routine; the dependency
+// area stays human-only. Same three-state pattern as checkPlatformConfig: read the
+// on-disk file, rebuild the post-edit JSON, diff which top-level keys changed.
+// Only `scripts` changed => allow; any protected field changed => deny; anything
+// else (name/version/… or unparseable) => ask (safe floor). Replaces the static ask.
+const PKG_PROTECTED = [
+  "dependencies",
+  "devDependencies",
+  "peerDependencies",
+  "optionalDependencies",
+  "bundledDependencies",
+  "engines",
+  "pnpm",
+  "overrides",
+  "resolutions",
+  "packageManager"
+];
+function checkPackageJson(tool, ti) {
+  const fp = String(ti.file_path || "");
+  if (!/(^|\/)package\.json$/.test(fp)) return;
+  try {
+    const root = process.env.CLAUDE_PROJECT_DIR || process.cwd();
+    const abs = fp.startsWith("/") ? fp : `${root}/${fp.replace(/^\.\//, "")}`;
+    const text = readFileSync(abs, "utf8");
+    const before = JSON.parse(text);
+    const after = JSON.parse(applyEdits(text, tool, ti));
+    const keys = new Set([...Object.keys(before), ...Object.keys(after)]);
+    const changed = [...keys].filter((k) => JSON.stringify(before[k]) !== JSON.stringify(after[k]));
+    const hit = changed.filter((k) => PKG_PROTECTED.includes(k));
+    if (hit.length) {
+      deny(
+        "Blocked: package.json dependency-area change (" +
+          hit.join(", ") +
+          "). Per AGENTS.md §1 + 02-ai-rules.md §13.2.1, dependency/engines/pnpm fields are human-only — propose the change in the PR for a human to run."
+      );
+    }
+    if (changed.length && changed.every((k) => k === "scripts")) {
+      decide(
+        "allow",
+        "Allowed: package.json scripts-only change (dependency area untouched) — 02-ai-rules.md §13.1 / 13-ai-harness §13A.10. Dependency/engines/pnpm changes stay human-only."
+      );
+    }
+    if (!changed.length) {
+      decide("allow", "Allowed: package.json edit leaves the parsed content unchanged (formatting-only).");
+    }
+    decide(
+      "ask",
+      "package.json: change outside scripts (" +
+        changed.join(", ") +
+        ") — deferring to a human (safe floor, 13-ai-harness §13A.10)."
+    );
+  } catch {
+    decide(
+      "ask",
+      "package.json: could not verify this is a scripts-only change (read/parse error) — deferring to a human (safe floor)."
+    );
+  }
+}
+
 function checkEdit(tool, ti) {
   // R1-c: the checks below are source-code rules. Only scan code files so that
   // editing docs / markdown / json that merely mention these tokens is not blocked.
@@ -153,6 +212,7 @@ function checkEdit(tool, ti) {
     if (tool === "Bash") checkBash(String(ti.command || ""));
     else if (tool === "Edit" || tool === "Write" || tool === "MultiEdit") {
       checkPlatformConfig(tool, ti); // §13.1: value-only allow / field-change deny / unsure ask
+      checkPackageJson(tool, ti); // §13A.10: scripts-only allow / dependency-area deny / else ask
       checkEdit(tool, ti);
     }
   } catch {

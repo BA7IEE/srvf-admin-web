@@ -205,6 +205,54 @@ try {
   check("guard denies: platform-config remove field", pcWrite({ A: 1, B: 2 }, JSON.stringify({ A: 1 }, null, 2)).decision === "deny");
   check("guard asks: platform-config malformed result", pcWrite({ A: 1 }, "{ not json").decision === "ask");
 
+  // ===== guard: package.json scripts-vs-dependency-area rule (13A.10) =============
+  const pkgFixture = (obj) => {
+    const f = path.join(mkTemp("srvf-h-pkg-"), "package.json");
+    writeFileSync(f, JSON.stringify(obj, null, 2));
+    return f;
+  };
+  const pkgWrite = (obj, next) =>
+    runGuard("Write", { file_path: pkgFixture(obj), content: JSON.stringify(next, null, 2) });
+  const pkgBase = {
+    name: "x",
+    version: "1.0.0",
+    scripts: { dev: "vite" },
+    dependencies: { vue: "^3.0.0" },
+    engines: { node: ">=20" }
+  };
+  check(
+    "guard allows: package.json scripts-only Write",
+    pkgWrite(pkgBase, { ...pkgBase, scripts: { dev: "vite", probe: "node -v" } }).decision === "allow"
+  );
+  check(
+    "guard allows: package.json scripts-only Edit",
+    runGuard("Edit", {
+      file_path: pkgFixture(pkgBase),
+      old_string: '"dev": "vite"',
+      new_string: '"dev": "vite --host"'
+    }).decision === "allow"
+  );
+  check(
+    "guard denies: package.json add dependency",
+    pkgWrite(pkgBase, { ...pkgBase, dependencies: { vue: "^3.0.0", axios: "^1.0.0" } }).decision === "deny"
+  );
+  check(
+    "guard denies: package.json engines change",
+    pkgWrite(pkgBase, { ...pkgBase, engines: { node: ">=22" } }).decision === "deny"
+  );
+  check(
+    "guard denies: package.json pnpm-field add",
+    pkgWrite(pkgBase, { ...pkgBase, pnpm: { overrides: {} } }).decision === "deny"
+  );
+  check(
+    "guard asks: package.json non-scripts field change",
+    pkgWrite(pkgBase, { ...pkgBase, version: "1.0.1" }).decision === "ask"
+  );
+  check(
+    "guard asks: package.json malformed result",
+    runGuard("Write", { file_path: pkgFixture(pkgBase), content: "{ not json" }).decision === "ask"
+  );
+
   // ===== verify: exported pure helpers (deterministic, no toolchain) ==============
   check("classifyCodeChange: src/.mts true", classifyCodeChange("?? src/x.mts") === true);
   check("classifyCodeChange: src/.cts true", classifyCodeChange(" M src/x.cts") === true);
