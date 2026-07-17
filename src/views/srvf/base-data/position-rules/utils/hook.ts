@@ -1,11 +1,11 @@
 import { bizErrorMessage } from "@/api/srvf-error";
-import { h, ref, reactive } from "vue";
-import type { PaginationProps } from "@pureadmin/table";
+import { h, ref } from "vue";
 import { ElMessageBox } from "element-plus";
 import { deviceDetection } from "@pureadmin/utils";
 import { message } from "@/utils/message";
 import { hasPerms } from "@/utils/auth";
 import { addDialog } from "@/components/ReDialog";
+import { useSrvfList } from "@/srvf-kit";
 import { getDictTypes, getDictItems } from "@/api/srvf-dict";
 import PositionRuleForm, { type PositionRuleFormModel } from "../form.vue";
 import {
@@ -15,6 +15,7 @@ import {
   deletePositionRule,
   getPositionOptions,
   type PositionRuleItem,
+  type PositionRuleListQuery,
   type PositionOptionItem,
   type PolicyStatus
 } from "@/api/srvf-position";
@@ -35,18 +36,10 @@ export function usePositionRules() {
   const canUpdate = hasPerms("position-rule.update.record");
   const canDelete = hasPerms("position-rule.delete.record");
 
-  const dataList = ref<PositionRuleItem[]>([]);
-  const loading = ref(false);
   const nodeTypeFilter = ref<string>("");
   const positionFilter = ref<string>("");
   const statusFilter = ref<"" | PolicyStatus>("");
   const formRef = ref();
-  const pagination = reactive<PaginationProps>({
-    total: 0,
-    pageSize: 10,
-    currentPage: 1,
-    background: true
-  });
 
   const statusOptions = [
     { value: "", label: "全部状态" },
@@ -109,6 +102,26 @@ export function usePositionRules() {
     return positionNameById.value[id] ?? id;
   }
 
+  const {
+    dataList,
+    loading,
+    pagination,
+    onSearch,
+    onFilterChange,
+    handleSizeChange,
+    handleCurrentChange
+  } = useSrvfList<PositionRuleItem, PositionRuleListQuery>({
+    fetch: getPositionRules,
+    beforeFetch: ensurePositionOptions,
+    buildParams: () => ({
+      ...(nodeTypeFilter.value ? { nodeTypeCode: nodeTypeFilter.value } : {}),
+      ...(positionFilter.value ? { positionId: positionFilter.value } : {}),
+      ...(statusFilter.value ? { status: statusFilter.value } : {})
+    }),
+    errorMessage: "加载职务规则失败",
+    canRead
+  });
+
   const columns: TableColumnList = [
     {
       label: "组织类别",
@@ -151,49 +164,6 @@ export function usePositionRules() {
     { label: "状态", prop: "status", minWidth: 90, slot: "status" },
     { label: "操作", fixed: "right" as const, width: 220, slot: "operation" }
   ];
-
-  async function onSearch() {
-    if (!canRead) {
-      dataList.value = [];
-      return;
-    }
-    loading.value = true;
-    try {
-      await ensurePositionOptions();
-      const { code, data } = await getPositionRules({
-        page: pagination.currentPage,
-        pageSize: pagination.pageSize,
-        ...(nodeTypeFilter.value ? { nodeTypeCode: nodeTypeFilter.value } : {}),
-        ...(positionFilter.value ? { positionId: positionFilter.value } : {}),
-        ...(statusFilter.value ? { status: statusFilter.value } : {})
-      });
-      if (code === 0) {
-        dataList.value = data.items;
-        pagination.total = data.total;
-        pagination.pageSize = data.pageSize;
-        pagination.currentPage = data.page;
-      }
-    } catch (error: any) {
-      message(bizErrorMessage(error, "加载职务规则失败"), {
-        type: "error"
-      });
-    } finally {
-      loading.value = false;
-    }
-  }
-
-  function onFilterChange() {
-    pagination.currentPage = 1;
-    onSearch();
-  }
-  function handleSizeChange(val: number) {
-    pagination.pageSize = val;
-    onSearch();
-  }
-  function handleCurrentChange(val: number) {
-    pagination.currentPage = val;
-    onSearch();
-  }
 
   async function openDialog(title: "新建" | "编辑", row?: PositionRuleItem) {
     await Promise.all([ensureNodeTypeOptions(), ensurePositionOptions()]);
