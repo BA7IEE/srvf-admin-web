@@ -138,12 +138,12 @@
 | 改 http 请求           | HTTP请求（§2.2）                                  | `05-http-api.md`                                                 | ⚠️ axios 封装结构一致；**响应结构、错误码、refresh 适配以后端 Swagger 为准**（不照搬官方 mock 假设）                                           | 🟠 中    |
 | 接后端 API             | HTTP请求 + 对接平台的前后端项目（§2.5）           | `05-http-api.md`、`08-starter-derivation.md` §11                 | ❌ **不照搬**。一切以 NestJS Swagger 为准                                                                                                      | 🔴 高    |
 | 做权限按钮             | RBAC权限（§2.4）                                  | `04-auth-permission.md` §6.6                                     | ⚠️ `Auth/Perms/v-auth/v-perms` 用法可照搬；**演示 `admin/common/*:*:*` 不可作正式角色**（裁决 3）                                              | 🟠 中    |
-| 做布局 / 菜单样式      | 布局 + 平台配置（§2.2）                           | `01-project-map.md` §3.7、`03-router-menu.md` §5.7               | ✅ 大部分照搬；layout 源码本地禁改（`02-ai-rules.md §13.1` ❌）                                                                                | 🟢 低    |
+| 做布局 / 菜单样式      | 布局 + 平台配置（§2.2）                           | `01-project-map.md` §3.7、`03-router-menu.md` §5.7               | ✅ 大部分照搬；layout / style 为 🟡 纪律区（`02-ai-rules.md §13.1`），改前评估影响面写进 PR，优先 mitt / 子组件扩展                            | 🟢 低    |
 | 做主题 / 暗黑模式      | 主题和暗黑模式（§2.3）                            | `01-project-map.md` §3.7、`03-router-menu.md` §5.7               | ✅ 通过 `public/platform-config.json` 或主题面板配置                                                                                           | 🟢 低    |
 | 做 Tailwind 样式       | Tailwind CSS（§2.3）                              | `01-project-map.md` §2.2                                         | ⚠️ **注意 Tailwind v4 与 v3 语法差异巨大**（v4 用 `@theme/@utility/@custom-variant`，无 `tailwind.config.js`）；官方文档需确认与本项目版本一致 | 🟠 中    |
 | 做 CRUD 页面           | 组件库（§2.5）                                    | `07-max-ts-modules.md` §9 范式表；优先参考 vue-pure-admin 完整版 | ⚠️ 交互范式可照搬；**字段 / API / 角色 / 字典必须按后端**（红线 1~4）                                                                          | 🟠 中    |
 | 做打包 / 部署          | 打包和部署（§2.2）+ 打包优化（§2.5）              | `01-project-map.md` §4、`06-mock-risk.md` §8.5 第 4 条           | ✅ 命令照搬；**生产 `enableProd: false`** 必改（裁决 4）                                                                                       | 🟢 低    |
-| 排查 FAQ 报错          | 常见问题 / 非平台问题跟踪（§2.6）                 | `setup-notes.md`、`10-review-log.md`                             | ✅ 大部分照搬                                                                                                                                  | 🟢 低    |
+| 排查 FAQ 报错          | 常见问题 / 非平台问题跟踪（§2.6）                 | `setup-notes.md`、`docs/archive/10-review-log.md`                | ✅ 大部分照搬                                                                                                                                  | 🟢 低    |
 | 上游更新同步           | 指南介绍页 changelog 段 + FAQ                     | `11-upstream-sync.md`                                            | ⚠️ 阅读官方 changelog，但同步必须走本地高风险文件清单 + 单独 PR                                                                                | 🔴 高    |
 | 动态路由               | 路由和菜单 + FAQ 内动态路由段                     | `03-router-menu.md` §5.2.1                                       | ❌ **第一阶段一律禁用 asyncRoutes**（裁决 2）；只读官方文档作排错参考，不实施                                                                  | 🔴 高    |
 | SSO / 免登录           | 单点登录 + 自定义免登录（§2.4）                   | `src/utils/sso.ts`（上游 starter 自带，默认 `main.ts` 注释）     | ⚠️ 若启用，按官方文档；但 token / role 来源仍以 NestJS 为准                                                                                    | 🟠 中    |
@@ -162,7 +162,7 @@
 
 1. **完整版作参考库，不作业务底座**：实际业务项目不直接用 `vue-pure-admin` 完整版，完整版只作为 `vue-pure-admin/` 只读参考；具体业务用本仓库 `u-admin-web-starter`（Max-Ts 精简 + Max 合一版）或派生项目。
 2. **使用 pnpm，不换 npm / yarn**：项目 `preinstall: "npx only-allow pnpm"` 强制。`02-ai-rules.md §13.2.1` 已硬约束。
-3. **提交 / 打包前必须跑** `pnpm typecheck` 与 `pnpm lint`：`02-ai-rules.md §13.3 第 8 条`；提交前再 `pnpm build`。
+3. **改动收尾必须跑** `pnpm typecheck` 与 `pnpm lint`（`02-ai-rules.md §13.3.8`）；`pnpm build` 由 PR 的 CI（`.github/workflows/ci.yml`）机械把关，本地仅自诊。
 4. **husky 不删除**：husky 钩子（commit-msg / pre-commit）在 `node_modules` 安装后会自动启用。不允许 `git commit --no-verify` 绕过（`02-ai-rules.md §13.3 第 12 条`）。
 5. **不走 monorepo**：starter + 多业务仓库独立 clone 派生（`08-starter-derivation.md §17.3`）。
 6. **正式项目目录路径不要使用中文**：FAQ 明确建议中文路径可能导致 vite / pnpm / 部分工具识别异常。本仓库 starter / srvf-admin-web / srvf-nest-api 均在英文路径下；上游参考目录 `<refs-root>/`（占位符见 `docs/external-refs.md`）自 2026-07-17 起亦为英文路径（含空格，shell 引用须加引号），仅用于只读参考，**不在该路径下做长期项目开发**。
@@ -252,7 +252,7 @@
 ### 边界
 
 - 官方文档变更**不得直接改变后端契约**——任何后端行为变化必须经 srvf-nest-api 仓库的 Swagger / Prisma schema 拍板，再回头适配前端。
-- 本文件不是规则源——所有硬规则仍以 `02-ai-rules.md` / `03-router-menu.md` / `04-auth-permission.md` / `05-http-api.md` / `06-mock-risk.md` / `08-starter-derivation.md` / `09-pr-roadmap.md` / `11-upstream-sync.md` 为准；本文件只做"官方文档 → 本项目"的映射 + 裁决索引。
+- 本文件不是规则源——恒读层 = 根 `AGENTS.md`；硬规则细则仍以 `02-ai-rules.md` / `03-router-menu.md` / `04-auth-permission.md` / `05-http-api.md` / `06-mock-risk.md` / `08-starter-derivation.md` / `11-upstream-sync.md` 为准（`09-pr-roadmap.md` 已归档至 `docs/archive/`）；本文件只做"官方文档 → 本项目"的映射 + 裁决索引。
 
 ---
 

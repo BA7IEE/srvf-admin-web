@@ -12,6 +12,6 @@ Authoritative rules: `docs/pure-admin/03-router-menu.md`. This file only restate
 
 ## Don't
 
-- ⛔ Enable `asyncRoutes` or add `getMenuList` — absent by design, not a bug (§13.3.10 · 03-router-menu.md §5.2.1). `src/router/asyncRoutes.ts` / `index.ts` / `utils.ts` are deny-listed.
-- ⛔ Edit `home.ts` / `error.ts` / `remaining.ts` except to **append** an absolute-static route (⚠️ assess first — these prompt for confirmation).
+- ⛔ Enable `asyncRoutes` or add `getMenuList` — absent by design, not a bug (§13.3.10 · 03-router-menu.md §5.2.1). `src/router/asyncRoutes.ts` / `index.ts` are ❌ deny; `src/router/utils.ts` is ⚠️ ask.
+- `home.ts` / `error.ts` / `remaining.ts` are 🟡 纪律区 (no static gate): edit only to **append** an absolute-static route, never touch existing entries (02-ai-rules.md §13.1).
 - ⛔ Restore `tenantManagementRouter` (must stay hidden).

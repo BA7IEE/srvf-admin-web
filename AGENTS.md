@@ -59,7 +59,7 @@
 
 - 🔴 **deny(框架内核;人改版本化 settings 才能动)**:既有 store 五件(permission/multiTags/app/settings/epTheme)、`router/index.ts` + `asyncRoutes.ts`、`components/Re*/**`、`plugins/**`、`main.ts` / `App.vue` / `config/index.ts`、`vite.config.ts` / `tsconfig.json` / `build/**`、eslint/stylelint/prettier/commitlint/postcss 配置、`.lintstagedrc`、`.env*`、`pnpm-lock.yaml`(含 Read)、`dist`(Read);Bash 面:force push 全变体。
 - 🟡 **ask(真敏感;人在场逐次批,无人值守等同拒绝)**:`src/utils/http/**`、`src/utils/auth.ts`、`src/views/login/**`、`src/router/utils.ts`、`.husky/**`、`.claude/**`(harness 自保护)、`docs/pure-admin/13-ai-harness.md`;Bash 面:`git branch -D|--delete`。`package.json` 由 guard 动态守:仅 scripts 区变 allow / 依赖区变 deny / 其余 ask(13A.10)。
-- 🟢 **allow(日常开发面,零弹窗)**:git 常规读写(push 非 force)、`gh pr`(merge 仅 `--squash`)、`pnpm dev/build/preview/typecheck/lint*/install --frozen-lockfile`、harness 自检脚本。views / layout 之外的业务面(views / 业务路由 modules / api / store 业务件 / mock)均为自由区——仍受 guard 内容规则与本文件纪律约束。
+- 🟢 **allow(日常开发面,零弹窗)**:git 常规读写(push 非 force、`git branch` 仅只读形态)、`gh pr`(merge 仅 `--squash`)、`pnpm dev/build/preview/typecheck/lint*/install --frozen-lockfile`、harness 自检脚本。业务面(`views/srvf/**` / 业务路由 `modules/srvf-*.ts` / `api/srvf-*.ts` / `store` 业务件)为 ✅ 自由区,layout / style / mock / 基础路由 module 为 🟡 纪律区——均仍受 guard 内容规则与本文件纪律约束。
 
 **hooks**(全部 fail-open,静态 deny 是硬底线):`guard.mjs`(PreToolUse:§1「依赖/绕闸/配置」行)· `verify.mjs`(Stop:会话改过 `src/**` 代码则 `pnpm typecheck` 不绿不让收工)· `readtax.mjs`(husky pre-commit:恒读双文档字符预算)。手动巡检:`node .claude/hooks/harness.test.mjs`(改 hooks 后必跑,全绿 = 未削弱)、`node .claude/hooks/harness-doctor.mjs`(§13.1↔settings 漂移巡检)。
 
@@ -72,7 +72,7 @@
 
 ## 5. 流程与验证
 
-- **开工**:按 `02-ai-rules.md` §13.4 **分级 preflight**——新页/契约/敏感面走全量八步,常规小改红线自查+收尾验证,零码任务声明即可,无人值守一律全量(Claude 可用 `/srvf-preflight`);全量档声明允许/禁触文件清单;C 档 goal 内自决连续推进,goal 外新发现记录不顺手修。
+- **开工**:按 `02-ai-rules.md` §13.4 **分级 preflight**——新页/契约/敏感面走全量八步,常规小改红线自查+收尾验证,零码任务声明即可,无人值守一律全量(Claude 可用 `/srvf-preflight`);全量档声明允许/禁触文件清单;无人值守 goal 在授权域内自决连续推进,goal 外新发现记录上报不顺手修。
 - **并行**:一任务 = 一 worktree 分支 = 一 PR,写集不相交;不动别人的 worktree。fresh worktree 先 `pnpm install --frozen-lockfile`(裸命令)。
 - **验证**:`pnpm lint && pnpm typecheck` 零错零警;build 由 PR 的 CI 把关(`.github/workflows/ci.yml`),合并前 `gh pr checks` 全绿;UI 改动起本 worktree 的 dev(→:8849)真验,登录用后端 docs §8 dev 默认账号(不读姊妹仓 `.env`)。
 - **提交/合并**:husky = lint-staged + commitlint(头纯中文)+ readtax;PR 走 squash;验证净的单 PR 可直接合,**多 PR brief 的显式 stop-gate 优先于「不问就合」**。
