@@ -1,6 +1,7 @@
 import { bizErrorMessage } from "@/api/srvf-error";
 import { ref } from "vue";
 import { ElMessageBox } from "element-plus";
+import { downloadByData } from "@pureadmin/utils";
 import { message } from "@/utils/message";
 import { hasPerms } from "@/utils/auth";
 import {
@@ -193,14 +194,7 @@ export function useRecruitmentTools(cycleId: string) {
     exportLoading.value = true;
     try {
       const blob = await exportApplications({ cycleId, filter });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `recruitment-applications-${cycleId}-${filter}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
+      downloadByData(blob, `recruitment-applications-${cycleId}-${filter}.csv`);
       message("导出成功", { type: "success" });
     } catch (error: any) {
       message(await blobErrorMessage(error, "导出失败"), { type: "error" });
