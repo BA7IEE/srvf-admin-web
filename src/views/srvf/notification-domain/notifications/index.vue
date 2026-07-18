@@ -5,7 +5,11 @@ import { useRenderIcon } from "@/components/ReIcon/src/hooks";
 import { useNotifications } from "./utils/hook";
 
 import AddFill from "~icons/ri/add-circle-line";
-import { SrvfListPage } from "@/srvf-kit";
+import { SrvfListPage, SrvfStatusTag } from "@/srvf-kit";
+import {
+  NOTIFICATION_STATUS_LABEL,
+  NOTIFICATION_STATUS_TAG
+} from "@/api/srvf-notification";
 
 defineOptions({
   name: "SrvfNotifications"
@@ -36,7 +40,6 @@ const {
   columns,
   dataList,
   pagination,
-  statusMeta,
   ensureTypeOptions,
   onSearch,
   onFilterChange,
@@ -109,9 +112,11 @@ onMounted(() => {
       </el-button>
     </template>
     <template #statusCode="{ row }">
-      <el-tag :type="statusMeta(row.statusCode).type">
-        {{ statusMeta(row.statusCode).text }}
-      </el-tag>
+      <SrvfStatusTag
+        :value="row.statusCode"
+        :label-dict="NOTIFICATION_STATUS_LABEL"
+        :tag-dict="NOTIFICATION_STATUS_TAG"
+      />
     </template>
     <template #operation="{ row, size }">
       <el-button

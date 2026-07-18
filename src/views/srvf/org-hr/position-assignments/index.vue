@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import { onMounted } from "vue";
 import { usePositionAssignmentList } from "./utils/hook";
-import { SrvfListPage } from "@/srvf-kit";
+import { SrvfListPage, SrvfStatusTag } from "@/srvf-kit";
+import {
+  ASSIGNMENT_STATUS_LABEL,
+  ASSIGNMENT_STATUS_TAG
+} from "@/api/srvf-position-assignment";
 
 defineOptions({
   name: "SrvfPositionAssignments"
@@ -23,7 +27,6 @@ const {
   columns,
   dataList,
   pagination,
-  statusMeta,
   onSearch,
   onFilterChange,
   handleRevoke,
@@ -115,9 +118,11 @@ onMounted(() => {
       </el-select>
     </template>
     <template #status="{ row }">
-      <el-tag :type="statusMeta(row.status).type">
-        {{ statusMeta(row.status).text }}
-      </el-tag>
+      <SrvfStatusTag
+        :value="row.status"
+        :label-dict="ASSIGNMENT_STATUS_LABEL"
+        :tag-dict="ASSIGNMENT_STATUS_TAG"
+      />
     </template>
     <template #isConcurrent="{ row }">
       <el-tag :type="row.isConcurrent ? 'warning' : 'info'">

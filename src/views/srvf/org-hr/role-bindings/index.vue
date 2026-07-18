@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
-import { SrvfListPage } from "@/srvf-kit";
+import { SrvfListPage, SrvfStatusTag } from "@/srvf-kit";
+import {
+  BINDING_STATUS_LABEL,
+  BINDING_STATUS_TAG
+} from "@/api/srvf-role-binding";
 import { hasPerms } from "@/utils/auth";
 import { useRoleBindings } from "./utils/hook";
 import AuthzExplainDrawer from "./authz-explain-drawer.vue";
@@ -40,7 +44,6 @@ const {
   dataList,
   pagination,
   scopeTypeLabel,
-  statusMeta,
   onSearch,
   onFilterChange,
   openCreateDialog,
@@ -162,9 +165,11 @@ onMounted(() => {
       <el-tag type="info">{{ scopeTypeLabel(row.scopeType) }}</el-tag>
     </template>
     <template #status="{ row }">
-      <el-tag :type="statusMeta(row.status).type">
-        {{ statusMeta(row.status).text }}
-      </el-tag>
+      <SrvfStatusTag
+        :value="row.status"
+        :label-dict="BINDING_STATUS_LABEL"
+        :tag-dict="BINDING_STATUS_TAG"
+      />
     </template>
     <template #operation="{ row, size }">
       <el-button

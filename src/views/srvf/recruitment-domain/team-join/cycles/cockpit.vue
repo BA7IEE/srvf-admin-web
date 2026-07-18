@@ -9,11 +9,13 @@ import { hasPerms } from "@/utils/auth";
 import { addDialog } from "@/components/ReDialog";
 import { PureTableBar } from "@/components/RePureTableBar";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
-import { SrvfDetailShell, SrvfPermEmpty } from "@/srvf-kit";
+import { SrvfDetailShell, SrvfPermEmpty, SrvfStatusTag } from "@/srvf-kit";
 import {
   getTeamJoinCycle,
   updateTeamJoinCycle,
   TJ_CYCLE_STATUS_LABEL,
+  TJ_APP_STATUS_LABEL,
+  TJ_APP_STATUS_TAG,
   type TeamJoinCycle
 } from "@/api/srvf-team-join";
 import TjCycleForm, { type TjCycleFormModel } from "./form.vue";
@@ -133,7 +135,6 @@ const {
   columns: appColumns,
   dataList: appDataList,
   pagination: appPagination,
-  statusMeta: appStatusMeta,
   detailVisible: appDetailVisible,
   detailLoading: appDetailLoading,
   detailData: appDetailData,
@@ -238,9 +239,11 @@ onMounted(() => {
                   @page-current-change="appHandleCurrentChange"
                 >
                   <template #statusCode="{ row }">
-                    <el-tag :type="appStatusMeta(row.statusCode).type">
-                      {{ appStatusMeta(row.statusCode).text }}
-                    </el-tag>
+                    <SrvfStatusTag
+                      :value="row.statusCode"
+                      :label-dict="TJ_APP_STATUS_LABEL"
+                      :tag-dict="TJ_APP_STATUS_TAG"
+                    />
                   </template>
                   <template #operation="{ row }">
                     <el-button

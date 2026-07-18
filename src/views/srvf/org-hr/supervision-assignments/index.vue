@@ -4,7 +4,11 @@ import { useRenderIcon } from "@/components/ReIcon/src/hooks";
 import { useSupervisionAssignments } from "./utils/hook";
 
 import AddFill from "~icons/ri/add-circle-line";
-import { SrvfListPage } from "@/srvf-kit";
+import { SrvfListPage, SrvfStatusTag } from "@/srvf-kit";
+import {
+  SUPERVISION_STATUS_LABEL,
+  SUPERVISION_STATUS_TAG
+} from "@/api/srvf-supervision";
 
 defineOptions({
   name: "SrvfSupervisionAssignments"
@@ -24,7 +28,6 @@ const {
   dataList,
   pagination,
   scopeModeLabel,
-  statusMeta,
   onSearch,
   onFilterChange,
   openCreateDialog,
@@ -104,9 +107,11 @@ onMounted(() => {
       </el-tag>
     </template>
     <template #status="{ row }">
-      <el-tag :type="statusMeta(row.status).type">
-        {{ statusMeta(row.status).text }}
-      </el-tag>
+      <SrvfStatusTag
+        :value="row.status"
+        :label-dict="SUPERVISION_STATUS_LABEL"
+        :tag-dict="SUPERVISION_STATUS_TAG"
+      />
     </template>
     <template #operation="{ row, size }">
       <el-button class="reset-margin" link :size="size" @click="goMember(row)">

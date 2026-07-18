@@ -6,7 +6,8 @@ import ContentMedia from "./content-media.vue";
 
 import AddFill from "~icons/ri/add-circle-line";
 import Search from "~icons/ri/search-line";
-import { SrvfListPage } from "@/srvf-kit";
+import { SrvfListPage, SrvfStatusTag } from "@/srvf-kit";
+import { CONTENT_STATUS_LABEL, CONTENT_STATUS_TAG } from "@/api/srvf-content";
 
 defineOptions({
   name: "SrvfContents"
@@ -25,7 +26,6 @@ const {
   columns,
   dataList,
   pagination,
-  statusMeta,
   mediaVisible,
   mediaContentId,
   onSearch,
@@ -92,9 +92,11 @@ onMounted(() => {
       </el-button>
     </template>
     <template #statusCode="{ row }">
-      <el-tag :type="statusMeta(row.statusCode).type">
-        {{ statusMeta(row.statusCode).text }}
-      </el-tag>
+      <SrvfStatusTag
+        :value="row.statusCode"
+        :label-dict="CONTENT_STATUS_LABEL"
+        :tag-dict="CONTENT_STATUS_TAG"
+      />
     </template>
     <template #operation="{ row, size }">
       <el-button
