@@ -3,7 +3,7 @@ import dayjs from "dayjs";
 import { h, ref, reactive } from "vue";
 import type { PaginationProps } from "@pureadmin/table";
 import { ElMessageBox } from "element-plus";
-import { deviceDetection } from "@pureadmin/utils";
+import { deviceDetection, downloadByData } from "@pureadmin/utils";
 import { message } from "@/utils/message";
 import { hasPerms } from "@/utils/auth";
 import { addDialog } from "@/components/ReDialog";
@@ -355,14 +355,10 @@ export function useRegistrations(externalActivityId: string) {
     if (!activityId.value) return;
     try {
       const blob = await exportRegistrations(activityId.value, scope);
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `registrations-${activityId.value}-${scope ?? "pass"}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      downloadByData(
+        blob,
+        `registrations-${activityId.value}-${scope ?? "pass"}.csv`
+      );
       message("导出成功", { type: "success" });
     } catch (error: any) {
       message(bizErrorMessage(error, "导出失败"), { type: "error" });
