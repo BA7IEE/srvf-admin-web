@@ -2,7 +2,6 @@
 import { onMounted } from "vue";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
 import { useContents } from "./utils/hook";
-import ContentMedia from "./content-media.vue";
 
 import AddFill from "~icons/ri/add-circle-line";
 import Search from "~icons/ri/search-line";
@@ -26,8 +25,6 @@ const {
   columns,
   dataList,
   pagination,
-  mediaVisible,
-  mediaContentId,
   onSearch,
   onFilterChange,
   openDialog,
@@ -159,7 +156,4 @@ onMounted(() => {
       </el-button>
     </template>
   </SrvfListPage>
-
-  <!-- 封面与附件管理 drawer（封面 + 附件上传/设封面/删；signed-URL 三步） -->
-  <ContentMedia v-model:visible="mediaVisible" :content-id="mediaContentId" />
 </template>

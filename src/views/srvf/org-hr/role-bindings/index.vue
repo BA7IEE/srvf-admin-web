@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { h, onMounted } from "vue";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
+import { addDrawer } from "@/components/ReDrawer";
 import { SrvfListPage, SrvfStatusTag } from "@/srvf-kit";
 import {
   BINDING_STATUS_LABEL,
@@ -21,7 +22,14 @@ defineOptions({
 
 /** 权限诊断入口（蓝图 §7：诊断是排查工具,入口放本页） */
 const canExplain = hasPerms("authz.explain.decision");
-const explainVisible = ref(false);
+function openExplain() {
+  addDrawer({
+    title: "权限诊断",
+    size: "620px",
+    hideFooter: true,
+    contentRenderer: () => h(AuthzExplainDrawer)
+  });
+}
 
 const {
   canRead,
@@ -148,7 +156,7 @@ onMounted(() => {
       <el-button
         v-if="canExplain"
         :icon="useRenderIcon(Guide)"
-        @click="explainVisible = true"
+        @click="openExplain"
       >
         权限诊断
       </el-button>
@@ -205,5 +213,4 @@ onMounted(() => {
       </el-button>
     </template>
   </SrvfListPage>
-  <AuthzExplainDrawer v-model="explainVisible" />
 </template>

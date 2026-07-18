@@ -46,11 +46,14 @@ function openMembers(row: OrgTreeNode) {
 }
 
 /** 在任职务面板（组织轴 position-assignments drawer） */
-const assignmentsVisible = ref(false);
-const assignmentsOrg = ref<{ id: string; name: string }>({ id: "", name: "" });
 function openAssignments(row: OrgTreeNode) {
-  assignmentsOrg.value = { id: row.id, name: row.name };
-  assignmentsVisible.value = true;
+  addDrawer({
+    title: `${row.name} · 在任职务`,
+    size: "58%",
+    hideFooter: true,
+    contentRenderer: () =>
+      h(AssignmentsDrawer, { orgId: row.id, orgName: row.name })
+  });
 }
 
 /** 被谁分管面板（组织轴 supervision-assignments drawer,只读） */
@@ -256,11 +259,6 @@ onMounted(() => {
       </template>
     </PureTableBar>
     <SrvfPermEmpty v-else action="查看组织架构" code="org.read.node" />
-    <AssignmentsDrawer
-      v-model="assignmentsVisible"
-      :org-id="assignmentsOrg.id"
-      :org-name="assignmentsOrg.name"
-    />
     <GrantWizard
       v-model="grantWizardVisible"
       :preset-org-id="grantWizardOrgId"

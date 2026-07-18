@@ -6,10 +6,12 @@ import { deviceDetection } from "@pureadmin/utils";
 import { message } from "@/utils/message";
 import { hasPerms } from "@/utils/auth";
 import { addDialog } from "@/components/ReDialog";
+import { addDrawer } from "@/components/ReDrawer";
 import { useSrvfList } from "@/srvf-kit";
 import { getDictTypes, getDictItems } from "@/api/srvf-dict";
 import { getOrganizations } from "@/api/srvf-organization";
 import ContentForm, { type ContentFormModel } from "../form.vue";
+import ContentMedia from "../content-media.vue";
 import {
   getContents,
   getContent,
@@ -42,9 +44,6 @@ export function useContents() {
   const statusFilter = ref<string>("");
   const keyword = ref<string>("");
   const formRef = ref();
-  /** 封面/附件管理 drawer（仅对已存在内容开放） */
-  const mediaVisible = ref(false);
-  const mediaContentId = ref<string>("");
   const {
     dataList,
     loading,
@@ -322,8 +321,12 @@ export function useContents() {
 
   /** 打开某内容的封面/附件管理 drawer */
   function openMedia(row: ContentListItem) {
-    mediaContentId.value = row.id;
-    mediaVisible.value = true;
+    addDrawer({
+      title: "封面与附件",
+      size: "56%",
+      hideFooter: true,
+      contentRenderer: () => h(ContentMedia, { contentId: row.id })
+    });
   }
 
   return {
@@ -340,8 +343,6 @@ export function useContents() {
     dataList,
     pagination,
     statusMeta,
-    mediaVisible,
-    mediaContentId,
     onSearch,
     onFilterChange,
     openDialog,
