@@ -4,6 +4,7 @@ import { ElMessageBox } from "element-plus";
 import { deviceDetection } from "@pureadmin/utils";
 import { message } from "@/utils/message";
 import { hasPerms } from "@/utils/auth";
+import { fetchAllPages } from "@/srvf-kit";
 import { addDialog } from "@/components/ReDialog";
 import DictTypeForm, { type DictTypeFormModel } from "../type-form.vue";
 import DictItemForm, { type DictItemFormModel } from "../item-form.vue";
@@ -58,19 +59,11 @@ export function useDictTypes() {
 
   /** 循环拉全量类型（后端 pageSize 上限 100）；导航列表不分页，改滚动展示 */
   async function fetchAllTypes(): Promise<DictTypeItem[]> {
-    let page = 1;
-    let all: DictTypeItem[] = [];
-    for (let guard = 0; guard < TYPE_FETCH_MAX_PAGES; guard++) {
-      const { code, data } = await getDictTypes({
-        page,
-        pageSize: TYPE_FETCH_PAGE_SIZE
-      });
-      if (code !== 0) break;
-      all = all.concat(data.items);
-      if (all.length >= data.total || data.items.length === 0) break;
-      page += 1;
-    }
-    return all;
+    const { items } = await fetchAllPages(
+      (page, pageSize) => getDictTypes({ page, pageSize }),
+      { pageSize: TYPE_FETCH_PAGE_SIZE, maxPages: TYPE_FETCH_MAX_PAGES }
+    );
+    return items;
   }
 
   async function fetchTypes() {

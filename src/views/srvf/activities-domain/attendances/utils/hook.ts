@@ -6,6 +6,7 @@ import { ElMessageBox } from "element-plus";
 import { deviceDetection } from "@pureadmin/utils";
 import { message } from "@/utils/message";
 import { hasPerms } from "@/utils/auth";
+import { fetchAllPages } from "@/srvf-kit";
 import { addDialog } from "@/components/ReDialog";
 import { getMembers, type MemberItem } from "@/api/srvf-member";
 import {
@@ -382,21 +383,15 @@ export function useAttendances(externalActivityId: string) {
   async function fetchApprovedRegistrationImportOptions() {
     registrationOptions.value = [];
     if (!activityId.value) return;
-    const pageSize = 100;
-    const items: RegistrationItem[] = [];
-    let page = 1;
-    let total = 0;
-    do {
-      const { code, data } = await getActivityRegistrations(activityId.value, {
-        statusCode: "pass",
-        page,
-        pageSize
-      });
-      if (code !== 0) break;
-      items.push(...data.items);
-      total = data.total;
-      page += 1;
-    } while (items.length < total && page <= 10);
+    const { items } = await fetchAllPages(
+      (page, pageSize) =>
+        getActivityRegistrations(activityId.value, {
+          statusCode: "pass",
+          page,
+          pageSize
+        }),
+      { maxPages: 10 }
+    );
 
     registrationOptions.value = items.map(item => ({
       registrationId: item.id,
@@ -419,20 +414,10 @@ export function useAttendances(externalActivityId: string) {
 
   /** 预取全队 ACTIVE 队员（≤1000）供表单本地搜索；超量仍可手输 Member.id 兜底。 */
   async function fetchActiveMemberOptions() {
-    const items: MemberItem[] = [];
-    let page = 1;
-    let total = 0;
-    do {
-      const { code, data } = await getMembers({
-        status: "ACTIVE",
-        page,
-        pageSize: MEMBER_OPTION_PAGE_SIZE
-      });
-      if (code !== 0) break;
-      items.push(...data.items);
-      total = data.total;
-      page += 1;
-    } while (items.length < total && items.length < MEMBER_OPTION_MAX_ITEMS);
+    const { items, total } = await fetchAllPages(
+      (page, pageSize) => getMembers({ status: "ACTIVE", page, pageSize }),
+      { pageSize: MEMBER_OPTION_PAGE_SIZE, maxItems: MEMBER_OPTION_MAX_ITEMS }
+    );
 
     memberOptions.value = items.slice(0, MEMBER_OPTION_MAX_ITEMS).map(m => ({
       label: memberLabel(m),
