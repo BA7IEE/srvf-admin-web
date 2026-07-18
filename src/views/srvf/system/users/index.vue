@@ -2,7 +2,6 @@
 import { ref, onMounted } from "vue";
 import { useUserAccounts } from "./utils/hook";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
-import RbacRolesDrawer from "./rbac-roles-drawer.vue";
 
 import AddFill from "~icons/ri/add-circle-line";
 import More from "~icons/ep/more-filled";
@@ -37,8 +36,6 @@ const {
   dataList,
   pagination,
   searchForm,
-  rbacRolesDrawerVisible,
-  activeUser,
   roleMeta,
   onSearch,
   onFilterChange,
@@ -257,6 +254,5 @@ onMounted(() => {
     </template>
   </SrvfListPage>
 
-  <RbacRolesDrawer v-model="rbacRolesDrawerVisible" :user="activeUser" />
   <GrantWizard v-model="grantWizardVisible" />
 </template>

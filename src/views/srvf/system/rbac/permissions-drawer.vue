@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { bizErrorMessage } from "@/api/srvf-error";
 import { SrvfPermEmpty } from "@/srvf-kit";
-import { computed, ref, watch } from "vue";
+import { computed, ref, onMounted } from "vue";
 import { message } from "@/utils/message";
 import { hasPerms } from "@/utils/auth";
 import { getPermissions, type PermissionItem } from "@/api/srvf-permission";
@@ -22,16 +22,13 @@ defineOptions({
  * 分配走批量 `permissionCodes[]`；撤销只能逐条 `DELETE .../{permissionId}`——
  * 保存时把 targetKeys 差集拆成"批量分配新增的" + "逐条撤销减少的"两路调用。
  */
-const visible = defineModel<boolean>({ required: true });
 const props = defineProps<{ role: RoleItem | null }>();
-const emit = defineEmits<{ saved: [] }>();
 
 const canAssign = hasPerms("rbac.role-permission.create");
 const canRevoke = hasPerms("rbac.role-permission.delete");
 const canManage = canAssign || canRevoke;
 
 const loading = ref(false);
-const saving = ref(false);
 const allPermissions = ref<PermissionItem[]>([]);
 const targetKeys = ref<string[]>([]);
 const originalKeys = ref<string[]>([]);
@@ -94,15 +91,18 @@ function chunk<T>(arr: T[], size: number): T[][] {
   return out;
 }
 
-async function handleSave() {
+/**
+ * 供抽屉底部「确定」经 addDrawer beforeSure 调用（父 hook 持组件 ref）。
+ * 无改动 → 直接 resolve（beforeSure done() 关闭）；真错误 → 弹提示后 throw
+ * （beforeSure closeLoading，抽屉保持打开待重试）；成功/部分撤销失败 → resolve
+ * （beforeSure done() + 刷新角色列表）。保存语义（差集分片分配 + 逐条 allSettled
+ * 撤销 + revokeFailures 告警）与原 handleSave 逐字一致。
+ */
+async function save() {
   if (!props.role) return;
   const added = targetKeys.value.filter(k => !originalKeys.value.includes(k));
   const removed = originalKeys.value.filter(k => !targetKeys.value.includes(k));
-  if (added.length === 0 && removed.length === 0) {
-    visible.value = false;
-    return;
-  }
-  saving.value = true;
+  if (added.length === 0 && removed.length === 0) return;
   let revokeFailures = 0;
   try {
     const byId = new Map(allPermissions.value.map(p => [p.id, p.code]));
@@ -129,27 +129,19 @@ async function handleSave() {
         type: "success"
       });
     }
-    emit("saved");
-    visible.value = false;
   } catch (error: any) {
     message(roleBizErrorMessage(error, "保存权限点失败"), { type: "error" });
-  } finally {
-    saving.value = false;
+    throw error;
   }
 }
 
-watch(visible, open => {
-  if (open) loadData();
-});
+defineExpose({ save });
+
+onMounted(loadData);
 </script>
 
 <template>
-  <el-drawer
-    v-model="visible"
-    :title="`权限点分配 — ${role?.displayName ?? ''} (${role?.code ?? ''})`"
-    size="640px"
-    destroy-on-close
-  >
+  <div>
     <template v-if="canManage">
       <el-alert
         class="mb-3"
@@ -167,26 +159,11 @@ watch(visible, open => {
         filter-placeholder="搜索权限标识"
         :props="{ key: 'key', label: 'label' }"
       />
-      <div class="drawer-footer">
-        <el-button @click="visible = false">取消</el-button>
-        <el-button type="primary" :loading="saving" @click="handleSave">
-          保存
-        </el-button>
-      </div>
     </template>
     <SrvfPermEmpty
       v-else
       action="分配权限点"
       code="rbac.role-permission.create / .delete"
     />
-  </el-drawer>
+  </div>
 </template>
-
-<style scoped lang="scss">
-.drawer-footer {
-  display: flex;
-  gap: 12px;
-  justify-content: flex-end;
-  margin-top: 16px;
-}
-</style>
