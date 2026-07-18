@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { bizErrorMessage } from "@/api/srvf-error";
 import dayjs from "dayjs";
-import { ref, watch } from "vue";
+import { ref, onMounted } from "vue";
 import { message } from "@/utils/message";
 import {
   getOrganizationSupervisors,
@@ -22,8 +22,6 @@ const props = defineProps<{
   orgId: string;
   orgName: string;
 }>();
-
-const visible = defineModel<boolean>({ required: true });
 
 const dataList = ref<OrganizationSupervisorItem[]>([]);
 const loading = ref(false);
@@ -81,64 +79,55 @@ async function onSearch() {
   }
 }
 
-watch(visible, v => {
-  if (v && props.orgId) onSearch();
-});
+onMounted(onSearch);
 </script>
 
 <template>
-  <el-drawer
-    v-model="visible"
-    :title="`${props.orgName} · 被谁分管`"
-    size="54%"
-    destroy-on-close
+  <pure-table
+    row-key="supervisionAssignment.id"
+    align-whole="center"
+    table-layout="auto"
+    :loading="loading"
+    :data="dataList"
+    :columns="[
+      {
+        label: '分管人',
+        prop: 'supervisor',
+        minWidth: 150,
+        formatter: row => supervisorLabel(row)
+      },
+      {
+        label: '覆盖范围',
+        prop: 'scopeMode',
+        minWidth: 110,
+        slot: 'scopeMode'
+      },
+      { label: '来源', prop: 'coverage', minWidth: 100, slot: 'coverage' },
+      {
+        label: '起始',
+        prop: 'startedAt',
+        minWidth: 110,
+        formatter: row => fmt(row.supervisionAssignment.startedAt)
+      }
+    ]"
+    :header-cell-style="{
+      background: 'var(--el-fill-color-light)',
+      color: 'var(--el-text-color-primary)'
+    }"
   >
-    <pure-table
-      row-key="supervisionAssignment.id"
-      align-whole="center"
-      table-layout="auto"
-      :loading="loading"
-      :data="dataList"
-      :columns="[
-        {
-          label: '分管人',
-          prop: 'supervisor',
-          minWidth: 150,
-          formatter: row => supervisorLabel(row)
-        },
-        {
-          label: '覆盖范围',
-          prop: 'scopeMode',
-          minWidth: 110,
-          slot: 'scopeMode'
-        },
-        { label: '来源', prop: 'coverage', minWidth: 100, slot: 'coverage' },
-        {
-          label: '起始',
-          prop: 'startedAt',
-          minWidth: 110,
-          formatter: row => fmt(row.supervisionAssignment.startedAt)
-        }
-      ]"
-      :header-cell-style="{
-        background: 'var(--el-fill-color-light)',
-        color: 'var(--el-text-color-primary)'
-      }"
-    >
-      <template #scopeMode="{ row }">
-        <el-tag
-          :type="
-            row.supervisionAssignment.scopeMode === 'TREE' ? 'primary' : 'info'
-          "
-        >
-          {{ scopeModeLabel(row.supervisionAssignment.scopeMode) }}
-        </el-tag>
-      </template>
-      <template #coverage="{ row }">
-        <el-tag :type="row.coverage === 'DIRECT' ? 'success' : 'warning'">
-          {{ row.coverage === "DIRECT" ? "直接分管" : "继承自上级" }}
-        </el-tag>
-      </template>
-    </pure-table>
-  </el-drawer>
+    <template #scopeMode="{ row }">
+      <el-tag
+        :type="
+          row.supervisionAssignment.scopeMode === 'TREE' ? 'primary' : 'info'
+        "
+      >
+        {{ scopeModeLabel(row.supervisionAssignment.scopeMode) }}
+      </el-tag>
+    </template>
+    <template #coverage="{ row }">
+      <el-tag :type="row.coverage === 'DIRECT' ? 'success' : 'warning'">
+        {{ row.coverage === "DIRECT" ? "直接分管" : "继承自上级" }}
+      </el-tag>
+    </template>
+  </pure-table>
 </template>

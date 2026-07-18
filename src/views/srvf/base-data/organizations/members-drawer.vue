@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { bizErrorMessage } from "@/api/srvf-error";
 import dayjs from "dayjs";
-import { h, ref, reactive, watch } from "vue";
+import { h, ref, reactive, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import type { PaginationProps } from "@pureadmin/table";
 import { message } from "@/utils/message";
@@ -37,7 +37,6 @@ const props = defineProps<{
   orgName: string;
 }>();
 
-const visible = defineModel<boolean>({ required: true });
 const router = useRouter();
 const canAdd = hasPerms("membership.set.record");
 const addFormRef = ref();
@@ -104,7 +103,6 @@ function handleCurrentChange(val: number) {
 }
 
 function goMember(row: MembershipItem) {
-  visible.value = false;
   router.push(`/srvf/members-domain/members/${row.memberId}`);
 }
 
@@ -170,108 +168,96 @@ async function openAddMemberDialog() {
   });
 }
 
-/** 打开时按当前节点重置并加载 */
-watch(visible, v => {
-  if (v && props.orgId) {
-    pagination.currentPage = 1;
-    onSearch();
-  }
-});
+/** 挂载即加载（函数式抽屉每次打开都是全新实例，pagination 天然复位） */
+onMounted(onSearch);
 </script>
 
 <template>
-  <el-drawer
-    v-model="visible"
-    :title="`${props.orgName} · 成员`"
-    size="62%"
-    destroy-on-close
-  >
-    <div class="drawer-toolbar">
-      <el-button
-        v-if="canAdd"
-        type="primary"
-        size="small"
-        @click="openAddMemberDialog"
-      >
-        添加成员
-      </el-button>
-      <el-input
-        v-model="keyword"
-        class="w-48!"
-        placeholder="搜队员（回车）"
-        clearable
-        @keyup.enter="onFilterChange"
-        @clear="onFilterChange"
-      />
-      <el-checkbox v-model="activeOnly" @change="onFilterChange">
-        仅在册
-      </el-checkbox>
-      <el-checkbox v-model="includeDescendants" @change="onFilterChange">
-        含下级组织
-      </el-checkbox>
-    </div>
-    <pure-table
-      row-key="id"
-      align-whole="center"
-      table-layout="auto"
-      :loading="loading"
-      :data="dataList"
-      :columns="[
-        {
-          label: '队员',
-          prop: 'member',
-          minWidth: 160,
-          formatter: ({ member, memberId }) =>
-            member ? `${member.displayName}（${member.memberNo}）` : memberId
-        },
-        {
-          label: '类型',
-          prop: 'membershipType',
-          minWidth: 90,
-          slot: 'membershipType'
-        },
-        { label: '状态', prop: 'status', minWidth: 90, slot: 'status' },
-        {
-          label: '起始',
-          prop: 'startedAt',
-          minWidth: 110,
-          formatter: ({ startedAt }) =>
-            startedAt ? dayjs(startedAt).format('YYYY-MM-DD') : '—'
-        },
-        {
-          label: '结束',
-          prop: 'endedAt',
-          minWidth: 110,
-          formatter: ({ endedAt }) =>
-            endedAt ? dayjs(endedAt).format('YYYY-MM-DD') : '—'
-        },
-        { label: '操作', fixed: 'right', width: 110, slot: 'operation' }
-      ]"
-      :pagination="pagination"
-      :header-cell-style="{
-        background: 'var(--el-fill-color-light)',
-        color: 'var(--el-text-color-primary)'
-      }"
-      @page-size-change="handleSizeChange"
-      @page-current-change="handleCurrentChange"
+  <div class="drawer-toolbar">
+    <el-button
+      v-if="canAdd"
+      type="primary"
+      size="small"
+      @click="openAddMemberDialog"
     >
-      <template #membershipType="{ row }">
-        <el-tag :type="row.membershipType === 'PRIMARY' ? 'primary' : 'info'">
-          {{ typeLabel(row.membershipType) }}
-        </el-tag>
-      </template>
-      <template #status="{ row }">
-        <SrvfStatusTag
-          :value="row.status"
-          :label-dict="MEMBERSHIP_STATUS_LABEL"
-          :tag-dict="MEMBERSHIP_STATUS_TAG"
-        />
-      </template>
-      <template #operation="{ row }">
-        <el-button link @click="goMember(row)"> 队员档案 </el-button>
-      </template>
-    </pure-table>
-  </el-drawer>
+      添加成员
+    </el-button>
+    <el-input
+      v-model="keyword"
+      class="w-48!"
+      placeholder="搜队员（回车）"
+      clearable
+      @keyup.enter="onFilterChange"
+      @clear="onFilterChange"
+    />
+    <el-checkbox v-model="activeOnly" @change="onFilterChange">
+      仅在册
+    </el-checkbox>
+    <el-checkbox v-model="includeDescendants" @change="onFilterChange">
+      含下级组织
+    </el-checkbox>
+  </div>
+  <pure-table
+    row-key="id"
+    align-whole="center"
+    table-layout="auto"
+    :loading="loading"
+    :data="dataList"
+    :columns="[
+      {
+        label: '队员',
+        prop: 'member',
+        minWidth: 160,
+        formatter: ({ member, memberId }) =>
+          member ? `${member.displayName}（${member.memberNo}）` : memberId
+      },
+      {
+        label: '类型',
+        prop: 'membershipType',
+        minWidth: 90,
+        slot: 'membershipType'
+      },
+      { label: '状态', prop: 'status', minWidth: 90, slot: 'status' },
+      {
+        label: '起始',
+        prop: 'startedAt',
+        minWidth: 110,
+        formatter: ({ startedAt }) =>
+          startedAt ? dayjs(startedAt).format('YYYY-MM-DD') : '—'
+      },
+      {
+        label: '结束',
+        prop: 'endedAt',
+        minWidth: 110,
+        formatter: ({ endedAt }) =>
+          endedAt ? dayjs(endedAt).format('YYYY-MM-DD') : '—'
+      },
+      { label: '操作', fixed: 'right', width: 110, slot: 'operation' }
+    ]"
+    :pagination="pagination"
+    :header-cell-style="{
+      background: 'var(--el-fill-color-light)',
+      color: 'var(--el-text-color-primary)'
+    }"
+    @page-size-change="handleSizeChange"
+    @page-current-change="handleCurrentChange"
+  >
+    <template #membershipType="{ row }">
+      <el-tag :type="row.membershipType === 'PRIMARY' ? 'primary' : 'info'">
+        {{ typeLabel(row.membershipType) }}
+      </el-tag>
+    </template>
+    <template #status="{ row }">
+      <SrvfStatusTag
+        :value="row.status"
+        :label-dict="MEMBERSHIP_STATUS_LABEL"
+        :tag-dict="MEMBERSHIP_STATUS_TAG"
+      />
+    </template>
+    <template #operation="{ row }">
+      <el-button link @click="goMember(row)"> 队员档案 </el-button>
+    </template>
+  </pure-table>
 </template>
 
 <style scoped lang="scss">
