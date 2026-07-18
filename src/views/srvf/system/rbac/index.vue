@@ -2,7 +2,6 @@
 import { onMounted } from "vue";
 import { useRoles } from "./utils/hook";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
-import PermissionsDrawer from "./permissions-drawer.vue";
 
 import Refresh from "~icons/ri/refresh-line";
 import AddFill from "~icons/ri/add-circle-line";
@@ -26,8 +25,6 @@ const {
   columns,
   dataList,
   pagination,
-  permissionsDrawerVisible,
-  activeRole,
   onSearch,
   handleReload,
   handleSizeChange,
@@ -108,10 +105,4 @@ onMounted(() => {
       </el-button>
     </template>
   </SrvfListPage>
-
-  <PermissionsDrawer
-    v-model="permissionsDrawerVisible"
-    :role="activeRole"
-    @saved="onSearch"
-  />
 </template>

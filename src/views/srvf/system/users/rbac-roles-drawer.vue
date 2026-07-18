@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { ref, onMounted } from "vue";
 import dayjs from "dayjs";
 import { ElMessageBox } from "element-plus";
 import { message } from "@/utils/message";
@@ -26,7 +26,6 @@ defineOptions({
  * 也与「组织与人事 → 角色绑定」页（scoped，role-bindings）不是同一个入口，
  * 但落到同一张底表：GLOBAL 绑定互相可见（handoff §2.6）。
  */
-const visible = defineModel<boolean>({ required: true });
 const props = defineProps<{ user: UserAccountItem | null }>();
 
 const canRead = hasPerms("rbac.user-role.read");
@@ -124,22 +123,11 @@ function handleRevoke(row: UserRoleItem) {
     .catch(() => {});
 }
 
-watch(visible, open => {
-  if (open) {
-    userRoles.value = [];
-    selectedRoleCode.value = "";
-    loadData();
-  }
-});
+onMounted(loadData);
 </script>
 
 <template>
-  <el-drawer
-    v-model="visible"
-    :title="`RBAC 角色绑定 — ${user?.username ?? ''}（全局）`"
-    size="520px"
-    destroy-on-close
-  >
+  <div>
     <template v-if="canRead">
       <SrvfPageIntro
         class="mb-3"
@@ -200,7 +188,7 @@ watch(visible, open => {
       </el-table>
     </template>
     <SrvfPermEmpty v-else action="查看角色绑定" code="rbac.user-role.read" />
-  </el-drawer>
+  </div>
 </template>
 
 <style scoped lang="scss">

@@ -6,8 +6,10 @@ import { deviceDetection } from "@pureadmin/utils";
 import { message } from "@/utils/message";
 import { hasPerms } from "@/utils/auth";
 import { addDialog } from "@/components/ReDialog";
+import { addDrawer } from "@/components/ReDrawer";
 import { useSrvfList } from "@/srvf-kit";
 import RoleForm, { type RoleFormModel } from "../form.vue";
+import PermissionsDrawer from "../permissions-drawer.vue";
 import {
   getRoles,
   reloadRbac,
@@ -33,9 +35,8 @@ export function useRoles() {
     hasPerms("rbac.role-permission.delete");
   const hasAnyAction = canUpdate || canDelete || canManagePermissions;
 
-  /** 权限点分配抽屉状态（由 index.vue 传给 permissions-drawer.vue） */
-  const permissionsDrawerVisible = ref(false);
-  const activeRole = ref<RoleItem | null>(null);
+  /** 权限点分配抽屉的内容组件 ref（beforeSure 经它调 save，见 openPermissionsDrawer） */
+  const permsDrawerRef = ref();
 
   const {
     dataList,
@@ -178,10 +179,26 @@ export function useRoles() {
       .catch(() => {});
   }
 
-  /** 打开权限点分配抽屉（permissions-drawer.vue 消费 activeRole + visible） */
+  /** 打开权限点分配抽屉；底部「确定」经 beforeSure 调内容组件 save() —
+   *  成功 → done() 关闭 + onSearch 刷新角色列表(承接原 @saved="onSearch")；
+   *  真错误 → closeLoading 保持打开待重试。 */
   function openPermissionsDrawer(row: RoleItem) {
-    activeRole.value = row;
-    permissionsDrawerVisible.value = true;
+    addDrawer({
+      title: `权限点分配 — ${row.displayName} (${row.code})`,
+      size: "640px",
+      sureBtnLoading: true,
+      contentRenderer: () =>
+        h(PermissionsDrawer, { ref: permsDrawerRef, role: row }),
+      beforeSure: (done, { closeLoading }) => {
+        permsDrawerRef.value
+          .save()
+          .then(() => {
+            done();
+            onSearch();
+          })
+          .catch(() => closeLoading());
+      }
+    });
   }
 
   return {
@@ -195,8 +212,6 @@ export function useRoles() {
     columns,
     dataList,
     pagination,
-    permissionsDrawerVisible,
-    activeRole,
     onSearch,
     handleReload,
     handleSizeChange,

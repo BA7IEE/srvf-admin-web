@@ -7,8 +7,10 @@ import { deviceDetection } from "@pureadmin/utils";
 import { message } from "@/utils/message";
 import { hasPerms } from "@/utils/auth";
 import { addDialog } from "@/components/ReDialog";
+import { addDrawer } from "@/components/ReDrawer";
 import { useSrvfList } from "@/srvf-kit";
 import { useMultiTagsStoreHook } from "@/store/modules/multiTags";
+import RbacRolesDrawer from "../rbac-roles-drawer.vue";
 import RoleForm, { type RoleFormModel } from "../role-form.vue";
 import UserForm, { type UserFormModel } from "../user-form.vue";
 import {
@@ -76,10 +78,6 @@ export function useUserAccounts() {
     canClearWechat ||
     canDelete ||
     canRbacRoleManage;
-
-  /** RBAC 角色绑定抽屉状态（由 index.vue 传给 rbac-roles-drawer.vue） */
-  const rbacRolesDrawerVisible = ref(false);
-  const activeUser = ref<UserAccountItem | null>(null);
 
   const {
     dataList,
@@ -348,10 +346,14 @@ export function useUserAccounts() {
       .catch(() => {});
   }
 
-  /** 打开 RBAC 角色绑定抽屉（rbac-roles-drawer.vue 消费 activeUser + visible） */
+  /** 打开 RBAC 角色绑定抽屉（全局绑定，users/{userId}/roles） */
   function openRbacRolesDrawer(row: UserAccountItem) {
-    activeUser.value = row;
-    rbacRolesDrawerVisible.value = true;
+    addDrawer({
+      title: `RBAC 角色绑定 — ${row.username}（全局）`,
+      size: "520px",
+      hideFooter: true,
+      contentRenderer: () => h(RbacRolesDrawer, { user: row })
+    });
   }
 
   /** 所属队员反查：跳队员详情页（沿用队员列表「档案」入口同款 tag 注册，行内 memberId 已由用户接口 additive 暴露） */
@@ -400,8 +402,6 @@ export function useUserAccounts() {
     dataList,
     pagination,
     searchForm,
-    rbacRolesDrawerVisible,
-    activeUser,
     roleMeta,
     onSearch,
     onFilterChange,
