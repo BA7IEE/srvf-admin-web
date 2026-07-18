@@ -3,6 +3,7 @@ import {
   IMPORT_ROW_STATUS_LABEL,
   IMPORT_ROW_STATUS_TAG
 } from "@/api/srvf-announcement-import";
+import { SrvfStatusTag } from "@/srvf-kit";
 import {
   useAnnouncementImport,
   ANNOUNCEMENT_IMPORT_PLACEHOLDER
@@ -123,9 +124,12 @@ function issueText(reasons: { bizCode: number | null; message: string }[]) {
           <el-table-column prop="row.name" label="组名" min-width="120" />
           <el-table-column label="状态" width="110">
             <template #default="{ row }">
-              <el-tag :type="IMPORT_ROW_STATUS_TAG[row.status]" size="small">
-                {{ IMPORT_ROW_STATUS_LABEL[row.status] }}
-              </el-tag>
+              <SrvfStatusTag
+                :value="row.status"
+                :label-dict="IMPORT_ROW_STATUS_LABEL"
+                :tag-dict="IMPORT_ROW_STATUS_TAG"
+                size="small"
+              />
             </template>
           </el-table-column>
           <el-table-column
@@ -156,9 +160,12 @@ function issueText(reasons: { bizCode: number | null; message: string }[]) {
           />
           <el-table-column label="状态" width="110">
             <template #default="{ row }">
-              <el-tag :type="IMPORT_ROW_STATUS_TAG[row.status]" size="small">
-                {{ IMPORT_ROW_STATUS_LABEL[row.status] }}
-              </el-tag>
+              <SrvfStatusTag
+                :value="row.status"
+                :label-dict="IMPORT_ROW_STATUS_LABEL"
+                :tag-dict="IMPORT_ROW_STATUS_TAG"
+                size="small"
+              />
             </template>
           </el-table-column>
           <el-table-column
@@ -194,9 +201,12 @@ function issueText(reasons: { bizCode: number | null; message: string }[]) {
           />
           <el-table-column label="状态" width="110">
             <template #default="{ row }">
-              <el-tag :type="IMPORT_ROW_STATUS_TAG[row.status]" size="small">
-                {{ IMPORT_ROW_STATUS_LABEL[row.status] }}
-              </el-tag>
+              <SrvfStatusTag
+                :value="row.status"
+                :label-dict="IMPORT_ROW_STATUS_LABEL"
+                :tag-dict="IMPORT_ROW_STATUS_TAG"
+                size="small"
+              />
             </template>
           </el-table-column>
           <el-table-column

@@ -9,12 +9,14 @@ import { hasPerms } from "@/utils/auth";
 import { addDialog } from "@/components/ReDialog";
 import { PureTableBar } from "@/components/RePureTableBar";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
-import { SrvfDetailShell, SrvfPermEmpty } from "@/srvf-kit";
+import { SrvfDetailShell, SrvfPermEmpty, SrvfStatusTag } from "@/srvf-kit";
 import {
   getRecruitmentCycle,
   updateRecruitmentCycle,
   getPublicityList,
   CYCLE_STATUS_LABEL,
+  APP_STATUS_LABEL,
+  APP_STATUS_TAG,
   type RecruitmentCycle,
   type PublicityList
 } from "@/api/srvf-recruitment";
@@ -208,7 +210,6 @@ const {
   columns: appColumns,
   dataList: appDataList,
   pagination: appPagination,
-  statusMeta: appStatusMeta,
   detailVisible: appDetailVisible,
   detailLoading: appDetailLoading,
   detailData: appDetailData,
@@ -433,9 +434,11 @@ onMounted(() => {
                   @page-current-change="appHandleCurrentChange"
                 >
                   <template #statusCode="{ row }">
-                    <el-tag :type="appStatusMeta(row.statusCode).type">
-                      {{ appStatusMeta(row.statusCode).text }}
-                    </el-tag>
+                    <SrvfStatusTag
+                      :value="row.statusCode"
+                      :label-dict="APP_STATUS_LABEL"
+                      :tag-dict="APP_STATUS_TAG"
+                    />
                   </template>
                   <template #operation="{ row }">
                     <el-button

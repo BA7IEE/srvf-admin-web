@@ -19,6 +19,7 @@ import {
   type MembershipItem
 } from "@/api/srvf-membership";
 import { getOrgScopedMemberOptions } from "@/api/srvf-organization";
+import { SrvfStatusTag } from "@/srvf-kit";
 
 defineOptions({
   name: "SrvfOrgMembersDrawer"
@@ -60,12 +61,6 @@ const pagination = reactive<PaginationProps>({
 
 function typeLabel(code: string) {
   return MEMBERSHIP_TYPE_LABEL[code] ?? code;
-}
-function statusMeta(code: string) {
-  return {
-    text: MEMBERSHIP_STATUS_LABEL[code] ?? code,
-    type: MEMBERSHIP_STATUS_TAG[code] ?? ("info" as const)
-  };
 }
 
 async function onSearch() {
@@ -266,9 +261,11 @@ watch(visible, v => {
         </el-tag>
       </template>
       <template #status="{ row }">
-        <el-tag :type="statusMeta(row.status).type">
-          {{ statusMeta(row.status).text }}
-        </el-tag>
+        <SrvfStatusTag
+          :value="row.status"
+          :label-dict="MEMBERSHIP_STATUS_LABEL"
+          :tag-dict="MEMBERSHIP_STATUS_TAG"
+        />
       </template>
       <template #operation="{ row }">
         <el-button link @click="goMember(row)"> 队员档案 </el-button>

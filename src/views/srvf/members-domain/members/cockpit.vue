@@ -15,7 +15,9 @@ import { SrvfStatusTag, SrvfDetailShell, SrvfPermEmpty } from "@/srvf-kit";
 import GrantWizard from "@/views/srvf/components/grant-wizard.vue";
 import {
   MEMBERSHIP_STATUS_LABEL,
-  MEMBERSHIP_STATUS_TAG
+  MEMBERSHIP_STATUS_TAG,
+  ASSIGNMENT_STATUS_LABEL,
+  ASSIGNMENT_STATUS_TAG
 } from "@/api/srvf-labels";
 import {
   getMember,
@@ -353,7 +355,6 @@ const {
   dataList: paDataList,
   positionLabel: paPositionLabel,
   orgLabel: paOrgLabel,
-  statusMeta: paStatusMeta,
   onSearch: paOnSearch
 } = useMemberPositionAssignments(memberId);
 
@@ -685,9 +686,11 @@ onMounted(() => {
                     {{ paOrgLabel(row.organizationId) }}
                   </template>
                   <template #status="{ row }">
-                    <el-tag :type="paStatusMeta(row.status).type">
-                      {{ paStatusMeta(row.status).text }}
-                    </el-tag>
+                    <SrvfStatusTag
+                      :value="row.status"
+                      :label-dict="ASSIGNMENT_STATUS_LABEL"
+                      :tag-dict="ASSIGNMENT_STATUS_TAG"
+                    />
                   </template>
                   <template #isConcurrent="{ row }">
                     <el-tag :type="row.isConcurrent ? 'warning' : 'info'">

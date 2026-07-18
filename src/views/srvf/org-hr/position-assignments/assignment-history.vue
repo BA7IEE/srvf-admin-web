@@ -5,6 +5,7 @@ import {
   ASSIGNMENT_STATUS_TAG,
   type PositionAssignmentItem
 } from "@/api/srvf-position-assignment";
+import { SrvfStatusTag } from "@/srvf-kit";
 
 /**
  * 任职历史链只读展示（父级已 loading 拉完数据传入;此组件不发请求）。
@@ -38,9 +39,12 @@ function fmt(v: string | null) {
         :timestamp="`${fmt(item.startedAt)} ~ ${fmt(item.endedAt)}`"
       >
         <div class="history-row">
-          <el-tag :type="ASSIGNMENT_STATUS_TAG[item.status]" size="small">
-            {{ ASSIGNMENT_STATUS_LABEL[item.status] ?? item.status }}
-          </el-tag>
+          <SrvfStatusTag
+            :value="item.status"
+            :label-dict="ASSIGNMENT_STATUS_LABEL"
+            :tag-dict="ASSIGNMENT_STATUS_TAG"
+            size="small"
+          />
           <span v-if="item.isConcurrent" class="history-tag">兼任</span>
           <span v-if="item.note" class="history-note">{{ item.note }}</span>
         </div>
