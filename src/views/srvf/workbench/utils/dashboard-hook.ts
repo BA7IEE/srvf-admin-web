@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from "vue";
 import dayjs, { type Dayjs } from "dayjs";
 import { message } from "@/utils/message";
 import { hasPerms } from "@/utils/auth";
+import { fetchAllPages } from "@/srvf-kit";
 import { getActivities, type ActivityItem } from "@/api/srvf-activity";
 import { getMembers } from "@/api/srvf-member";
 import { useSrvfDictStoreHook } from "@/store/modules/srvfDict";
@@ -31,19 +32,11 @@ function mondayOf(d: Dayjs) {
 
 /** 拉全量活动（按需翻页，安全上限 FETCH_MAX_PAGES 页）。 */
 async function fetchAllActivities(dateFrom: string, dateTo: string) {
-  const all: ActivityItem[] = [];
-  for (let page = 1; page <= FETCH_MAX_PAGES; page++) {
-    const { code, data } = await getActivities({
-      dateFrom,
-      dateTo,
-      page,
-      pageSize: FETCH_PAGE_SIZE
-    });
-    if (code !== 0) break;
-    all.push(...data.items);
-    if (all.length >= data.total) break;
-  }
-  return all;
+  const { items } = await fetchAllPages(
+    (page, pageSize) => getActivities({ dateFrom, dateTo, page, pageSize }),
+    { pageSize: FETCH_PAGE_SIZE, maxPages: FETCH_MAX_PAGES }
+  );
+  return items;
 }
 
 /**

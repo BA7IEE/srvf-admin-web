@@ -7,4 +7,5 @@ export { default as SrvfListPage } from "./components/SrvfListPage.vue";
 export { default as SrvfGlobalSearch } from "./components/SrvfGlobalSearch.vue";
 export { default as SrvfFlowSteps } from "./components/SrvfFlowSteps.vue";
 export { useSrvfList } from "./composables/useSrvfList";
+export { fetchAllPages } from "./composables/fetchAllPages";
 export { useSrvfGlobalSearch } from "./composables/useSrvfGlobalSearch";
