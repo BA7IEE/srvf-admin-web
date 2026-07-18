@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { h, onMounted, ref } from "vue";
 import { useOrganizations } from "./utils/hook";
 import { PureTableBar } from "@/components/RePureTableBar";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
+import { addDrawer } from "@/components/ReDrawer";
 import MembersDrawer from "./members-drawer.vue";
 import AssignmentsDrawer from "./assignments-drawer.vue";
 import SupervisorsDrawer from "./supervisors-drawer.vue";
@@ -34,11 +35,14 @@ function openGrantWizard(row: { id: string }) {
 }
 
 /** 成员面板（组织轴 memberships drawer;默认仅在册,踩坑 #9 见 drawer 内注释） */
-const membersVisible = ref(false);
-const membersOrg = ref<{ id: string; name: string }>({ id: "", name: "" });
 function openMembers(row: OrgTreeNode) {
-  membersOrg.value = { id: row.id, name: row.name };
-  membersVisible.value = true;
+  addDrawer({
+    title: `${row.name} · 成员`,
+    size: "62%",
+    hideFooter: true,
+    contentRenderer: () =>
+      h(MembersDrawer, { orgId: row.id, orgName: row.name })
+  });
 }
 
 /** 在任职务面板（组织轴 position-assignments drawer） */
@@ -50,11 +54,14 @@ function openAssignments(row: OrgTreeNode) {
 }
 
 /** 被谁分管面板（组织轴 supervision-assignments drawer,只读） */
-const supervisorsVisible = ref(false);
-const supervisorsOrg = ref<{ id: string; name: string }>({ id: "", name: "" });
 function openSupervisors(row: OrgTreeNode) {
-  supervisorsOrg.value = { id: row.id, name: row.name };
-  supervisorsVisible.value = true;
+  addDrawer({
+    title: `${row.name} · 被谁分管`,
+    size: "54%",
+    hideFooter: true,
+    contentRenderer: () =>
+      h(SupervisorsDrawer, { orgId: row.id, orgName: row.name })
+  });
 }
 
 const {
@@ -249,20 +256,10 @@ onMounted(() => {
       </template>
     </PureTableBar>
     <SrvfPermEmpty v-else action="查看组织架构" code="org.read.node" />
-    <MembersDrawer
-      v-model="membersVisible"
-      :org-id="membersOrg.id"
-      :org-name="membersOrg.name"
-    />
     <AssignmentsDrawer
       v-model="assignmentsVisible"
       :org-id="assignmentsOrg.id"
       :org-name="assignmentsOrg.name"
-    />
-    <SupervisorsDrawer
-      v-model="supervisorsVisible"
-      :org-id="supervisorsOrg.id"
-      :org-name="supervisorsOrg.name"
     />
     <GrantWizard
       v-model="grantWizardVisible"
