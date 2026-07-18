@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { bizErrorMessage } from "@/api/srvf-error";
 import { SrvfPermEmpty } from "@/srvf-kit";
-import { computed, nextTick, reactive, ref, watch } from "vue";
+import { computed, nextTick, onMounted, reactive, ref } from "vue";
 import type { FormInstance, FormRules } from "element-plus";
 import { message } from "@/utils/message";
 import { hasPerms } from "@/utils/auth";
@@ -24,8 +24,6 @@ defineOptions({
  * 蓝图 §7：诊断是排查工具，不是常规业务流——用法是"这人为什么做不了 X"一键查，
  * 入口放本页（角色绑定）头部按钮。deny 是 200 数据，不是异常。
  */
-const visible = defineModel<boolean>({ required: true });
-
 const canExplain = hasPerms("authz.explain.decision");
 const canReadUsers = hasPerms("user.read.account");
 const loading = ref(false);
@@ -174,8 +172,7 @@ function submit() {
   });
 }
 
-watch(visible, async open => {
-  if (!open) return;
+onMounted(async () => {
   applyInitial();
   await Promise.allSettled([fillCurrentUserIfNeeded(), loadUserOptions()]);
   nextTick(() => formRef.value?.clearValidate());
@@ -183,174 +180,170 @@ watch(visible, async open => {
 </script>
 
 <template>
-  <el-drawer v-model="visible" title="权限诊断" size="620px" destroy-on-close>
-    <template v-if="canExplain">
-      <el-alert
-        class="mb-3"
-        type="info"
-        show-icon
-        :closable="false"
-        title="诊断说明"
-        description="authz/explain 是诊断读接口：合法入参下 deny 也是 200 数据。它用于解释目标用户对某个 action、某个可选资源为什么被允许或拒绝。"
-      />
+  <template v-if="canExplain">
+    <el-alert
+      class="mb-3"
+      type="info"
+      show-icon
+      :closable="false"
+      title="诊断说明"
+      description="authz/explain 是诊断读接口：合法入参下 deny 也是 200 数据。它用于解释目标用户对某个 action、某个可选资源为什么被允许或拒绝。"
+    />
 
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="110px">
-        <el-form-item label="目标用户" prop="userId">
-          <el-select
-            v-if="canReadUsers"
-            v-model="form.userId"
-            filterable
-            allow-create
-            default-first-option
-            clearable
-            :loading="usersLoading"
-            placeholder="选择用户或直接粘贴 userId"
-            class="w-full"
-          >
-            <el-option
-              v-for="user in userOptions"
-              :key="user.id"
-              :label="userLabel(user)"
-              :value="user.id"
-            />
-          </el-select>
-          <el-input
-            v-else
-            v-model="form.userId"
-            clearable
-            placeholder="目标用户 userId"
+    <el-form ref="formRef" :model="form" :rules="rules" label-width="110px">
+      <el-form-item label="目标用户" prop="userId">
+        <el-select
+          v-if="canReadUsers"
+          v-model="form.userId"
+          filterable
+          allow-create
+          default-first-option
+          clearable
+          :loading="usersLoading"
+          placeholder="选择用户或直接粘贴 userId"
+          class="w-full"
+        >
+          <el-option
+            v-for="user in userOptions"
+            :key="user.id"
+            :label="userLabel(user)"
+            :value="user.id"
           />
-        </el-form-item>
+        </el-select>
+        <el-input
+          v-else
+          v-model="form.userId"
+          clearable
+          placeholder="目标用户 userId"
+        />
+      </el-form-item>
 
-        <el-form-item label="Action" prop="action">
-          <el-select
-            v-model="form.action"
-            filterable
-            allow-create
-            default-first-option
-            clearable
-            placeholder="如 attendance.final-approve.sheet"
-            class="w-full"
-          >
-            <el-option
-              v-for="action in actionOptions"
-              :key="action"
-              :label="action"
-              :value="action"
-            />
-          </el-select>
-        </el-form-item>
-
-        <el-form-item label="资源类型">
-          <el-select
-            v-model="form.resourceType"
-            clearable
-            filterable
-            placeholder="不填 = 全局退化路径"
-            class="w-full"
-          >
-            <el-option
-              v-for="item in resourceTypeOptions"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-            />
-          </el-select>
-        </el-form-item>
-
-        <el-form-item label="资源 ID">
-          <el-input
-            v-model="form.resourceId"
-            clearable
-            placeholder="resourceRef.id；和资源类型同时填写或同时留空"
+      <el-form-item label="Action" prop="action">
+        <el-select
+          v-model="form.action"
+          filterable
+          allow-create
+          default-first-option
+          clearable
+          placeholder="如 attendance.final-approve.sheet"
+          class="w-full"
+        >
+          <el-option
+            v-for="action in actionOptions"
+            :key="action"
+            :label="action"
+            :value="action"
           />
-        </el-form-item>
+        </el-select>
+      </el-form-item>
 
-        <el-form-item>
-          <el-button type="primary" :loading="loading" @click="submit">
-            开始诊断
-          </el-button>
-          <el-button @click="resetForm">重置</el-button>
-        </el-form-item>
-      </el-form>
+      <el-form-item label="资源类型">
+        <el-select
+          v-model="form.resourceType"
+          clearable
+          filterable
+          placeholder="不填 = 全局退化路径"
+          class="w-full"
+        >
+          <el-option
+            v-for="item in resourceTypeOptions"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          />
+        </el-select>
+      </el-form-item>
 
-      <el-card v-if="result" shadow="never" class="mt-4">
-        <template #header>
-          <div class="authz-result-header">
-            <span>诊断结果</span>
-            <el-tag :type="decisionTagType">{{ decisionText }}</el-tag>
-          </div>
-        </template>
+      <el-form-item label="资源 ID">
+        <el-input
+          v-model="form.resourceId"
+          clearable
+          placeholder="resourceRef.id；和资源类型同时填写或同时留空"
+        />
+      </el-form-item>
 
-        <el-descriptions :column="1" border>
-          <el-descriptions-item label="目标用户">
-            {{ result.targetUser.username }} / {{ result.targetUser.role }} /
-            {{ result.targetUser.status }}
-          </el-descriptions-item>
-          <el-descriptions-item label="判定原因">
-            <el-tag :type="decisionTagType">{{ reasonLabel }}</el-tag>
-            <span class="reason-raw">（{{ result.decision.reason }}）</span>
-          </el-descriptions-item>
-          <el-descriptions-item label="命中来源">
-            <template v-if="result.decision.matchedGrant">
-              <div>source：{{ result.decision.matchedGrant.source }}</div>
-              <div v-if="result.decision.matchedGrant.roleCode">
-                roleCode：{{ result.decision.matchedGrant.roleCode }}
-              </div>
-              <div>scopeType：{{ result.decision.matchedGrant.scopeType }}</div>
-              <div v-if="result.decision.matchedGrant.scopeId">
-                scopeId：{{ result.decision.matchedGrant.scopeId }}
-              </div>
-              <div v-if="result.decision.matchedGrant.bindingId">
-                bindingId：{{ result.decision.matchedGrant.bindingId }}
-              </div>
-              <div v-if="result.decision.matchedGrant.positionAssignmentId">
-                positionAssignmentId：{{
-                  result.decision.matchedGrant.positionAssignmentId
-                }}
-              </div>
-              <div v-if="result.decision.matchedGrant.supervisionAssignmentId">
-                supervisionAssignmentId：{{
-                  result.decision.matchedGrant.supervisionAssignmentId
-                }}
-              </div>
-            </template>
-            <span v-else>—</span>
-          </el-descriptions-item>
-          <el-descriptions-item label="资源解析">
-            <template v-if="result.decision.resource">
-              <div>
-                resource：{{ result.decision.resource.resourceType }} /
-                {{ result.decision.resource.resourceId }}
-              </div>
-              <div>
-                organizationId：{{
-                  result.decision.resource.organizationId ?? "—"
-                }}
-              </div>
-              <div>
-                activityId：{{ result.decision.resource.activityId ?? "—" }}
-              </div>
-              <div>
-                ownerMemberId：{{
-                  result.decision.resource.ownerMemberId ?? "—"
-                }}
-              </div>
-              <div>
-                ownerUserId：{{ result.decision.resource.ownerUserId ?? "—" }}
-              </div>
-              <div>
-                statusCode：{{ result.decision.resource.statusCode ?? "—" }}
-              </div>
-            </template>
-            <span v-else>—</span>
-          </el-descriptions-item>
-        </el-descriptions>
-      </el-card>
-    </template>
+      <el-form-item>
+        <el-button type="primary" :loading="loading" @click="submit">
+          开始诊断
+        </el-button>
+        <el-button @click="resetForm">重置</el-button>
+      </el-form-item>
+    </el-form>
 
-    <SrvfPermEmpty v-else action="使用权限诊断" code="authz.explain.decision" />
-  </el-drawer>
+    <el-card v-if="result" shadow="never" class="mt-4">
+      <template #header>
+        <div class="authz-result-header">
+          <span>诊断结果</span>
+          <el-tag :type="decisionTagType">{{ decisionText }}</el-tag>
+        </div>
+      </template>
+
+      <el-descriptions :column="1" border>
+        <el-descriptions-item label="目标用户">
+          {{ result.targetUser.username }} / {{ result.targetUser.role }} /
+          {{ result.targetUser.status }}
+        </el-descriptions-item>
+        <el-descriptions-item label="判定原因">
+          <el-tag :type="decisionTagType">{{ reasonLabel }}</el-tag>
+          <span class="reason-raw">（{{ result.decision.reason }}）</span>
+        </el-descriptions-item>
+        <el-descriptions-item label="命中来源">
+          <template v-if="result.decision.matchedGrant">
+            <div>source：{{ result.decision.matchedGrant.source }}</div>
+            <div v-if="result.decision.matchedGrant.roleCode">
+              roleCode：{{ result.decision.matchedGrant.roleCode }}
+            </div>
+            <div>scopeType：{{ result.decision.matchedGrant.scopeType }}</div>
+            <div v-if="result.decision.matchedGrant.scopeId">
+              scopeId：{{ result.decision.matchedGrant.scopeId }}
+            </div>
+            <div v-if="result.decision.matchedGrant.bindingId">
+              bindingId：{{ result.decision.matchedGrant.bindingId }}
+            </div>
+            <div v-if="result.decision.matchedGrant.positionAssignmentId">
+              positionAssignmentId：{{
+                result.decision.matchedGrant.positionAssignmentId
+              }}
+            </div>
+            <div v-if="result.decision.matchedGrant.supervisionAssignmentId">
+              supervisionAssignmentId：{{
+                result.decision.matchedGrant.supervisionAssignmentId
+              }}
+            </div>
+          </template>
+          <span v-else>—</span>
+        </el-descriptions-item>
+        <el-descriptions-item label="资源解析">
+          <template v-if="result.decision.resource">
+            <div>
+              resource：{{ result.decision.resource.resourceType }} /
+              {{ result.decision.resource.resourceId }}
+            </div>
+            <div>
+              organizationId：{{
+                result.decision.resource.organizationId ?? "—"
+              }}
+            </div>
+            <div>
+              activityId：{{ result.decision.resource.activityId ?? "—" }}
+            </div>
+            <div>
+              ownerMemberId：{{ result.decision.resource.ownerMemberId ?? "—" }}
+            </div>
+            <div>
+              ownerUserId：{{ result.decision.resource.ownerUserId ?? "—" }}
+            </div>
+            <div>
+              statusCode：{{ result.decision.resource.statusCode ?? "—" }}
+            </div>
+          </template>
+          <span v-else>—</span>
+        </el-descriptions-item>
+      </el-descriptions>
+    </el-card>
+  </template>
+
+  <SrvfPermEmpty v-else action="使用权限诊断" code="authz.explain.decision" />
 </template>
 
 <style scoped lang="scss">

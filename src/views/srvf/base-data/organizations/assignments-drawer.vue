@@ -2,7 +2,7 @@
 import { bizErrorMessage } from "@/api/srvf-error";
 import { SrvfPermEmpty } from "@/srvf-kit";
 import dayjs from "dayjs";
-import { h, ref, watch } from "vue";
+import { h, onMounted, ref } from "vue";
 import { ElMessageBox } from "element-plus";
 import { deviceDetection } from "@pureadmin/utils";
 import { message } from "@/utils/message";
@@ -42,8 +42,6 @@ const props = defineProps<{
   orgId: string;
   orgName: string;
 }>();
-
-const visible = defineModel<boolean>({ required: true });
 
 const canRead = hasPerms("position-assignment.read.record");
 const canCreate = hasPerms("position-assignment.create.record");
@@ -272,99 +270,90 @@ function openHistory(row: PositionAssignmentItem) {
     });
 }
 
-watch(visible, v => {
-  if (v && props.orgId) onSearch();
-});
+onMounted(onSearch);
 </script>
 
 <template>
-  <el-drawer
-    v-model="visible"
-    :title="`${props.orgName} · 在任职务`"
-    size="58%"
-    destroy-on-close
+  <div class="drawer-toolbar">
+    <el-button v-if="canCreate" type="primary" @click="openAssignDialog">
+      任命
+    </el-button>
+  </div>
+  <pure-table
+    v-if="canRead"
+    row-key="id"
+    align-whole="center"
+    table-layout="auto"
+    :loading="loading"
+    :data="dataList"
+    :columns="[
+      {
+        label: '职务',
+        prop: 'positionId',
+        minWidth: 110,
+        formatter: ({ positionId }) => positionLabel(positionId)
+      },
+      {
+        label: '队员',
+        prop: 'memberId',
+        minWidth: 130,
+        formatter: ({ memberId }) => memberLabel(memberId)
+      },
+      {
+        label: '兼任',
+        prop: 'isConcurrent',
+        minWidth: 70,
+        slot: 'isConcurrent'
+      },
+      {
+        label: '起始',
+        prop: 'startedAt',
+        minWidth: 110,
+        formatter: ({ startedAt }) => fmt(startedAt)
+      },
+      {
+        label: '来源',
+        prop: 'appointmentSource',
+        minWidth: 100,
+        formatter: ({ appointmentSource }) => appointmentSource ?? '—'
+      },
+      { label: '操作', fixed: 'right', width: 140, slot: 'operation' }
+    ]"
+    :header-cell-style="{
+      background: 'var(--el-fill-color-light)',
+      color: 'var(--el-text-color-primary)'
+    }"
   >
-    <div class="drawer-toolbar">
-      <el-button v-if="canCreate" type="primary" @click="openAssignDialog">
-        任命
+    <template #isConcurrent="{ row }">
+      <el-tag :type="row.isConcurrent ? 'warning' : 'info'">
+        {{ row.isConcurrent ? "是" : "否" }}
+      </el-tag>
+    </template>
+    <template #operation="{ row }">
+      <el-button
+        v-if="canHistory"
+        class="reset-margin"
+        link
+        @click="openHistory(row)"
+      >
+        历史
       </el-button>
-    </div>
-    <pure-table
-      v-if="canRead"
-      row-key="id"
-      align-whole="center"
-      table-layout="auto"
-      :loading="loading"
-      :data="dataList"
-      :columns="[
-        {
-          label: '职务',
-          prop: 'positionId',
-          minWidth: 110,
-          formatter: ({ positionId }) => positionLabel(positionId)
-        },
-        {
-          label: '队员',
-          prop: 'memberId',
-          minWidth: 130,
-          formatter: ({ memberId }) => memberLabel(memberId)
-        },
-        {
-          label: '兼任',
-          prop: 'isConcurrent',
-          minWidth: 70,
-          slot: 'isConcurrent'
-        },
-        {
-          label: '起始',
-          prop: 'startedAt',
-          minWidth: 110,
-          formatter: ({ startedAt }) => fmt(startedAt)
-        },
-        {
-          label: '来源',
-          prop: 'appointmentSource',
-          minWidth: 100,
-          formatter: ({ appointmentSource }) => appointmentSource ?? '—'
-        },
-        { label: '操作', fixed: 'right', width: 140, slot: 'operation' }
-      ]"
-      :header-cell-style="{
-        background: 'var(--el-fill-color-light)',
-        color: 'var(--el-text-color-primary)'
-      }"
-    >
-      <template #isConcurrent="{ row }">
-        <el-tag :type="row.isConcurrent ? 'warning' : 'info'">
-          {{ row.isConcurrent ? "是" : "否" }}
-        </el-tag>
-      </template>
-      <template #operation="{ row }">
-        <el-button
-          v-if="canHistory"
-          class="reset-margin"
-          link
-          @click="openHistory(row)"
-        >
-          历史
-        </el-button>
-        <el-button
-          v-if="canRevoke"
-          class="reset-margin"
-          link
-          type="danger"
-          @click="handleRevoke(row)"
-        >
-          撤销
-        </el-button>
-      </template>
-    </pure-table>
-    <SrvfPermEmpty
-      v-else
-      action="查看在任职务"
-      code="position-assignment.read.record"
-    />
-  </el-drawer>
+      <el-button
+        v-if="canRevoke"
+        class="reset-margin"
+        link
+        type="danger"
+        @click="handleRevoke(row)"
+      >
+        撤销
+      </el-button>
+    </template>
+  </pure-table>
+  <SrvfPermEmpty
+    v-else
+    action="查看在任职务"
+    code="position-assignment.read.record"
+  />
 </template>
 
 <style scoped lang="scss">
