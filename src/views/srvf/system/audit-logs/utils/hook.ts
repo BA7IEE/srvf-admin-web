@@ -1,7 +1,9 @@
 import dayjs from "dayjs";
-import { ref } from "vue";
+import { h } from "vue";
 import { hasPerms } from "@/utils/auth";
 import { useSrvfList } from "@/srvf-kit";
+import { addDrawer } from "@/components/ReDrawer";
+import DetailDrawer from "../detail-drawer.vue";
 import {
   getAuditLogs,
   type AuditLogItem,
@@ -53,11 +55,13 @@ export function useAuditLogs() {
   ];
 
   /** 详情抽屉（点开单条,重拉 GET .../{id}，与列表内存态各自独立） */
-  const detailVisible = ref(false);
-  const detailId = ref("");
   function openDetail(row: AuditLogItem) {
-    detailId.value = row.id;
-    detailVisible.value = true;
+    addDrawer({
+      title: "审计记录详情",
+      size: "560px",
+      hideFooter: true,
+      contentRenderer: () => h(DetailDrawer, { id: row.id })
+    });
   }
 
   return {
@@ -69,8 +73,6 @@ export function useAuditLogs() {
     onSearch,
     handleSizeChange,
     handleCurrentChange,
-    detailVisible,
-    detailId,
     openDetail
   };
 }

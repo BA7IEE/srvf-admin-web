@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { onMounted } from "vue";
 import { useAuditLogs } from "./utils/hook";
-import DetailDrawer from "./detail-drawer.vue";
 import { SrvfListPage } from "@/srvf-kit";
 
 defineOptions({
@@ -17,8 +16,6 @@ const {
   onSearch,
   handleSizeChange,
   handleCurrentChange,
-  detailVisible,
-  detailId,
   openDetail
 } = useAuditLogs();
 
@@ -58,5 +55,4 @@ onMounted(() => {
       </el-button>
     </template>
   </SrvfListPage>
-  <DetailDrawer :id="detailId" v-model="detailVisible" />
 </template>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { bizErrorMessage } from "@/api/srvf-error";
-import { ref, watch } from "vue";
+import { ref, onMounted } from "vue";
 import dayjs from "dayjs";
 import { message } from "@/utils/message";
 import { getAuditLogDetail, type AuditLogDetail } from "@/api/srvf-audit-log";
@@ -10,7 +10,6 @@ defineOptions({
 });
 
 const props = defineProps<{ id: string }>();
-const visible = defineModel<boolean>({ required: true });
 
 const loading = ref(false);
 const detail = ref<AuditLogDetail | null>(null);
@@ -37,65 +36,56 @@ async function load() {
   }
 }
 
-watch(visible, open => {
-  if (open) load();
-});
+onMounted(load);
 </script>
 
 <template>
-  <el-drawer
-    v-model="visible"
-    title="审计记录详情"
-    size="560px"
-    destroy-on-close
-  >
-    <div v-loading="loading">
-      <template v-if="detail">
-        <el-descriptions :column="1" border>
-          <el-descriptions-item label="时间">
-            {{ dayjs(detail.createdAt).format("YYYY-MM-DD HH:mm:ss") }}
-          </el-descriptions-item>
-          <el-descriptions-item label="事件">
-            {{ detail.event }}
-          </el-descriptions-item>
-          <el-descriptions-item label="资源">
-            {{ detail.resourceType }} / {{ detail.resourceId ?? "—" }}
-          </el-descriptions-item>
-          <el-descriptions-item label="操作者角色快照">
-            {{ detail.actorRoleSnap ?? "—" }}
-          </el-descriptions-item>
-          <el-descriptions-item label="结果">
-            <el-tag :type="detail.success ? 'success' : 'danger'">
-              {{ detail.success ? "成功" : "失败" }}
-            </el-tag>
-          </el-descriptions-item>
-          <el-descriptions-item label="requestId">
-            {{ detail.context.requestId }}
-          </el-descriptions-item>
-          <el-descriptions-item label="来源 IP">
-            {{ detail.context.ip ?? "—" }}
-          </el-descriptions-item>
-          <el-descriptions-item label="User-Agent">
-            {{ detail.context.ua ?? "—" }}
-          </el-descriptions-item>
-        </el-descriptions>
+  <div v-loading="loading">
+    <template v-if="detail">
+      <el-descriptions :column="1" border>
+        <el-descriptions-item label="时间">
+          {{ dayjs(detail.createdAt).format("YYYY-MM-DD HH:mm:ss") }}
+        </el-descriptions-item>
+        <el-descriptions-item label="事件">
+          {{ detail.event }}
+        </el-descriptions-item>
+        <el-descriptions-item label="资源">
+          {{ detail.resourceType }} / {{ detail.resourceId ?? "—" }}
+        </el-descriptions-item>
+        <el-descriptions-item label="操作者角色快照">
+          {{ detail.actorRoleSnap ?? "—" }}
+        </el-descriptions-item>
+        <el-descriptions-item label="结果">
+          <el-tag :type="detail.success ? 'success' : 'danger'">
+            {{ detail.success ? "成功" : "失败" }}
+          </el-tag>
+        </el-descriptions-item>
+        <el-descriptions-item label="requestId">
+          {{ detail.context.requestId }}
+        </el-descriptions-item>
+        <el-descriptions-item label="来源 IP">
+          {{ detail.context.ip ?? "—" }}
+        </el-descriptions-item>
+        <el-descriptions-item label="User-Agent">
+          {{ detail.context.ua ?? "—" }}
+        </el-descriptions-item>
+      </el-descriptions>
 
-        <template v-if="pretty(detail.context.before)">
-          <div class="section-title">操作前快照（打码后）</div>
-          <pre class="json-block">{{ pretty(detail.context.before) }}</pre>
-        </template>
-        <template v-if="pretty(detail.context.after)">
-          <div class="section-title">操作后快照（打码后）</div>
-          <pre class="json-block">{{ pretty(detail.context.after) }}</pre>
-        </template>
-        <template v-if="pretty(detail.context.extra)">
-          <div class="section-title">附加元数据</div>
-          <pre class="json-block">{{ pretty(detail.context.extra) }}</pre>
-        </template>
+      <template v-if="pretty(detail.context.before)">
+        <div class="section-title">操作前快照（打码后）</div>
+        <pre class="json-block">{{ pretty(detail.context.before) }}</pre>
       </template>
-      <el-empty v-else-if="!loading" description="暂无数据" />
-    </div>
-  </el-drawer>
+      <template v-if="pretty(detail.context.after)">
+        <div class="section-title">操作后快照（打码后）</div>
+        <pre class="json-block">{{ pretty(detail.context.after) }}</pre>
+      </template>
+      <template v-if="pretty(detail.context.extra)">
+        <div class="section-title">附加元数据</div>
+        <pre class="json-block">{{ pretty(detail.context.extra) }}</pre>
+      </template>
+    </template>
+    <el-empty v-else-if="!loading" description="暂无数据" />
+  </div>
 </template>
 
 <style scoped lang="scss">
