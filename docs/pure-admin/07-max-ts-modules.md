@@ -24,7 +24,7 @@
 ## 相关关键文件路径
 
 - `src/views/srvf/**`（本仓业务页与范式 A/B）、`src/views/welcome / login / error`
-- `src/components/Re*`、`src/components/RePureTableBar`、`src/components/ReDialog`、`@/srvf-kit`
+- `src/components/Re*`、`src/components/RePureTableBar`、`src/components/ReDialog`、`src/components/ReDrawer`、`@/srvf-kit`
 - `src/router/asyncRoutes.ts`（禁启用）
 - 完整版参考库：`vue-pure-admin/src/views/<对应模块>`（演示 dict/tenant/schedule 等的只读参考在此）
 
@@ -52,6 +52,9 @@
 - 用 `addDialog`（来自 `@/components/ReDialog`）以**函数式**打开 dialog，避免每个页面写 `el-dialog`。
 - 表单组件单独放在 `views/srvf/<域>/<模块>/form.vue`，通过 props 接收初始值。
 - 参考：`src/views/srvf/members-domain/members/utils/hook.ts` → `openDialog` 系列函数。
+- **抽屉同理**：用 `addDrawer`（来自 `@/components/ReDrawer`）函数式打开，别在页面里写 `<el-drawer>`。内容组件放同目录 `*-drawer.vue`，**纯内容**（无 `visible` model、无 `<el-drawer>` 外壳），自己在 `onMounted` 里加载数据；父级 hook 里 `addDrawer({ title, size, hideFooter?, contentRenderer: () => h(Cmp, props) })`。只读/操作在内容里的抽屉用 `hideFooter: true`；需要"底部确定=保存"的抽屉由内容组件 `defineExpose({ save })`，hook 侧配 `sureBtnLoading: true` + `beforeSure`（参考 `src/views/srvf/system/rbac/utils/hook.ts` → `openPermissionsDrawer`）。
+- 例外：抽屉内容与所在页的 state/handler 强耦合（作战室页内嵌的那几处）时才保留 `<el-drawer>`——拆出 SFC 的回归风险大于收益。
+- 全局宿主 `<ReDrawer />` 与 `<ReDialog />` 一样挂在 `src/App.vue`，且 `router.beforeEach` 里已调 `closeAllDrawer()`（路由切换自动关抽屉），页面侧不用管。
 
 ### 9.4 树形
 
@@ -75,7 +78,7 @@
 | 范式       | thin-max-ts 内                                           | vue-pure-admin 完整版补丁                             |
 | ---------- | -------------------------------------------------------- | ----------------------------------------------------- |
 | Tabs       | 顶部多标签自带                                           | `src/views/components/tabs/*`（演示）                 |
-| Drawer     | `el-drawer` 直接用                                       | `src/views/schema-form/form/drawer.vue`               |
+| Drawer     | `@/components/ReDrawer` 函数式 `addDrawer`               | `src/views/schema-form/form/drawer.vue`               |
 | Dialog     | `@/components/ReDialog` 函数式                           | `src/views/schema-form/form/dialog.vue`               |
 | 日历       | 无（starter schedule 演示已删）；用 `el-calendar` 自封装 | 无                                                    |
 | 上传       | 无（需自封装）                                           | `src/views/components/upload/*`                       |

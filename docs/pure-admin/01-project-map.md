@@ -184,6 +184,7 @@ src/components/
 ├── ReAuth/          # <Auth> 包裹按钮，基于 meta.auths
 ├── RePerms/         # <Perms> 包裹按钮，基于登录返回 permissions
 ├── ReDialog/        # 函数式 addDialog
+├── ReDrawer/        # 函数式 addDrawer
 ├── ReFloatButton/
 ├── ReIcon/          # IconifyIconOffline / IconifyIconOnline / FontIcon
 ├── RePureTableBar/  # 列表页操作栏
