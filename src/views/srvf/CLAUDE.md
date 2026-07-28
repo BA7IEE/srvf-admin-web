@@ -33,6 +33,7 @@ SRVF 业务页只允许这两种形状。**范式 A 是默认**；当一个实�
 
 - Build real list/detail pages (or placeholders where the contract isn't ready yet); reuse `Re*` components and the in-repo 范式 A three-piece — `PureTableBar` + `pure-table` + a `utils/hook` (§13.3.1, §13.3.4).
 - **按任务设计页面,不止 CRUD 列表**(第二种被许可范式,沿后端仓 `docs/handoff/admin-web.md` §1 轴模型):后端把报名/考勤/证书等建成**嵌套子资源**(`activities/:id/registrations`、`members/:id/certificates`…)。这类该做成**详情页/作战室**——进一个活动看它的报名/考勤 tab、进一个队员看它的证书/履历 tab,`activityId`/`memberId` **从路由参数**取,不在页面顶部摆"选择活动/队员"下拉。沿轴下钻(详情页)+ 跨轴横扫(工作台,按 status)是两种互补任务视图。
+- 弹窗用 `addDialog`、**抽屉用 `addDrawer`**（`@/components/ReDrawer`，2026-07-28 起为本仓抽屉范式）：`*-drawer.vue` 只写内容（无 `visible` model、无 `<el-drawer>` 外壳，`onMounted` 里自己加载），hook 里 `addDrawer({title, size, hideFooter?, contentRenderer: () => h(Cmp, props)})`；"底部确定=保存"型用 `defineExpose({save})` + `beforeSure`（范例 `system/rbac/utils/hook.ts`）。只有作战室页那种与页内 state 强耦合的内嵌抽屉才保留 `<el-drawer>`（详见 `docs/pure-admin/07-max-ts-modules.md` §9.3）。
 - Put API calls in `src/api/srvf-*.ts`; align types to **`/api/docs-json`**, not the guide's abbreviated field names (several drift — e.g. `userId` / `avatarKey` / `effectiveRoles`).
 - Gate page / button visibility with `v-auth` / `hasPerms` using **real permission codes** (e.g. `member.read.record`) — codes come from each endpoint's `[rbac: <code>]` summary in live `/api/docs-json` or backend `prisma/seed.ts`（数量随后端演进，以 live 为准）. Never `*:*:*` / `permission:btn:*`.
 - Where the contract isn't ready, still mark backend-dependent fields / flows / states with an explicit `placeholder` note.

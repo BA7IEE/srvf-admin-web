@@ -83,7 +83,7 @@
 | Schema 配置式表单（基础）    | `schema-form/form/base.vue`                                        | 表单            | 复用 `@pureadmin/components` 的 PlusForm 思路 |
 | Schema 表单 - 搜索栏形态     | `schema-form/form/search.vue`                                      | —               | 列表页顶部搜索范式                            |
 | Schema 表单 - 对话框内       | `schema-form/form/dialog.vue`                                      | —               | 配 `ReDialog` 函数式                          |
-| Schema 表单 - 抽屉内         | `schema-form/form/drawer.vue`                                      | —               | 配 `ReDrawer`（§3）                           |
+| Schema 表单 - 抽屉内         | `schema-form/form/drawer.vue`                                      | —               | 配 `ReDrawer` 函数式（✅本仓已有）            |
 | Schema 表单 - 向导步骤       | `schema-form/form/steps.vue`                                       | —               | 多步骤提交                                    |
 | 可视化表单设计器             | `form-design`（iframe 外链）                                       | 表单设计器      | ⚠️ iframe，无本地代码                         |
 | 日期 / 日期时间 / 时间选择器 | `components/date-picker`·`datetime-picker`·`time-picker`（单文件） | 日期/时间选择器 | Element Plus 原生封装范式                     |
@@ -107,14 +107,14 @@
 
 ### 1.4 弹层 / 抽屉 / 反馈
 
-| 我想做的事                       | 完整版路径                                          | 中文       | ✅本仓已有                          |
-| -------------------------------- | --------------------------------------------------- | ---------- | ----------------------------------- |
-| 函数式弹框（不写 `<el-dialog>`） | `components/dialog/index.vue` + 组件 `ReDialog`     | 函数式弹框 | ✅ `src/components/ReDialog`        |
-| 函数式抽屉                       | `components/drawer/index.vue` + 组件 `ReDrawer`     | 函数式抽屉 | ⛔需引 `ReDrawer`（完整版独有，§3） |
-| 消息提示范式                     | `components/message`                                | 消息提示   | Element Plus 原生                   |
-| 右键菜单                         | `components/contextmenu` / `table/high/contextmenu` | 右键菜单   | —                                   |
-| 结果页（成功/失败）              | `result/{success,fail}`                             | 结果页面   | —                                   |
-| 异常页（403/404/500）            | `error/{403,404,500}`                               | 异常页面   | ✅ 本仓 `src/views/error`           |
+| 我想做的事                       | 完整版路径                                          | 中文       | ✅本仓已有                   |
+| -------------------------------- | --------------------------------------------------- | ---------- | ---------------------------- |
+| 函数式弹框（不写 `<el-dialog>`） | `components/dialog/index.vue` + 组件 `ReDialog`     | 函数式弹框 | ✅ `src/components/ReDialog` |
+| 函数式抽屉                       | `components/drawer/index.vue` + 组件 `ReDrawer`     | 函数式抽屉 | ✅ `src/components/ReDrawer` |
+| 消息提示范式                     | `components/message`                                | 消息提示   | Element Plus 原生            |
+| 右键菜单                         | `components/contextmenu` / `table/high/contextmenu` | 右键菜单   | —                            |
+| 结果页（成功/失败）              | `result/{success,fail}`                             | 结果页面   | —                            |
+| 异常页（403/404/500）            | `error/{403,404,500}`                               | 异常页面   | ✅ 本仓 `src/views/error`    |
 
 ### 1.5 导航 / 标签 / 多级菜单
 
@@ -222,7 +222,7 @@
 
 ### 2.2 `components/` 组件演示（最大「单组件用法」库 · ~35 例）
 
-`dialog/`🧩(ReDialog) `drawer/`🧩(ReDrawer) `message` `upload/`(⛔依赖) `check-card` `date-picker` `datetime-picker` `time-picker` `icon-select`🧩(ReIcon) `animatecss`🧩(ReAnimateSelector) `cropping/`🧩(ReCropper) `segmented`🧩(ReSegmented) `text`🧩(ReText) `slider/` `el-button` `check-button` `button` `progress` `tag` `statistic` `collapse` `cascader` `color-picker` `color-picker-panel` `selector`🧩(ReSelector) `waterfall/` `split-pane`🧩(ReSplitPane) `swiper`(⛔swiper) `timeline` `count-to`🧩(ReCountTo) `contextmenu/` `json-editor`(⛔依赖) `seamless-scroll`🧩(ReSeamlessScroll) `virtual-list/`
+`dialog/`🧩(ReDialog) `drawer/`(✅ReDrawer) `message` `upload/`(⛔依赖) `check-card` `date-picker` `datetime-picker` `time-picker` `icon-select`🧩(ReIcon) `animatecss`🧩(ReAnimateSelector) `cropping/`🧩(ReCropper) `segmented`🧩(ReSegmented) `text`🧩(ReText) `slider/` `el-button` `check-button` `button` `progress` `tag` `statistic` `collapse` `cascader` `color-picker` `color-picker-panel` `selector`🧩(ReSelector) `waterfall/` `split-pane`🧩(ReSplitPane) `swiper`(⛔swiper) `timeline` `count-to`🧩(ReCountTo) `contextmenu/` `json-editor`(⛔依赖) `seamless-scroll`🧩(ReSeamlessScroll) `virtual-list/`
 
 > 注：`components/ripple`、`components/button` 等部分项在 router 里指向 `components.ts`，源码为 `components/` 下单文件或子目录。
 
@@ -280,7 +280,7 @@
 ## §3 `Re*` 组件全量目录（26 个）· 本仓对照
 
 > 「位置」列：**✅本仓已有**=`src/components/` 已有同名，直接用；**完整版独有**=本仓没有，引入前须评估（多数绑重依赖，§4）+ 单独 PR。
-> 本仓现有 9 个：`ReAuth ReCol ReDialog ReFloatButton ReIcon RePerms RePureTableBar ReSegmented ReText`（其中 `ReFloatButton` 为本仓/starter 独有，完整版无）。
+> 本仓现有 10 个：`ReAuth ReCol ReDialog ReDrawer ReFloatButton ReIcon RePerms RePureTableBar ReSegmented ReText`（其中 `ReFloatButton` 为本仓/starter 独有，完整版无；`ReDrawer` 于 2026-07-28 由维护者从完整版引入，PR #120）。
 
 ### 3.1 底座组件（✅本仓已有，优先复用，禁改源码—改用 wrapper）
 
@@ -290,34 +290,34 @@
 | `RePerms`        | 功能/权限码级网关                             | `value`(权限码数组)                  | 各页                                     |
 | `ReCol`          | 响应式列包装                                  | `value`(默认 24)                     | welcome、system/user form                |
 | `ReDialog`       | **函数式弹框**（不写 `<el-dialog>`）          | `addDialog/closeDialog/updateDialog` | components/dialog、system role/user hook |
+| `ReDrawer`       | **函数式抽屉**（不写 `<el-drawer>`）          | `addDrawer/closeDrawer/updateDrawer` | components/drawer、本仓 8 处抽屉入口     |
 | `ReIcon`         | 图标（Iconify 离线/在线 + 选择器 + FontIcon） | `useRenderIcon()`                    | 全站                                     |
 | `RePureTableBar` | `@pureadmin/table` 工具条（列控制/刷新/密度） | 插槽 + buttons                       | monitor/\*、system/role                  |
 | `ReSegmented`    | 分段控制器                                    | `options/modelValue/block/size`      | welcome                                  |
 | `ReText`         | 文本省略 + Tooltip                            | `lineClamp/tippyProps`               | account-settings                         |
 
-### 3.2 完整版独有组件（18 个 · 本仓没有，引入须单独 PR + 多数带依赖）
+### 3.2 完整版独有组件（17 个 · 本仓没有，引入须单独 PR + 多数带依赖）
 
-| 组件                | 用途                                             | 绑定 demo 页                            | 依赖(§4)         |
-| ------------------- | ------------------------------------------------ | --------------------------------------- | ---------------- |
-| `ReDrawer`          | 函数式抽屉                                       | components/drawer                       | 无（纯 Element） |
-| `ReCropper`         | 图片裁剪                                         | account-settings/Profile                | ⛔cropperjs      |
-| `ReCropperPreview`  | 裁剪预览（头像回显）                             | account-settings/Profile、system/user   | ⛔随 ReCropper   |
-| `ReCountTo`         | 数字动画计数（含回弹 NormalCountTo）             | components/count-to、welcome            | 无               |
-| `ReFlicker`         | 圆点闪烁动画                                     | welcome、components/timeline            | 无               |
-| `ReFlop`            | 时间翻牌器                                       | —（无直接 demo 页）                     | 无               |
-| `ReSeamlessScroll`  | 无缝滚动                                         | components/seamless-scroll              | ⛔滚动库         |
-| `ReSplitPane`       | 可拖拽切割面板                                   | components/split-pane                   | 无               |
-| `ReSelector`        | 范围/多选择器                                    | components/selector                     | 无               |
-| `ReAnimateSelector` | animate.css 动画选择器                           | components/animatecss、system/menu/form | 无               |
-| `ReTreeLine`        | 树形连接线                                       | able/line-tree                          | 无               |
-| `ReText`→见 §3.1    | —                                                | —                                       | —                |
-| `ReTypeit`          | 打字机效果                                       | able/typeit                             | ⛔typeit         |
-| `ReBarcode`         | 条形码生成                                       | able/barcode                            | ⛔条形码库       |
-| `ReQrcode`          | 二维码生成                                       | able/qrcode                             | ⛔二维码库       |
-| `ReImageVerify`     | 图形验证码                                       | login                                   | 无（canvas）     |
-| `ReMap`             | 高德地图                                         | able/map                                | ⛔AMap + key     |
-| `ReFlowChart`       | LogicFlow 流程图（Control/NodePanel/DataDialog） | flow-chart                              | ⛔LogicFlow      |
-| `ReVxeTableBar`     | vxe-table 工具条                                 | table/virtual/\*                        | ⛔vxe-table      |
+| 组件                | 用途                                             | 绑定 demo 页                            | 依赖(§4)       |
+| ------------------- | ------------------------------------------------ | --------------------------------------- | -------------- |
+| `ReCropper`         | 图片裁剪                                         | account-settings/Profile                | ⛔cropperjs    |
+| `ReCropperPreview`  | 裁剪预览（头像回显）                             | account-settings/Profile、system/user   | ⛔随 ReCropper |
+| `ReCountTo`         | 数字动画计数（含回弹 NormalCountTo）             | components/count-to、welcome            | 无             |
+| `ReFlicker`         | 圆点闪烁动画                                     | welcome、components/timeline            | 无             |
+| `ReFlop`            | 时间翻牌器                                       | —（无直接 demo 页）                     | 无             |
+| `ReSeamlessScroll`  | 无缝滚动                                         | components/seamless-scroll              | ⛔滚动库       |
+| `ReSplitPane`       | 可拖拽切割面板                                   | components/split-pane                   | 无             |
+| `ReSelector`        | 范围/多选择器                                    | components/selector                     | 无             |
+| `ReAnimateSelector` | animate.css 动画选择器                           | components/animatecss、system/menu/form | 无             |
+| `ReTreeLine`        | 树形连接线                                       | able/line-tree                          | 无             |
+| `ReText`→见 §3.1    | —                                                | —                                       | —              |
+| `ReTypeit`          | 打字机效果                                       | able/typeit                             | ⛔typeit       |
+| `ReBarcode`         | 条形码生成                                       | able/barcode                            | ⛔条形码库     |
+| `ReQrcode`          | 二维码生成                                       | able/qrcode                             | ⛔二维码库     |
+| `ReImageVerify`     | 图形验证码                                       | login                                   | 无（canvas）   |
+| `ReMap`             | 高德地图                                         | able/map                                | ⛔AMap + key   |
+| `ReFlowChart`       | LogicFlow 流程图（Control/NodePanel/DataDialog） | flow-chart                              | ⛔LogicFlow    |
+| `ReVxeTableBar`     | vxe-table 工具条                                 | table/virtual/\*                        | ⛔vxe-table    |
 
 > 注：引入完整版独有组件 = 抄一个**组件**而非一个页面，同样**手敲重写**、不 `cp -R`；若绑重依赖按 §4 处理。
 
