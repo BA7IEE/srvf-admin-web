@@ -85,4 +85,5 @@
 - `docs/pure-admin/13-ai-harness.md` —— 改 harness / 权限 / hooks(「为什么这样设计」的权威说明;§13A.8 反转记录 · §13A.9 复审记录)。
 - `docs/pure-admin/14-full-version-reference-index.md` —— 建新页前查范式(208 演示页 / 26 个 `Re*` 组件能力速查;完整版只读,只抄交互)。
 - `docs/srvf-admin-ux-upgrade-blueprint.md` —— 新业务规划定位(IA v3 / 工作台 v2 / 七条军规;与 handoff 冲突按 §0 处理;前作 vnext 蓝图已入 archive)。
+- `docs/srvf-backend-catchup-v064-blueprint.md` —— 后端 v0.40→v0.64 追赶总方案(P0 止血 / P1 权限底座 / 分批补齐 / 两带闸区;逐 PR 动手前仍以 live 契约为准)。
 - `docs/pure-admin-max-ts-baseline.md` 与 `docs/pure-admin/` 其余各篇 —— starter 底座专题(项目图 / http / mock 风险 / 模块 / 上游同步 / 官方索引)。
