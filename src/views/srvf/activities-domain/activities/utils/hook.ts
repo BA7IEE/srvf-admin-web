@@ -18,7 +18,6 @@ import {
   createActivity,
   updateActivity,
   deleteActivity,
-  publishActivity,
   cancelActivity,
   type ActivityItem,
   type ActivityListQuery,
@@ -27,6 +26,7 @@ import {
 import { getDictTypes, getDictItems } from "@/api/srvf-dict";
 import { getOrganizations } from "@/api/srvf-organization";
 import { useSrvfDictStoreHook } from "@/store/modules/srvfDict";
+import { openPublishDialog, openCompleteDialog } from "./lifecycle";
 
 /**
  * 活动状态 code → tag 颜色（仅展示色；状态文案改由 activity_status 字典提供，前端不臆造）。
@@ -58,6 +58,7 @@ export function useActivities() {
   const canDelete = hasPerms("activity.delete.record");
   const canPublish = hasPerms("activity.publish.record");
   const canCancel = hasPerms("activity.cancel.record");
+  const canComplete = hasPerms("activity.complete.record");
   // 「管理」(进作战室)对任何可见此列表的登录用户开放（作战室 [auth]-only,内部 tab 各自按码门）,
   // 故操作列恒显;写操作仍按各自 RBAC 码做按钮级显隐。
 
@@ -295,29 +296,21 @@ export function useActivities() {
       .catch(() => {});
   }
 
-  /** 发布（draft → published；后端拒绝非法流转时弹其 message） */
+  /** 发布（draft → published；与作战室共用 openPublishDialog：保险核对勾选 + 必填 body） */
   function handlePublish(row: ActivityItem) {
-    ElMessageBox.confirm(
-      `确定要发布活动「${row.title}」吗？发布后将对符合条件的用户可见。`,
-      "发布活动",
+    openPublishDialog(
       {
-        confirmButtonText: "确定发布",
-        cancelButtonText: "取消",
-        type: "warning"
-      }
-    )
-      .then(async () => {
-        try {
-          await publishActivity(row.id);
-          message("发布成功", { type: "success" });
-          onSearch();
-        } catch (error: any) {
-          message(bizErrorMessage(error, "发布失败"), {
-            type: "error"
-          });
-        }
-      })
-      .catch(() => {});
+        id: row.id,
+        title: row.title,
+        requiresInsurance: row.requiresInsurance
+      },
+      onSearch
+    );
+  }
+
+  /** 完结（published → completed；唯一完结通路，与作战室共用 openCompleteDialog） */
+  function handleComplete(row: ActivityItem) {
+    openCompleteDialog({ id: row.id, title: row.title }, onSearch);
   }
 
   /** 取消（* → cancelled；弹原因输入，cancelReason 可空；后端拒绝时弹其 message） */
@@ -369,6 +362,7 @@ export function useActivities() {
     canDelete,
     canPublish,
     canCancel,
+    canComplete,
     loading,
     columns,
     dataList,
@@ -379,6 +373,7 @@ export function useActivities() {
     openCockpit,
     handleDelete,
     handlePublish,
+    handleComplete,
     handleCancel,
     handleSizeChange,
     handleCurrentChange

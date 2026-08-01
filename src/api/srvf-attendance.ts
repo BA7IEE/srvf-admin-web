@@ -288,10 +288,19 @@ export const getAttendanceSheetReviewDetail = (id: string) =>
   );
 
 /**
+ * 并发审批冲突文案（后端 v0.44 起同一单据的并发审批只有一个赢家，输家拿到
+ * `ATTENDANCE_SHEET_STATUS_INVALID` 22030）。按 UX 十条第 5 条：说「已被他人处理」
+ * 并让调用侧刷新，**绝不静默重试覆盖**。
+ */
+const CONCURRENT_SHEET_CONFLICT_TEXT =
+  "这张考勤单刚被其他人处理过（22030），当前状态已经变了；列表已刷新，请按最新状态再决定";
+
+/**
  * 考勤终审失败的专用文案（后端 handoff 踩坑 #8：22074/22075 必须独立提示，
  * 不得混入通用"权限不足"）。码源 = 后端 BizCode（v0.35 摘码微刀落地）：
  * - 22074 自审拒：提交人 == 终审人（SUPER_ADMIN 也拒）
- * - 22075 同人拒：一级审核人 == 终审人（后端 env `ATTENDANCE_ALLOW_SAME_REVIEWER` 可放开）
+ * - 22075 同人拒：一级审核人 == 终审人（后端 env `ATTENDANCE_ALLOW_SAME_REVIEWER`
+ *   只保留配置解析兼容，**true / false 均不放开**，不要按「可配置」写文案）
  * - 30100 判权失败：2026-07-03 起 biz-admin 不再天然持终审权，仅 SUPER_ADMIN 或
  *   「考勤终审员」scoped 角色绑定可终审
  * 其余码回落后端 message，再回落调用方兜底文案。
@@ -310,5 +319,30 @@ export function finalReviewErrorMessage(
     return "一级审核人与终审人不能是同一人（22075），请由另一位终审人处理";
   if (code === 30100)
     return "当前账号没有考勤终审权（30100）：终审权仅来自 SUPER_ADMIN 或「考勤终审员」角色绑定";
+  if (code === 22030) return CONCURRENT_SHEET_CONFLICT_TEXT;
+  return data?.message ?? fallback;
+}
+
+/**
+ * 考勤**一级审核**失败的专用文案。码源 = 后端 `biz-code.constant.ts`：
+ * - 22081 `ATTENDANCE_SELF_FIRST_REVIEW_FORBIDDEN`：不能一审自己提交或重提的单据
+ *   （v0.62 起生效的域不变量，**SUPER_ADMIN 也不豁免**，不是权限配置问题）
+ * - 22030 状态不允许：并发审批的输家
+ * - 30100 无一审码——后端判定顺序是「先判权、再判约束」，所以无码者拿到的是 30100 而非 22081
+ * 其余码回落后端 message，再回落调用方兜底文案。
+ */
+export function firstReviewErrorMessage(
+  error: unknown,
+  fallback: string
+): string {
+  const data = (
+    error as { response?: { data?: { code?: unknown; message?: string } } }
+  )?.response?.data;
+  const code = Number(data?.code);
+  if (code === 22081)
+    return "不能审核自己提交或重新提交的考勤单（22081），请转交另一位有一级审核权的人处理";
+  if (code === 22030) return CONCURRENT_SHEET_CONFLICT_TEXT;
+  if (code === 30100)
+    return "当前账号没有考勤一级审核权（30100），请联系管理员开通";
   return data?.message ?? fallback;
 }
