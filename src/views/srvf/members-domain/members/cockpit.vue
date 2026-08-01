@@ -310,10 +310,19 @@ const {
 /* --------------- Tab：保险（只读，复用 hook，memberId 由路由参数注入；无队员下拉） --------------- */
 const {
   canRead: insCanRead,
+  canReview: insCanReview,
+  summary: insSummary,
+  asOfDate: insAsOfDate,
+  selfPurchased: insSelfPurchased,
+  teamProvided: insTeamProvided,
+  selfColumns: insSelfColumns,
+  teamColumns: insTeamColumns,
+  reviewingId: insReviewingId,
+  dateStatusMeta: insDateStatusMeta,
+  reviewStatusMeta: insReviewStatusMeta,
+  canReviewRow: insCanReviewRow,
+  handleReview: insHandleReview,
   loading: insLoading,
-  columns: insColumns,
-  dataList: insDataList,
-  isActive: insIsActive,
   onSearch: insOnSearch
 } = useMemberInsurances(memberId);
 
@@ -910,38 +919,156 @@ onMounted(() => {
           />
         </el-tab-pane>
 
-        <!-- Tab：保险（只读；admin 侧契约仅 GET，无写操作） -->
+        <!-- Tab：保险（主源=统一概览：自购可审 + 队内覆盖只读投影） -->
         <el-tab-pane label="保险" name="insurances">
           <template v-if="insCanRead">
+            <el-card v-loading="insLoading" shadow="never" class="mb-4">
+              <template #header>
+                <div class="ins-head">
+                  <span>保险概览</span>
+                  <el-tag
+                    v-if="insSummary"
+                    :type="insSummary.hasConfirmedCoverage ? 'success' : 'info'"
+                  >
+                    {{
+                      insSummary.hasConfirmedCoverage
+                        ? "已有确认的保险来源"
+                        : "暂无确认的保险来源"
+                    }}
+                  </el-tag>
+                </div>
+              </template>
+              <div v-if="insSummary" class="ins-summary">
+                <el-statistic
+                  title="自购·日期有效"
+                  :value="insSummary.dateActiveSelfPurchasedCount"
+                />
+                <el-statistic
+                  title="自购·已确认"
+                  :value="insSummary.confirmedActiveSelfPurchasedCount"
+                />
+                <el-statistic
+                  title="队内覆盖·日期有效"
+                  :value="insSummary.dateActiveTeamProvidedCount"
+                />
+              </div>
+              <div class="ins-note">
+                按 {{ insAsOfDate || "今日" }} 计算。
+                <template v-if="insSummary?.confirmedCoverageThrough">
+                  已确认的保险最晚覆盖到
+                  {{
+                    dayjs(insSummary.confirmedCoverageThrough).format(
+                      "YYYY-MM-DD"
+                    )
+                  }}。
+                </template>
+                <strong
+                  >这只是保险资料的核对结果，不能替代活动审批或入队时的资格判定。</strong
+                >
+              </div>
+            </el-card>
+
             <PureTableBar
-              title="队员保险"
-              :columns="insColumns"
+              title="个人自购"
+              :columns="insSelfColumns"
               @refresh="insOnSearch"
             >
               <template v-slot="{ size, dynamicColumns }">
                 <pure-table
                   row-key="id"
-                  adaptive
-                  :adaptiveConfig="{ offsetBottom: 108 }"
                   align-whole="center"
                   table-layout="auto"
                   :loading="insLoading"
                   :size="size"
-                  :data="insDataList"
+                  :data="insSelfPurchased"
                   :columns="dynamicColumns"
                   :header-cell-style="{
                     background: 'var(--el-fill-color-light)',
                     color: 'var(--el-text-color-primary)'
                   }"
                 >
-                  <template #validity="{ row }">
-                    <el-tag :type="insIsActive(row) ? 'success' : 'info'">
-                      {{ insIsActive(row) ? "有效" : "已过期" }}
+                  <template #empty>
+                    <el-empty description="该队员没有自己买的保险记录" />
+                  </template>
+                  <template #dateStatus="{ row }">
+                    <el-tag :type="insDateStatusMeta(row.dateStatus).type">
+                      {{ insDateStatusMeta(row.dateStatus).text }}
+                    </el-tag>
+                  </template>
+                  <template #reviewStatus="{ row }">
+                    <el-tag
+                      :type="insReviewStatusMeta(row.reviewStatusCode).type"
+                    >
+                      {{ insReviewStatusMeta(row.reviewStatusCode).text }}
+                    </el-tag>
+                  </template>
+                  <template #operation="{ row, size: btnSize }">
+                    <!-- 只有待核验的行才给动作;其余状态后端只会返 26012 -->
+                    <template v-if="insCanReviewRow(row)">
+                      <el-button
+                        class="reset-margin"
+                        link
+                        type="success"
+                        :size="btnSize"
+                        :loading="insReviewingId === row.id"
+                        @click="insHandleReview(row, 'verified')"
+                      >
+                        核验通过
+                      </el-button>
+                      <el-button
+                        class="reset-margin"
+                        link
+                        type="danger"
+                        :size="btnSize"
+                        :loading="insReviewingId === row.id"
+                        @click="insHandleReview(row, 'rejected')"
+                      >
+                        驳回
+                      </el-button>
+                    </template>
+                    <span v-else class="ins-muted">已审核</span>
+                  </template>
+                </pure-table>
+              </template>
+            </PureTableBar>
+
+            <PureTableBar
+              title="队内统一投保"
+              :columns="insTeamColumns"
+              class="mt-4"
+              @refresh="insOnSearch"
+            >
+              <template v-slot="{ size, dynamicColumns }">
+                <pure-table
+                  row-key="coverageId"
+                  align-whole="center"
+                  table-layout="auto"
+                  :loading="insLoading"
+                  :size="size"
+                  :data="insTeamProvided"
+                  :columns="dynamicColumns"
+                  :header-cell-style="{
+                    background: 'var(--el-fill-color-light)',
+                    color: 'var(--el-text-color-primary)'
+                  }"
+                >
+                  <template #empty>
+                    <el-empty
+                      description="该队员不在任何队内统一保单的覆盖名单里"
+                    />
+                  </template>
+                  <template #dateStatus="{ row }">
+                    <el-tag :type="insDateStatusMeta(row.dateStatus).type">
+                      {{ insDateStatusMeta(row.dateStatus).text }}
                     </el-tag>
                   </template>
                 </pure-table>
               </template>
             </PureTableBar>
+            <div class="ins-note mt-2">
+              队内统一投保这一块是只读投影：这里不显示保单号与备注，也没有审核动作。
+              保单明细与覆盖名单请到「队员 → 队保单」维护。
+            </div>
           </template>
           <SrvfPermEmpty
             v-else
@@ -1293,6 +1420,31 @@ onMounted(() => {
 .contribution-hint {
   margin-top: 12px;
   font-size: 13px;
+  color: var(--el-text-color-secondary);
+}
+
+.ins-head {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ins-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 32px;
+}
+
+.ins-note {
+  margin-top: 12px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--el-text-color-secondary);
+}
+
+.ins-muted {
+  font-size: 12px;
   color: var(--el-text-color-secondary);
 }
 </style>
