@@ -102,7 +102,7 @@ export function useRecruitmentTools(cycleId: string) {
       if (code === 0) {
         precheckVisible.value = false;
         ElMessageBox.alert(
-          `已发放编号 ${data.promotedCount} 人；跳过 ${data.skippedCount} 人（外籍等需手动建档）。`,
+          `已发放编号 ${data.promotedCount} 人；跳过 ${data.skippedCount} 人（缺登录方式或资料不全，需手动建档）。`,
           "发放结果",
           { confirmButtonText: "知道了", type: "success" }
         );

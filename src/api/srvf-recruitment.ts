@@ -106,7 +106,12 @@ export type PublicityListItem = {
   applicationId: string;
   realName: string | null;
   proposedMemberNo: string | null;
-  isForeigner: boolean;
+  /**
+   * 是否非大陆证件（后端 v0.42 起由 `isForeigner` 改名而来）。
+   * 语义是「证件类型不是大陆身份证，身份需人工核验」，**不等于国籍**——
+   * 文案一律用「非大陆证件」，不要写回「外籍」。
+   */
+  isNonMainlandDocument: boolean;
   needsManualBuild: boolean;
 };
 /** 公示名单（`PublicityListResponseDto`）。 */
@@ -140,7 +145,12 @@ export type RecruitmentApplication = {
   idCardNumber: string | null;
   phone: string | null;
   documentTypeCode: string;
-  isForeigner: boolean;
+  /**
+   * 是否非大陆证件（后端 v0.42 起由 `isForeigner` 改名而来）。
+   * 语义是「证件类型不是大陆身份证，身份需人工核验」，**不等于国籍**——
+   * 文案一律用「非大陆证件」，不要写回「外籍」。
+   */
+  isNonMainlandDocument: boolean;
   genderCode: string | null;
   ageGroup: string | null;
   cityDistrict: string | null;
@@ -277,14 +287,22 @@ export const getCycleStats = (cycleId: string) =>
     `/api/admin/v1/recruitment/cycles/${cycleId}/stats`
   );
 
-/** 六类跳过原因（后端 §8.2；与 `PromotePrecheckRowDto.skipReason` 同源）。 */
+/**
+ * 发号预检的跳过原因 → 人话（与 live `PromotePrecheckRowDto.skipReason` 逐值对齐）。
+ *
+ * v0.40 H5 手机通道上线后这套值整体换过一轮:`missing-openid` 停用,
+ * 改为 `missing-login-channel`(微信与手机都没有),并新增两个手机相关值。
+ * 无微信但有已验证手机的申请人**现在可以直接发号**(建 SMS 登录通道账号),
+ * 不再是跳过项。
+ */
 export const PROMOTE_SKIP_REASON_LABEL: Record<string, string> = {
-  "foreign-manual-build": "外籍需手动建档",
-  "openid-already-bound": "openid 已被既有账号占用",
-  "missing-openid": "缺 openid,无法建账号",
-  "duplicate-openid-in-batch": "openid 本批重复",
-  "missing-derived-fields": "缺派生字段(生日/性别等)",
-  "special-document": "特殊证件类型需手动建档"
+  "openid-already-bound": "微信号已被其他账号占用",
+  "phone-already-bound": "手机号已被其他账号占用",
+  "missing-login-channel": "没有微信也没有已验证手机，无法建登录账号",
+  "duplicate-openid-in-batch": "同一微信号在本批里重复出现",
+  "duplicate-phone-in-batch": "同一手机号在本批里重复出现",
+  "missing-derived-field": "缺生日或性别等派生信息，需先补录",
+  "incomplete-data": "报名资料不完整，需先补录"
 };
 
 export type PromotePrecheckRow = {
@@ -293,11 +311,20 @@ export type PromotePrecheckRow = {
   willIssue: boolean;
   skipReason: string | null;
   proposedMemberNo: string | null;
-  isForeigner: boolean;
+  /**
+   * 是否非大陆证件（后端 v0.42 起由 `isForeigner` 改名而来）。
+   * 语义是「证件类型不是大陆身份证，身份需人工核验」，**不等于国籍**——
+   * 文案一律用「非大陆证件」，不要写回「外籍」。
+   */
+  isNonMainlandDocument: boolean;
   documentTypeCode: string;
   missingOpenid: boolean;
   openidAlreadyBound: boolean;
   duplicateOpenidInBatch: boolean;
+  /** 手机号已被其他账号占用（v0.40 H5 手机通道新增） */
+  phoneAlreadyBound: boolean;
+  /** 同一手机号在本批里重复（v0.40 H5 手机通道新增） */
+  duplicatePhoneInBatch: boolean;
   missingPhone: boolean;
   missingBirthDate: boolean;
   missingGender: boolean;
