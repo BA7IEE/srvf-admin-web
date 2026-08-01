@@ -106,7 +106,6 @@ export function useContributionRules() {
           durationThreshold: row?.durationThreshold ?? null,
           pointsBelow: row?.pointsBelow ?? 0,
           pointsAbove: row?.pointsAbove ?? null,
-          dailyCap: row?.dailyCap ?? null,
           status: row?.status ?? "ACTIVE",
           remark: row?.remark ?? ""
         } as ContributionRuleFormModel
@@ -122,11 +121,10 @@ export function useContributionRules() {
           }
           try {
             if (isEdit && row) {
-              // 后端 PATCH 白名单：仅 pointsBelow / pointsAbove / dailyCap / status / remark
+              // 后端 PATCH 白名单：仅 pointsBelow / pointsAbove / status / remark（dailyCap 已下线，发了会被拒）
               await updateContributionRule(row.id, {
                 pointsBelow: curData.pointsBelow ?? 0,
                 pointsAbove: curData.pointsAbove,
-                dailyCap: curData.dailyCap,
                 status: curData.status,
                 remark: curData.remark === "" ? null : curData.remark
               });
@@ -138,7 +136,6 @@ export function useContributionRules() {
                 durationThreshold: curData.durationThreshold,
                 pointsBelow: curData.pointsBelow ?? 0,
                 pointsAbove: curData.pointsAbove,
-                dailyCap: curData.dailyCap,
                 status: curData.status,
                 remark: curData.remark === "" ? undefined : curData.remark
               });

@@ -29,6 +29,7 @@ const {
   canDelete,
   canPublish,
   canCancel,
+  canComplete,
   loading,
   columns,
   dataList,
@@ -39,6 +40,7 @@ const {
   openCockpit,
   handleDelete,
   handlePublish,
+  handleComplete,
   handleCancel,
   handleSizeChange,
   handleCurrentChange
@@ -112,6 +114,23 @@ onMounted(() => {
         @click="handlePublish(row)"
       >
         发布
+      </el-button>
+      <!--
+        完结:唯一完结通路(考勤提交不再推进状态)。
+        显示条件必须同时满足后端 complete 的两个前置(published + phase 已结束),
+        否则点了必返 20030。
+      -->
+      <el-button
+        v-if="
+          canComplete && row.statusCode === 'published' && row.phase === 'ended'
+        "
+        class="reset-margin"
+        link
+        type="primary"
+        :size="size"
+        @click="handleComplete(row)"
+      >
+        完结
       </el-button>
       <el-button
         v-if="canCancel && row.statusCode !== 'cancelled'"

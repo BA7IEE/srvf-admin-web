@@ -74,6 +74,26 @@ defineExpose({ getRef });
     :rules="rules"
     label-width="92px"
   >
+    <!--
+      v0.45 起：改动证书的关键信息会让已核验/已拒绝的证书自动退回「待核验」。
+      后端判据是「事实真的变了」，所以只改了不影响事实的内容、或原样提交，都不会退回。
+      编辑态才提示——新建时没有可退回的核验结论。
+    -->
+    <el-alert
+      v-if="newFormInline.isEdit"
+      class="mb-4"
+      type="info"
+      :closable="false"
+      show-icon
+      title="改动关键信息会退回待核验"
+    >
+      <span class="text-xs/5">
+        证书类型、颁发机构、证书编号、颁发日期、到期日中任一项<strong>实际发生变化</strong>时，已核验
+        /
+        已拒绝的证书会自动退回「待核验」，原有核验人、核验时间与核验备注一并清空，需要重新复核。只改其它内容或原样保存不会退回。
+      </span>
+    </el-alert>
+
     <el-row :gutter="30">
       <re-col :value="12">
         <el-form-item label="证书类型" prop="certTypeCode">

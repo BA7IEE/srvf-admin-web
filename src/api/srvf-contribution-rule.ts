@@ -18,6 +18,12 @@ export type ContributionRuleItem = {
   durationThreshold: number | null;
   pointsBelow: number;
   pointsAbove: number | null;
+  /**
+   * 每日上限（**历史字段，不再生效**）。
+   * 后端已把 `dailyCap` 从 Create/Update DTO 下线（live docs-json 两个入参 DTO 均无此属性），
+   * 只有读模型 `ContributionRuleResponseDto` 还保留它回放历史数据。
+   * 故：读可以显示，**写一律不发**——再发会被 ValidationPipe 当非白名单字段拒掉。
+   */
   dailyCap: number | null;
   status: ContributionRuleStatus;
   remark: string | null;
@@ -48,6 +54,7 @@ export const getContributionRules = (params?: ContributionRuleListQuery) =>
 
 /**
  * 创建贡献值规则入参（后端 `CreateContributionRuleDto`；字段以 `/api/docs-json` 为准）。
+ * ⚠️ `dailyCap` 已被后端下线，**不在本入参内**——再发会被 ValidationPipe 拒（见 ContributionRuleItem 注释）。
  */
 export type CreateContributionRuleBody = {
   /** 活动类型字典 code（必填；typeCode=activity_type） */
@@ -60,8 +67,6 @@ export type CreateContributionRuleBody = {
   pointsBelow: number;
   /** > 阈值的预填分值（省略 / 显式 null；非 null 时要求 durationThreshold 非 null 且 > pointsBelow） */
   pointsAbove?: number | null;
-  /** 每日上限（省略 / 显式 null） */
-  dailyCap?: number | null;
   /** 规则状态（省略默认 ACTIVE） */
   status?: ContributionRuleStatus;
   /** 运营备注（≤ 500） */
@@ -70,13 +75,12 @@ export type CreateContributionRuleBody = {
 
 /**
  * 更新贡献值规则入参（后端 `UpdateContributionRuleDto`）。
- * 后端 PATCH 白名单**仅** `pointsBelow / pointsAbove / dailyCap / status / remark`；
+ * 后端 PATCH 白名单**仅** `pointsBelow / pointsAbove / status / remark`（`dailyCap` 已下线）；
  * `activityTypeCode / attendanceRoleCode / durationThreshold` 禁改（传入会被 ValidationPipe 拦截抛 40000）。
  */
 export type UpdateContributionRuleBody = {
   pointsBelow?: number;
   pointsAbove?: number | null;
-  dailyCap?: number | null;
   status?: ContributionRuleStatus;
   remark?: string | null;
 };

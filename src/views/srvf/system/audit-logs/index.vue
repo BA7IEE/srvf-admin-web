@@ -28,7 +28,7 @@ onMounted(() => {
   <SrvfListPage
     :can-read="canRead"
     title="审计日志"
-    intro="系统操作留痕（技术排查用）：出现异常操作或需要追溯时，按时间和资源检索。"
+    intro="系统操作留痕（技术排查用）：出现异常操作或需要追溯时，按时间和资源检索。除超级管理员外，这里只显示你自己的操作，以及普通用户产生的操作——看不到别人的管理操作是设计如此，不是漏记。"
     :columns="columns"
     :loading="loading"
     :data-list="dataList"

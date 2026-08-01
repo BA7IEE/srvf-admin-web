@@ -14,7 +14,6 @@ export type ContributionRuleFormModel = {
   durationThreshold: number | null;
   pointsBelow: number | null;
   pointsAbove: number | null;
-  dailyCap: number | null;
   status: ContributionRuleStatus;
   remark: string;
 };
@@ -29,7 +28,6 @@ const props = withDefaults(
       durationThreshold: null,
       pointsBelow: 0,
       pointsAbove: null,
-      dailyCap: null,
       status: "ACTIVE",
       remark: ""
     })
@@ -150,25 +148,10 @@ defineExpose({ getRef });
           />
         </el-form-item>
       </re-col>
-      <re-col>
-        <el-form-item>
-          <template #label>
-            <FormLabelTip
-              label="每日上限"
-              tip="同一人同一天最多累计的分数，超出部分不再累计"
-            />
-          </template>
-          <el-input-number
-            v-model="newFormInline.dailyCap"
-            :min="0"
-            :precision="2"
-            :value-on-clear="null"
-            class="w-full!"
-            controls-position="right"
-            placeholder="留空 = 无（预填兜底 1.5）"
-          />
-        </el-form-item>
-      </re-col>
+      <!--
+        「每日上限」输入已撤下：后端把 dailyCap 从 Create/Update DTO 下线，
+        再发这个字段整个表单都会被拒。历史值仍在列表里只读展示（标注「历史字段，不再生效」）。
+      -->
       <re-col>
         <el-form-item label="状态">
           <el-switch

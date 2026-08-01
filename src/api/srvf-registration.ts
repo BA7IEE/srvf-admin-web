@@ -1,4 +1,5 @@
 import { http } from "@/utils/http";
+import { activityBizErrorMessage } from "@/api/srvf-activity";
 
 type Envelope<T> = { code: number; message: string; data: T };
 type PageResult<T> = {
@@ -164,3 +165,24 @@ export const exportRegistrations = (
     `/api/admin/v1/activities/${activityId}/registrations/export`,
     { params: scope ? { scope } : {}, responseType: "blob" }
   );
+
+/* ----------------------------- 报名审核错误码 → 人话 ----------------------------- */
+
+/**
+ * 报名审核失败的专用文案。码源 = 后端 `biz-code.constant.ts` + handoff §2.1：
+ * - 21030 `ACTIVITY_REGISTRATION_STATUS_INVALID`：报名状态不允许——v0.44 起并发审批
+ *   只有一个赢家，输家就落在这里（UX 十条第 5 条：说「已被他人处理」并刷新，不静默重试）
+ * - 20126 / 20124：活动本身不允许再通过报名（草稿 / 已取消·已完结·已结束）——
+ *   由 `activityBizErrorMessage` 统一翻译，两处文案不各写一份
+ */
+export function registrationReviewErrorMessage(
+  error: unknown,
+  fallback: string
+): string {
+  const data = (
+    error as { response?: { data?: { code?: unknown; message?: string } } }
+  )?.response?.data;
+  if (Number(data?.code) === 21030)
+    return "这条报名刚被其他人处理过（21030），当前状态已经变了；列表已刷新，请按最新状态再决定";
+  return activityBizErrorMessage(error, fallback);
+}

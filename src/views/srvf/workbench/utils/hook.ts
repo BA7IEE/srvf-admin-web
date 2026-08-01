@@ -16,14 +16,16 @@ import {
 import {
   approveRegistration,
   rejectRegistration,
-  cancelRegistration
+  cancelRegistration,
+  registrationReviewErrorMessage
 } from "@/api/srvf-registration";
 import {
   approveAttendanceSheet,
   rejectAttendanceSheet,
   finalApproveAttendanceSheet,
   finalRejectAttendanceSheet,
-  finalReviewErrorMessage
+  finalReviewErrorMessage,
+  firstReviewErrorMessage
 } from "@/api/srvf-attendance";
 import { useSrvfDictStoreHook } from "@/store/modules/srvfDict";
 import { resolveLabelMap } from "@/api/srvf-meta";
@@ -209,9 +211,11 @@ export function useApprovalRegistrations() {
           message("已通过", { type: "success" });
           onSearch();
         } catch (error: any) {
-          message(bizErrorMessage(error, "审核通过失败"), {
+          message(registrationReviewErrorMessage(error, "审核通过失败"), {
             type: "error"
           });
+          // 并发审批的输家（21030）状态已变：重拉一次，别让用户对着过期行再点
+          onSearch();
         }
       })
       .catch(() => {});
@@ -243,9 +247,11 @@ export function useApprovalRegistrations() {
           message("已拒绝", { type: "success" });
           onSearch();
         } catch (error: any) {
-          message(bizErrorMessage(error, "审核拒绝失败"), {
+          message(registrationReviewErrorMessage(error, "审核拒绝失败"), {
             type: "error"
           });
+          // 同上：并发冲突时重拉
+          onSearch();
         }
       })
       .catch(() => {});
@@ -464,9 +470,11 @@ export function useApprovalAttendance() {
           message("已一级通过", { type: "success" });
           onSearch();
         } catch (error: any) {
-          message(bizErrorMessage(error, "一级通过失败"), {
+          message(firstReviewErrorMessage(error, "一级通过失败"), {
             type: "error"
           });
+          // 失败可能是并发审批的输家（22030）：状态已被他人改过，重拉一次让界面回到真实状态
+          onSearch();
         }
       })
       .catch(() => {});
@@ -496,9 +504,11 @@ export function useApprovalAttendance() {
           message("已一级驳回", { type: "success" });
           onSearch();
         } catch (error: any) {
-          message(bizErrorMessage(error, "一级驳回失败"), {
+          message(firstReviewErrorMessage(error, "一级驳回失败"), {
             type: "error"
           });
+          // 同上：并发冲突时重拉，避免用户对着过期状态再点一次
+          onSearch();
         }
       })
       .catch(() => {});

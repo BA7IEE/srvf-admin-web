@@ -59,7 +59,7 @@ export type AuditLogDetail = AuditLogItem & { context: AuditLogContext };
 
 /**
  * 审计记录详情 `GET /api/system/v1/audit-logs/{id}`（rbac: `audit-log.read.entry`）。
- * ADMIN 越级查 SUPER_ADMIN 操作记录 → 403/14101；不存在 → 404/14001（消息均已够清楚,不另映射）。
+ * 越范围查 → 403/14101；不存在 → 404/14001。
  * 列表已带同款 `context` 字段，本端点用于"点开某一行单独复核"场景（重新拉一次而非复用列表内存态）。
  */
 export const getAuditLogDetail = (id: string) =>
@@ -67,3 +67,21 @@ export const getAuditLogDetail = (id: string) =>
     "get",
     `/api/system/v1/audit-logs/${id}`
   );
+
+/**
+ * 审计日志读取失败的专用文案。
+ * 读范围策略（后端 `audit-log-read-scope.policy.ts`）：SUPER_ADMIN 见全部；
+ * 其余通过 RBAC 的账号只见「本人操作」或「操作时角色快照为 USER」的记录。
+ * 越范围取详情 → 14101，属于设计内的范围外，不是权限配置漏配。
+ */
+export function auditLogErrorMessage(error: unknown, fallback: string): string {
+  const data = (
+    error as { response?: { data?: { code?: unknown; message?: string } } }
+  )?.response?.data;
+  const code = Number(data?.code);
+  if (code === 14101)
+    return "无权查看这条审计记录（14101）：除超级管理员外，只能看自己的操作和普通用户的操作";
+  if (code === 14001)
+    return "这条审计记录不存在（14001），可能列表已过期，请刷新后重试";
+  return data?.message ?? fallback;
+}

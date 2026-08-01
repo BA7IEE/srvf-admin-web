@@ -1,4 +1,5 @@
 import { http } from "@/utils/http";
+import { bizErrorMessage } from "@/api/srvf-error";
 
 type Envelope<T> = { code: number; message: string; data: T };
 type PageResult<T> = {
@@ -22,6 +23,12 @@ export type ActivityItem = {
   genderRequirementCode: string | null;
   registrationDeadline: string | null;
   statusCode: string;
+  /**
+   * 按当前时间派生的阶段(后端算,前端直读不自算)。
+   * 与 `statusCode` 是**两根轴**:`statusCode` 是生命周期(draft/published/completed/cancelled),
+   * `phase` 只讲时间(活动还没开始 / 正在进行 / 已经结束)。判断「该提醒去完结了」用 `phase === "ended"`。
+   */
+  phase: "upcoming" | "ongoing" | "ended";
   isPublicRegistration: boolean;
   requiresInsurance: boolean;
   coverImageUrl: string | null;
@@ -199,13 +206,46 @@ export const deleteActivity = (id: string) =>
   );
 
 /**
- * 发布活动 `PATCH /api/admin/v1/activities/{id}/publish`（rbac: `activity.publish.record`）。
- * 无 body；draft → published；非 draft → 后端 20030「活动当前状态不允许此操作」。
+ * 发布活动入参（后端 `PublishActivityDto`）。
+ * 后端 v0.50 起 **body 必填**，且 `requiresInsuranceConfirmed` 只接受 `true`——
+ * 缺失 / false 一律 400。语义是「操作者已当面核对过本活动的保险要求」，
+ * 因此调用侧必须由人在弹窗里显式勾选后才传，**不得写死默认值绕过核对**。
  */
-export const publishActivity = (id: string) =>
+export type PublishActivityBody = {
+  /** 确认已核对本活动保险要求；只能为 true */
+  requiresInsuranceConfirmed: true;
+};
+
+/**
+ * 发布活动 `PATCH /api/admin/v1/activities/{id}/publish`（rbac: `activity.publish.record`）。
+ * body 必填 `{requiresInsuranceConfirmed:true}`（v0.50 起；不传 = 400）。
+ * draft → published；非 draft → 后端 20030「活动当前状态不允许此操作」。
+ * 发布时后端复检 `endAt > now` 与报名截止未过。
+ */
+export const publishActivity = (id: string, body: PublishActivityBody) =>
   http.request<ActivityMutationResult>(
     "patch",
-    `/api/admin/v1/activities/${id}/publish`
+    `/api/admin/v1/activities/${id}/publish`,
+    { data: body }
+  );
+
+/**
+ * 完结活动 `POST /api/admin/v1/activities/{id}/complete`（rbac: `activity.complete.record`）。
+ * **无 body**。published → completed，且这是 v0.50 起的**唯一完结通路**——
+ * 考勤提交不再推进活动状态，没有这个按钮活动会永远停在「已发布」，
+ * 参与核对 / 评价率等一切 completed 依赖功能都够不到。
+ * 完结后仍可补录考勤，但不可新报名 / 审批通过。
+ *
+ * ⚠️ **两个前置条件，缺一个都返 20030**（本地实测 2026-08-01 确认；
+ * 状态机注释与 handoff 都只写了第一条，第二条只存在于 service 实现里）：
+ * 1. `statusCode === "published"`；
+ * 2. `phase === "ended"`——活动时间必须已经结束。
+ * 所以按钮的显示条件必须**两条都满足**，否则就是个点了必报错的死按钮。
+ */
+export const completeActivity = (id: string) =>
+  http.request<ActivityMutationResult>(
+    "post",
+    `/api/admin/v1/activities/${id}/complete`
   );
 
 /**
@@ -218,3 +258,28 @@ export const cancelActivity = (id: string, body: CancelActivityBody) =>
     `/api/admin/v1/activities/${id}/cancel`,
     { data: body }
   );
+
+/* ----------------------------- 活动域错误码 → 人话 ----------------------------- */
+
+/**
+ * 活动域业务码 → 人话文案（三段式:出了什么事 / 为什么 / 怎么办）。
+ * 码义来源 = 后端 handoff `admin-web.md` §2.1 与 live `/api/docs-json`，禁臆造。
+ * 与 `bizErrorMessage` 链式组合：`activityBizErrorMessage(error, "发布失败")`。
+ */
+export function activityBizErrorMessage(
+  error: unknown,
+  fallback: string
+): string {
+  const data = (
+    error as { response?: { data?: { code?: unknown; message?: string } } }
+  )?.response?.data;
+  const code = Number(data?.code);
+  if (code === 20030)
+    return "活动当前状态不允许这个操作（20030）：可能已被他人发布/取消/完结，请刷新后按最新状态重试";
+  if (code === 20122)
+    return "活动已取消（20122）：不能再新增或修改考勤记录；如需清理，请到考勤面处理既有单据";
+  if (code === 20124)
+    return "活动已取消、已完结或已结束（20124）：不能再通过报名；仍可驳回或取消残留的待审报名";
+  if (code === 20126) return "活动还是草稿（20126）：先发布活动，才能审批报名";
+  return bizErrorMessage(error, fallback);
+}

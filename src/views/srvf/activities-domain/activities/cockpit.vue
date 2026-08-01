@@ -12,10 +12,10 @@ import { useSrvfDictStoreHook } from "@/store/modules/srvfDict";
 import { SrvfDetailShell, SrvfFlowSteps, SrvfPermEmpty } from "@/srvf-kit";
 import {
   getActivity,
-  publishActivity,
   cancelActivity,
   type ActivityDetail
 } from "@/api/srvf-activity";
+import { openPublishDialog, openCompleteDialog } from "./utils/lifecycle";
 import { useRegistrations } from "../registrations/utils/hook";
 import { useAttendances } from "../attendances/utils/hook";
 import ReviewDetail from "../attendances/review-detail.vue";
@@ -87,9 +87,22 @@ const STATUS_TAG_TYPE: Record<
 const detail = ref<ActivityDetail | null>(null);
 const detailLoading = ref(false);
 
-// 发布/取消按真实 RBAC 码做按钮级显隐（与活动列表 hook 同码门；SUPER_ADMIN 全码故全可见）
+// 发布/取消/完结按真实 RBAC 码做按钮级显隐（与活动列表 hook 同码门；SUPER_ADMIN 全码故全可见）
 const canPublish = hasPerms("activity.publish.record");
 const canCancel = hasPerms("activity.cancel.record");
+const canComplete = hasPerms("activity.complete.record");
+
+/**
+ * 「完结活动」的显示条件 = 后端 complete 的两个前置条件（少判一条就是死按钮）：
+ * published + 活动时间已结束。`phase` 直读后端派生值，前端不自算 endAt < now。
+ * 活动一结束按钮就出现，正是最容易忘记完结、导致活动永远停在「已发布」的时刻。
+ */
+const showComplete = computed(
+  () =>
+    canComplete &&
+    detail.value?.statusCode === "published" &&
+    detail.value?.phase === "ended"
+);
 
 function statusText(code?: string) {
   return dict.label("activity_status", code);
@@ -113,26 +126,26 @@ async function fetchDetail() {
   }
 }
 
-/** 发布（draft → published；照活动列表 hook 写法：confirm + 复用 publishActivity；成功后重拉详情） */
+/** 发布（draft → published；与活动列表共用 openPublishDialog：保险核对勾选 + 必填 body；成功后重拉详情） */
 function handlePublish() {
   if (!detail.value) return;
-  ElMessageBox.confirm(
-    `确定要发布活动「${detail.value.title}」吗？发布后将对符合条件的用户可见。`,
-    "发布活动",
-    { confirmButtonText: "确定发布", cancelButtonText: "取消", type: "warning" }
-  )
-    .then(async () => {
-      try {
-        await publishActivity(activityId);
-        message("发布成功", { type: "success" });
-        fetchDetail();
-      } catch (error: any) {
-        message(bizErrorMessage(error, "发布失败"), {
-          type: "error"
-        });
-      }
-    })
-    .catch(() => {});
+  openPublishDialog(
+    {
+      id: activityId,
+      title: detail.value.title,
+      requiresInsurance: detail.value.requiresInsurance
+    },
+    fetchDetail
+  );
+}
+
+/** 完结（published → completed；唯一完结通路，与活动列表共用 openCompleteDialog；成功后重拉详情） */
+function handleComplete() {
+  if (!detail.value) return;
+  openCompleteDialog(
+    { id: activityId, title: detail.value.title },
+    fetchDetail
+  );
 }
 
 /** 取消（* → cancelled；照活动列表 hook 写法：prompt 原因可空 + 复用 cancelActivity；成功后重拉详情） */
@@ -252,6 +265,9 @@ onMounted(() => {
           @click="handlePublish"
         >
           发布
+        </el-button>
+        <el-button v-if="showComplete" type="primary" @click="handleComplete">
+          完结活动
         </el-button>
         <el-button
           v-if="canCancel && detail.statusCode !== 'cancelled'"

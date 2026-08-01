@@ -11,6 +11,7 @@
  *
  * 错误翻译目录（域码留各自域文件，不并入本表）：
  * - `finalReviewErrorMessage`  → src/api/srvf-attendance.ts（考勤终审码）
+ * - `activityBizErrorMessage`  → src/api/srvf-activity.ts（活动生命周期码 20030/20122/20124/20126）
  * - `membershipBizErrorMessage` → src/api/srvf-membership.ts（会籍冲突码）
  * - `permissionBizErrorMessage` → src/api/srvf-permission.ts（权限变更码）
  * - `roleBizErrorMessage`      → src/api/srvf-role.ts（角色变更码）

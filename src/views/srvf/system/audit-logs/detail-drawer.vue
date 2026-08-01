@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import { bizErrorMessage } from "@/api/srvf-error";
 import { ref, onMounted } from "vue";
 import dayjs from "dayjs";
 import { message } from "@/utils/message";
-import { getAuditLogDetail, type AuditLogDetail } from "@/api/srvf-audit-log";
+import {
+  getAuditLogDetail,
+  auditLogErrorMessage,
+  type AuditLogDetail
+} from "@/api/srvf-audit-log";
 
 defineOptions({
   name: "SrvfAuditLogDetailDrawer"
@@ -28,7 +31,7 @@ async function load() {
     const { code, data } = await getAuditLogDetail(props.id);
     if (code === 0) detail.value = data;
   } catch (error: any) {
-    message(bizErrorMessage(error, "查看审计记录详情失败"), {
+    message(auditLogErrorMessage(error, "查看审计记录详情失败"), {
       type: "error"
     });
   } finally {
