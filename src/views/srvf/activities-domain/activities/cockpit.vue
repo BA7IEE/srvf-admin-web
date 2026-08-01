@@ -19,10 +19,13 @@ import { openPublishDialog, openCompleteDialog } from "./utils/lifecycle";
 import { useRegistrations } from "../registrations/utils/hook";
 import { useAttendances } from "../attendances/utils/hook";
 import { useActivityPositions } from "./positions/utils/hook";
+import { useActivityFeedbacks } from "./feedbacks/utils/hook";
+import { useActivityReconciliation } from "./reconciliation/utils/hook";
 import ReviewDetail from "../attendances/review-detail.vue";
 
 import AddFill from "~icons/ri/add-circle-line";
 import EditPen from "~icons/ep/edit-pen";
+import InfoFilled from "~icons/ep/info-filled";
 
 defineOptions({
   name: "SrvfActivityCockpit"
@@ -183,9 +186,9 @@ function handleCancel() {
 }
 
 /* --------------- Tab：报名 / 考勤（复用既有 hook，activityId 由路由参数注入；无活动下拉） --------------- */
-const activeTab = ref<"registrations" | "attendances" | "positions">(
-  "registrations"
-);
+const activeTab = ref<
+  "registrations" | "attendances" | "positions" | "feedbacks" | "reconciliation"
+>("registrations");
 
 const {
   canRead: regCanRead,
@@ -250,6 +253,40 @@ const {
   handleDelete: posHandleDelete
 } = useActivityPositions(activityId);
 
+/* --------------- Tab：评价（只读；汇总卡 + 五星分布 + 实名列表） --------------- */
+const {
+  canRead: fbCanRead,
+  loading: fbLoading,
+  summary: fbSummary,
+  ratingBars: fbRatingBars,
+  feedbackRatePercent: fbRatePercent,
+  columns: fbColumns,
+  dataList: fbDataList,
+  pagination: fbPagination,
+  refresh: fbRefresh,
+  handleSizeChange: fbHandleSizeChange,
+  handleCurrentChange: fbHandleCurrentChange
+} = useActivityFeedbacks(activityId);
+
+/** 平均星级展示：无评价（avgRating 为 null）时出「—」，不要显示成 0 分 */
+function avgRatingFormatter(value: number | string) {
+  return fbSummary.value?.avgRating == null ? "—" : String(value);
+}
+
+/* --------------- Tab：参与核对（核对部分仅 completed 可调） --------------- */
+const {
+  canRead: recCanRead,
+  isCompleted: recIsCompleted,
+  setActivityStatus: recSetActivityStatus,
+  loading: recLoading,
+  summary: recSummary,
+  participants: recParticipants,
+  attendanceRatePercent: recAttendanceRate,
+  outcomeMeta: recOutcomeMeta,
+  columns: recColumns,
+  onSearch: recOnSearch
+} = useActivityReconciliation(activityId);
+
 onMounted(async () => {
   await fetchDetail();
   // 岗位时段的即时校验要拿活动时间窗做参照，故等详情到手后再喂给岗位 hook
@@ -258,6 +295,10 @@ onMounted(async () => {
   regOnSearch();
   attOnSearch();
   posOnSearch();
+  fbRefresh();
+  // 核对 hook 要先知道活动状态,才能决定发不发 reconciliation 那个 completed-only 端点
+  recSetActivityStatus(detail.value?.statusCode);
+  recOnSearch();
 });
 </script>
 
@@ -626,6 +667,202 @@ onMounted(async () => {
             code="attendance.read.sheet"
           />
         </el-tab-pane>
+
+        <el-tab-pane label="评价" name="feedbacks">
+          <template v-if="fbCanRead">
+            <el-card v-loading="fbLoading" shadow="never" class="mb-4">
+              <template #header>
+                <span>评价汇总</span>
+              </template>
+              <div class="fb-summary">
+                <el-statistic title="评价人数" :value="fbSummary?.count ?? 0" />
+                <!--
+                  无评价时 avgRating 是 null,必须显示占位而不是 0 分——
+                  「0 分」和「还没人评」是两个完全不同的意思。
+                  值本身走 value 属性(类型只收数字),占位靠 formatter 出——
+                  默认插槽覆盖不了它,会退回属性默认值 0。
+                -->
+                <el-statistic
+                  title="平均星级"
+                  :value="fbSummary?.avgRating ?? 0"
+                  :formatter="avgRatingFormatter"
+                />
+                <el-statistic
+                  title="评价率"
+                  :value="fbRatePercent"
+                  suffix="%"
+                />
+              </div>
+              <div class="fb-bars">
+                <div v-for="b in fbRatingBars" :key="b.rating" class="fb-bar">
+                  <span class="fb-bar__label">{{ b.rating }} 星</span>
+                  <el-progress
+                    :percentage="b.percent"
+                    :stroke-width="10"
+                    :show-text="false"
+                    class="fb-bar__track"
+                  />
+                  <span class="fb-bar__count">{{ b.count }}</span>
+                </div>
+              </div>
+              <div class="fb-hint">
+                评价率的分母是「已终审考勤的队员 ∪
+                已评价的队员」去重数，不是报名人数。
+              </div>
+            </el-card>
+
+            <PureTableBar
+              title="评价明细"
+              :columns="fbColumns"
+              @refresh="fbRefresh"
+            >
+              <template v-slot="{ size, dynamicColumns }">
+                <pure-table
+                  adaptive
+                  :adaptiveConfig="{ offsetBottom: 108 }"
+                  align-whole="center"
+                  table-layout="auto"
+                  :loading="fbLoading"
+                  :size="size"
+                  :data="fbDataList"
+                  :columns="dynamicColumns"
+                  :pagination="fbPagination"
+                  :header-cell-style="{
+                    background: 'var(--el-fill-color-light)',
+                    color: 'var(--el-text-color-primary)'
+                  }"
+                  @page-size-change="fbHandleSizeChange"
+                  @page-current-change="fbHandleCurrentChange"
+                >
+                  <template #empty>
+                    <el-empty
+                      description="还没有评价：活动完结并且考勤生效后，队员才能在小程序里评价"
+                    />
+                  </template>
+                  <template #rating="{ row }">
+                    <el-rate :model-value="row.rating" disabled />
+                  </template>
+                </pure-table>
+              </template>
+            </PureTableBar>
+          </template>
+          <SrvfPermEmpty
+            v-else
+            action="查看活动评价"
+            code="attendance.read.sheet"
+          />
+        </el-tab-pane>
+
+        <el-tab-pane label="参与核对" name="reconciliation">
+          <template v-if="recCanRead">
+            <el-card v-loading="recLoading" shadow="never" class="mb-4">
+              <template #header>
+                <span>参与合计</span>
+                <el-tooltip placement="top">
+                  <template #content>
+                    <div class="rec-tip">
+                      未到场 =
+                      报名已通过、但这个活动下一条考勤记录都没有（不论单据是否已审）。<br />
+                      已取消的报名不计入未到场。<br />
+                      临时参加 = 没有报名记录、却有考勤记录的人。<br />
+                      生效时长与贡献值只统计已终审的单据。
+                    </div>
+                  </template>
+                  <el-icon class="rec-tip__icon"><InfoFilled /></el-icon>
+                </el-tooltip>
+              </template>
+              <div class="fb-summary">
+                <el-statistic
+                  title="报名总数"
+                  :value="recSummary?.registrationCounts.total ?? 0"
+                />
+                <el-statistic
+                  title="已通过"
+                  :value="recSummary?.registrationCounts.pass ?? 0"
+                />
+                <el-statistic
+                  title="候补中"
+                  :value="recSummary?.registrationCounts.waitlisted ?? 0"
+                />
+                <el-statistic
+                  title="实际到场"
+                  :value="recSummary?.attendeeCount ?? 0"
+                />
+                <el-statistic
+                  title="未到场"
+                  :value="recSummary?.noShowCount ?? 0"
+                />
+                <el-statistic
+                  title="到场率"
+                  :value="recAttendanceRate"
+                  suffix="%"
+                />
+              </div>
+              <div v-if="recSummary" class="fb-bars">
+                <div class="fb-bar">
+                  <span class="fb-bar__label">生效时长</span>
+                  <span class="fb-bar__count">
+                    {{ recSummary.totalServiceHours }} 小时 · 贡献值
+                    {{ recSummary.totalContributionPoints }}
+                  </span>
+                </div>
+                <div class="fb-bar">
+                  <span class="fb-bar__label">时长分布</span>
+                  <span class="fb-bar__count">
+                    2 小时内 {{ recSummary.durationHistogram.under2Hours }} ·
+                    2~4 小时 {{ recSummary.durationHistogram.from2To4Hours }} ·
+                    4~8 小时 {{ recSummary.durationHistogram.from4To8Hours }} ·
+                    8 小时以上 {{ recSummary.durationHistogram.atLeast8Hours }}
+                  </span>
+                </div>
+              </div>
+            </el-card>
+
+            <!-- 核对名单只有完结活动才有:后端该端点仅 completed 可调 -->
+            <PureTableBar
+              v-if="recIsCompleted"
+              title="报名与实到核对"
+              :columns="recColumns"
+              @refresh="recOnSearch"
+            >
+              <template v-slot="{ size, dynamicColumns }">
+                <pure-table
+                  row-key="memberId"
+                  adaptive
+                  :adaptiveConfig="{ offsetBottom: 108 }"
+                  align-whole="center"
+                  table-layout="auto"
+                  :loading="recLoading"
+                  :size="size"
+                  :data="recParticipants"
+                  :columns="dynamicColumns"
+                  :header-cell-style="{
+                    background: 'var(--el-fill-color-light)',
+                    color: 'var(--el-text-color-primary)'
+                  }"
+                >
+                  <template #empty>
+                    <el-empty description="没有需要核对的人员" />
+                  </template>
+                  <template #outcome="{ row }">
+                    <el-tag :type="recOutcomeMeta(row.outcome).type">
+                      {{ recOutcomeMeta(row.outcome).text }}
+                    </el-tag>
+                  </template>
+                </pure-table>
+              </template>
+            </PureTableBar>
+            <el-empty
+              v-else
+              description="活动完结后，这里会列出每个人到场没到场"
+            />
+          </template>
+          <SrvfPermEmpty
+            v-else
+            action="查看参与核对"
+            code="attendance.read.sheet 与 activity-registration.read.record"
+          />
+        </el-tab-pane>
       </el-tabs>
     </SrvfDetailShell>
 
@@ -651,5 +888,63 @@ onMounted(async () => {
 .cockpit-header__name {
   font-size: 18px;
   font-weight: 600;
+}
+
+.fb-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 32px;
+  align-items: flex-start;
+}
+
+.fb-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 16px;
+}
+
+.fb-bar {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-size: 12px;
+}
+
+.fb-bar__label {
+  flex: 0 0 64px;
+  color: var(--el-text-color-secondary);
+}
+
+.fb-bar__track {
+  flex: 1;
+  min-width: 120px;
+}
+
+.fb-bar__count {
+  flex: 0 0 auto;
+  color: var(--el-text-color-regular);
+}
+
+.fb-hint {
+  margin-top: 12px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--el-text-color-secondary);
+}
+
+.fb-muted {
+  color: var(--el-text-color-secondary);
+}
+
+.rec-tip {
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.rec-tip__icon {
+  margin-left: 6px;
+  vertical-align: middle;
+  color: var(--el-text-color-secondary);
 }
 </style>
