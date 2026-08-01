@@ -83,6 +83,19 @@ export default [
         }
       },
       {
+        // 证书工作台（跨队员横扫，按 status 找该核验/快到期的证）。与队员档案的证书 tab
+        // 是互补的两种任务视图：沿轴下钻看一个人，横扫看全队某一状态。
+        path: "/srvf/members-domain/certificates",
+        name: "SrvfCertificateWorkbench",
+        component: () =>
+          import("@/views/srvf/members-domain/certificates-workbench/index.vue"),
+        meta: {
+          icon: "ri/award-line",
+          title: "证书管理",
+          auths: ["certificate.read.record"]
+        }
+      },
+      {
         // 队员作战室（实体详情页）：由队员列表行「管理」router.push 进入，非侧栏菜单项。
         // showLink:false 不进侧栏；activePath 指回队员列表，停留时「队员列表」菜单保持高亮。
         path: "/srvf/members-domain/members/:id",

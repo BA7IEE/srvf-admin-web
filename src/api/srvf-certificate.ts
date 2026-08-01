@@ -2,6 +2,12 @@ import { http } from "@/utils/http";
 
 /** 后端统一成功信封（失败为 HTTP 4xx，axios reject） */
 type Envelope<T> = { code: number; message: string; data: T };
+type PageResult<T> = {
+  items: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+};
 
 /**
  * 队员证书（后端 `CertificateResponseDto`）。字段以 live `/api/docs-json` 为准，勿前端臆造。
@@ -284,6 +290,135 @@ export const getCertificateStandardOptions = (params?: {
   http.request<Envelope<{ items: CertificateStandardOption[] }>>(
     "get",
     "/api/admin/v1/certificate-standards/options",
+    { params }
+  );
+
+/* --------------------------- 证书工作台（跨队员横扫） --------------------------- */
+
+/** 工作台行上的队员摘要（`WorkbenchMemberSummaryDto`；列表已内嵌，无需再查队员） */
+export type CertificateWorkbenchMember = {
+  id: string;
+  memberNo: string;
+  displayName: string;
+};
+
+/** 工作台行上的标准摘要（`WorkbenchStandardSummaryDto`；类别 / 等级从这里取，不读证书行） */
+export type CertificateWorkbenchStandard = {
+  id: string;
+  code: string;
+  name: string;
+  /** 类别字典 code（cert_type） */
+  categoryCode: string;
+  /** 等级字典 code（cert_sub_type） */
+  levelCode: string | null;
+};
+
+/**
+ * 工作台证书行（后端 `CertificateWorkbenchItemDto`）。
+ *
+ * 与队员轴读模型的两处关键差异：
+ * 1. **有 `effectiveStatusCode`**（队员轴没有）——展示态由后端按北京 today 现算，
+ *    不依赖每天 09:00 的到期 cron 是否跑过，所以状态列一律用它，不用前端自算过期。
+ * 2. 出参恒**不含完整编号 / 审核备注 / 审核人 / 图片 key**（只有掩码编号）。
+ */
+export type CertificateWorkbenchItem = {
+  id: string;
+  member: CertificateWorkbenchMember;
+  standard: CertificateWorkbenchStandard;
+  /** 发证机构（审核 / 录入时的名称快照） */
+  issuingOrg: string;
+  /** 证书编号掩码（形如 `SZ****01`；无编号为 null）。完整编号本端点不返 */
+  certNumberMasked: string | null;
+  issuedAt: string;
+  /** 最后有效日（null = 终身有效） */
+  expiredAt: string | null;
+  /** 持久状态（四态闭集，入库值） */
+  certStatusCode: string;
+  /**
+   * 当前有效展示状态：`certStatusCode=verified` 且 `expiredAt < 北京 today` 时为 `expired`，
+   * 其余等于 `certStatusCode`。**不是第五个持久状态**——不入库，每次读时按今天算。
+   */
+  effectiveStatusCode: string;
+  sourceCode: "ADMIN" | "RECRUITMENT";
+  /** 是否存在证据（布尔；取图走 evidence-urls 端点） */
+  evidenceAvailable: boolean;
+  createdAt: string;
+};
+
+/**
+ * 工作台筛选（列表与统计**完全同一套**非分页参数，两端必须传一样的值，否则卡片与表格对不上）。
+ *
+ * ⚠️ `q` **刻意不搜完整证书编号**——那是敏感数据，可搜即可枚举。
+ * 页面要说明「按编号搜索请进队员档案详情」，不要让人以为是搜不到。
+ */
+export type CertificateWorkbenchQuery = {
+  /** 模糊搜：队员编号 / 队员展示名 / 标准名称与 code / 发证机构 */
+  q?: string;
+  memberId?: string;
+  /** 按组织过滤（经队员的 active PRIMARY 归属；与判权可见范围取交集） */
+  organizationId?: string;
+  /** 组织过滤是否含下级（闭包展开） */
+  includeDescendants?: boolean;
+  standardCode?: string;
+  categoryCode?: string;
+  levelCode?: string;
+  /** 按**持久**状态过滤（注意不是展示态） */
+  certStatusCode?: "pending" | "verified" | "expired" | "rejected";
+  sourceCode?: "ADMIN" | "RECRUITMENT";
+  /** 发证日 ≥（含），纯日期 YYYY-MM-DD */
+  issuedFrom?: string;
+  /** 发证日 ≤（含） */
+  issuedTo?: string;
+  /** 到期日 ≥（含）；终身有效不匹配 */
+  expiresFrom?: string;
+  /** 到期日 ≤（含）；终身有效不匹配 */
+  expiresTo?: string;
+  page?: number;
+  pageSize?: number;
+};
+
+/**
+ * 全局证书工作台列表 `GET /api/admin/v1/certificates`
+ * （rbac: `certificate.read.record`）。跨队员横扫，可见组织范围先下推 SQL 再分页计数。
+ */
+export const getCertificateWorkbench = (params?: CertificateWorkbenchQuery) =>
+  http.request<Envelope<PageResult<CertificateWorkbenchItem>>>(
+    "get",
+    "/api/admin/v1/certificates",
+    { params }
+  );
+
+/**
+ * 工作台六计数器（后端 `CertificateWorkbenchStatsDto`）。
+ *
+ * ⚠️ `expired` = `certStatusCode=expired` **或**「verified 且 expiredAt < today」——
+ * 第二个分支是关键：到期 cron 每天 09:00 才翻态，只信持久状态会在它跑之前少算。
+ */
+export type CertificateWorkbenchStats = {
+  /** 待核验 */
+  pending: number;
+  /** 有效（verified 且〔无到期日 或 到期日 ≥ today〕） */
+  verified: number;
+  /** 已过期（含 verified 但已过到期日的） */
+  expired: number;
+  /** 已驳回 */
+  rejected: number;
+  /** 60 天内到期（verified 且到期日 ∈ [today, today+60]） */
+  expiringWithin60Days: number;
+  /** 终身有效（verified 且无到期日） */
+  permanent: number;
+};
+
+/**
+ * 工作台统计 `GET /api/admin/v1/certificates/stats`
+ * （rbac: `certificate.read.record`）。接受与列表**完全相同**的非分页过滤。
+ */
+export const getCertificateWorkbenchStats = (
+  params?: Omit<CertificateWorkbenchQuery, "page" | "pageSize">
+) =>
+  http.request<Envelope<CertificateWorkbenchStats>>(
+    "get",
+    "/api/admin/v1/certificates/stats",
     { params }
   );
 
