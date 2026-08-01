@@ -69,13 +69,6 @@ export type SupervisionAssignmentItem = {
   organization?: SupervisionExpandedOrganization;
 };
 
-/** 列出当前在任分管（数组,无分页,status=ACTIVE）`GET /api/admin/v1/supervision-assignments`（rbac: `supervision-assignment.read.record`）。 */
-export const getSupervisionAssignments = () =>
-  http.request<Envelope<SupervisionAssignmentItem[]>>(
-    "get",
-    "/api/admin/v1/supervision-assignments"
-  );
-
 /**
  * 分页总表查询入参。status 缺省 = 全部未软删含 REVOKED 历史
  * （与角色绑定总表"缺省仅生效"的口径相反 —— 与 memberships/position-assignments
@@ -104,13 +97,6 @@ export const getSupervisionAssignmentsPage = (params?: SupervisionListQuery) =>
     { params }
   );
 
-/** 单条分管详情 `GET /api/admin/v1/supervision-assignments/{id}`（rbac: `supervision-assignment.read.record`）。 */
-export const getSupervisionAssignment = (id: string) =>
-  http.request<Envelope<SupervisionAssignmentItem>>(
-    "get",
-    `/api/admin/v1/supervision-assignments/${id}`
-  );
-
 /** 建分管入参（后端 `CreateSupervisionAssignmentDto`；分管人队员必须 active，不要求持职务）。 */
 export type CreateSupervisionAssignmentBody = {
   supervisorMemberId: string;
@@ -137,17 +123,6 @@ export const createSupervisionAssignment = (
   http.request<Envelope<SupervisionAssignmentItem>>(
     "post",
     "/api/admin/v1/supervision-assignments",
-    { data: body }
-  );
-
-/** 改分管 `PATCH /api/admin/v1/supervision-assignments/{id}`（rbac: `supervision-assignment.update.record`）。 */
-export const updateSupervisionAssignment = (
-  id: string,
-  body: UpdateSupervisionAssignmentBody
-) =>
-  http.request<Envelope<SupervisionAssignmentItem>>(
-    "patch",
-    `/api/admin/v1/supervision-assignments/${id}`,
     { data: body }
   );
 

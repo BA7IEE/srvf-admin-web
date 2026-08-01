@@ -148,13 +148,6 @@ export const getPositionAssignments = (params?: PositionAssignmentListQuery) =>
     { params }
   );
 
-/** 任职详情 `GET /api/admin/v1/position-assignments/{id}`（rbac: `position-assignment.read.record`）。 */
-export const getPositionAssignment = (id: string) =>
-  http.request<Envelope<PositionAssignmentItem>>(
-    "get",
-    `/api/admin/v1/position-assignments/${id}`
-  );
-
 /**
  * 历史链（以 :id 锚定的人-组织-职务三元组全量历史,含该三元组下所有 ACTIVE/ENDED/REVOKED 记录）
  * `GET /api/admin/v1/position-assignments/{id}/history`（rbac: `position-assignment.read.history`）。

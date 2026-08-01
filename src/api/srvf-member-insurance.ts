@@ -32,6 +32,10 @@ export type MemberInsuranceItem = {
  * 某队员的自购保险列表（**无分页**，按 coverageEnd DESC，软删过滤）。
  * `GET /api/admin/v1/members/{memberId}/insurances`（rbac: `member-insurance.read.other`）。
  * admin 侧**只读**；本人侧（小程序）的增删改走 `app/v1/me/insurances`，admin 后台不调（踩坑 6）。
+ *
+ * **本仓已无消费方**——保险 tab 自 v0.64 起改用统一概览 `getMemberInsuranceOverview`
+ * （自购 + 队内两段一次取齐）。此函数刻意保留：它是这条端点唯一的封装，
+ * 「只要自购一段、不要队内段」的场景（如导出/对账）还会用到，删了得重新对一遍契约。
  */
 export const getMemberInsurances = (memberId: string) =>
   http.request<Envelope<MemberInsuranceItem[]>>(

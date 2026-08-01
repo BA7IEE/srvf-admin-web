@@ -21,6 +21,11 @@ import {
 } from "@/api/srvf-labels";
 import {
   getMember,
+  getMemberOffboardImpact,
+  offboardBlockingReasonText,
+  offboardMember,
+  memberOffboardBizErrorMessage,
+  type MemberOffboardImpact,
   grantMemberAccount,
   bindMemberAccount,
   unbindMemberAccount,
@@ -326,6 +331,165 @@ const {
   onSearch: insOnSearch
 } = useMemberInsurances(memberId);
 
+/* ----------------------------- 头部危险区：一键离队 ----------------------------- */
+const canOffboard = hasPerms("member.offboard.record");
+const offboarding = ref(false);
+
+/** 把预检结果画成人话清单（只列有内容的那几组，避免一屏全是「0 条」） */
+function impactLines(impact: MemberOffboardImpact) {
+  const lines: string[] = [];
+  const n = (arr: unknown[]) => arr.length;
+  if (n(impact.draftInitiatedActivities))
+    lines.push(`发起且仍是草稿的活动 ${n(impact.draftInitiatedActivities)} 个`);
+  if (n(impact.activeOwnerActivities))
+    lines.push(`仍担任负责人的活动 ${n(impact.activeOwnerActivities)} 个`);
+  if (n(impact.activeCollaboratorActivities))
+    lines.push(
+      `仍担任协办的活动 ${n(impact.activeCollaboratorActivities)} 个（仅供知情，不影响离队）`
+    );
+  if (n(impact.futureRegistrations))
+    lines.push(`当前或未来的报名 ${n(impact.futureRegistrations)} 条`);
+  if (n(impact.historicalRegistrationsWithEvidence))
+    lines.push(
+      `有参与记录的历史报名 ${n(impact.historicalRegistrationsWithEvidence)} 条（仅供知情，不影响离队）`
+    );
+  return lines;
+}
+
+/**
+ * 一键离队。
+ *
+ * 先调预检做**真预演**——后端会算出这个人还挂着哪些活动责任与报名，
+ * 并直接给出能不能离队（`canOffboard`）。不能离队时只展示原因、不给确定按钮，
+ * 而不是让人点下去再吃一个 15037 / 15038。
+ * 老后端没有这个预检端点时（404）退化成静态后果清单，仍可继续。
+ */
+async function handleOffboard() {
+  if (!canOffboard || !detail.value) return;
+
+  let impact: MemberOffboardImpact | null = null;
+  try {
+    const { code, data } = await getMemberOffboardImpact(memberId);
+    if (code === 0) impact = data;
+  } catch {
+    // 预检端点不可用时退化为静态后果清单，不阻断离队本身
+  }
+
+  const consequences = h("div", { class: "leading-6" }, [
+    impact && impactLines(impact).length
+      ? h("div", { class: "mb-2" }, [
+          h("p", { class: "font-medium" }, "这个人目前还挂着："),
+          h(
+            "ul",
+            { class: "mt-1 pl-4 list-disc text-xs" },
+            impactLines(impact).map(t => h("li", t))
+          )
+        ])
+      : null,
+    impact && !impact.canOffboard
+      ? h("div", { class: "offboard-block" }, [
+          h("p", { class: "font-medium" }, "现在还不能离队："),
+          h(
+            "ul",
+            { class: "mt-1 pl-4 list-disc text-xs" },
+            (impact.blockingReasons.length
+              ? impact.blockingReasons.map(offboardBlockingReasonText)
+              : ["后端未给出具体原因，请联系管理员"]
+            ).map(t => h("li", t))
+          ),
+          h(
+            "p",
+            { class: "mt-2 text-xs" },
+            "按上面每条的做法处理完，再回来办离队。"
+          )
+        ])
+      : h("div", {}, [
+          h("p", { class: "font-medium" }, "确认离队后会立刻发生："),
+          h("ul", { class: "mt-1 pl-4 list-disc text-xs" }, [
+            h("li", "队员状态置为停用"),
+            h("li", "结束全部在编的部门 / 小组归属"),
+            h("li", "停用关联的登录账号，并让已登录的会话立即失效"),
+            h("li", "撤销全部任职与分管"),
+            h("li", "结束直接授予的角色绑定")
+          ]),
+          h("p", { class: "mt-2 font-medium" }, "会保留："),
+          h("ul", { class: "mt-1 pl-4 list-disc text-xs" }, [
+            h("li", "全部历史记录：报名、考勤、贡献值、证书都不动")
+          ]),
+          h(
+            "p",
+            { class: "mt-2 text-xs" },
+            "注意：以后重新启用这名队员，只会恢复队员状态，归属、账号、任职不会自动回来，需要重新配。"
+          )
+        ])
+  ]);
+
+  if (impact && !impact.canOffboard) {
+    ElMessageBox.alert(consequences, "暂时不能离队", {
+      confirmButtonText: "知道了",
+      type: "warning"
+    }).catch(() => {});
+    return;
+  }
+
+  try {
+    await ElMessageBox.confirm(
+      consequences,
+      `一键离队 · ${detail.value.displayName}`,
+      {
+        confirmButtonText: "确定离队",
+        cancelButtonText: "再想想",
+        type: "warning"
+      }
+    );
+  } catch {
+    return;
+  }
+
+  offboarding.value = true;
+  try {
+    const { code, data } = await offboardMember(memberId);
+    if (code === 0) {
+      // 逐腿计数展示:哪几件事真发生了、各多少条。该操作幂等,失败可原样重试。
+      ElMessageBox.alert(
+        h("div", { class: "leading-6" }, [
+          h("p", "离队已完成，这次实际做了："),
+          h("ul", { class: "mt-1 pl-4 list-disc text-xs" }, [
+            h(
+              "li",
+              `队员状态：${data.memberDeactivated ? "已置为停用" : "本来就已停用，未改动"}`
+            ),
+            h("li", `结束在编归属：${data.membershipsEnded} 条`),
+            h(
+              "li",
+              `登录账号：${data.accountDisabled ? "已停用" : data.linkedUserId ? "本来就已停用" : "没有关联账号"}`
+            ),
+            h("li", `失效登录凭证：${data.refreshTokensRevoked} 条`)
+          ]),
+          data.residualActivePositionAssignments > 0 ||
+          data.residualActiveSupervisions > 0
+            ? h(
+                "p",
+                { class: "mt-2 text-xs offboard-residual" },
+                `注意：仍有 ${data.residualActivePositionAssignments} 条任职、${data.residualActiveSupervisions} 条分管没被收干净，请联系管理员核查。`
+              )
+            : null
+        ]),
+        "离队结果",
+        { confirmButtonText: "知道了", type: "success" }
+      ).catch(() => {});
+      fetchDetail();
+    }
+  } catch (error: any) {
+    message(memberOffboardBizErrorMessage(error, "离队失败"), {
+      type: "error",
+      duration: 8000
+    });
+  } finally {
+    offboarding.value = false;
+  }
+}
+
 /* --------------- Tab：紧急联系人（CRUD，复用 hook，memberId 由路由参数注入；无队员下拉） --------------- */
 const {
   canRead: ecCanRead,
@@ -425,6 +589,7 @@ const {
   canRead: contribCanRead,
   loading: contribLoading,
   summary: contribSummary,
+  participation: contribParticipation,
   onSearch: contribOnSearch
 } = useMemberContribution(memberId);
 
@@ -495,6 +660,16 @@ onMounted(() => {
           @click="grantWizardVisible = true"
         >
           授权
+        </el-button>
+        <!-- 危险区:一键离队(单独码门);预检与后果清单都在弹窗里 -->
+        <el-button
+          v-if="canOffboard && detail.status === 'ACTIVE'"
+          type="danger"
+          plain
+          :loading="offboarding"
+          @click="handleOffboard"
+        >
+          一键离队
         </el-button>
       </template>
       <template #overview>
@@ -1246,16 +1421,39 @@ onMounted(() => {
         <el-tab-pane label="贡献值" name="contribution">
           <template v-if="contribCanRead">
             <el-card v-loading="contribLoading" shadow="never">
-              <el-statistic
-                title="生涯累计贡献值"
-                :value="
-                  contribSummary ? Number(contribSummary.contributionPoints) : 0
-                "
-                :precision="2"
-              />
+              <template #header>参与汇总</template>
+              <!-- 四个数都由后端按已终审单据算好,前端只展示不再加总 -->
+              <div class="participation-summary">
+                <el-statistic
+                  title="生涯累计贡献值"
+                  :value="
+                    contribSummary
+                      ? Number(contribSummary.contributionPoints)
+                      : 0
+                  "
+                  :precision="2"
+                />
+                <el-statistic
+                  title="生效时长（小时）"
+                  :value="
+                    contribParticipation
+                      ? Number(contribParticipation.totalServiceHours)
+                      : 0
+                  "
+                  :precision="2"
+                />
+                <el-statistic
+                  title="参与活动数"
+                  :value="contribParticipation?.activityCount ?? 0"
+                />
+                <el-statistic
+                  title="考勤记录数"
+                  :value="contribParticipation?.recordCount ?? 0"
+                />
+              </div>
               <div class="contribution-hint">
-                后端实时算 capped 总分（approved 考勤 + 北京日封顶
-                1.5）,前端直接展示。
+                这几个数都只统计<strong>已终审</strong>的考勤单，由后端实时计算（贡献值按北京日封顶
+                1.5 计），前端直接展示、不再自行加总。
               </div>
             </el-card>
           </template>
@@ -1446,5 +1644,22 @@ onMounted(() => {
 .ins-muted {
   font-size: 12px;
   color: var(--el-text-color-secondary);
+}
+
+.participation-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 32px;
+}
+
+.offboard-block {
+  padding: 8px 10px;
+  margin-top: 4px;
+  background: var(--el-color-warning-light-9);
+  border-radius: 4px;
+}
+
+.offboard-residual {
+  color: var(--el-color-warning);
 }
 </style>

@@ -114,13 +114,6 @@ export const getMemberships = (params?: MembershipListQuery) =>
     { params }
   );
 
-/** 会籍详情 `GET /api/admin/v1/memberships/{id}`（rbac: `membership.list.record`）。 */
-export const getMembership = (id: string) =>
-  http.request<Envelope<MembershipItem>>(
-    "get",
-    `/api/admin/v1/memberships/${id}`
-  );
-
 /**
  * 归属数据体检（多主/悬空/停用组织;无分页,organizationId 可选限域）
  * `GET /api/admin/v1/memberships/conflicts`（rbac: `membership.list.record`）。

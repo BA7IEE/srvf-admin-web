@@ -117,10 +117,6 @@ export const getAttachmentsByOwner = (params: AttachmentByOwnerQuery) =>
     { params }
   );
 
-/** 附件详情 `GET .../attachments/{id}`（不存在/无权统一 13001，防信息泄漏）。`[rbac: attachment.view.*]` */
-export const getAttachment = (id: string) =>
-  http.request<Envelope<Attachment>>("get", `/api/admin/v1/attachments/${id}`);
-
 /** 更新附件元数据 `PATCH .../attachments/{id}`。`[rbac: attachment.update.*]` */
 export const updateAttachment = (id: string, body: UpdateAttachmentBody) =>
   http.request<Envelope<Attachment>>(
