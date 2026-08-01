@@ -89,6 +89,12 @@ const SECTIONS: SettingSection[] = [
         title: "贡献值规则",
         desc: "各类活动、各考勤角色按时长门槛的记分规则",
         path: "/srvf/base-data/contribution-rules"
+      },
+      {
+        title: "证书标准库",
+        desc: "队里认哪些证书、按什么规则认定（建证与招新审核的前提）",
+        path: "/srvf/base-data/certificate-standards",
+        auths: ["certificate-standard.read.record"]
       }
     ]
   },

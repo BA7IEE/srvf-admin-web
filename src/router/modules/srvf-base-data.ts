@@ -56,6 +56,19 @@ export default [
         }
       },
       {
+        path: "/srvf/base-data/certificate-standards",
+        name: "SrvfCertificateStandards",
+        component: () =>
+          import("@/views/srvf/base-data/certificate-standards/index.vue"),
+        meta: {
+          icon: "ri/award-line",
+          title: "证书标准库",
+          auths: ["certificate-standard.read.record"],
+          showLink: false,
+          activePath: "/srvf/settings-center"
+        }
+      },
+      {
         path: "/srvf/base-data/contribution-rules",
         name: "SrvfContributionRules",
         component: () =>
