@@ -41,7 +41,10 @@ const REG_STATUS_TAG: Record<
   pending: "warning",
   pass: "success",
   reject: "danger",
-  cancelled: "info"
+  cancelled: "info",
+  // 候补态（与活动轴报名表同色板）。工作台「候补中」卡下钻要落到这一项，
+  // 少了它下拉框会显示成空值、看着像筛坏了。
+  waitlisted: "primary"
 };
 
 /**
