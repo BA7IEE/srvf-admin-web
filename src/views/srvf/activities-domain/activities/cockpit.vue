@@ -212,6 +212,13 @@ const {
   handleApprove: regHandleApprove,
   handleReject: regHandleReject,
   handleCancel: regHandleCancel,
+  canReopen: regCanReopen,
+  selectedPendingIds: regSelectedPendingIds,
+  bulkSubmitting: regBulkSubmitting,
+  onSelectionChange: regOnSelectionChange,
+  handleBulkApprove: regHandleBulkApprove,
+  handleBulkReject: regHandleBulkReject,
+  handleReopen: regHandleReopen,
   handleExport: regHandleExport,
   handleSizeChange: regHandleSizeChange,
   handleCurrentChange: regHandleCurrentChange
@@ -238,6 +245,8 @@ const {
   handleReject: attHandleReject,
   handleFinalApprove: attHandleFinalApprove,
   handleFinalReject: attHandleFinalReject,
+  canReopenSheet: attCanReopenSheet,
+  handleReopenSheet: attHandleReopenSheet,
   handleDelete: attHandleDelete,
   openReviewDetail: attOpenReviewDetail,
   reviewDetailVisible: attReviewDetailVisible,
@@ -490,6 +499,20 @@ onMounted(async () => {
 
         <el-tab-pane label="报名" name="registrations">
           <template v-if="regCanRead">
+            <el-alert
+              class="mb-3"
+              type="info"
+              :closable="false"
+              show-icon
+              title="名额满了会自动转候补"
+            >
+              <span class="text-xs/5">
+                名额满时新报名会直接进入候补并排位；有人取消或活动扩容后，
+                <strong>后端会自动按位次递补</strong
+                >，不需要也没有「手动让某人直通」的操作。
+              </span>
+            </el-alert>
+
             <PureTableBar
               title="报名记录"
               :columns="regColumns"
@@ -510,6 +533,35 @@ onMounted(async () => {
                 <el-button v-if="regCanRead" @click="regHandleExport('all')">
                   导出全部
                 </el-button>
+                <!-- 批量审批:只对勾中的「待审核」行生效,逐条独立事务,允许部分成功 -->
+                <el-button
+                  v-if="regCanApprove"
+                  type="success"
+                  plain
+                  :loading="regBulkSubmitting"
+                  :disabled="regSelectedPendingIds.length === 0"
+                  @click="regHandleBulkApprove"
+                >
+                  批量通过{{
+                    regSelectedPendingIds.length
+                      ? `（${regSelectedPendingIds.length}）`
+                      : ""
+                  }}
+                </el-button>
+                <el-button
+                  v-if="regCanReject"
+                  type="danger"
+                  plain
+                  :loading="regBulkSubmitting"
+                  :disabled="regSelectedPendingIds.length === 0"
+                  @click="regHandleBulkReject"
+                >
+                  批量驳回{{
+                    regSelectedPendingIds.length
+                      ? `（${regSelectedPendingIds.length}）`
+                      : ""
+                  }}
+                </el-button>
               </template>
               <template v-slot="{ size, dynamicColumns }">
                 <pure-table
@@ -528,6 +580,7 @@ onMounted(async () => {
                     background: 'var(--el-fill-color-light)',
                     color: 'var(--el-text-color-primary)'
                   }"
+                  @selection-change="regOnSelectionChange"
                   @page-size-change="regHandleSizeChange"
                   @page-current-change="regHandleCurrentChange"
                 >
@@ -556,6 +609,17 @@ onMounted(async () => {
                       @click="regHandleReject(row)"
                     >
                       审核拒绝
+                    </el-button>
+                    <!-- 后悔药:仅已驳回的行给「退回待审」,单独码门 -->
+                    <el-button
+                      v-if="regCanReopen && row.statusCode === 'reject'"
+                      class="reset-margin"
+                      link
+                      type="primary"
+                      :size="size"
+                      @click="regHandleReopen(row)"
+                    >
+                      退回待审
                     </el-button>
                     <el-button
                       v-if="
@@ -683,6 +747,20 @@ onMounted(async () => {
                       @click="attHandleFinalReject(row)"
                     >
                       终审驳回
+                    </el-button>
+                    <!--
+                      撤回终审:仅已终审通过的单据;attendance.reopen.sheet 码
+                      biz-admin 不持有,故按码显隐而不是让人点了才被拒
+                    -->
+                    <el-button
+                      v-if="attCanReopenSheet && row.statusCode === 'approved'"
+                      class="reset-margin"
+                      link
+                      type="warning"
+                      :size="size"
+                      @click="attHandleReopenSheet(row)"
+                    >
+                      撤回终审
                     </el-button>
                     <el-button
                       v-if="attCanDelete && row.statusCode === 'pending'"

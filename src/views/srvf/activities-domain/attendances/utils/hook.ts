@@ -25,6 +25,7 @@ import {
   getAttendanceSheetReviewDetail,
   finalReviewErrorMessage,
   firstReviewErrorMessage,
+  reopenAttendanceSheet,
   type AttendanceSheetItem,
   type AttendanceSheetReviewDetail,
   type AttendanceRecordInputBody
@@ -51,7 +52,9 @@ const STATUS_TAG_TYPE: Record<
   pending_final_review: "warning",
   approved: "success",
   rejected: "danger",
-  final_rejected: "danger"
+  final_rejected: "danger",
+  // P6 责任闭环才产生的「退回修改」态,先做枚举兜底,避免显示成未知状态
+  returned: "warning"
 };
 
 /**
@@ -70,6 +73,11 @@ export function useAttendances(externalActivityId: string) {
   const canReject = hasPerms("attendance.reject.sheet");
   const canFinalApprove = hasPerms("attendance.final-approve.sheet");
   const canFinalReject = hasPerms("attendance.final-reject.sheet");
+  /**
+   * 撤回终审码。**biz-admin 不持有**——普通业务管理员看不到这个按钮，
+   * 所以必须按码显隐，不能只靠后端拒。
+   */
+  const canReopenSheet = hasPerms("attendance.reopen.sheet");
   const canDelete = hasPerms("attendance.delete.sheet");
   /** 提交 / 编辑写权限（后端真实 RBAC 码）。 */
   const canCreate = hasPerms("attendance.create.sheet");
@@ -695,6 +703,67 @@ export function useAttendances(externalActivityId: string) {
   }
 
   /** 终审驳回（pending_final_review → final_rejected；finalReviewNote 必填 → 弹必填输入框；后端拒绝弹其 message） */
+  /**
+   * 撤回终审（approved → pending）。
+   * records 原样保留，只清空一审 / 终审的责任字段；不发通知。
+   * 危险动作按 UX 十条第 4 条列清单：说清「会发生什么」与「什么会保留」。
+   */
+  function handleReopenSheet(row: AttendanceSheetItem) {
+    ElMessageBox.prompt(
+      `确定撤回「提交人 ${rowSubject(row)}」这张已终审的考勤单吗？请填写撤回原因（必填）。`,
+      "撤回终审",
+      {
+        confirmButtonText: "确定撤回",
+        cancelButtonText: "返回",
+        type: "warning",
+        inputType: "textarea",
+        inputPlaceholder: "撤回原因（必填；≤ 500）",
+        inputValidator: (val: string) => {
+          if (!val || !val.trim()) return "撤回原因为必填项";
+          if (val.length > 500) return "撤回原因不能超过 500 字";
+          return true;
+        }
+      }
+    )
+      .then(async ({ value }) => {
+        try {
+          await ElMessageBox.confirm(
+            h("div", { class: "leading-6" }, [
+              h("p", "撤回后："),
+              h("ul", { class: "mt-1 pl-4 list-disc text-xs" }, [
+                h("li", "单据回到「待一级审核」，需要重新走完一审和终审"),
+                h("li", "这批考勤的时长与贡献值会暂时回退，重新终审通过后恢复"),
+                h("li", "原一审人、终审人的审核记录会被清空")
+              ]),
+              h("p", { class: "mt-2 font-medium" }, "会保留："),
+              h("ul", { class: "mt-1 pl-4 list-disc text-xs" }, [
+                h("li", "单据里的考勤记录原样保留，不用重录")
+              ])
+            ]),
+            "撤回终审",
+            {
+              confirmButtonText: "确定撤回",
+              cancelButtonText: "再想想",
+              type: "warning"
+            }
+          );
+        } catch {
+          return;
+        }
+        try {
+          await reopenAttendanceSheet(row.id, { reason: value });
+          message("已撤回终审，单据回到待一级审核", { type: "success" });
+          onSearch();
+        } catch (error: any) {
+          message(finalReviewErrorMessage(error, "撤回终审失败"), {
+            type: "error"
+          });
+          onSearch();
+        }
+      })
+      .catch(() => {});
+  }
+
   function handleFinalReject(row: AttendanceSheetItem) {
     ElMessageBox.prompt(
       `确定终审驳回「提交人 ${rowSubject(row)}」的考勤单据吗？请填写终审驳回理由（必填）。`,
@@ -776,6 +845,7 @@ export function useAttendances(externalActivityId: string) {
     canReject,
     canFinalApprove,
     canFinalReject,
+    canReopenSheet,
     canDelete,
     loading,
     columns,
@@ -789,6 +859,7 @@ export function useAttendances(externalActivityId: string) {
     handleReject,
     handleFinalApprove,
     handleFinalReject,
+    handleReopenSheet,
     handleDelete,
     openReviewDetail,
     reviewDetailVisible,

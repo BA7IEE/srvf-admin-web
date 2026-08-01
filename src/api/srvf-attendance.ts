@@ -199,6 +199,31 @@ export const finalRejectAttendanceSheet = (
     { data: body }
   );
 
+/** 撤回终审入参（后端 `ReopenAttendanceSheetDto`；reason 必填，去空白后 1~500 字）。 */
+export type ReopenAttendanceSheetBody = {
+  /** 撤回终审原因（必填） */
+  reason: string;
+};
+
+/**
+ * 撤回已终审通过的考勤单
+ * `POST /api/admin/v1/attendance-sheets/{id}/reopen`（rbac: **`attendance.reopen.sheet`**）。
+ *
+ * approved → pending；**保留 records**，只清空一审 / 终审的责任字段；不发通知。
+ *
+ * ⚠️ 这个码 **biz-admin 不持有**——普通业务管理员看不到也点不了这个按钮，
+ * 所以入口必须按码显隐，不能只靠后端拒。
+ */
+export const reopenAttendanceSheet = (
+  id: string,
+  body: ReopenAttendanceSheetBody
+) =>
+  http.request<AttendanceSheetMutationResult>(
+    "post",
+    `/api/admin/v1/attendance-sheets/${id}/reopen`,
+    { data: body }
+  );
+
 /**
  * 软删考勤单据 `DELETE /api/admin/v1/attendance-sheets/{id}`
  * （rbac: `attendance.delete.sheet`）。

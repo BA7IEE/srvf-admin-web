@@ -75,6 +75,11 @@ const sheetFlow = computed(() => {
       return { steps, active: 1, status: "error" as const };
     case "final_rejected":
       return { steps, active: 2, status: "error" as const };
+    // returned = 退回修改。该状态由 P6 活动责任闭环产生,当前后端 rollout 未执行,
+    // 这里先做枚举兜底:万一读到也画在「一级审核」这一步并标为需修改,
+    // 而不是落进 default 显示成一张没走过任何流程的单子。
+    case "returned":
+      return { steps, active: 1, status: "error" as const };
     default:
       return { steps, active: 0, status: "process" as const };
   }
@@ -88,7 +93,9 @@ const SHEET_STATUS_TAG: Record<
   pending_final_review: "warning",
   approved: "success",
   rejected: "danger",
-  final_rejected: "danger"
+  final_rejected: "danger",
+  // P6 责任闭环才产生的「退回修改」态,先做枚举兜底
+  returned: "warning"
 };
 
 function fmt(t?: string | null) {
