@@ -1,24 +1,35 @@
 import { bizErrorMessage } from "@/api/srvf-error";
 import dayjs from "dayjs";
-import { ref, computed } from "vue";
+import { h, ref, computed } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessageBox } from "element-plus";
 import { message } from "@/utils/message";
+import { addDialog } from "@/components/ReDialog";
 import { hasPerms } from "@/utils/auth";
 import { useSrvfList } from "@/srvf-kit";
+import ProfileForm, { type ProfileFormModel } from "../profile-form.vue";
 import {
   getRecruitmentApplications,
   getRecruitmentApplication,
   markThreshold,
   evaluateApplication,
   resolveApplication,
+  updateRecruitmentApplication,
+  promoteSingleApplication,
+  recruitmentBizErrorMessage,
   getIdCardImageUrl,
+  type UpdateApplicationBody,
   APP_STATUS_LABEL,
   APP_STATUS_TAG,
   THRESHOLD_CODES,
+  RISK_LEVEL_LABEL,
+  RISK_LEVEL_TAG,
+  MANUAL_REVIEW_REASON_LABEL,
+  MANUAL_REVIEW_REASONS,
   type RecruitmentApplication,
   type MarkThresholdBody,
-  type ApplicationListQuery
+  type ApplicationListQuery,
+  type RiskLevel
 } from "@/api/srvf-recruitment";
 
 /** 可标门槛态(后端:仅 verified/pending_evaluation) */
@@ -27,6 +38,12 @@ const THRESHOLD_EDITABLE_STATUS = ["verified", "pending_evaluation"];
 const EVALUATE_STATUS = ["pending_evaluation"];
 /** 可人工 resolve 态(后端:manual_review / pending_verification / mismatch 卡死态) */
 const RESOLVE_STATUS = ["manual_review", "pending_verification", "mismatch"];
+/**
+ * 改资料禁入态：已发号 / 已拒 / 已撤销。
+ * 后端对 promoted 与已脱敏行一律 28041（回写 PII 与留存 SOP「已清不再触」冲突），
+ * rejected/withdrawn 是终态同理——这几类不给入口，免得点了才知道不行。
+ */
+const UPDATE_LOCKED_STATUS = ["promoted", "rejected", "withdrawn"];
 
 /**
  * @param cycleId 招新轮次 id（来自招新作战室路由参数）。报名按 cycleId 过滤,无页内轮次下拉。
@@ -38,9 +55,27 @@ export function useRecruitmentApplications(cycleId: string) {
   const canMarkThreshold = hasPerms("recruitment-application.mark.threshold");
   const canEvaluate = hasPerms("recruitment-application.evaluate.assessment");
   const canResolve = hasPerms("recruitment-application.resolve.manual");
+  /** 改资料与单人建档各自独立码：能看能审 ≠ 能改资料 ≠ 能建档 */
+  const canUpdate = hasPerms("recruitment-application.update.record");
+  const canPromoteSingle = hasPerms("recruitment-application.promote.single");
+  /** 正在建档的那一行（按钮 loading 用） */
+  const promotingId = ref("");
 
   /** statusCode 过滤（默认空 = 全部该轮报名） */
   const statusFilter = ref<string>("");
+  /**
+   * 人工队列三栏（默认空 = 不分栏、看全部）。
+   * 后端 v0.31 起就支持按 `riskLevel` 过滤，这里才把它接上。
+   */
+  const riskFilter = ref<RiskLevel | "">("");
+  /**
+   * 人工原因分组筛（默认空 = 不筛）。
+   * ⚠️ **后端列表端点没有 `manualReviewReason` 这个 query 参数**（实测 `/api/docs-json`
+   * 只有 page/pageSize/cycleId/statusCode/riskLevel 五个），所以这一项只能**在当前页内
+   * 前端过滤**。因此它筛的是「这一页里的」，不是全量——分页数字仍是后端的原始总数，
+   * 不去改 pagination.total 假装筛过（那会让翻页彻底对不上）。
+   */
+  const reasonFilter = ref<string>("");
 
   const {
     dataList,
@@ -54,11 +89,56 @@ export function useRecruitmentApplications(cycleId: string) {
     fetch: getRecruitmentApplications,
     buildParams: () => ({
       cycleId,
-      ...(statusFilter.value ? { statusCode: statusFilter.value } : {})
+      ...(statusFilter.value ? { statusCode: statusFilter.value } : {}),
+      ...(riskFilter.value ? { riskLevel: riskFilter.value } : {})
     }),
     errorMessage: "加载报名列表失败",
     canRead: canRead && Boolean(cycleId)
   });
+
+  /** 页内再按人工原因过滤（见 `reasonFilter` 的说明：后端不支持该 query）。 */
+  const visibleList = computed(() =>
+    reasonFilter.value
+      ? dataList.value.filter(
+          (r: RecruitmentApplication) =>
+            r.manualReviewReason === reasonFilter.value
+        )
+      : dataList.value
+  );
+
+  /** 三栏选项（含「全部」，作 segmented 用） */
+  const riskOptions = [
+    { value: "" as const, label: "全部" },
+    ...(
+      Object.keys(RISK_LEVEL_LABEL) as Array<keyof typeof RISK_LEVEL_LABEL>
+    ).map(v => ({ value: v, label: RISK_LEVEL_LABEL[v] }))
+  ];
+
+  const reasonOptions = [
+    { value: "", label: "全部人工原因" },
+    ...MANUAL_REVIEW_REASONS.map(v => ({
+      value: v as string,
+      label: MANUAL_REVIEW_REASON_LABEL[v]
+    }))
+  ];
+
+  /** 风险级展示元数据；null（未分级）走「—」不显示标签。 */
+  function riskMeta(level: string | null) {
+    if (!level) return null;
+    return {
+      text: RISK_LEVEL_LABEL[level as RiskLevel] ?? level,
+      type: RISK_LEVEL_TAG[level as RiskLevel] ?? ("info" as const)
+    };
+  }
+
+  /** 人工原因文案；未知值原样返回（后端加了新分类时不静默吞掉）。 */
+  function reasonText(reason: string | null) {
+    return reason ? (MANUAL_REVIEW_REASON_LABEL[reason] ?? reason) : "—";
+  }
+
+  function onRiskChange() {
+    onFilterChange();
+  }
 
   /** 详情 drawer（全 PII + 门槛开关）；详情走 getRecruitmentApplication(全显,读记审计) */
   const detailVisible = ref(false);
@@ -94,6 +174,13 @@ export function useRecruitmentApplications(cycleId: string) {
         isNonMainlandDocument ? "是" : "否"
     },
     { label: "状态", prop: "statusCode", minWidth: 120, slot: "statusCode" },
+    { label: "风险级", prop: "riskLevel", minWidth: 100, slot: "riskLevel" },
+    {
+      label: "人工原因",
+      prop: "manualReviewReason",
+      minWidth: 175,
+      formatter: ({ manualReviewReason }) => reasonText(manualReviewReason)
+    },
     {
       label: "门槛",
       prop: "thresholdsComplete",
@@ -140,6 +227,197 @@ export function useRecruitmentApplications(cycleId: string) {
   }
   function canDoResolve(row: RecruitmentApplication) {
     return canResolve && RESOLVE_STATUS.includes(row.statusCode);
+  }
+  /**
+   * 改资料可见性：终态（已发号 / 已拒 / 已撤销）不给入口——
+   * 后端对这些行一律 28041，给了按钮只会白点一次。
+   */
+  function canDoUpdate(row: RecruitmentApplication) {
+    return canUpdate && !UPDATE_LOCKED_STATUS.includes(row.statusCode);
+  }
+  /** 单人建档可见性：仅公示态可建（他态含已 promoted → 28041 幂等不重复建）。 */
+  function canDoPromoteSingle(row: RecruitmentApplication) {
+    return canPromoteSingle && row.statusCode === "publicity";
+  }
+
+  /** 身份组是否可改：仅人工复核态或非大陆证件记录（其余 → 28045）。 */
+  function identityEditable(row: RecruitmentApplication) {
+    return row.statusCode === "manual_review" || row.isNonMainlandDocument;
+  }
+
+  /**
+   * 由表单模型拼出 PATCH body——**这是掩码/派生防回写的最后一道闸**：
+   * - 身份组不可改时，四个身份字段一个都不发（发了就是 28045）；
+   * - 大陆记录的 birthDate/genderCode 恒不发（发了是 40000，不是被忽略）；
+   * - 值没变的字段不发（PATCH 三态：不传 = 保持原样）。
+   */
+  function buildProfilePatch(
+    row: RecruitmentApplication,
+    form: ProfileFormModel
+  ): UpdateApplicationBody {
+    const body: UpdateApplicationBody = {};
+    const put = (k: keyof UpdateApplicationBody, next: string, prev: unknown) =>
+      next !== (prev ?? "") && Object.assign(body, { [k]: next });
+
+    if (identityEditable(row)) {
+      put("realName", form.realName, row.realName);
+      put("idCardNumber", form.idCardNumber, row.idCardNumber);
+      // 仅非大陆记录能直改这两项；大陆记录恒由证件号派生
+      if (row.isNonMainlandDocument) {
+        put("birthDate", form.birthDate, "");
+        put("genderCode", form.genderCode, row.genderCode);
+      }
+    }
+    put("detailedAddress", form.detailedAddress, "");
+    put("cityDistrict", form.cityDistrict, row.cityDistrict);
+    put("sourceChannel", form.sourceChannel, "");
+    return body;
+  }
+
+  /**
+   * 打开改资料表单。
+   *
+   * 只收 id 不收行对象——发号预检与公示名单两张表的行是另一种形状（只有
+   * `applicationId` + 姓名），它们也要能开这个表单。数据一律现拉详情端点：
+   * 列表里的姓名/证件号是掩码，拿掩码回填再提交就是把 `***` 写回库里。
+   */
+  async function openProfileForm(applicationId: string) {
+    let full: RecruitmentApplication;
+    try {
+      const { code, data } = await getRecruitmentApplication(applicationId);
+      if (code !== 0) return;
+      full = data;
+    } catch (error: any) {
+      message(recruitmentBizErrorMessage(error, "加载报名详情失败"), {
+        type: "error"
+      });
+      return;
+    }
+
+    const model: ProfileFormModel = {
+      identityEditable: identityEditable(full),
+      isNonMainlandDocument: full.isNonMainlandDocument,
+      realName: full.realName ?? "",
+      idCardNumber: full.idCardNumber ?? "",
+      birthDate: "",
+      genderCode: full.genderCode ?? "",
+      detailedAddress: "",
+      cityDistrict: full.cityDistrict ?? "",
+      sourceChannel: "",
+      originalIdCardNumber: full.idCardNumber ?? ""
+    };
+
+    addDialog({
+      title: `修改资料 · ${rowSubject(full)}`,
+      width: "44%",
+      draggable: true,
+      closeOnClickModal: false,
+      contentRenderer: () => h(ProfileForm, { formInline: model }),
+      beforeSure: async (done: () => void) => {
+        const body = buildProfilePatch(full, model);
+        if (!Object.keys(body).length) {
+          message("没有改动任何字段", { type: "info" });
+          return;
+        }
+        try {
+          const res = await updateRecruitmentApplication(full.id, body);
+          if (res.code === 0) {
+            message("已保存", { type: "success" });
+            if (detailData.value?.id === full.id) detailData.value = res.data;
+            onSearch();
+            done();
+          }
+        } catch (error: any) {
+          message(recruitmentBizErrorMessage(error, "保存失败"), {
+            type: "error",
+            duration: 8000
+          });
+        }
+      }
+    });
+  }
+
+  /**
+   * 单人建档（批量发号跳过的行由此收尾）。
+   *
+   * 两条失败路径都要给出**下一步**，不能只报错：
+   * - `28047` 资料不齐 → 直接把改资料表单开出来，别让人自己去找入口；
+   * - `28046` 双缺双占 → 说清要申请人先自助换绑，后台这边建不了。
+   */
+  async function handlePromoteSingle(
+    applicationId: string,
+    subject: string,
+    /** 建档成功后额外要刷的东西（发号预检 / 公示名单 / 轮次统计由调用方传入）。 */
+    afterDone?: () => void
+  ) {
+    try {
+      await ElMessageBox.confirm(
+        h("div", { class: "leading-6" }, [
+          h("p", `确定给「${subject}」单独建档吗？`),
+          h("ul", { class: "mt-2 pl-4 list-disc text-xs" }, [
+            h("li", "会发一个永久编号，与批量发号共用同一号段、连续不跳号"),
+            h("li", "会建立队员档案与登录账号，并按既有规则派发通知"),
+            h("li", "报名状态转为「已发号」，敏感信息随即清理")
+          ]),
+          h(
+            "p",
+            { class: "mt-2 text-xs" },
+            "登录方式由系统择优决定：微信没被占用就用微信，否则用手机号。建完会告诉你用的哪个。"
+          )
+        ]),
+        "单人建档",
+        {
+          confirmButtonText: "确定建档",
+          cancelButtonText: "返回",
+          type: "warning"
+        }
+      );
+    } catch {
+      return;
+    }
+
+    promotingId.value = applicationId;
+    try {
+      const { code, data } = await promoteSingleApplication(applicationId);
+      if (code === 0) {
+        ElMessageBox.alert(
+          h("div", { class: "leading-6" }, [
+            h("p", `已为「${data.realName ?? subject}」建档完成。`),
+            h("ul", { class: "mt-2 pl-4 list-disc text-xs" }, [
+              h("li", `永久编号：${data.memberNo}`),
+              h(
+                "li",
+                `登录方式：${data.loginChannel === "wechat" ? "微信" : "手机号"}`
+              )
+            ]),
+            data.loginChannel === "phone"
+              ? h(
+                  "p",
+                  { class: "mt-2 text-xs" },
+                  "这个人的微信没能用作登录锚点（未绑定或已被占用），所以用手机号开的号——请转告本人用手机验证码登录。"
+                )
+              : null
+          ]),
+          "建档结果",
+          { confirmButtonText: "知道了", type: "success" }
+        ).catch(() => {});
+        onSearch();
+        afterDone?.();
+      }
+    } catch (error: any) {
+      const bizCode = Number(
+        (error as { response?: { data?: { code?: unknown } } })?.response?.data
+          ?.code
+      );
+      message(recruitmentBizErrorMessage(error, "建档失败"), {
+        type: "error",
+        duration: 8000
+      });
+      // 28047 = 资料不齐：直接把补录表单开出来，省得操作者自己找入口
+      if (bizCode === 28047 && canUpdate) openProfileForm(applicationId);
+    } finally {
+      promotingId.value = "";
+    }
   }
 
   /** 查看详情（drawer 内全 PII + 门槛开关）；走详情端点拿全显字段（读 PII 后端记审计） */
@@ -289,11 +567,21 @@ export function useRecruitmentApplications(cycleId: string) {
     canMarkThreshold,
     canEvaluate,
     canResolve,
+    canUpdate,
+    canPromoteSingle,
     loading,
     statusFilter,
     statusOptions,
+    riskFilter,
+    riskOptions,
+    reasonFilter,
+    reasonOptions,
+    riskMeta,
+    reasonText,
+    onRiskChange,
+    promotingId,
     columns,
-    dataList,
+    dataList: visibleList,
     pagination,
     statusMeta,
     detailVisible,
@@ -304,6 +592,10 @@ export function useRecruitmentApplications(cycleId: string) {
     canDoThreshold,
     canDoEvaluate,
     canDoResolve,
+    canDoUpdate,
+    canDoPromoteSingle,
+    openProfileForm,
+    handlePromoteSingle,
     openDetail,
     handleMarkThreshold,
     handleEvaluate,

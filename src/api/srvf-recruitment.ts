@@ -155,6 +155,20 @@ export type RecruitmentApplication = {
   ageGroup: string | null;
   cityDistrict: string | null;
   verifyOutcome: string | null;
+  /**
+   * 复核风险级（契约闭集 normal/high/system）——人工队列三栏分流用。
+   *
+   * ⚠️ **纪律：这是后台内部分诊标签，申请人侧永不暴露。**
+   * 任何对外出参（公开进度查询 / 通知短信 / 导出给申请人的材料）都不得带上它，
+   * 也不要在给申请人看的文案里转述「你被标为高风险」——这是我们内部排队用的，
+   * 不是对申请人的结论。
+   */
+  riskLevel: string | null;
+  /**
+   * 后台人工原因分类（契约闭集四值）——同上，内部标签，不对申请人暴露。
+   * 空值表示这条不是人工队列里的。
+   */
+  manualReviewReason: string | null;
   eliminationStage: string | null;
   hasIdCardImage: boolean;
   thresholdMarks: ThresholdMarks;
@@ -170,6 +184,8 @@ export type ApplicationListQuery = {
   pageSize?: number;
   cycleId?: string;
   statusCode?: string;
+  /** 人工队列三栏分流（S4b 是 v0.31 就有的能力，前端一直没接）。 */
+  riskLevel?: RiskLevel;
 };
 export type ApplicationListResult = Envelope<
   PageResult<RecruitmentApplication>
@@ -487,3 +503,158 @@ export const THRESHOLD_LABEL: Record<string, string> = {
   redCross: "红十字",
   bsafe: "BSAFE"
 };
+
+/* ============================================================================
+ * P4-1 · 人工队列三栏 + 改资料 + 单人建档
+ * ========================================================================== */
+
+/** 复核风险级（契约闭集；列表可按此过滤，构成人工队列三栏）。 */
+export type RiskLevel = "normal" | "high" | "system";
+
+/**
+ * 三栏文案。用「系统异常」而不是后端的 `system`——
+ * 这一栏是 OCR/核验通道自己出错，不是申请人有问题，文案上要能区分开。
+ */
+export const RISK_LEVEL_LABEL: Record<RiskLevel, string> = {
+  normal: "普通",
+  high: "高风险",
+  system: "系统异常"
+};
+
+export const RISK_LEVEL_TAG: Record<
+  RiskLevel,
+  "success" | "danger" | "warning"
+> = {
+  normal: "success",
+  high: "danger",
+  system: "warning"
+};
+
+/**
+ * 后台人工原因分类（契约闭集四值）。
+ * 每条都说清「是什么情况」，光看 code 名不知道该怎么处理。
+ */
+export const MANUAL_REVIEW_REASON_LABEL: Record<string, string> = {
+  ocr_mismatch_confirmed: "OCR 与填写不符（已确认）",
+  forgery_suspected: "疑似伪造证件",
+  system_ocr_error: "OCR 系统异常",
+  special_document: "特殊证件类型"
+};
+
+/** 人工原因四值（做分组筛下拉用，顺序即展示顺序）。 */
+export const MANUAL_REVIEW_REASONS = [
+  "ocr_mismatch_confirmed",
+  "forgery_suspected",
+  "system_ocr_error",
+  "special_document"
+] as const;
+
+/**
+ * admin 改报名资料入参（后端 `UpdateRecruitmentApplicationDto`，R1 白名单）。
+ *
+ * 两类字段的可改条件完全不同，别混着发：
+ * - **非身份字段**（detailedAddress / cityDistrict / sourceChannel /
+ *   emergencyContacts / profileExtra）恒可改。
+ * - **身份字段**（realName / idCardNumber / birthDate / genderCode）只在
+ *   `manual_review` 态**或**非大陆证件记录上可改；已 verified 的大陆记录 → `28045`。
+ *
+ * 另有两条派生权威纪律（传错不是「不生效」而是直接报错）：
+ * - 大陆记录的 `birthDate` / `genderCode` **恒由证件号派生**，直接传 → `40000`。
+ *   所以大陆记录的这两个输入框必须禁用，不能只是「不填」。
+ * - 大陆改 `idCardNumber` 会触发校验位 + 年龄复检（`28010`）+ 重新派生生日性别 +
+ *   同轮去重（`28003`）——表单要提前告诉操作者「改号会连带改生日与性别」。
+ *
+ * `phone` / `openid` **不在白名单**：换绑走申请人自助双验通道，admin 直改会绕过
+ * 验证链、破坏 H5 身份锚，所以这里没有这两个字段，也不要加。
+ */
+export type UpdateApplicationBody = {
+  realName?: string;
+  idCardNumber?: string;
+  birthDate?: string;
+  genderCode?: "male" | "female";
+  detailedAddress?: string;
+  cityDistrict?: string;
+  sourceChannel?: string;
+  emergencyContacts?: unknown[];
+  profileExtra?: Record<string, unknown>;
+};
+
+/**
+ * admin 改报名资料 `PATCH .../recruitment/applications/{id}`
+ * （rbac: `recruitment-application.update.record`）。
+ *
+ * 后端对 `statusCode + sensitivePurgedAt IS NULL` 走 CAS 写入，命中不为 1 即 `28041`
+ * ——也就是说「保存失败」可能是这条刚被发号或刚被留存清理清过，重试无用，要重新拉详情。
+ */
+export const updateRecruitmentApplication = (
+  id: string,
+  body: UpdateApplicationBody
+) =>
+  http.request<ApplicationResult>(
+    "patch",
+    `/api/admin/v1/recruitment/applications/${id}`,
+    { data: body }
+  );
+
+/** 单人建档结果（后端 `PromoteSingleResultDto`）。 */
+export type PromoteSingleResult = {
+  applicationId: string;
+  /** 新建 Member id */
+  memberId: string;
+  /** 永久编号 {YY}{NNN}，与批量发号共享同一原子号段、连续无空洞 */
+  memberNo: string;
+  realName: string | null;
+  /**
+   * 登录通道（锚点择优的结果）：openid 未被占用 → 微信；
+   * openid 缺/被占且 phone 未占用 → 手机。**这条要回显**——
+   * openid 被占时被迫走手机通道，不说清楚没人知道这个人该怎么登录。
+   */
+  loginChannel: "wechat" | "phone";
+};
+
+/**
+ * 单人手动建档 `POST .../recruitment/applications/{id}/promote-single`
+ * （rbac: `recruitment-application.promote.single`）。
+ *
+ * 批量发号跳过的行由此收尾。仅 `publicity` 态可建，其他态（含已 promoted 重跑）
+ * → `28041` 幂等零重复，不会建出第二个号。
+ */
+export const promoteSingleApplication = (id: string) =>
+  http.request<Envelope<PromoteSingleResult>>(
+    "post",
+    `/api/admin/v1/recruitment/applications/${id}/promote-single`
+  );
+
+/**
+ * 招新域错误码人话（三段式：出了什么事 / 为什么 / 怎么办）。
+ *
+ * 这些码全部对 live `/api/docs-json` 与后端 CHANGELOG 逐条核实过。注意 `28045` 与
+ * `40000` 是**两回事**：前者是「这条记录不让你改身份字段」，后者是「大陆记录的生日性别
+ * 根本不接受直传」——混成一句会让操作者以为换个记录就能改。
+ */
+export function recruitmentBizErrorMessage(
+  error: unknown,
+  fallback: string
+): string {
+  const data = (
+    error as { response?: { data?: { code?: unknown; message?: string } } }
+  )?.response?.data;
+  const code = Number(data?.code);
+  if (code === 28041)
+    return "这条报名的状态已经变了（28041）：可能刚被发号，或留存清理已清过敏感信息，此时不能再改。请关掉重新打开这条报名看最新状态";
+  if (code === 28003)
+    return "同一轮里已经有人用这个证件号报名了（28003）：请核对证件号是否输错，或先处理那条重复报名";
+  if (code === 28010)
+    return "改完证件号后年龄不在报名范围内（28010）：报名要求 18~60 周岁，请核对证件号是否输错";
+  if (code === 28042)
+    return "编号或登录账号撞车了（28042）：这次建档已整体回滚、没有留下半个号，请刷新后重试";
+  if (code === 28045)
+    return "这条记录已经通过证件核验，身份字段不可修改（28045）：姓名、证件号、生日、性别只能在人工复核态或非大陆证件记录上改。确需更正请走人工复核";
+  if (code === 28046)
+    return "这个人没有可用的登录方式（28046）：微信和手机号都已被别的账号占用，建了号也登不进来。请先让申请人自助换绑微信或手机，再来建档";
+  if (code === 28047)
+    return "资料还不齐，建不了档（28047）：非大陆证件的记录需要先补齐姓名、出生日期和性别，请先用「修改资料」补录";
+  if (code === 19010)
+    return "紧急联系人的关系填得不对（19010）：请从关系下拉里选一个，不要手输";
+  return data?.message ?? fallback;
+}

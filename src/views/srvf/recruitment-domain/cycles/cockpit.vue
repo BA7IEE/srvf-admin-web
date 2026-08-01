@@ -207,6 +207,13 @@ const {
   loading: appLoading,
   statusFilter: appStatusFilter,
   statusOptions: appStatusOptions,
+  riskFilter: appRiskFilter,
+  riskOptions: appRiskOptions,
+  reasonFilter: appReasonFilter,
+  reasonOptions: appReasonOptions,
+  riskMeta: appRiskMeta,
+  onRiskChange: appOnRiskChange,
+  promotingId: appPromotingId,
   columns: appColumns,
   dataList: appDataList,
   pagination: appPagination,
@@ -218,6 +225,12 @@ const {
   onFilterChange: appOnFilterChange,
   canDoEvaluate: appCanDoEvaluate,
   canDoResolve: appCanDoResolve,
+  canDoUpdate: appCanDoUpdate,
+  canDoPromoteSingle: appCanDoPromoteSingle,
+  canUpdate: appCanUpdate,
+  canPromoteSingle: appCanPromoteSingle,
+  openProfileForm: appOpenProfileForm,
+  handlePromoteSingle: appHandlePromoteSingle,
   openDetail: appOpenDetail,
   handleMarkThreshold: appHandleMarkThreshold,
   handleEvaluate: appHandleEvaluate,
@@ -369,6 +382,32 @@ onMounted(() => {
               @refresh="appOnSearch"
             >
               <template #buttons>
+                <!-- 人工队列三栏：分诊用的内部标签，不对申请人暴露 -->
+                <el-radio-group
+                  v-model="appRiskFilter"
+                  class="mr-2!"
+                  @change="appOnRiskChange"
+                >
+                  <el-radio-button
+                    v-for="opt in appRiskOptions"
+                    :key="opt.value"
+                    :value="opt.value"
+                  >
+                    {{ opt.label }}
+                  </el-radio-button>
+                </el-radio-group>
+                <el-select
+                  v-model="appReasonFilter"
+                  class="w-44! mr-2!"
+                  placeholder="按人工原因过滤"
+                >
+                  <el-option
+                    v-for="opt in appReasonOptions"
+                    :key="opt.value"
+                    :label="opt.label"
+                    :value="opt.value"
+                  />
+                </el-select>
                 <el-select
                   v-model="appStatusFilter"
                   class="w-40! mr-2!"
@@ -440,6 +479,17 @@ onMounted(() => {
                       :tag-dict="APP_STATUS_TAG"
                     />
                   </template>
+                  <template #riskLevel="{ row }">
+                    <el-tag
+                      v-if="appRiskMeta(row.riskLevel)"
+                      :type="appRiskMeta(row.riskLevel).type"
+                      effect="plain"
+                      size="small"
+                    >
+                      {{ appRiskMeta(row.riskLevel).text }}
+                    </el-tag>
+                    <span v-else>—</span>
+                  </template>
                   <template #operation="{ row }">
                     <el-button
                       class="reset-margin"
@@ -448,6 +498,31 @@ onMounted(() => {
                       @click="appOpenDetail(row)"
                     >
                       详情
+                    </el-button>
+                    <el-button
+                      v-if="appCanDoUpdate(row)"
+                      class="reset-margin"
+                      link
+                      :size="size"
+                      @click="appOpenProfileForm(row.id)"
+                    >
+                      修改资料
+                    </el-button>
+                    <el-button
+                      v-if="appCanDoPromoteSingle(row)"
+                      class="reset-margin"
+                      link
+                      type="warning"
+                      :size="size"
+                      :loading="appPromotingId === row.id"
+                      @click="
+                        appHandlePromoteSingle(
+                          row.id,
+                          row.realName ?? row.tempNo ?? row.id
+                        )
+                      "
+                    >
+                      单人建档
                     </el-button>
                     <el-button
                       v-if="row.hasIdCardImage"
@@ -580,6 +655,43 @@ onMounted(() => {
                 </el-tag>
               </template>
             </el-table-column>
+            <!-- 需手动建档的行直接给出路：改资料补录 → 单人建档 -->
+            <el-table-column
+              v-if="appCanPromoteSingle || appCanUpdate"
+              label="操作"
+              min-width="170"
+              fixed="right"
+            >
+              <template #default="{ row }">
+                <template v-if="row.needsManualBuild">
+                  <el-button
+                    v-if="appCanUpdate"
+                    link
+                    size="small"
+                    @click="appOpenProfileForm(row.applicationId)"
+                  >
+                    修改资料
+                  </el-button>
+                  <el-button
+                    v-if="appCanPromoteSingle"
+                    link
+                    type="warning"
+                    size="small"
+                    :loading="appPromotingId === row.applicationId"
+                    @click="
+                      appHandlePromoteSingle(
+                        row.applicationId,
+                        row.realName ?? row.applicationId,
+                        openPublicity
+                      )
+                    "
+                  >
+                    单人建档
+                  </el-button>
+                </template>
+                <span v-else>—</span>
+              </template>
+            </el-table-column>
           </el-table>
         </template>
         <el-empty v-else-if="!publicityLoading" description="暂无公示名单" />
@@ -689,6 +801,50 @@ onMounted(() => {
                 >
                   非大陆证件
                 </el-tag>
+              </template>
+            </el-table-column>
+            <!--
+              被跳过的行在这里就能收尾：缺资料先「修改资料」补录，齐了再「单人建档」。
+              这是批量发号 skip 项的唯一出路，放在预检表里最省事——不用再回列表找人。
+            -->
+            <el-table-column
+              v-if="appCanPromoteSingle || appCanUpdate"
+              label="操作"
+              min-width="170"
+              fixed="right"
+            >
+              <template #default="{ row }">
+                <template v-if="!row.willIssue">
+                  <el-button
+                    v-if="appCanUpdate"
+                    link
+                    size="small"
+                    @click="appOpenProfileForm(row.applicationId)"
+                  >
+                    修改资料
+                  </el-button>
+                  <el-button
+                    v-if="appCanPromoteSingle"
+                    link
+                    type="warning"
+                    size="small"
+                    :loading="appPromotingId === row.applicationId"
+                    @click="
+                      appHandlePromoteSingle(
+                        row.applicationId,
+                        row.realName ?? row.applicationId,
+                        () => {
+                          openPrecheck();
+                          fetchCycle();
+                          loadStats();
+                        }
+                      )
+                    "
+                  >
+                    单人建档
+                  </el-button>
+                </template>
+                <span v-else>—</span>
               </template>
             </el-table-column>
           </el-table>
