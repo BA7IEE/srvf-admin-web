@@ -76,8 +76,8 @@ function onToggle(code: ThresholdCode, val: boolean) {
       <el-descriptions-item label="城市/区">
         {{ app.cityDistrict ?? "—" }}
       </el-descriptions-item>
-      <el-descriptions-item label="是否外籍">
-        {{ app.isForeigner ? "是" : "否" }}
+      <el-descriptions-item label="非大陆证件">
+        {{ app.isNonMainlandDocument ? "是" : "否" }}
       </el-descriptions-item>
       <el-descriptions-item label="核验结果">
         {{ app.verifyOutcome ?? "—" }}

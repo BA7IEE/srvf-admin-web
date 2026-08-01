@@ -87,10 +87,11 @@ export function useRecruitmentApplications(cycleId: string) {
       formatter: ({ realName }) => realName ?? "—"
     },
     {
-      label: "外籍",
-      prop: "isForeigner",
-      minWidth: 80,
-      formatter: ({ isForeigner }) => (isForeigner ? "是" : "否")
+      label: "非大陆证件",
+      prop: "isNonMainlandDocument",
+      minWidth: 110,
+      formatter: ({ isNonMainlandDocument }) =>
+        isNonMainlandDocument ? "是" : "否"
     },
     { label: "状态", prop: "statusCode", minWidth: 120, slot: "statusCode" },
     {

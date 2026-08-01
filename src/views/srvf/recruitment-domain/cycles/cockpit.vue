@@ -548,7 +548,7 @@ onMounted(() => {
         <template v-if="publicityData">
           <div class="publicity-summary">
             {{ publicityData.cycleYear }} 年度 · 可发号
-            {{ publicityData.promotableCount }} 人 · 需手动建档（外籍）
+            {{ publicityData.promotableCount }} 人 · 需手动建档
             {{ publicityData.manualBuildCount }} 人
           </div>
           <el-table
@@ -565,9 +565,9 @@ onMounted(() => {
                 {{ row.proposedMemberNo ?? "—" }}
               </template>
             </el-table-column>
-            <el-table-column label="外籍" min-width="80">
+            <el-table-column label="非大陆证件" min-width="110">
               <template #default="{ row }">
-                {{ row.isForeigner ? "是" : "否" }}
+                {{ row.isNonMainlandDocument ? "是" : "否" }}
               </template>
             </el-table-column>
             <el-table-column label="需手动建档" min-width="100">
@@ -682,8 +682,12 @@ onMounted(() => {
                 >
                   缺性别
                 </el-tag>
-                <el-tag v-if="row.isForeigner" type="info" size="small">
-                  外籍
+                <el-tag
+                  v-if="row.isNonMainlandDocument"
+                  type="info"
+                  size="small"
+                >
+                  非大陆证件
                 </el-tag>
               </template>
             </el-table-column>
