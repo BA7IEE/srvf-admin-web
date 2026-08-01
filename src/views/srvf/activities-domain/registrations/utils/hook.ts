@@ -1,6 +1,6 @@
 import { bizErrorMessage } from "@/api/srvf-error";
 import dayjs from "dayjs";
-import { h, ref, reactive } from "vue";
+import { h, ref, reactive, computed } from "vue";
 import type { PaginationProps } from "@pureadmin/table";
 import { ElMessageBox } from "element-plus";
 import { deviceDetection, downloadByData } from "@pureadmin/utils";
@@ -20,14 +20,21 @@ import {
   createRegistration,
   exportRegistrations,
   registrationReviewErrorMessage,
+  bulkApproveRegistrations,
+  bulkRejectRegistrations,
+  reopenRegistration,
+  bulkFailureText,
+  REGISTRATION_BULK_MAX,
   type RegistrationItem,
-  type RegistrationExportScope
+  type RegistrationExportScope,
+  type BulkReviewRegistrationsResult
 } from "@/api/srvf-registration";
 import { useSrvfDictStoreHook } from "@/store/modules/srvfDict";
+import { getActivityPositions } from "@/api/srvf-activity-position";
 
 /**
  * 报名状态 code → tag 颜色（仅展示色；文案查 registration_status 字典，前端不臆造）。
- * code 取自契约 registration_status 闭集（pending / pass / reject / cancelled）。
+ * code 取自契约 registration_status 闭集（pending / pass / reject / cancelled / waitlisted）。
  */
 const STATUS_TAG_TYPE: Record<
   string,
@@ -36,7 +43,9 @@ const STATUS_TAG_TYPE: Record<
   pending: "warning",
   pass: "success",
   reject: "danger",
-  cancelled: "info"
+  cancelled: "info",
+  // v0.53 新增态:满员时新报名直接落这里,由后端自动递补
+  waitlisted: "primary"
 };
 
 /**
@@ -54,7 +63,11 @@ export function useRegistrations(externalActivityId: string) {
   const canApprove = hasPerms("activity-registration.approve.record");
   const canReject = hasPerms("activity-registration.reject.record");
   const canCancel = hasPerms("activity-registration.cancel.record");
-  const hasAnyRowAction = canApprove || canReject || canCancel;
+  /** 后悔药码：把已驳回的报名退回待审（与 approve/reject 是不同的码，单独门控） */
+  const canReopen = hasPerms("activity-registration.reopen.record");
+  const hasAnyRowAction = canApprove || canReject || canCancel || canReopen;
+  /** 批量审批可用性：任一批量动作有码即渲染多选列 */
+  const canBulk = canApprove || canReject;
   /** 代报名权限（工具栏按钮级显隐；需先选中活动才可代报名） */
   const canCreate = hasPerms("activity-registration.create.record");
   /** 共享字典标签解析器：报名状态 code → 中文（registration_status 字典） */
@@ -76,6 +89,10 @@ export function useRegistrations(externalActivityId: string) {
   });
 
   const columns: TableColumnList = [
+    // 有批量码才给多选列;没有批量动作时多勾选纯属噪音
+    ...(canBulk
+      ? [{ type: "selection" as const, align: "left" as const, width: 44 }]
+      : []),
     {
       label: "队员",
       prop: "memberDisplayName",
@@ -89,7 +106,22 @@ export function useRegistrations(externalActivityId: string) {
       minWidth: 140,
       formatter: ({ memberNo }) => memberNo ?? "—"
     },
+    {
+      // 无岗位活动恒 null,显示破折号即可;有岗位时这是审批的关键上下文
+      label: "岗位",
+      prop: "activityPosition",
+      minWidth: 120,
+      formatter: ({ activityPosition }) => activityPosition?.name ?? "—"
+    },
     { label: "状态", prop: "statusCode", minWidth: 110, slot: "statusCode" },
+    {
+      // 候补位次只有候补态才有;其余状态后端返 null,显示破折号
+      label: "候补位次",
+      prop: "waitlistPosition",
+      minWidth: 100,
+      formatter: ({ waitlistPosition }) =>
+        waitlistPosition == null ? "—" : `第 ${waitlistPosition} 位`
+    },
     {
       label: "报名时间",
       prop: "registeredAt",
@@ -165,6 +197,193 @@ export function useRegistrations(externalActivityId: string) {
   function handleCurrentChange(val: number) {
     pagination.currentPage = val;
     onSearch();
+  }
+
+  /** 该活动的岗位下拉（懒加载；空 = 这个活动没配岗位，代报名就不出岗位项） */
+  const positionOptions = ref<{ label: string; value: string }[]>([]);
+  let positionOptionsResolved = false;
+  async function ensurePositionOptions() {
+    if (positionOptionsResolved || !activityId.value) return;
+    positionOptionsResolved = true;
+    try {
+      const { code, data } = await getActivityPositions(activityId.value);
+      if (code === 0) {
+        positionOptions.value = data.map(p => ({
+          label: p.name,
+          value: p.activityPositionId
+        }));
+      }
+    } catch {
+      // 拉不到岗位就当没配岗位：表单不出岗位项，真必填时后端会用 21035 拦下
+    }
+  }
+
+  /* ----------------------------- 批量审批 ----------------------------- */
+
+  /** 表格多选到的行（清空时机：每次批量动作完成后 + 列表刷新） */
+  const selectedRows = ref<RegistrationItem[]>([]);
+  const bulkSubmitting = ref(false);
+  function onSelectionChange(rows: RegistrationItem[]) {
+    selectedRows.value = rows;
+  }
+  /** 只有待审核的报名才谈得上批量通过 / 驳回,其余状态选了也是白选 */
+  const selectedPendingIds = computed(() =>
+    selectedRows.value.filter(r => r.statusCode === "pending").map(r => r.id)
+  );
+
+  /**
+   * 批量审批结果对话框：**逐行**展示成功与失败。
+   *
+   * 后端逐条独立事务、允许部分成功，HTTP 200 不代表全过——
+   * 只弹一句「操作成功」是错的，会让人以为整批都通过了。
+   */
+  function showBulkResult(
+    action: "通过" | "驳回",
+    result: BulkReviewRegistrationsResult,
+    nameById: Map<string, string>
+  ) {
+    const okCount = result.succeeded.length;
+    const failCount = result.failed.length;
+    ElMessageBox.alert(
+      h("div", { class: "leading-6" }, [
+        h(
+          "p",
+          `批量${action}完成：成功 ${okCount} 条${failCount ? `，失败 ${failCount} 条` : ""}。`
+        ),
+        failCount
+          ? h("div", { class: "mt-2" }, [
+              h("p", { class: "font-medium" }, "以下这些没有成功："),
+              h(
+                "ul",
+                { class: "mt-1 pl-4 list-disc text-xs" },
+                result.failed.map(f =>
+                  h(
+                    "li",
+                    `${nameById.get(f.id) ?? f.id}：${bulkFailureText(f)}`
+                  )
+                )
+              ),
+              h(
+                "p",
+                { class: "mt-2 text-xs" },
+                "失败的这几条状态没变，处理完原因后可以重新选中再试一次。"
+              )
+            ])
+          : null
+      ]),
+      `批量${action}结果`,
+      { confirmButtonText: "知道了", type: failCount ? "warning" : "success" }
+    ).catch(() => {});
+  }
+
+  /** 批量通过 / 批量驳回共用流程（差别只在端点、确认文案与备注默认值） */
+  async function runBulkReview(action: "通过" | "驳回") {
+    if (!activityId.value) return;
+    const ids = selectedPendingIds.value;
+    if (ids.length === 0) {
+      message("请先勾选待审核的报名（其他状态不能批量审批）", {
+        type: "warning"
+      });
+      return;
+    }
+    if (ids.length > REGISTRATION_BULK_MAX) {
+      message(
+        `一次最多处理 ${REGISTRATION_BULK_MAX} 条，当前选了 ${ids.length} 条，请分批操作`,
+        { type: "warning" }
+      );
+      return;
+    }
+
+    let reviewNote = "";
+    try {
+      const r = await ElMessageBox.prompt(
+        `确定批量${action}选中的 ${ids.length} 条报名吗？${
+          action === "驳回"
+            ? "可填写统一驳回理由（留空后端默认写「批量驳回」）。"
+            : "可填写统一审核备注（可空）。"
+        }`,
+        `批量${action}`,
+        {
+          confirmButtonText: `确定${action}`,
+          cancelButtonText: "返回",
+          type: "warning",
+          inputType: "textarea",
+          inputPlaceholder:
+            action === "驳回"
+              ? "统一驳回理由（可空；≤ 500）"
+              : "统一审核备注（可空；≤ 500）",
+          inputValidator: (val: string) => {
+            if (val && val.length > 500) return "备注不能超过 500 字";
+            return true;
+          }
+        }
+      );
+      reviewNote = r.value ?? "";
+    } catch {
+      return;
+    }
+
+    const nameById = new Map(
+      selectedRows.value.map(r => [r.id, rowSubject(r)] as const)
+    );
+    bulkSubmitting.value = true;
+    try {
+      const body = { ids, ...(reviewNote ? { reviewNote } : {}) };
+      const { code, data } =
+        action === "通过"
+          ? await bulkApproveRegistrations(activityId.value, body)
+          : await bulkRejectRegistrations(activityId.value, body);
+      if (code === 0) showBulkResult(action, data, nameById);
+    } catch (error: any) {
+      message(registrationReviewErrorMessage(error, `批量${action}失败`), {
+        type: "error"
+      });
+    } finally {
+      bulkSubmitting.value = false;
+      selectedRows.value = [];
+      onSearch();
+    }
+  }
+
+  const handleBulkApprove = () => runBulkReview("通过");
+  const handleBulkReject = () => runBulkReview("驳回");
+
+  /**
+   * 退回待审（审批后悔药）：reject → pending，清空审核字段。
+   * 也用于解除被驳回队员的重新报名限制。
+   */
+  function handleReopen(row: RegistrationItem) {
+    ElMessageBox.confirm(
+      h("div", { class: "leading-6" }, [
+        h("p", `确定把「${rowSubject(row)}」的报名退回待审核吗？`),
+        h("ul", { class: "mt-2 pl-4 list-disc text-xs" }, [
+          h("li", "这条报名回到「待审核」，可以重新通过或驳回"),
+          h("li", "原来的审核人、审核时间与驳回理由会被清空"),
+          h("li", "该队员被驳回后的重新报名限制也一并解除"),
+          h("li", "本操作不会给队员发通知")
+        ])
+      ]),
+      "退回待审",
+      {
+        confirmButtonText: "确定退回",
+        cancelButtonText: "返回",
+        type: "warning"
+      }
+    )
+      .then(async () => {
+        if (!activityId.value) return;
+        try {
+          await reopenRegistration(activityId.value, row.id);
+          message("已退回待审核", { type: "success" });
+          onSearch();
+        } catch (error: any) {
+          message(registrationReviewErrorMessage(error, "退回待审失败"), {
+            type: "error"
+          });
+          onSearch();
+        }
+      })
+      .catch(() => {});
   }
 
   /** 行主语：显示名 → 编号 → id（与队员列同口径） */
@@ -312,7 +531,7 @@ export function useRegistrations(externalActivityId: string) {
       message("请先选择一个活动", { type: "warning" });
       return;
     }
-    await ensureMemberOptions();
+    await Promise.allSettled([ensureMemberOptions(), ensurePositionOptions()]);
     addDialog({
       title: "代报名",
       width: "40%",
@@ -322,8 +541,12 @@ export function useRegistrations(externalActivityId: string) {
       closeOnClickModal: false,
       sureBtnLoading: true,
       props: {
-        formInline: { memberId: "" } as RegistrationFormModel,
-        memberOptions: memberOptions.value
+        formInline: {
+          memberId: "",
+          activityPositionId: ""
+        } as RegistrationFormModel,
+        memberOptions: memberOptions.value,
+        positionOptions: positionOptions.value
       },
       contentRenderer: () => h(RegistrationForm, { ref: formRef }),
       beforeSure: (done, { options, closeLoading }) => {
@@ -335,14 +558,24 @@ export function useRegistrations(externalActivityId: string) {
             return;
           }
           try {
-            await createRegistration(activityId.value, {
-              memberId: curData.memberId
+            const created = await createRegistration(activityId.value, {
+              memberId: curData.memberId,
+              ...(curData.activityPositionId
+                ? { activityPositionId: curData.activityPositionId }
+                : {})
             });
-            message("代报名成功", { type: "success" });
+            // 满员时后端会把这条直接落成候补,要如实告诉操作者,别一律说「报名成功」
+            const pos = created?.data?.waitlistPosition;
+            message(
+              pos != null
+                ? `已加入候补（第 ${pos} 位）：名额已满，取消或扩容后会自动递补`
+                : "代报名成功",
+              { type: "success", duration: pos != null ? 6000 : 3000 }
+            );
             done();
             onSearch();
           } catch (error: any) {
-            message(bizErrorMessage(error, "代报名失败"), {
+            message(registrationReviewErrorMessage(error, "代报名失败"), {
               type: "error"
             });
             closeLoading();
@@ -374,6 +607,15 @@ export function useRegistrations(externalActivityId: string) {
     canRead,
     canApprove,
     canReject,
+    canReopen,
+    canBulk,
+    selectedRows,
+    selectedPendingIds,
+    bulkSubmitting,
+    onSelectionChange,
+    handleBulkApprove,
+    handleBulkReject,
+    handleReopen,
     canCancel,
     canCreate,
     loading,
