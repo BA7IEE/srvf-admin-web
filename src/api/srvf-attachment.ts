@@ -173,3 +173,23 @@ export async function uploadAttachment(
   if (confirmed.code !== 0) throw new Error("确认上传失败");
   return confirmed.data;
 }
+
+/**
+ * 附件域错误码人话（三段式）。
+ *
+ * `13016` 说的是**文件真实内容与声明的类型对不上**，不是「文件太大」也不是
+ * 「格式不支持」——最常见的成因是把文件改了个扩展名就上传。文案要点破这一点，
+ * 否则用户会反复换同一个文件重传。
+ */
+export function attachmentBizErrorMessage(
+  error: unknown,
+  fallback: string
+): string {
+  const data = (
+    error as { response?: { data?: { code?: unknown; message?: string } } }
+  )?.response?.data;
+  const code = Number(data?.code);
+  if (code === 13016)
+    return "文件内容与它的格式对不上（13016）：常见于把文件改了扩展名再上传。请用原始文件重新选择，别只改后缀";
+  return data?.message ?? fallback;
+}

@@ -254,6 +254,8 @@ const {
   canReject: attCanReject,
   canFinalApprove: attCanFinalApprove,
   canFinalReject: attCanFinalReject,
+  stateBlocked: attStateBlocked,
+  stateTip: attStateTip,
   loading: attLoading,
   statusFilter: attStatusFilter,
   keyword: attKeyword,
@@ -642,52 +644,130 @@ onMounted(() => {
                   </el-tag>
                 </template>
                 <template #operation="{ row }">
-                  <el-button
+                  <!--
+                    按钮态由后端逐条裁决：明确被拒才置灰并给出原因
+                    （「状态不允许」与「没权限」文案分开）；查不到就维持原判断，
+                    绝不因为这个增强接口挂了把按钮全灰掉。
+                  -->
+                  <el-tooltip
                     v-if="attCanApprove && row.statusCode === 'pending'"
-                    class="reset-margin"
-                    link
-                    type="success"
-                    :size="size"
-                    @click="attHandleApprove(row)"
+                    :content="attStateTip(row.id, 'attendance.approve.sheet')"
+                    :disabled="
+                      !attStateBlocked(row.id, 'attendance.approve.sheet')
+                    "
                   >
-                    一级通过
-                  </el-button>
-                  <el-button
+                    <span class="inline-block">
+                      <el-button
+                        class="reset-margin"
+                        link
+                        type="success"
+                        :size="size"
+                        :disabled="
+                          attStateBlocked(row.id, 'attendance.approve.sheet')
+                        "
+                        @click="attHandleApprove(row)"
+                      >
+                        一级通过
+                      </el-button>
+                    </span>
+                  </el-tooltip>
+                  <!--
+                    按钮态由后端逐条裁决：明确被拒才置灰并给出原因
+                    （「状态不允许」与「没权限」文案分开）；查不到就维持原判断，
+                    绝不因为这个增强接口挂了把按钮全灰掉。
+                  -->
+                  <el-tooltip
                     v-if="attCanReject && row.statusCode === 'pending'"
-                    class="reset-margin"
-                    link
-                    type="danger"
-                    :size="size"
-                    @click="attHandleReject(row)"
+                    :content="attStateTip(row.id, 'attendance.reject.sheet')"
+                    :disabled="
+                      !attStateBlocked(row.id, 'attendance.reject.sheet')
+                    "
                   >
-                    一级驳回
-                  </el-button>
-                  <el-button
+                    <span class="inline-block">
+                      <el-button
+                        class="reset-margin"
+                        link
+                        type="danger"
+                        :size="size"
+                        :disabled="
+                          attStateBlocked(row.id, 'attendance.reject.sheet')
+                        "
+                        @click="attHandleReject(row)"
+                      >
+                        一级驳回
+                      </el-button>
+                    </span>
+                  </el-tooltip>
+                  <!--
+                    按钮态由后端逐条裁决：明确被拒才置灰并给出原因
+                    （「状态不允许」与「没权限」文案分开）；查不到就维持原判断，
+                    绝不因为这个增强接口挂了把按钮全灰掉。
+                  -->
+                  <el-tooltip
                     v-if="
                       attCanFinalApprove &&
                       row.statusCode === 'pending_final_review'
                     "
-                    class="reset-margin"
-                    link
-                    type="success"
-                    :size="size"
-                    @click="attHandleFinalApprove(row)"
+                    :content="
+                      attStateTip(row.id, 'attendance.final-approve.sheet')
+                    "
+                    :disabled="
+                      !attStateBlocked(row.id, 'attendance.final-approve.sheet')
+                    "
                   >
-                    终审通过
-                  </el-button>
-                  <el-button
+                    <span class="inline-block">
+                      <el-button
+                        class="reset-margin"
+                        link
+                        type="success"
+                        :size="size"
+                        :disabled="
+                          attStateBlocked(
+                            row.id,
+                            'attendance.final-approve.sheet'
+                          )
+                        "
+                        @click="attHandleFinalApprove(row)"
+                      >
+                        终审通过
+                      </el-button>
+                    </span>
+                  </el-tooltip>
+                  <!--
+                    按钮态由后端逐条裁决：明确被拒才置灰并给出原因
+                    （「状态不允许」与「没权限」文案分开）；查不到就维持原判断，
+                    绝不因为这个增强接口挂了把按钮全灰掉。
+                  -->
+                  <el-tooltip
                     v-if="
                       attCanFinalReject &&
                       row.statusCode === 'pending_final_review'
                     "
-                    class="reset-margin"
-                    link
-                    type="danger"
-                    :size="size"
-                    @click="attHandleFinalReject(row)"
+                    :content="
+                      attStateTip(row.id, 'attendance.final-reject.sheet')
+                    "
+                    :disabled="
+                      !attStateBlocked(row.id, 'attendance.final-reject.sheet')
+                    "
                   >
-                    终审驳回
-                  </el-button>
+                    <span class="inline-block">
+                      <el-button
+                        class="reset-margin"
+                        link
+                        type="danger"
+                        :size="size"
+                        :disabled="
+                          attStateBlocked(
+                            row.id,
+                            'attendance.final-reject.sheet'
+                          )
+                        "
+                        @click="attHandleFinalReject(row)"
+                      >
+                        终审驳回
+                      </el-button>
+                    </span>
+                  </el-tooltip>
                   <el-button
                     class="reset-margin"
                     link

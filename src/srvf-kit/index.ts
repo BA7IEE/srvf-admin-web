@@ -9,3 +9,5 @@ export { default as SrvfFlowSteps } from "./components/SrvfFlowSteps.vue";
 export { useSrvfList } from "./composables/useSrvfList";
 export { fetchAllPages } from "./composables/fetchAllPages";
 export { useSrvfGlobalSearch } from "./composables/useSrvfGlobalSearch";
+export { useActionStates } from "./composables/useActionStates";
+export type { ActionStateView } from "./composables/useActionStates";

@@ -6,6 +6,7 @@ import type { PaginationProps } from "@pureadmin/table";
 import { ElMessageBox } from "element-plus";
 import { message } from "@/utils/message";
 import { hasPerms } from "@/utils/auth";
+import { useActionStates } from "@/srvf-kit";
 import { useMultiTagsStoreHook } from "@/store/modules/multiTags";
 import {
   getAllRegistrations,
@@ -340,6 +341,28 @@ export function useApprovalAttendance() {
   dict.ensureTypes(["attendance_sheet_status"]);
 
   const canRead = hasPerms("attendance.read.sheet");
+  /**
+   * 批量按钮态：把「有码但超范围」与「状态不允许」提前问清楚，
+   * 并让这两种情况在 tooltip 上区分开（前者找管理员，后者等状态流转）。
+   */
+  const {
+    load: loadStates,
+    isBlocked: stateBlocked,
+    blockTip: stateTip,
+    buildItems: buildStateItems
+  } = useActionStates();
+
+  /** 这一页四个动作各问一次（同一张单子四个按钮） */
+  const SHEET_ACTIONS = [
+    "attendance.approve.sheet",
+    "attendance.reject.sheet",
+    "attendance.final-approve.sheet",
+    "attendance.final-reject.sheet"
+  ];
+  function loadActionStates(sheetIds: string[]) {
+    loadStates(buildStateItems("attendance_sheet", sheetIds, SHEET_ACTIONS));
+  }
+
   const canApprove = hasPerms("attendance.approve.sheet");
   const canReject = hasPerms("attendance.reject.sheet");
   const canFinalApprove = hasPerms("attendance.final-approve.sheet");
@@ -424,6 +447,9 @@ export function useApprovalAttendance() {
           data.items.map(i => i.submitterUserId)
         );
         submitterLabels.value = { ...submitterLabels.value, ...resolved };
+        // 一次问清这一页按钮该亮该灰：hasPerms 答不了 scope 与状态机两件事，
+        // 由后端逐条裁决。失败/查不到一律降级为「不拦」，见 useActionStates 注释。
+        loadActionStates(data.items.map(i => i.id));
       }
     } catch (error: any) {
       message(bizErrorMessage(error, "加载待审考勤失败"), {
@@ -600,6 +626,8 @@ export function useApprovalAttendance() {
     canReject,
     canFinalApprove,
     canFinalReject,
+    stateBlocked,
+    stateTip,
     loading,
     statusFilter,
     keyword,

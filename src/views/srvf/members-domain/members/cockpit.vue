@@ -13,6 +13,7 @@ import { useRenderIcon } from "@/components/ReIcon/src/hooks";
 import { useSrvfDictStoreHook } from "@/store/modules/srvfDict";
 import { SrvfStatusTag, SrvfDetailShell, SrvfPermEmpty } from "@/srvf-kit";
 import GrantWizard from "@/views/srvf/components/grant-wizard.vue";
+import SrvfFormLabelTip from "@/views/srvf/components/form-label-tip.vue";
 import {
   MEMBERSHIP_STATUS_LABEL,
   MEMBERSHIP_STATUS_TAG,
@@ -1425,14 +1426,24 @@ onMounted(() => {
               <!-- 四个数都由后端按已终审单据算好,前端只展示不再加总 -->
               <div class="participation-summary">
                 <el-statistic
-                  title="生涯累计贡献值"
                   :value="
                     contribSummary
                       ? Number(contribSummary.contributionPoints)
                       : 0
                   "
                   :precision="2"
-                />
+                >
+                  <!--
+                    封顶规则放在数字旁边而不是只写在脚注里：看数的人会问
+                    「我干了一整天为什么只加 1.5」，答案要在他看数的地方。
+                  -->
+                  <template #title>
+                    <SrvfFormLabelTip
+                      label="生涯累计贡献值"
+                      tip="同一个北京日内，无论参加几场活动、干了多少小时，当天最多计 1.5 分。这里显示的是按此规则封顶后的累计值。"
+                    />
+                  </template>
+                </el-statistic>
                 <el-statistic
                   title="生效时长（小时）"
                   :value="

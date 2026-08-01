@@ -1,4 +1,5 @@
 import { bizErrorMessage } from "@/api/srvf-error";
+import { contentBizErrorMessage } from "@/api/srvf-content";
 import { reactive, ref } from "vue";
 import dayjs from "dayjs";
 import { ElMessageBox } from "element-plus";
@@ -10,6 +11,7 @@ import {
   getAttachmentsByOwner,
   updateAttachment,
   deleteAttachment,
+  attachmentBizErrorMessage,
   uploadAttachment,
   ACCESS_LEVEL_LABEL,
   ACCESS_LEVEL_TAG,
@@ -270,8 +272,10 @@ export function useAttachments() {
       pagination.currentPage = 1;
       await onSearch();
     } catch (error: any) {
-      message(error?.response?.data?.message ?? error?.message ?? "上传失败", {
-        type: "error"
+      // 13016（内容与声明格式不符）等附件域码要说清成因,不能裸抛后端 message
+      message(attachmentBizErrorMessage(error, "上传失败"), {
+        type: "error",
+        duration: 8000
       });
     } finally {
       uploading.value = false;
@@ -346,7 +350,11 @@ export function useAttachments() {
         await onSearch();
       }
     } catch (error: any) {
-      message(bizErrorMessage(error, "删除失败"), { type: "error" });
+      // 29031：附件正被封面/正文引用——后端不自动清引用,必须说清「先移除引用」
+      message(contentBizErrorMessage(error, "删除失败"), {
+        type: "error",
+        duration: 8000
+      });
     }
   }
 
