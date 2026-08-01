@@ -15,6 +15,7 @@ import {
   markGate,
   evaluateTeamJoinApplication,
   joinTeam,
+  teamJoinBizErrorMessage,
   TJ_APP_STATUS_LABEL,
   TJ_APP_STATUS_TAG,
   type TeamJoinApplication,
@@ -291,8 +292,10 @@ export function useTeamJoinApplications(cycleId: string) {
             done();
             onSearch();
           } catch (error: any) {
-            message(bizErrorMessage(error, "入队失败"), {
-              type: "error"
+            // 26031（入队日无有效保险）等入队域码要说清「查的是入队当天」
+            message(teamJoinBizErrorMessage(error, "入队失败"), {
+              type: "error",
+              duration: 8000
             });
             closeLoading();
           }

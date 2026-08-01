@@ -209,7 +209,8 @@ export const getRecruitmentApplication = (id: string) =>
 
 /** 标/清门槛入参（`MarkThresholdDto`）。 */
 export type MarkThresholdBody = {
-  thresholdCode: "patrol1" | "patrol2" | "training" | "redCross" | "bsafe";
+  /** 仅这三项可手标——redCross/bsafe 由证书申报审核派生，手传 40000（待 P7-4） */
+  thresholdCode: (typeof MANUAL_THRESHOLD_CODES)[number];
   completed: boolean;
 };
 /** 标/清门槛 `PATCH .../applications/{id}/thresholds`（rbac: `recruitment-application.mark.threshold`；幂等；仅 verified/pending_evaluation；末次完成自动→待综合评定）。 */
@@ -240,8 +241,31 @@ export const resolveApplication = (id: string, body: ResolveBody) =>
     { data: body }
   );
 
-export type IdCardImageUrl = { url: string; expiresAt: string };
-/** 取证件照短 TTL signed-URL `GET .../applications/{id}/id-card-image-url`（rbac: `recruitment-application.read.record`；L3,读图记审计）。 */
+/**
+ * 证件照 signed-URL 三图（后端 `IdCardImageUrlResponseDto`）。
+ *
+ * `url` 恒有；后两张**仅身份证鉴伪版且已入库**才非空，否则 null——
+ * 所以切换器要按有无动态显示，不能恒摆三个页签让人点到空图。
+ * 三图共用同一个 `expiresAt`。
+ */
+export type IdCardImageUrl = {
+  /** 原图 */
+  url: string;
+  /** 三图同一过期时刻 */
+  expiresAt: string;
+  /** 主体框裁剪图（鉴伪版才有） */
+  cropImageUrl: string | null;
+  /** 头像裁剪图（鉴伪版才有） */
+  portraitImageUrl: string | null;
+};
+/**
+ * 取证件照三图短 TTL signed-URL
+ * `GET .../applications/{id}/id-card-image-url`（L3，读图记审计）。
+ *
+ * ⚠️ rbac 是 **`recruitment-application.read.sensitive`**，不是列表那个 `read.record`
+ * ——2026-08-01 对 live 契约核实，此前本文件注释写错成读码。按钮必须按敏感码显隐，
+ * 否则只有读码的人会看到按钮、点了吃 403。
+ */
 export const getIdCardImageUrl = (id: string) =>
   http.request<Envelope<IdCardImageUrl>>(
     "get",
@@ -294,6 +318,12 @@ export type RecruitmentCycleStats = {
   threshold: RecruitmentStatsThreshold;
   evaluation: RecruitmentStatsEvaluation;
   issuance: RecruitmentStatsIssuance;
+  /**
+   * 已自助撤销数（v0.44 F6 终态）。
+   * **独立计数，不进任何待处理桶**——撤销不是待办也不是淘汰，
+   * 所以工作台上单独一格显示，不要加进「待处理」的任何一项里。
+   */
+  withdrawnCount: number;
 };
 
 /** 工作台聚合 stats `GET .../cycles/{id}/stats`（rbac: `recruitment-application.read.record`）。 */
@@ -423,7 +453,8 @@ export type ExportApplicationsFilter =
   | "pending-evaluation"
   | "publicity"
   | "promoted"
-  | "rejected";
+  | "rejected"
+  | "withdrawn";
 
 export const EXPORT_FILTER_LABEL: Record<ExportApplicationsFilter, string> = {
   all: "全部",
@@ -433,7 +464,8 @@ export const EXPORT_FILTER_LABEL: Record<ExportApplicationsFilter, string> = {
   "pending-evaluation": "待评定",
   publicity: "公示中",
   promoted: "已发号",
-  rejected: "已淘汰"
+  rejected: "已淘汰",
+  withdrawn: "已撤销报名"
 };
 
 /**
@@ -470,7 +502,9 @@ export const APP_STATUS_LABEL: Record<string, string> = {
   rejected: "未通过",
   pending_evaluation: "待综合评定",
   publicity: "公示中",
-  promoted: "已发永久编号"
+  promoted: "已发永久编号",
+  /** 申请人自助撤销（v0.44 F6）——是**终态但非淘汰**，不写淘汰阶段，也不进任何待处理桶 */
+  withdrawn: "已撤销报名"
 };
 
 /** 报名状态码 → tag 展示色。 */
@@ -485,16 +519,36 @@ export const APP_STATUS_TAG: Record<
   rejected: "danger",
   pending_evaluation: "warning",
   publicity: "primary",
-  promoted: "success"
+  promoted: "success",
+  withdrawn: "info"
 };
 
-/** 门槛码（后端 THRESHOLD_CODES）+ 中文。 */
+/**
+ * 五项入队门槛（展示顺序）。
+ * 注意：**只有前三项可以手工标记**，见 {@link MANUAL_THRESHOLD_CODES}。
+ */
 export const THRESHOLD_CODES = [
   "patrol1",
   "patrol2",
   "training",
   "redCross",
   "bsafe"
+] as const;
+
+/**
+ * 可**手工**标记的门槛（后端 `MarkThresholdDto` 的 enum，2026-08-01 实测核对）。
+ *
+ * ⚠️ 契约已收紧：急救资质（redCross）与 BSAFE **改成了证书申报审核结论的派生投影**，
+ * 手工传这两个 code 后端直接以 40000「门槛 code 非法」拒绝（实测证实）。
+ * 所以界面上这两项只读展示，不给开关——给了也是白点。
+ *
+ * 驱动这两项的「招新证书申报审核」面**待 P7-4**（证书标准库解冻后一步到位建，
+ * 不按已被移除的 v0.42 契约重复建设）。在那之前这两项只能看不能改。
+ */
+export const MANUAL_THRESHOLD_CODES = [
+  "patrol1",
+  "patrol2",
+  "training"
 ] as const;
 export const THRESHOLD_LABEL: Record<string, string> = {
   patrol1: "巡山①",

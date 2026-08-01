@@ -229,6 +229,7 @@ const {
   canDoPromoteSingle: appCanDoPromoteSingle,
   canUpdate: appCanUpdate,
   canPromoteSingle: appCanPromoteSingle,
+  canReadSensitive: appCanReadSensitive,
   openProfileForm: appOpenProfileForm,
   handlePromoteSingle: appHandlePromoteSingle,
   openDetail: appOpenDetail,
@@ -525,7 +526,7 @@ onMounted(() => {
                       单人建档
                     </el-button>
                     <el-button
-                      v-if="row.hasIdCardImage"
+                      v-if="row.hasIdCardImage && appCanReadSensitive"
                       class="reset-margin"
                       link
                       :size="size"
