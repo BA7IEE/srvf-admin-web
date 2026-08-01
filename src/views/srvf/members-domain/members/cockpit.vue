@@ -299,7 +299,9 @@ const {
   handleDelete: certHandleDelete,
   handleVerify: certHandleVerify,
   handleReject: certHandleReject,
-  qualCheckCertType,
+  qualCheckType,
+  qualCheckCode,
+  qualCriterionOptions,
   qualCheckLoading,
   qualCheckResult,
   checkQualification
@@ -766,15 +768,24 @@ onMounted(() => {
             <el-card shadow="never" class="mb-4">
               <template #header>资质核验</template>
               <div class="qual-check-row">
+                <!-- 判据两段：先选按大类还是按具体标准，再选具体判据 -->
+                <el-select v-model="qualCheckType" class="w-32!">
+                  <el-option label="按大类" value="category" />
+                  <el-option label="按标准" value="standard" />
+                </el-select>
                 <el-select
-                  v-model="qualCheckCertType"
+                  v-model="qualCheckCode"
                   filterable
                   clearable
-                  placeholder="选择证书大类"
+                  :placeholder="
+                    qualCheckType === 'category'
+                      ? '选择证书大类'
+                      : '选择证书标准'
+                  "
                   class="w-64!"
                 >
                   <el-option
-                    v-for="opt in dict.options('cert_type')"
+                    v-for="opt in qualCriterionOptions"
                     :key="opt.value"
                     :label="opt.label"
                     :value="opt.value"
@@ -783,7 +794,7 @@ onMounted(() => {
                 <el-button
                   type="primary"
                   :loading="qualCheckLoading"
-                  :disabled="!qualCheckCertType"
+                  :disabled="!qualCheckCode"
                   @click="checkQualification"
                 >
                   核验
@@ -793,11 +804,14 @@ onMounted(() => {
                     :type="qualCheckResult.qualified ? 'success' : 'danger'"
                     size="large"
                   >
-                    {{
-                      dict.label("cert_type", qualCheckResult.certTypeCode)
-                    }}：{{
-                      qualCheckResult.qualified ? "具备资质" : "不具备资质"
-                    }}
+                    {{ qualCheckResult.qualified ? "具备资质" : "不具备资质" }}
+                    <template v-if="qualCheckResult.qualified">
+                      （{{
+                        qualCheckResult.expiredAt
+                          ? `有效期至 ${qualCheckResult.expiredAt.slice(0, 10)}`
+                          : "终身有效"
+                      }}）
+                    </template>
                   </el-tag>
                 </template>
               </div>
@@ -840,11 +854,6 @@ onMounted(() => {
                   <template #certStatusCode="{ row }">
                     <el-tag :type="certStatusTagType(row.certStatusCode)">
                       {{ dict.label("cert_status", row.certStatusCode) }}
-                    </el-tag>
-                  </template>
-                  <template #isInternal="{ row }">
-                    <el-tag :type="row.isInternal ? 'warning' : 'info'">
-                      {{ row.isInternal ? "内部" : "外部" }}
                     </el-tag>
                   </template>
                   <template #operation="{ row }">
