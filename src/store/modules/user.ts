@@ -96,14 +96,19 @@ export const useUserStore = defineStore("pure-user", {
         // 身份 + 权限（两个 authed 端点并行取）
         const [meRes, permRes] = await Promise.all([
           getAdminMe(), // GET /api/admin/v1/me
-          getMyPermissions() // GET /api/system/v1/rbac/me/permissions
+          getMyPermissions() // GET /api/system/v1/authz/me/effective-permissions
         ]);
         const me = meRes.data;
         const perm = permRes.data;
         // 组装进 user store 期望形状并持久化。
         // roles 用「系统角色」(me.role) 驱动静态菜单粗粒度门控
-        //   （src/router/modules/srvf.ts 的 meta.roles 用的就是 SUPER_ADMIN/ADMIN），
-        //   并附带 RBAC 业务角色 code；真正的按钮级鉴权用 permissions[]（真实点格式码）。
+        //   （src/router/modules/srvf.ts 的 meta.roles 用的就是 SUPER_ADMIN/ADMIN）；
+        //   真正的按钮级鉴权用 permissions[]（真实点格式码）。
+        //
+        // 权限出口换到 authz/me/effective-permissions 后，响应里不再有 RBAC 业务角色
+        // (effectiveRoles)，故 roles 只剩系统角色。**门控不受影响**——全站 meta.roles
+        // 与设置中心的 roles 判断取值只有 SUPER_ADMIN / ADMIN，本就来自 me.role；
+        // 业务角色 code 过去只是附带进来在个人中心当标签展示。
         setToken({
           accessToken: t.accessToken,
           refreshToken: t.refreshToken,
@@ -112,9 +117,7 @@ export const useUserStore = defineStore("pure-user", {
           avatar: me.avatarKey ?? "",
           username: me.username,
           nickname: me.nickname ?? me.username,
-          roles: Array.from(
-            new Set([me.role, ...perm.effectiveRoles.map(r => r.code)])
-          ),
+          roles: [me.role],
           permissions: perm.permissions
         });
         return res;

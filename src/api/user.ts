@@ -47,13 +47,20 @@ export type AdminMeResult = ApiEnvelope<{
 }>;
 
 /**
- * `GET /api/system/v1/rbac/me/permissions` 的 `data`（后端 `MyPermissionsResponseDto`）。
+ * `GET /api/system/v1/authz/me/effective-permissions` 的 `data`
+ * （后端 `EffectivePermissionsResponseDto`）。
+ *
+ * 这是 3-call 登录第三腿的**新出口**。旧出口 `rbac/me/permissions` 只认直接绑定，
+ * 走职务派生 / 分管派生拿权限的干部（队长、部长、组长、副职、分管）在旧出口下
+ * 拿到的是空集合——登录后看到的是一个空菜单。新出口把「直接绑定 + 职务策略 + 分管」
+ * 三源合并后返回，故必须换。
+ *
+ * ⚠️ 与旧出口的形状差异：新出口**只返 `permissions`，不返 `effectiveRoles`**
+ * （见本文件 `getMyPermissions` 注释与 store 侧处理）。
  */
 export type MyPermissionsResult = ApiEnvelope<{
-  /** 真实点格式权限码（SUPER_ADMIN 返回全集）；前端 `v-auth`/`hasPerms` 直接 `includes` */
+  /** 三源合并、去重并按字典序排序的有效权限码（SUPER_ADMIN 返回全集） */
   permissions: Array<string>;
-  /** RBAC 业务角色（SUPER_ADMIN 可能为空数组） */
-  effectiveRoles: Array<{ code: string; displayName: string }>;
 }>;
 
 /** 登录 */
@@ -71,11 +78,21 @@ export const getAdminMe = () => {
   return http.request<AdminMeResult>("get", "/api/admin/v1/me");
 };
 
-/** 当前登录用户的 RBAC 权限码 + 业务角色 */
+/**
+ * 当前登录用户的**有效**权限码（3-call 登录第三腿）。
+ *
+ * 端点从 `rbac/me/permissions` 换到 `authz/me/effective-permissions`：
+ * 前者只算直接角色绑定，后者把直接绑定 + 职务策略 + 分管三源合并。
+ * 不换的话，靠职务 / 分管派生权限的干部登录后是空菜单。
+ *
+ * 新出口不再返 `effectiveRoles`（RBAC 业务角色列表）。`roles` 的**门控**用途
+ * 只依赖系统角色（`SUPER_ADMIN` / `ADMIN`，来自 `/api/admin/v1/me`），不受影响；
+ * 详见 `src/store/modules/user.ts` 组装 `roles` 处的说明。
+ */
 export const getMyPermissions = () => {
   return http.request<MyPermissionsResult>(
     "get",
-    "/api/system/v1/rbac/me/permissions"
+    "/api/system/v1/authz/me/effective-permissions"
   );
 };
 
