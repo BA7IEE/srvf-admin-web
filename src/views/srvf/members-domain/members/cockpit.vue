@@ -72,9 +72,9 @@ dict.ensureTypes(["member_grade"]);
  * 显式锚定默认激活 tab：EP el-tabs 无 v-model/default-value 时 currentName 默认 "0"，
  * 与所有具名 tab-pane 都不匹配 → 首屏所有 pane 被 v-show 隐藏，点一下才显示。
  * 本页 tab-pane 恒渲染（权限门在 pane 内部 template v-if 上，无权时退化为空态提示），
- * 故初始化为第一个 tab「证书」即可稳定落屏。
+ * 故必须显式给一个真实存在的 tab 名才能稳定落屏。
  */
-const activeTab = ref<
+type CockpitTab =
   | "certificates"
   | "insurances"
   | "emergency-contacts"
@@ -85,8 +85,32 @@ const activeTab = ref<
   | "account"
   | "registrations-history"
   | "attendance-records"
-  | "contribution"
->("profile");
+  | "contribution";
+
+const COCKPIT_TABS: CockpitTab[] = [
+  "certificates",
+  "insurances",
+  "emergency-contacts",
+  "memberships",
+  "position-assignments",
+  "supervision-scope",
+  "profile",
+  "account",
+  "registrations-history",
+  "attendance-records",
+  "contribution"
+];
+
+/**
+ * 落地 tab 可由 `?tab=` 指定（证书工作台「查看队员」直接落到证书 tab，省一次点击）。
+ * 只认白名单内的值——URL 是外部输入，给个不存在的名字会让所有 pane 都隐藏。
+ */
+const queryTab = route.query.tab as string | undefined;
+const activeTab = ref<CockpitTab>(
+  COCKPIT_TABS.includes(queryTab as CockpitTab)
+    ? (queryTab as CockpitTab)
+    : "profile"
+);
 
 /* ----------------------------- 头部：队员基本信息 ----------------------------- */
 const detail = ref<MemberItem | null>(null);
