@@ -21,6 +21,7 @@ import { useAttendances } from "../attendances/utils/hook";
 import { useActivityPositions } from "./positions/utils/hook";
 import { useActivityFeedbacks } from "./feedbacks/utils/hook";
 import { useActivityReconciliation } from "./reconciliation/utils/hook";
+import { useActivityCheckIns } from "./checkins/utils/hook";
 import ReviewDetail from "../attendances/review-detail.vue";
 
 import AddFill from "~icons/ri/add-circle-line";
@@ -187,7 +188,12 @@ function handleCancel() {
 
 /* --------------- Tab：报名 / 考勤（复用既有 hook，activityId 由路由参数注入；无活动下拉） --------------- */
 const activeTab = ref<
-  "registrations" | "attendances" | "positions" | "feedbacks" | "reconciliation"
+  | "registrations"
+  | "attendances"
+  | "positions"
+  | "feedbacks"
+  | "reconciliation"
+  | "checkins"
 >("registrations");
 
 const {
@@ -287,6 +293,36 @@ const {
   onSearch: recOnSearch
 } = useActivityReconciliation(activityId);
 
+/* --------------- Tab：GPS 打卡（证据只读 + 由打卡生成考勤草稿） --------------- */
+const {
+  canRead: ciCanRead,
+  canUseDraft: ciCanUseDraft,
+  isCancelled: ciIsCancelled,
+  activityNotEndedYet: ciNotEndedYet,
+  setActivityStatus: ciSetActivityStatus,
+  loading: ciLoading,
+  columns: ciColumns,
+  dataList: ciDataList,
+  pagination: ciPagination,
+  rowFlags: ciRowFlags,
+  onSearch: ciOnSearch,
+  handleSizeChange: ciHandleSizeChange,
+  handleCurrentChange: ciHandleCurrentChange,
+  draftLoading: ciDraftLoading,
+  draftVisible: ciDraftVisible,
+  draftRows: ciDraftRows,
+  absentRegistrations: ciAbsent,
+  sheetCount: ciSheetCount,
+  willSplit: ciWillSplit,
+  roleOptions: ciRoleOptions,
+  statusOptions: ciStatusOptions,
+  submitting: ciSubmitting,
+  generateDraft: ciGenerateDraft,
+  discardDraft: ciDiscardDraft,
+  removeDraftRow: ciRemoveDraftRow,
+  submitDraft: ciSubmitDraft
+} = useActivityCheckIns(activityId);
+
 onMounted(async () => {
   await fetchDetail();
   // 岗位时段的即时校验要拿活动时间窗做参照，故等详情到手后再喂给岗位 hook
@@ -299,6 +335,8 @@ onMounted(async () => {
   // 核对 hook 要先知道活动状态,才能决定发不发 reconciliation 那个 completed-only 端点
   recSetActivityStatus(detail.value?.statusCode);
   recOnSearch();
+  ciSetActivityStatus(detail.value?.statusCode, detail.value?.phase);
+  ciOnSearch();
 });
 </script>
 
@@ -863,6 +901,240 @@ onMounted(async () => {
             code="attendance.read.sheet 与 activity-registration.read.record"
           />
         </el-tab-pane>
+
+        <el-tab-pane label="GPS 打卡" name="checkins">
+          <template v-if="ciCanRead">
+            <el-alert
+              class="mb-4"
+              type="info"
+              :closable="false"
+              show-icon
+              title="安全复核视图"
+            >
+              <span class="text-xs/5">
+                这里只显示队员打卡时「离活动地点多少米」，
+                <strong>不显示具体定位坐标</strong
+                >——这是有意的隐私设计，不是数据缺失。
+              </span>
+            </el-alert>
+
+            <PureTableBar
+              title="打卡记录"
+              :columns="ciColumns"
+              @refresh="ciOnSearch"
+            >
+              <template #buttons>
+                <!-- 生成/提交要创建码;活动已取消则不给这条路(审批入口在考勤页签,不受影响) -->
+                <el-button
+                  v-if="ciCanUseDraft"
+                  type="primary"
+                  :loading="ciDraftLoading"
+                  @click="ciGenerateDraft"
+                >
+                  用打卡记录生成考勤草稿
+                </el-button>
+                <span v-else-if="ciIsCancelled" class="ci-note">
+                  活动已取消，不能再由打卡生成考勤；已提交的考勤仍可在「考勤」页签继续审核
+                </span>
+              </template>
+              <template v-slot="{ size, dynamicColumns }">
+                <pure-table
+                  row-key="id"
+                  adaptive
+                  :adaptiveConfig="{ offsetBottom: 108 }"
+                  align-whole="center"
+                  table-layout="auto"
+                  :loading="ciLoading"
+                  :size="size"
+                  :data="ciDataList"
+                  :columns="dynamicColumns"
+                  :pagination="ciPagination"
+                  :header-cell-style="{
+                    background: 'var(--el-fill-color-light)',
+                    color: 'var(--el-text-color-primary)'
+                  }"
+                  @page-size-change="ciHandleSizeChange"
+                  @page-current-change="ciHandleCurrentChange"
+                >
+                  <template #empty>
+                    <el-empty description="还没有人打卡" />
+                  </template>
+                  <template #flags="{ row }">
+                    <template v-if="ciRowFlags(row).length">
+                      <el-tooltip
+                        v-for="f in ciRowFlags(row)"
+                        :key="f.key"
+                        :content="f.tip"
+                        placement="top"
+                      >
+                        <el-tag type="warning" size="small" class="mr-1">
+                          {{ f.text }}
+                        </el-tag>
+                      </el-tooltip>
+                    </template>
+                    <el-tag v-else type="success" size="small">正常</el-tag>
+                  </template>
+                </pure-table>
+              </template>
+            </PureTableBar>
+
+            <!-- 草稿编辑器：本地可改,未落库;确认后才走既有考勤提交端点 -->
+            <el-card v-if="ciDraftVisible" shadow="never" class="mt-4">
+              <template #header>
+                <div class="ci-draft-head">
+                  <span
+                    >考勤草稿（共 {{ ciDraftRows.length }} 条，尚未提交）</span
+                  >
+                  <div>
+                    <el-button
+                      type="primary"
+                      :loading="ciSubmitting"
+                      :disabled="ciDraftRows.length === 0"
+                      @click="ciSubmitDraft"
+                    >
+                      提交考勤
+                    </el-button>
+                    <el-button @click="ciDiscardDraft">放弃草稿</el-button>
+                  </div>
+                </div>
+              </template>
+
+              <el-alert
+                v-if="ciNotEndedYet"
+                class="mb-3"
+                type="warning"
+                :closable="false"
+                show-icon
+                title="活动还没结束，现在提交多半会被拒"
+              >
+                <span class="text-xs/5">
+                  忘签退的人，草稿会拿「活动结束时间」当签退时间补上，而那个时刻还没到；
+                  后端要求签退时间不得晚于当前时间，会整张单退回。建议活动结束后再生成草稿，
+                  或先把这些人的时长手工改成实际值。
+                </span>
+              </el-alert>
+
+              <el-alert
+                v-if="ciWillSplit"
+                class="mb-3"
+                type="warning"
+                :closable="false"
+                show-icon
+                :title="`记录数超过单张考勤单上限，提交时将拆成 ${ciSheetCount} 张单据`"
+              />
+
+              <el-alert
+                v-if="ciAbsent.length"
+                class="mb-3"
+                type="warning"
+                :closable="false"
+                show-icon
+                :title="`有 ${ciAbsent.length} 人报名已通过但没有任何打卡记录`"
+              >
+                <div class="text-xs/5">
+                  <span>
+                    {{
+                      ciAbsent
+                        .map(a => `${a.displayName}（${a.memberNo}）`)
+                        .join("、")
+                    }}
+                  </span>
+                  <div class="mt-1">
+                    这些人<strong>不会</strong>被写进草稿——没打卡就是没打卡，系统不替他们编造考勤记录。
+                    如果确实到场了，请核实后在「考勤」页签手工新建单据补录。
+                  </div>
+                </div>
+              </el-alert>
+
+              <el-table :data="ciDraftRows" size="small" border>
+                <el-table-column label="队员" min-width="150">
+                  <template #default="{ row }">
+                    {{ row.displayName }}
+                    <span class="ci-note">（{{ row.memberNo }}）</span>
+                  </template>
+                </el-table-column>
+                <el-table-column label="情况" min-width="180">
+                  <template #default="{ row }">
+                    <template v-if="row.flags.length">
+                      <el-tooltip
+                        v-for="f in row.flags"
+                        :key="f.key"
+                        :content="f.tip"
+                        placement="top"
+                      >
+                        <el-tag type="warning" size="small" class="mr-1">
+                          {{ f.text }}
+                        </el-tag>
+                      </el-tooltip>
+                    </template>
+                    <el-tag v-else type="success" size="small">正常</el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column label="考勤角色" min-width="150">
+                  <template #default="{ row }">
+                    <el-select v-model="row.roleCode" size="small" filterable>
+                      <el-option
+                        v-for="opt in ciRoleOptions"
+                        :key="opt.value"
+                        :label="opt.label"
+                        :value="opt.value"
+                      />
+                    </el-select>
+                  </template>
+                </el-table-column>
+                <el-table-column label="状态" min-width="130">
+                  <template #default="{ row }">
+                    <el-select
+                      v-model="row.attendanceStatusCode"
+                      size="small"
+                      filterable
+                    >
+                      <el-option
+                        v-for="opt in ciStatusOptions"
+                        :key="opt.value"
+                        :label="opt.label"
+                        :value="opt.value"
+                      />
+                    </el-select>
+                  </template>
+                </el-table-column>
+                <el-table-column label="时长(小时)" min-width="120">
+                  <template #default="{ row }">
+                    <el-input-number
+                      v-model="row.serviceHours"
+                      size="small"
+                      :min="0"
+                      :precision="2"
+                      :step="0.5"
+                      controls-position="right"
+                    />
+                  </template>
+                </el-table-column>
+                <el-table-column label="操作" width="90" fixed="right">
+                  <template #default="{ $index }">
+                    <el-button
+                      link
+                      type="danger"
+                      size="small"
+                      @click="ciRemoveDraftRow($index)"
+                    >
+                      移除
+                    </el-button>
+                  </template>
+                </el-table-column>
+              </el-table>
+              <div class="ci-note mt-2">
+                草稿只在本页，未保存到服务器；「提交考勤」后才会创建考勤单并进入待一级审核。
+                考勤角色已按各人报名的岗位自动带出，贡献值由后端按该角色计算，无需也不应在这里改成通用角色。
+              </div>
+            </el-card>
+          </template>
+          <SrvfPermEmpty
+            v-else
+            action="查看打卡记录"
+            code="attendance.read.sheet"
+          />
+        </el-tab-pane>
       </el-tabs>
     </SrvfDetailShell>
 
@@ -946,5 +1218,19 @@ onMounted(async () => {
   margin-left: 6px;
   vertical-align: middle;
   color: var(--el-text-color-secondary);
+}
+
+.ci-note {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--el-text-color-secondary);
+}
+
+.ci-draft-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
 }
 </style>
