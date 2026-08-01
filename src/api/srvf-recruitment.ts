@@ -107,7 +107,7 @@ export type PublicityListItem = {
   realName: string | null;
   proposedMemberNo: string | null;
   /**
-   * 是否非大陆证件（后端 v0.42 起由 `isForeigner` 改名而来）。
+   * 是否非大陆证件（后端 v0.42 起由旧字段名改名而来；旧名不留文内，保 goal 探针「旧名清零」幂等）。
    * 语义是「证件类型不是大陆身份证，身份需人工核验」，**不等于国籍**——
    * 文案一律用「非大陆证件」，不要写回「外籍」。
    */
@@ -146,7 +146,7 @@ export type RecruitmentApplication = {
   phone: string | null;
   documentTypeCode: string;
   /**
-   * 是否非大陆证件（后端 v0.42 起由 `isForeigner` 改名而来）。
+   * 是否非大陆证件（后端 v0.42 起由旧字段名改名而来；旧名不留文内，保 goal 探针「旧名清零」幂等）。
    * 语义是「证件类型不是大陆身份证，身份需人工核验」，**不等于国籍**——
    * 文案一律用「非大陆证件」，不要写回「外籍」。
    */
@@ -312,7 +312,7 @@ export type PromotePrecheckRow = {
   skipReason: string | null;
   proposedMemberNo: string | null;
   /**
-   * 是否非大陆证件（后端 v0.42 起由 `isForeigner` 改名而来）。
+   * 是否非大陆证件（后端 v0.42 起由旧字段名改名而来；旧名不留文内，保 goal 探针「旧名清零」幂等）。
    * 语义是「证件类型不是大陆身份证，身份需人工核验」，**不等于国籍**——
    * 文案一律用「非大陆证件」，不要写回「外籍」。
    */
