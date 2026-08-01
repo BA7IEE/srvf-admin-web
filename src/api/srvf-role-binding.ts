@@ -96,6 +96,13 @@ export type RoleBindingItem = {
   endedAt: string | null;
   createdByUserId: string | null;
   note: string | null;
+  /**
+   * 当前 scope 是否失效（后端 v0.61 起恒返）。
+   * 仅 `ORGANIZATION` / `ORGANIZATION_TREE` 可能为 true——绑定所指的组织被停用、
+   * 软删或已不存在。此时这条绑定**不再产生任何权限**，且「恢复生效 / 延长任期」
+   * 都救不回来（要么先把组织恢复，要么改绑到别的组织），故界面上要禁掉这些入口。
+   */
+  scopeInactive: boolean;
   createdAt: string;
   updatedAt: string;
   /** 仅分页总表 `?expand` 含 role 时出现 */
@@ -268,3 +275,83 @@ export const batchCreateRoleBindings = (items: CreateRoleBindingBody[]) =>
     "/api/admin/v1/role-bindings/batch",
     { data: { items } }
   );
+
+/* ----------------------- 绑定是否「当前真的在生效」 ----------------------- */
+
+/**
+ * 绑定的生效态（展示用）。
+ *
+ * 后端只认**在期且范围有效**的绑定产权限，但列表里 `status=ACTIVE` 的行可能因为
+ * 任期没到、任期已过、或范围组织被停用而**其实一点权限都不产生**。
+ * 只看 `status` 会让人以为「显示 ACTIVE 就是生效中」，排查授权问题时极容易被误导，
+ * 故这里把这三种「名义 ACTIVE、实际不生效」的情况显式算出来。
+ */
+export type RoleBindingEffectiveState =
+  | "effective"
+  | "scope-inactive"
+  | "not-started"
+  | "expired"
+  | "suspended"
+  | "ended";
+
+/**
+ * 判定一条绑定当前是否真的在产生权限。
+ * 优先级：显式状态 > 范围失效 > 任期未到 / 已过。
+ * `now` 可注入便于测试；默认取当前时刻。
+ */
+export function roleBindingEffectiveState(
+  row: Pick<
+    RoleBindingItem,
+    "status" | "startedAt" | "endedAt" | "scopeInactive"
+  >,
+  now: Date = new Date()
+): RoleBindingEffectiveState {
+  if (row.status === "ENDED") return "ended";
+  if (row.status === "SUSPENDED") return "suspended";
+  if (row.scopeInactive) return "scope-inactive";
+  if (row.startedAt && new Date(row.startedAt).getTime() > now.getTime())
+    return "not-started";
+  if (row.endedAt && new Date(row.endedAt).getTime() < now.getTime())
+    return "expired";
+  return "effective";
+}
+
+/** 生效态 → 界面文案与 tag 色（`effective` 不额外加标，避免正常行被噪音淹没）。 */
+export const ROLE_BINDING_EFFECTIVE_META: Record<
+  RoleBindingEffectiveState,
+  { text: string; type: "success" | "info" | "warning" | "danger" } | null
+> = {
+  effective: null,
+  "scope-inactive": { text: "范围已失效", type: "info" },
+  "not-started": { text: "未生效", type: "warning" },
+  expired: { text: "已过期", type: "info" },
+  suspended: { text: "已挂起", type: "warning" },
+  ended: { text: "已结束", type: "info" }
+};
+
+/* ----------------------------- 角色绑定域错误码 → 人话 ----------------------------- */
+
+/**
+ * 角色绑定 / 授权域错误码 → 人话（码义取自后端 `biz-code.constant.ts`，禁臆造）。
+ * 与 `roleBizErrorMessage` 分工：那边管角色本体与用户-角色关系，这边管绑定与范围组织。
+ */
+export function roleBindingBizErrorMessage(
+  error: unknown,
+  fallback: string
+): string {
+  const data = (
+    error as { response?: { data?: { code?: unknown; message?: string } } }
+  )?.response?.data;
+  const code = Number(data?.code);
+  if (code === 30101)
+    return "系统必须保留至少一名在岗的运营管理员（30101）：请先给别人补上这个角色，再来撤销这一条";
+  if (code === 30102)
+    return "无权分配或撤销该角色（30102）：只能操作不高于自己级别的角色，请找更高权限的人处理";
+  if (code === 30103)
+    return "该权限点仅超级管理员可分配（30103）：控制面保留码不开放给普通管理员";
+  if (code === 11001)
+    return "选中的组织节点不存在（11001）：可能刚被删除，请刷新组织树后重选";
+  if (code === 17031)
+    return "该组织节点已停用（17031）：停用的组织不能作为授权范围，请先启用它或改选其它组织";
+  return data?.message ?? fallback;
+}
