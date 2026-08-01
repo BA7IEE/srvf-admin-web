@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import ReCol from "@/components/ReCol";
 import type { FormRules } from "element-plus";
 
@@ -13,6 +13,8 @@ export type ActivityOption = { label: string; value: string };
  */
 export type ActivityFormModel = {
   isEdit: boolean;
+  /** 编辑态的活动状态 code：completed / cancelled 时后端只收五个展示字段 */
+  statusCode: string;
   title: string;
   /** 活动类型字典 code（typeCode=activity_type） */
   activityTypeCode: string;
@@ -48,6 +50,7 @@ const props = withDefaults(
   {
     formInline: () => ({
       isEdit: false,
+      statusCode: "",
       title: "",
       activityTypeCode: "",
       organizationId: "",
@@ -70,6 +73,28 @@ const props = withDefaults(
 
 const ruleFormRef = ref();
 const newFormInline = ref(props.formInline);
+
+/**
+ * 终态锁：活动已完结 / 已取消时，后端只接受五个展示字段
+ * （description / coverImageUrl / galleryImageUrls / content / registrationNotes）。
+ * 本表单里属于这五个的只有「简介」和「报名须知」，其余一律禁用——
+ * 不锁的话用户改完点保存会被后端整单拒掉，还不知道是哪一项惹的。
+ */
+const terminalLocked = computed(
+  () =>
+    newFormInline.value.isEdit &&
+    (newFormInline.value.statusCode === "completed" ||
+      newFormInline.value.statusCode === "cancelled")
+);
+
+/** 报名截止不得晚于活动结束（后端拒的规则，前端先说人话） */
+const deadlineWarning = computed(() => {
+  const m = newFormInline.value;
+  if (!m.registrationDeadline || !m.endAt) return "";
+  return m.registrationDeadline > m.endAt
+    ? "报名截止时间晚于活动结束时间，后端会拒绝"
+    : "";
+});
 
 const rules: FormRules = {
   title: [{ required: true, message: "请输入活动标题", trigger: "blur" }],
@@ -114,6 +139,21 @@ defineExpose({ getRef });
     :rules="rules"
     label-width="92px"
   >
+    <!-- 终态提示:说清还能改什么,免得用户挨个试哪个字段被拒 -->
+    <el-alert
+      v-if="terminalLocked"
+      class="mb-4"
+      type="info"
+      :closable="false"
+      show-icon
+      title="活动已完结或已取消，基本不能再改"
+    >
+      <span class="text-xs/5">
+        时间、地点、名额、报名设置等都已锁定。按契约还应放开「活动简介」与「报名须知」两项，
+        但当前后端对终态活动一律拒绝修改——保存很可能仍会被拒；如确需更正请联系管理员。
+      </span>
+    </el-alert>
+
     <el-row :gutter="30">
       <re-col>
         <el-divider content-position="left" class="form-section">
@@ -124,6 +164,7 @@ defineExpose({ getRef });
         <el-form-item label="活动标题" prop="title">
           <el-input
             v-model="newFormInline.title"
+            :disabled="terminalLocked"
             clearable
             maxlength="200"
             placeholder="活动标题（必填；≤ 200）"
@@ -136,6 +177,7 @@ defineExpose({ getRef });
           <el-select
             v-if="activityTypeOptions.length"
             v-model="newFormInline.activityTypeCode"
+            :disabled="terminalLocked"
             class="w-full!"
             clearable
             filterable
@@ -162,6 +204,7 @@ defineExpose({ getRef });
           <el-select
             v-if="organizationOptions.length"
             v-model="newFormInline.organizationId"
+            :disabled="terminalLocked"
             class="w-full!"
             clearable
             filterable
@@ -187,6 +230,7 @@ defineExpose({ getRef });
         <el-form-item label="开始时间" prop="startAt">
           <el-date-picker
             v-model="newFormInline.startAt"
+            :disabled="terminalLocked"
             class="w-full!"
             type="datetime"
             value-format="YYYY-MM-DDTHH:mm:ss"
@@ -199,6 +243,7 @@ defineExpose({ getRef });
         <el-form-item label="结束时间" prop="endAt">
           <el-date-picker
             v-model="newFormInline.endAt"
+            :disabled="terminalLocked"
             class="w-full!"
             type="datetime"
             value-format="YYYY-MM-DDTHH:mm:ss"
@@ -211,6 +256,7 @@ defineExpose({ getRef });
         <el-form-item label="活动地点" prop="location">
           <el-input
             v-model="newFormInline.location"
+            :disabled="terminalLocked"
             clearable
             maxlength="200"
             placeholder="活动地点（必填；≤ 200）"
@@ -227,6 +273,7 @@ defineExpose({ getRef });
         <el-form-item label="名额上限">
           <el-input-number
             v-model="newFormInline.capacity"
+            :disabled="terminalLocked"
             class="w-full!"
             :min="1"
             controls-position="right"
@@ -240,6 +287,7 @@ defineExpose({ getRef });
           <el-select
             v-if="genderRequirementOptions.length"
             v-model="newFormInline.genderRequirementCode"
+            :disabled="terminalLocked"
             class="w-full!"
             clearable
             filterable
@@ -265,11 +313,15 @@ defineExpose({ getRef });
         <el-form-item label="报名截止">
           <el-date-picker
             v-model="newFormInline.registrationDeadline"
+            :disabled="terminalLocked"
             class="w-full!"
             type="datetime"
             value-format="YYYY-MM-DDTHH:mm:ss"
             placeholder="选择报名截止时间（可空）"
           />
+          <div v-if="deadlineWarning" class="form-field-warn">
+            {{ deadlineWarning }}
+          </div>
         </el-form-item>
       </re-col>
 
@@ -277,6 +329,7 @@ defineExpose({ getRef });
         <el-form-item label="公开报名">
           <el-switch
             v-model="newFormInline.isPublicRegistration"
+            :disabled="terminalLocked"
             inline-prompt
             active-text="公开"
             inactive-text="非公开"
@@ -288,6 +341,7 @@ defineExpose({ getRef });
         <el-form-item label="要求保险">
           <el-switch
             v-model="newFormInline.requiresInsurance"
+            :disabled="terminalLocked"
             inline-prompt
             active-text="要求"
             inactive-text="不要求"
@@ -334,5 +388,13 @@ defineExpose({ getRef });
   margin: 4px 0 12px;
   font-size: 13px;
   font-weight: 600;
+}
+
+.form-field-warn {
+  width: 100%;
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--el-color-warning);
 }
 </style>

@@ -1,4 +1,3 @@
-import { bizErrorMessage } from "@/api/srvf-error";
 import { h, ref } from "vue";
 import { useRouter } from "vue-router";
 import dayjs from "dayjs";
@@ -19,9 +18,11 @@ import {
   updateActivity,
   deleteActivity,
   cancelActivity,
+  activityBizErrorMessage,
   type ActivityItem,
   type ActivityListQuery,
-  type CreateActivityBody
+  type CreateActivityBody,
+  type UpdateActivityBody
 } from "@/api/srvf-activity";
 import { getDictTypes, getDictItems } from "@/api/srvf-dict";
 import { getOrganizations } from "@/api/srvf-organization";
@@ -206,6 +207,26 @@ export function useActivities() {
     };
   }
 
+  /**
+   * 终态（completed / cancelled）编辑提交体：**只发展示字段**。
+   *
+   * 后端源码里对终态有个五字段白名单（description / coverImageUrl / galleryImageUrls /
+   * content / registrationNotes），判据是「dto 里出现白名单之外的 key」就整单拒，
+   * 而不是「值变了才拒」——所以光把输入框禁掉不够，`buildBody` 恒发的 title / startAt
+   * 照样会把整次保存带塌。这里按白名单重新组装。
+   *
+   * ⚠️ 2026-08-01 本地实测：当前这版后端对 completed 与 cancelled **一律拒改**，
+   * 连只发白名单两项也返 20030，即那个白名单在这个 build 上够不到。
+   * 仍按白名单组装是因为它在两种行为下都正确：白名单可用时这样发才能成功，
+   * 不可用时也只是同样被拒——而不像整表提交那样连「为什么被拒」都说不清。
+   */
+  function buildTerminalUpdateBody(m: ActivityFormModel): UpdateActivityBody {
+    return {
+      ...(m.description ? { description: m.description } : {}),
+      ...(m.registrationNotes ? { registrationNotes: m.registrationNotes } : {})
+    };
+  }
+
   /** 新建 / 编辑弹窗（编辑时按列表返回字段回填；registrationNotes 列表不返回故留空，不填则不提交） */
   async function openDialog(title: "新建" | "编辑", row?: ActivityItem) {
     await ensureFormOptions();
@@ -221,6 +242,8 @@ export function useActivities() {
       props: {
         formInline: {
           isEdit,
+          // 终态(completed/cancelled)只放行五个展示字段,表单据此锁住其余输入
+          statusCode: row?.statusCode ?? "",
           title: row?.title ?? "",
           activityTypeCode: row?.activityTypeCode ?? "",
           organizationId: row?.organizationId ?? "",
@@ -256,7 +279,28 @@ export function useActivities() {
           }
           try {
             if (isEdit && row) {
-              await updateActivity(row.id, buildBody(curData));
+              const isTerminal =
+                row.statusCode === "completed" ||
+                row.statusCode === "cancelled";
+              try {
+                await updateActivity(
+                  row.id,
+                  isTerminal
+                    ? buildTerminalUpdateBody(curData)
+                    : buildBody(curData)
+                );
+              } catch (err: any) {
+                // 终态被拒时给准确成因,别让人以为是自己填错了哪一项
+                if (isTerminal && Number(err?.response?.data?.code) === 20030) {
+                  message(
+                    "已完结 / 已取消的活动不能再修改（20030）：如果确实需要更正，请联系后端管理员",
+                    { type: "error", duration: 6000 }
+                  );
+                  closeLoading();
+                  return;
+                }
+                throw err;
+              }
               message("修改成功", { type: "success" });
             } else {
               await createActivity(buildBody(curData));
@@ -265,7 +309,7 @@ export function useActivities() {
             done();
             onSearch();
           } catch (error: any) {
-            message(bizErrorMessage(error, "保存失败"), {
+            message(activityBizErrorMessage(error, "保存失败"), {
               type: "error"
             });
             closeLoading();
@@ -288,7 +332,7 @@ export function useActivities() {
           message("删除成功", { type: "success" });
           onSearch();
         } catch (error: any) {
-          message(bizErrorMessage(error, "删除失败"), {
+          message(activityBizErrorMessage(error, "删除失败"), {
             type: "error"
           });
         }
@@ -336,7 +380,7 @@ export function useActivities() {
           message("取消成功", { type: "success" });
           onSearch();
         } catch (error: any) {
-          message(bizErrorMessage(error, "取消失败"), {
+          message(activityBizErrorMessage(error, "取消失败"), {
             type: "error"
           });
         }
