@@ -1,4 +1,3 @@
-import { bizErrorMessage } from "@/api/srvf-error";
 import dayjs from "dayjs";
 import { h, ref, watch } from "vue";
 import { useRoute } from "vue-router";
@@ -31,6 +30,9 @@ import {
   SCOPE_TYPE_LABEL,
   BINDING_STATUS_LABEL,
   BINDING_STATUS_TAG,
+  ROLE_BINDING_EFFECTIVE_META,
+  roleBindingEffectiveState,
+  roleBindingBizErrorMessage,
   type RoleBindingItem,
   type PrincipalType,
   type ScopeType,
@@ -226,6 +228,14 @@ export function useRoleBindings() {
     { label: "生效范围", prop: "scopeType", minWidth: 110, slot: "scopeType" },
     { label: "状态", prop: "status", minWidth: 90, slot: "status" },
     {
+      // 「状态」是绑定自己的字段,这一列回答的是另一个问题:它此刻到底产不产生权限。
+      // status=ACTIVE 但范围组织被停用 / 任期没到 / 任期已过时,后端一律不授权。
+      label: "当前是否生效",
+      prop: "effectiveState",
+      minWidth: 120,
+      slot: "effectiveState"
+    },
+    {
       label: "起始",
       prop: "startedAt",
       minWidth: 110,
@@ -250,6 +260,24 @@ export function useRoleBindings() {
       text: BINDING_STATUS_LABEL[code] ?? code,
       type: BINDING_STATUS_TAG[code] ?? ("info" as const)
     };
+  }
+
+  /** 该行此刻是否真的在产生权限（合并状态 / 范围失效 / 任期未到或已过四种成因）。 */
+  function effectiveMeta(row: RoleBindingItem) {
+    const state = roleBindingEffectiveState(row);
+    return {
+      state,
+      meta: ROLE_BINDING_EFFECTIVE_META[state]
+    };
+  }
+
+  /**
+   * 范围已失效的绑定不给「恢复生效」入口：它所指的组织已停用 / 已删，
+   * 恢复了也照样不产生权限，点一次只会让人以为修好了。
+   * 正确做法是先恢复组织，或另建一条指向有效组织的绑定。
+   */
+  function canResume(row: RoleBindingItem) {
+    return row.status === "SUSPENDED" && !row.scopeInactive;
   }
 
   /** 解除按主体锁定，回到全量角色绑定列表 */
@@ -332,7 +360,7 @@ export function useRoleBindings() {
               return;
             }
           } catch (error: any) {
-            message(bizErrorMessage(error, "预检失败"), {
+            message(roleBindingBizErrorMessage(error, "预检失败"), {
               type: "error"
             });
             closeLoading();
@@ -344,7 +372,7 @@ export function useRoleBindings() {
             done();
             onSearch();
           } catch (error: any) {
-            message(bizErrorMessage(error, "新建失败"), {
+            message(roleBindingBizErrorMessage(error, "新建失败"), {
               type: "error"
             });
             closeLoading();
@@ -372,7 +400,7 @@ export function useRoleBindings() {
           message("修改成功", { type: "success" });
           onSearch();
         } catch (error: any) {
-          message(bizErrorMessage(error, "修改失败"), {
+          message(roleBindingBizErrorMessage(error, "修改失败"), {
             type: "error"
           });
         }
@@ -396,7 +424,7 @@ export function useRoleBindings() {
           message(`${action}成功`, { type: "success" });
           onSearch();
         } catch (error: any) {
-          message(bizErrorMessage(error, `${action}失败`), {
+          message(roleBindingBizErrorMessage(error, `${action}失败`), {
             type: "error"
           });
         }
@@ -421,7 +449,7 @@ export function useRoleBindings() {
           message("删除成功", { type: "success" });
           onSearch();
         } catch (error: any) {
-          message(bizErrorMessage(error, "删除失败"), {
+          message(roleBindingBizErrorMessage(error, "删除失败"), {
             type: "error"
           });
         }
@@ -451,6 +479,8 @@ export function useRoleBindings() {
     pagination,
     scopeTypeLabel,
     statusMeta,
+    effectiveMeta,
+    canResume,
     onSearch,
     onFilterChange,
     openCreateDialog,

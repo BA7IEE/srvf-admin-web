@@ -2,6 +2,7 @@
 import { onMounted } from "vue";
 import { useRoles } from "./utils/hook";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
+import { isProtectedRole } from "@/api/srvf-role";
 
 import Refresh from "~icons/ri/refresh-line";
 import AddFill from "~icons/ri/add-circle-line";
@@ -92,8 +93,27 @@ onMounted(() => {
       >
         编辑
       </el-button>
+      <!-- 内置角色后端恒拒删(30104),故直接置灰并说明原因,不做点了必报错的按钮 -->
+      <el-tooltip
+        v-if="canDelete && isProtectedRole(row.code)"
+        content="系统内置角色不可删除"
+        placement="top"
+      >
+        <span>
+          <el-button
+            class="reset-margin"
+            link
+            type="danger"
+            disabled
+            :size="size"
+            :icon="useRenderIcon(Delete)"
+          >
+            删除
+          </el-button>
+        </span>
+      </el-tooltip>
       <el-button
-        v-if="canDelete"
+        v-else-if="canDelete"
         class="reset-margin"
         link
         type="danger"

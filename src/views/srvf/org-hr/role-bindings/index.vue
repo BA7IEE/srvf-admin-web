@@ -57,6 +57,8 @@ const {
   openCreateDialog,
   openEditDialog,
   handleToggleSuspend,
+  effectiveMeta,
+  canResume,
   handleDelete,
   handleSizeChange,
   handleCurrentChange
@@ -71,7 +73,7 @@ onMounted(() => {
   <SrvfListPage
     :can-read="canRead"
     title="角色绑定"
-    intro="角色绑定 = 把角色授予某个主体（用户 / 队员 / 任职）并限定生效范围；「系统管理 → 角色权限」定义的是角色本身有哪些权限，两者配合使用。"
+    intro="角色绑定 = 把角色授予某个主体（用户 / 队员 / 任职）并限定生效范围；「系统管理 → 角色权限」定义的是角色本身有哪些权限，两者配合使用。范围授权已对队员轴与参与域生效；具体能读能写仍取决于角色带的动作码与这条绑定的资源范围。"
     :columns="columns"
     :loading="loading"
     :data-list="dataList"
@@ -179,6 +181,14 @@ onMounted(() => {
         :tag-dict="BINDING_STATUS_TAG"
       />
     </template>
+    <template #effectiveState="{ row }">
+      <template v-if="effectiveMeta(row).meta">
+        <el-tag :type="effectiveMeta(row).meta.type">
+          {{ effectiveMeta(row).meta.text }}
+        </el-tag>
+      </template>
+      <el-tag v-else type="success">生效中</el-tag>
+    </template>
     <template #operation="{ row, size }">
       <el-button
         v-if="canUpdate"
@@ -190,8 +200,29 @@ onMounted(() => {
       >
         备注
       </el-button>
+      <!--
+        范围已失效的绑定不给「恢复」：它指向的组织已停用/已删，恢复了照样不产生权限。
+        置灰并说明，比让人点一次以为修好了要诚实。
+      -->
+      <el-tooltip
+        v-if="canUpdate && row.status === 'SUSPENDED' && !canResume(row)"
+        content="该绑定的范围组织已停用或已删除，恢复也不会产生权限；请先恢复该组织，或另建一条指向有效组织的绑定"
+        placement="top"
+      >
+        <span>
+          <el-button
+            class="reset-margin"
+            link
+            type="success"
+            disabled
+            :size="size"
+          >
+            恢复
+          </el-button>
+        </span>
+      </el-tooltip>
       <el-button
-        v-if="canUpdate && row.status !== 'ENDED'"
+        v-else-if="canUpdate && row.status !== 'ENDED'"
         class="reset-margin"
         link
         :type="row.status === 'SUSPENDED' ? 'success' : 'warning'"

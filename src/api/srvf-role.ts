@@ -200,5 +200,38 @@ export function roleBizErrorMessage(error: unknown, fallback: string): string {
     return "分级权限不足：您当前的角色级别无法绑定/撤销此角色（30102）";
   if (code === 30103)
     return "该权限点为 SUPER_ADMIN 专属保留码，当前账号无法分配（30103）";
+  if (code === 30104)
+    return "系统内置角色不允许删除（30104）：它们是权限体系的基础，删掉会让相关授权整片失效";
   return data?.message ?? fallback;
+}
+
+/**
+ * 系统内置角色 code（镜像后端 `src/modules/permissions/protected-role-codes.ts`
+ * 这一单一真相；后端对这些角色的 DELETE 恒返 30104）。
+ *
+ * 前端镜像只为**提前把删除按钮禁掉**，不做权威判定：后端加了新内置角色而这里没跟上时，
+ * 删除仍会被后端拦下并弹 30104 人话（`roleBizErrorMessage`），不会造成误删。
+ * 反过来也一样——这里多列一个不存在的 code 只会让某个按钮多灰一个，不会放行任何删除。
+ */
+export const PROTECTED_ROLE_CODES: readonly string[] = [
+  "ops-admin",
+  "member",
+  "biz-admin",
+  "org-admin",
+  "org-readonly",
+  "group-manager",
+  "group-readonly",
+  "org-supervisor",
+  "attendance-final-reviewer",
+  "activity-publish-reviewer",
+  "activity-cross-org-initiator",
+  "attendance-first-reviewer",
+  "activity-owner",
+  "activity-registration-collaborator",
+  "activity-attendance-collaborator"
+];
+
+/** 该角色是否为系统内置（内置角色禁删）。 */
+export function isProtectedRole(code?: string | null): boolean {
+  return !!code && PROTECTED_ROLE_CODES.includes(code);
 }
