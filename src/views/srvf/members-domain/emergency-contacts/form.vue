@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import ReCol from "@/components/ReCol";
 import type { FormRules } from "element-plus";
 
@@ -31,8 +31,16 @@ const props = withDefaults(
     formInline?: EmergencyContactFormModel;
     /** 关系字典下拉（type=emergency_relation；空 = 退化文本输入） */
     relationOptions?: EmergencyContactOption[];
+    /**
+     * 是否持敏感明文权限（`emergency-contact.read.sensitive`）。后端 v0.42 起紧急联系人
+     * 四出口掩码化：无此权限者读到的 contactName / phonePrimary / phoneBackup / address
+     * 是掩码值——编辑态禁用这四个输入并提示，避免掩码回写覆盖真值。
+     * 默认 true：新建态 / 未传时不误禁（新建须录入真实值；剔除逻辑在 hook 侧兜底）。
+     */
+    canReadSensitive?: boolean;
   }>(),
   {
+    canReadSensitive: true,
     formInline: () => ({
       isEdit: false,
       contactName: "",
@@ -48,6 +56,16 @@ const props = withDefaults(
 
 const ruleFormRef = ref();
 const newFormInline = ref(props.formInline);
+
+/**
+ * 敏感字段锁：仅「编辑态 且 无敏感明文权限」时为 true。
+ * 此时姓名 / 主电话 / 备用电话 / 地址的回填值是后端掩码（张*、138****1234、广东省深圳市******），
+ * 禁用输入并提示；提交侧再剔除，双保险避免掩码覆盖真值。
+ * 新建态恒 false（须录入真实值）；持 read.sensitive 者恒 false（见明文可正常编辑）。
+ */
+const sensitiveLocked = computed(
+  () => newFormInline.value.isEdit && !props.canReadSensitive
+);
 
 const rules: FormRules = {
   contactName: [
@@ -78,10 +96,14 @@ defineExpose({ getRef });
         <el-form-item label="联系人姓名" prop="contactName">
           <el-input
             v-model="newFormInline.contactName"
+            :disabled="sensitiveLocked"
             clearable
             maxlength="64"
             placeholder="联系人姓名（必填；≤ 64）"
           />
+          <div v-if="sensitiveLocked" class="sensitive-field-hint">
+            已脱敏显示，需「敏感信息查看」权限方可编辑；保存不会覆盖后端真实值
+          </div>
         </el-form-item>
       </re-col>
 
@@ -116,10 +138,14 @@ defineExpose({ getRef });
         <el-form-item label="主电话" prop="phonePrimary">
           <el-input
             v-model="newFormInline.phonePrimary"
+            :disabled="sensitiveLocked"
             clearable
             maxlength="32"
             placeholder="联系人主电话（必填；≤ 32）"
           />
+          <div v-if="sensitiveLocked" class="sensitive-field-hint">
+            已脱敏显示，需「敏感信息查看」权限方可编辑；保存不会覆盖后端真实值
+          </div>
         </el-form-item>
       </re-col>
 
@@ -127,10 +153,14 @@ defineExpose({ getRef });
         <el-form-item label="备用电话">
           <el-input
             v-model="newFormInline.phoneBackup"
+            :disabled="sensitiveLocked"
             clearable
             maxlength="32"
             placeholder="备用电话（可空；≤ 32）"
           />
+          <div v-if="sensitiveLocked" class="sensitive-field-hint">
+            已脱敏显示，需「敏感信息查看」权限方可编辑；保存不会覆盖后端真实值
+          </div>
         </el-form-item>
       </re-col>
 
@@ -138,10 +168,14 @@ defineExpose({ getRef });
         <el-form-item label="地址">
           <el-input
             v-model="newFormInline.address"
+            :disabled="sensitiveLocked"
             clearable
             maxlength="256"
             placeholder="联系人地址（可空；≤ 256）"
           />
+          <div v-if="sensitiveLocked" class="sensitive-field-hint">
+            已脱敏显示，需「敏感信息查看」权限方可编辑；保存不会覆盖后端真实值
+          </div>
         </el-form-item>
       </re-col>
 
@@ -166,3 +200,13 @@ defineExpose({ getRef });
     </el-row>
   </el-form>
 </template>
+
+<style scoped>
+.sensitive-field-hint {
+  width: 100%;
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--el-color-info);
+}
+</style>

@@ -6,7 +6,12 @@ type Envelope<T> = { code: number; message: string; data: T };
 /**
  * 队员紧急联系人列表项（后端 `EmergencyContactResponseDto`）。字段以 live `/api/docs-json` 为准。
  * `relationCode` 是后端字典 `emergency_relation` 的 code（前端经 srvfDict 翻中文，不臆造枚举）。
- * `contactName` / `phonePrimary` 为高敏感字段，按后端返回原样展示。
+ *
+ * ⚠️ **四出口掩码化**（后端 v0.42）：无 `emergency-contact.read.sensitive` 者，
+ * `contactName` / `phonePrimary` / `phoneBackup` / `address` 四个字段返回的是**掩码值**
+ * （`张*` / `138****1234` / `广东省深圳市******`），字段名与类型不变，只是值被替换。
+ * 展示照返回值原样即可；**编辑回写必须先剔除**，否则掩码会覆盖后端真值，见
+ * `UpdateEmergencyContactBody` 注释与 emergency-contacts hook 的 `buildUpdateBody`。
  */
 export type EmergencyContactItem = {
   /** 主键（cuid） */
@@ -67,6 +72,13 @@ export type CreateEmergencyContactBody = {
 /**
  * 部分更新紧急联系人入参（后端 `UpdateEmergencyContactDto`；全字段 optional）。
  * 后端**禁止** memberId / id 入参，故前端只提交资料字段。
+ *
+ * ⚠️ **掩码回写防护**：无 `emergency-contact.read.sensitive` 者读到的
+ * `contactName` / `phonePrimary` / `phoneBackup` / `address` 是掩码值，
+ * 表单按读响应回填后若原样 PATCH 回来，会用 `张*` / `138****1234` 之类
+ * **覆盖后端真实值,且掩码不可逆、覆盖后原值找不回来**。
+ * 后端「不发某字段 = 保留原值」，故编辑时对无该权限者须**剔除**这四个字段
+ * （调用方已处理，见 emergency-contacts hook 的 `buildUpdateBody`）。
  */
 export type UpdateEmergencyContactBody = Partial<CreateEmergencyContactBody>;
 
