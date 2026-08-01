@@ -32,6 +32,12 @@ export function useEmergencyContacts(externalMemberId: string) {
   const canUpdate = hasPerms("emergency-contact.update.record");
   const canDelete = hasPerms("emergency-contact.delete.record");
   const hasAnyRowAction = canUpdate || canDelete;
+  /**
+   * 敏感明文权限（与后端 `rbac.can('emergency-contact.read.sensitive')` 同码同义）。
+   * 后端 v0.42 起对无此码者把 contactName / phonePrimary / phoneBackup / address
+   * 四个字段掩码后再返回，编辑表单据此禁用输入、提交侧据此剔除，避免掩码回写覆盖真值。
+   */
+  const canReadSensitive = hasPerms("emergency-contact.read.sensitive");
   /** 共享字典标签解析器：关系 code → 中文（emergency_relation 字典；查不到退化为原 code） */
   const dict = useSrvfDictStoreHook();
   dict.ensureTypes(["emergency_relation"]);
@@ -118,6 +124,35 @@ export function useEmergencyContacts(externalMemberId: string) {
     };
   }
 
+  /** 掩码特征：后端四个 mask 函数产出的值都必然含 `*`（张* / 138****1234 / 广东省深圳市******）。 */
+  const looksMasked = (v?: string) => !!v && v.includes("*");
+
+  /**
+   * 编辑提交体 = buildBody 再剔除「掩码回写」风险字段（后端 v0.42 紧急联系人四出口掩码化）。
+   *
+   * 无 `emergency-contact.read.sensitive` 者，表单回填的姓名 / 主电话 / 备用电话 / 地址
+   * 是后端掩码值；若原样 PATCH 回写，就用掩码**覆盖了后端真实值**——这是实打实的数据污染，
+   * 且掩码不可逆,覆盖后原值找不回来。契约「PATCH 不发某字段 = 保留原值」，故此处剔除。
+   *
+   * 双保险：即便前端权限缓存漂移（有码但拿到的仍是旧掩码数据），凡值含 `*` 也一并剔除。
+   * 代价是真名里带 `*` 的人无法通过本表单改这个字段——现实中不存在，且宁可改不动也不能覆盖真值。
+   *
+   * 只用于编辑；新建走 buildBody 原样提交（新建时用户录的就是真实值，无掩码可言）。
+   */
+  function buildUpdateBody(
+    m: EmergencyContactFormModel
+  ): Partial<CreateEmergencyContactBody> {
+    const body: Partial<CreateEmergencyContactBody> = buildBody(m);
+    if (!canReadSensitive || looksMasked(body.contactName))
+      delete body.contactName;
+    if (!canReadSensitive || looksMasked(body.phonePrimary))
+      delete body.phonePrimary;
+    if (!canReadSensitive || looksMasked(body.phoneBackup))
+      delete body.phoneBackup;
+    if (!canReadSensitive || looksMasked(body.address)) delete body.address;
+    return body;
+  }
+
   /** 新建 / 编辑弹窗（memberId 由作战室固定；编辑按列表返回字段回填） */
   async function openDialog(
     title: "新建" | "编辑",
@@ -144,7 +179,8 @@ export function useEmergencyContacts(externalMemberId: string) {
           address: row?.address ?? "",
           priority: row?.priority ?? 0
         } as EmergencyContactFormModel,
-        relationOptions: dict.options("emergency_relation")
+        relationOptions: dict.options("emergency_relation"),
+        canReadSensitive
       },
       contentRenderer: () => h(EmergencyContactForm, { ref: formRef }),
       beforeSure: (done, { options, closeLoading }) => {
@@ -160,7 +196,7 @@ export function useEmergencyContacts(externalMemberId: string) {
               await updateMemberEmergencyContact(
                 memberId.value,
                 row.id,
-                buildBody(curData)
+                buildUpdateBody(curData)
               );
               message("修改成功", { type: "success" });
             } else {

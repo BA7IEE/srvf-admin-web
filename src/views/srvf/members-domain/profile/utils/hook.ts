@@ -243,6 +243,12 @@ export function useMemberProfile(externalMemberId: string) {
     if (!canReadSensitive || body.mobile?.includes("*")) {
       delete body.mobile;
     }
+    // v0.42「刀D」：无 read.sensitive 者，birthDate / email 后端返的是 **null**（不是掩码）。
+    // 这两项在 buildBody 里属「必填恒发」，回填后会变成空串——原样 PATCH 过去既过不了后端校验
+    // （400，等于无权者根本存不了档案），空值真被接受时又会抹掉真实数据。故同样剔除。
+    // 其余 8 个刀D 字段（landline/qq/wechat/身高/体重/血型/视力/病史）本就「仅有值时发」，天然安全。
+    if (!canReadSensitive || !body.birthDate) delete body.birthDate;
+    if (!canReadSensitive || !body.email) delete body.email;
     return body;
   }
 

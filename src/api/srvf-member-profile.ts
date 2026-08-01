@@ -36,16 +36,24 @@ export type MemberProfileItem = {
   realName: string;
   /** 性别字典 code（字典 gender） */
   genderCode: string;
-  /** 出生日期（ISO 8601） */
-  birthDate: string;
+  /**
+   * 出生日期（ISO 8601）。
+   * ⚠️ 高敏感：无 `member-profile.read.sensitive` 时后端返 **null**（不是掩码），
+   * 故读模型可空；编辑回写前须剔除，见 `UpdateMemberProfileBody`。
+   */
+  birthDate: string | null;
   /** 证件类型字典 code（字典 document_type） */
   documentTypeCode: string;
   /** 证件号（高敏感；无 `read.sensitive` 时后端返掩码 `110101********1234`，字段仍 string） */
   documentNumber: string;
   /** 本人手机（高敏感；无 `read.sensitive` 时后端返掩码 `138****1234`，字段仍 string） */
   mobile: string;
-  /** 邮箱 */
-  email: string;
+  /**
+   * 邮箱。
+   * ⚠️ 无 `member-profile.read.sensitive` 时后端返 **null**；另招新 promote 建档本就可为 null。
+   * 编辑回写前须剔除，见 `UpdateMemberProfileBody`。
+   */
+  email: string | null;
   /** 加入日期（ISO 8601） */
   joinedDate: string;
   /** 加入来源字典 code（字典 join_source） */

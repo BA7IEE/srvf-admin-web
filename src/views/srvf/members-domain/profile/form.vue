@@ -148,14 +148,27 @@ const sensitiveLocked = computed(
 /** typeCode → options（空数组时单选退化为文本输入，多选退化为 allow-create 自由码） */
 const opts = (type: string): ProfileOption[] => props.dictOptions?.[type] ?? [];
 
-/** 仅前端必填存在性校验（10 必填里 9 个文本 / 下拉 / 日期；privacyConsentSigned 为 switch 恒有值）。
- *  格式 / 字典合法性 / 业务规则一律由后端裁决，前端不复刻。 */
-const rules: FormRules = {
+/**
+ * 仅前端必填存在性校验（10 必填里 9 个文本 / 下拉 / 日期；privacyConsentSigned 为 switch 恒有值）。
+ * 格式 / 字典合法性 / 业务规则一律由后端裁决，前端不复刻。
+ *
+ * `birthDate` / `email` 的必填在 `sensitiveLocked` 时**去掉**：这两项在无敏感权限时
+ * 后端返 null（不是掩码），回填即空;若仍按必填拦，无权者连改个电话都保存不了。
+ * 它们本来也不会被提交（hook 的 buildUpdateBody 已剔除），拦下来纯属自伤。
+ * documentNumber / mobile 不在此列——它们回填的是非空掩码串，必填天然满足。
+ */
+const rules = computed<FormRules>(() => ({
   realName: [{ required: true, message: "请输入真实姓名", trigger: "blur" }],
   genderCode: [
     { required: true, message: "请选择 / 输入性别", trigger: "change" }
   ],
-  birthDate: [{ required: true, message: "请选择出生日期", trigger: "change" }],
+  birthDate: [
+    {
+      required: !sensitiveLocked.value,
+      message: "请选择出生日期",
+      trigger: "change"
+    }
+  ],
   documentTypeCode: [
     { required: true, message: "请选择 / 输入证件类型", trigger: "change" }
   ],
@@ -163,14 +176,16 @@ const rules: FormRules = {
     { required: true, message: "请输入证件号", trigger: "blur" }
   ],
   mobile: [{ required: true, message: "请输入本人手机", trigger: "blur" }],
-  email: [{ required: true, message: "请输入邮箱", trigger: "blur" }],
+  email: [
+    { required: !sensitiveLocked.value, message: "请输入邮箱", trigger: "blur" }
+  ],
   joinedDate: [
     { required: true, message: "请选择加入日期", trigger: "change" }
   ],
   joinSourceCode: [
     { required: true, message: "请选择 / 输入加入来源", trigger: "change" }
   ]
-};
+}));
 
 function getRef() {
   return ruleFormRef.value;
@@ -234,11 +249,15 @@ defineExpose({ getRef });
         <el-form-item label="出生日期" prop="birthDate">
           <el-date-picker
             v-model="newFormInline.birthDate"
+            :disabled="sensitiveLocked"
             class="w-full!"
             type="date"
             value-format="YYYY-MM-DD"
             placeholder="选择出生日期"
           />
+          <div v-if="sensitiveLocked" class="sensitive-field-hint">
+            需「敏感信息查看」权限方可查看和编辑；保存不会覆盖后端真实值
+          </div>
         </el-form-item>
       </re-col>
 
@@ -303,10 +322,14 @@ defineExpose({ getRef });
         <el-form-item label="邮箱" prop="email">
           <el-input
             v-model="newFormInline.email"
+            :disabled="sensitiveLocked"
             clearable
             maxlength="256"
             placeholder="邮箱（必填；≤ 256）"
           />
+          <div v-if="sensitiveLocked" class="sensitive-field-hint">
+            需「敏感信息查看」权限方可查看和编辑；保存不会覆盖后端真实值
+          </div>
         </el-form-item>
       </re-col>
 
