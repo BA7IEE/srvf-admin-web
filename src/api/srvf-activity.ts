@@ -281,5 +281,7 @@ export function activityBizErrorMessage(
   if (code === 20124)
     return "活动已取消、已完结或已结束（20124）：不能再通过报名；仍可驳回或取消残留的待审报名";
   if (code === 20126) return "活动还是草稿（20126）：先发布活动，才能审批报名";
+  if (code === 20016)
+    return "报名截止时间不能晚于活动结束时间（20016）：请把截止时间调到活动结束之前";
   return bizErrorMessage(error, fallback);
 }

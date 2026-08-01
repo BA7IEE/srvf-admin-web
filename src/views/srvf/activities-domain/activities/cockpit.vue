@@ -18,9 +18,11 @@ import {
 import { openPublishDialog, openCompleteDialog } from "./utils/lifecycle";
 import { useRegistrations } from "../registrations/utils/hook";
 import { useAttendances } from "../attendances/utils/hook";
+import { useActivityPositions } from "./positions/utils/hook";
 import ReviewDetail from "../attendances/review-detail.vue";
 
 import AddFill from "~icons/ri/add-circle-line";
+import EditPen from "~icons/ep/edit-pen";
 
 defineOptions({
   name: "SrvfActivityCockpit"
@@ -181,7 +183,9 @@ function handleCancel() {
 }
 
 /* --------------- Tab：报名 / 考勤（复用既有 hook，activityId 由路由参数注入；无活动下拉） --------------- */
-const activeTab = ref<"registrations" | "attendances">("registrations");
+const activeTab = ref<"registrations" | "attendances" | "positions">(
+  "registrations"
+);
 
 const {
   canRead: regCanRead,
@@ -234,11 +238,26 @@ const {
   handleCurrentChange: attHandleCurrentChange
 } = useAttendances(activityId);
 
-onMounted(() => {
-  fetchDetail();
+/* --------------- Tab：岗位（活动的子资源，复用范式 A hook，无独立菜单） --------------- */
+const {
+  canWrite: posCanWrite,
+  loading: posLoading,
+  columns: posColumns,
+  dataList: posDataList,
+  setActivityWindow: posSetActivityWindow,
+  onSearch: posOnSearch,
+  openDialog: posOpenDialog,
+  handleDelete: posHandleDelete
+} = useActivityPositions(activityId);
+
+onMounted(async () => {
+  await fetchDetail();
+  // 岗位时段的即时校验要拿活动时间窗做参照，故等详情到手后再喂给岗位 hook
+  posSetActivityWindow(detail.value?.startAt, detail.value?.endAt);
   // onSearch 自带 canRead + activityId 守卫；activityId 已由路由注入，有读码即加载该活动的报名/考勤
   regOnSearch();
   attOnSearch();
+  posOnSearch();
 });
 </script>
 
@@ -324,8 +343,72 @@ onMounted(() => {
         </el-descriptions>
       </template>
 
-      <!-- Tab：报名 / 考勤（各自复用对应 list hook，无需再选活动） -->
+      <!-- Tab：报名 / 考勤 / 岗位（各自复用对应 list hook，无需再选活动） -->
       <el-tabs v-model="activeTab" class="cockpit-tabs">
+        <el-tab-pane label="岗位" name="positions">
+          <PureTableBar
+            title="活动岗位"
+            :columns="posColumns"
+            @refresh="posOnSearch"
+          >
+            <template #buttons>
+              <el-button
+                v-if="posCanWrite"
+                type="primary"
+                :icon="useRenderIcon(AddFill)"
+                @click="posOpenDialog('新建')"
+              >
+                新建岗位
+              </el-button>
+            </template>
+            <template v-slot="{ size, dynamicColumns }">
+              <pure-table
+                row-key="activityPositionId"
+                adaptive
+                :adaptiveConfig="{ offsetBottom: 108 }"
+                align-whole="center"
+                table-layout="auto"
+                :loading="posLoading"
+                :size="size"
+                :data="posDataList"
+                :columns="dynamicColumns"
+                :header-cell-style="{
+                  background: 'var(--el-fill-color-light)',
+                  color: 'var(--el-text-color-primary)'
+                }"
+              >
+                <template #empty>
+                  <el-empty
+                    description="还没有岗位：不配岗位时，队员直接报名这个活动；配了岗位后，报名必须选岗位"
+                  />
+                </template>
+                <template #operation="{ row, size: btnSize }">
+                  <el-button
+                    v-if="posCanWrite"
+                    class="reset-margin"
+                    link
+                    :size="btnSize"
+                    :icon="useRenderIcon(EditPen)"
+                    @click="posOpenDialog('编辑', row)"
+                  >
+                    编辑
+                  </el-button>
+                  <el-button
+                    v-if="posCanWrite"
+                    class="reset-margin"
+                    link
+                    type="danger"
+                    :size="btnSize"
+                    @click="posHandleDelete(row)"
+                  >
+                    删除
+                  </el-button>
+                </template>
+              </pure-table>
+            </template>
+          </PureTableBar>
+        </el-tab-pane>
+
         <el-tab-pane label="报名" name="registrations">
           <template v-if="regCanRead">
             <PureTableBar
