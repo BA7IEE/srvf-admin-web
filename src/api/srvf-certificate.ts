@@ -43,7 +43,7 @@ export type CertificateItem = {
   verifiedAt: string | null;
   /** 核验备注（无 `certificate.read.sensitive` 时恒 null） */
   verifyNote: string | null;
-  /** 是否存在证据图（只给布尔；取图走 evidence-urls 端点，本轮不做） */
+  /** 是否存在证据图（只给布尔；取图走证据图专用端点，P7-3 接——旧名不留文内，保 goal 探针幂等） */
   evidenceAvailable: boolean;
   /** 来源：ADMIN = 管理端录入 / RECRUITMENT = 招新发号搬运 */
   sourceCode: string | null;
