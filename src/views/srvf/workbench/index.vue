@@ -123,6 +123,15 @@ type SummaryCard = {
 /** 盾蓝——纯信息量卡片（在册队员 / 本月活动）的品牌强调色 */
 const INFO_ACCENT = "var(--srvf-navy)";
 
+/**
+ * 参与月报入口显隐：该端点虽只要登录，但**数据范围是两项读权限可见组织范围的交集**，
+ * 交集为空时后端返空数组而不报错。只持其一的人点进去只会看到一张空表，
+ * 误以为「这几个月没人参加活动」——所以入口按两码同时持有显隐。
+ */
+const canViewParticipationOverview =
+  hasPerms("attendance.read.sheet") &&
+  hasPerms("activity-registration.read.record");
+
 const summaryCards = computed<SummaryCard[]>(() => {
   const current = summary.value;
   if (!current) return [];
@@ -137,6 +146,13 @@ const summaryCards = computed<SummaryCard[]>(() => {
       desc: "等待审核的活动报名，点击处理",
       accent: "var(--srvf-status-standby)"
     });
+    cards.push({
+      key: "registrations.waitlisted",
+      title: "候补中",
+      value: current.registrations.waitlisted,
+      desc: "名额满后进入候补的报名，点击查看",
+      accent: INFO_ACCENT
+    });
   }
 
   if (current.attendanceSheets) {
@@ -147,6 +163,17 @@ const summaryCards = computed<SummaryCard[]>(() => {
       desc: "等待一级审核的考勤单，点击处理",
       accent: "var(--srvf-status-standby)"
     });
+    // 无一审动作权限时后端**省略这个字段**——缺失 ≠ 0，此时整张卡不出现。
+    // 用 != null 而不是真值判断：0 是「确实没有待我审的」，要照常显示。
+    if (current.attendanceSheets.pendingFirstReview != null) {
+      cards.push({
+        key: "attendanceSheets.pendingFirstReview",
+        title: "待我一级审核",
+        value: current.attendanceSheets.pendingFirstReview,
+        desc: "在我审核范围内的考勤单，点击处理",
+        accent: "var(--srvf-status-standby)"
+      });
+    }
     cards.push({
       key: "attendanceSheets.pendingFinalReview",
       title: "考勤待终审",
@@ -163,6 +190,13 @@ const summaryCards = computed<SummaryCard[]>(() => {
       value: current.activities.published,
       desc: "已发布、进行中的活动，点击查看",
       accent: "var(--srvf-status-active)"
+    });
+    cards.push({
+      key: "activities.pendingCompletion",
+      title: "待完结活动",
+      value: current.activities.pendingCompletion,
+      desc: "已结束但还没点完结的活动，点击处理",
+      accent: "var(--srvf-status-alert)"
     });
   }
 
@@ -261,8 +295,28 @@ function onCardClick(key: string) {
       attStatusFilter.value = "pending_final_review";
       attOnFilterChange();
       break;
+    case "registrations.waitlisted":
+      activeTab.value = "registrations";
+      regStatusFilter.value = "waitlisted";
+      regOnFilterChange();
+      break;
+    case "attendanceSheets.pendingFirstReview":
+      // 与「考勤待一级审核」落同一处：范围差异由后端统计口径体现，
+      // 列表本身没有「只看我能审的」这个筛选项，不假装有
+      activeTab.value = "attendances";
+      attStatusFilter.value = "pending";
+      attOnFilterChange();
+      break;
     case "activities.published":
       router.push("/srvf/activities-domain/activities");
+      break;
+    case "activities.pendingCompletion":
+      // 待完结 = published 且已结束；活动列表按 published 预筛，
+      // 结束与否由列表的生命周期列自己显示
+      router.push({
+        path: "/srvf/activities-domain/activities",
+        query: { statusCode: "published" }
+      });
       break;
   }
 }
@@ -304,6 +358,13 @@ onMounted(() => {
               @click="loadDashboardSummary"
             >
               刷新摘要
+            </el-button>
+            <el-button
+              v-if="canViewParticipationOverview"
+              link
+              @click="router.push('/srvf/activities-domain/participation')"
+            >
+              参与月报
             </el-button>
             <el-button link @click="router.push('/srvf/help')">
               使用手册

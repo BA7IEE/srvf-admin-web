@@ -34,6 +34,20 @@ export default [
           showLink: false,
           activePath: "/srvf/activities-domain/activities"
         }
+      },
+      {
+        // 参与月报（隐藏叶）：从工作台摘要区入口进，不占侧栏位置。
+        // 数据范围由「考勤单读」∩「活动报名读」两码的可见组织范围求交决定，
+        // 入口按两码同时持有显隐（后端对无交集者返空数组而非报错）。
+        path: "/srvf/activities-domain/participation",
+        name: "SrvfParticipationOverview",
+        component: () =>
+          import("@/views/srvf/activities-domain/participation/index.vue"),
+        meta: {
+          title: "参与月报",
+          showLink: false,
+          activePath: "/srvf/activities-domain/activities"
+        }
       }
     ]
   },
