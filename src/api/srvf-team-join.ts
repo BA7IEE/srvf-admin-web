@@ -16,12 +16,45 @@ export type TeamJoinCycle = {
   year: number;
   name: string;
   statusCode: string;
+  /**
+   * 本轮最终入队是否要求保险。
+   *
+   * ⚠️ **这个开关不是自己生效的**：只有后端的保险总闸（单一 enforcement gate）
+   * 开启后它才真正校验；总闸关着时它只是**配置与回显**，不查保险也不产生凭据。
+   * 所以界面上不能说成「开了就一定会拦」，得说清依赖总闸——否则运营会以为已经拦上了。
+   */
+  requiresInsurance: boolean;
   openedAt: string | null;
   closedAt: string | null;
+  /**
+   * 本轮开放候选部门（最多 64 项）。
+   * **null / 空数组 = 全部 ACTIVE 部门**，不是「一个都不开放」——
+   * 这个语义反直觉，界面要显式写出来。
+   */
+  openOrganizationIds: string[] | null;
+  /** 每人可报候选部门数上限；null = 走后端默认 2。 */
+  maxTargetOrgs: number | null;
   createdAt: string;
 };
-export type CreateTeamJoinCycleBody = { year: number; name: string };
-export type UpdateTeamJoinCycleBody = { statusCode?: string; name?: string };
+export type CreateTeamJoinCycleBody = {
+  year: number;
+  name: string;
+  requiresInsurance?: boolean;
+  openOrganizationIds?: string[];
+  maxTargetOrgs?: number;
+};
+export type UpdateTeamJoinCycleBody = {
+  statusCode?: string;
+  name?: string;
+  requiresInsurance?: boolean;
+  openOrganizationIds?: string[];
+  maxTargetOrgs?: number;
+};
+
+/** 开放部门数量上限（后端 `@ArrayMaxSize(64)`）。 */
+export const TJ_MAX_OPEN_ORGS = 64;
+/** 每人可报部门数的取值范围（后端默认 2）。 */
+export const TJ_MAX_TARGET_ORGS_RANGE = { min: 1, max: 2, default: 2 };
 
 export type TjCycleListResult = Envelope<PageResult<TeamJoinCycle>>;
 export type TjCycleResult = Envelope<TeamJoinCycle>;
@@ -210,3 +243,25 @@ export const GATE_LABEL: Record<string, string> = {
   "team-mountain": "山地救援队",
   "team-high": "高空救援队"
 };
+
+/**
+ * 入队域错误码人话（三段式）。
+ *
+ * `26031` 是**最终入队**这一步才会撞上的保险闸：这个人在入队当天没有任何被认可的
+ * 保险来源（本人自购且已核验 / 队内统一保单覆盖）。文案要说清「查的是入队日那天」，
+ * 否则会有人去补一份明天才起保的保单然后纳闷为什么还是不行。
+ */
+export function teamJoinBizErrorMessage(
+  error: unknown,
+  fallback: string
+): string {
+  const data = (
+    error as { response?: { data?: { code?: unknown; message?: string } } }
+  )?.response?.data;
+  const code = Number(data?.code);
+  if (code === 26031)
+    return "这个人在入队当天没有有效保险（26031）：需要本人自购并已核验通过、或已被队内统一保单覆盖，且保障期要覆盖入队当天。请先到队员档案的保险页签确认，再回来办入队";
+  if (code === 28242)
+    return "选的部门不在本轮开放清单里，或超过了本轮允许的部门数（28242）：请改选本轮开放的部门，数量也要在上限内";
+  return data?.message ?? fallback;
+}

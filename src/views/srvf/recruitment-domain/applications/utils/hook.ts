@@ -8,6 +8,7 @@ import { addDialog } from "@/components/ReDialog";
 import { hasPerms } from "@/utils/auth";
 import { useSrvfList } from "@/srvf-kit";
 import ProfileForm, { type ProfileFormModel } from "../profile-form.vue";
+import IdCardViewer from "../id-card-viewer.vue";
 import {
   getRecruitmentApplications,
   getRecruitmentApplication,
@@ -18,6 +19,7 @@ import {
   promoteSingleApplication,
   recruitmentBizErrorMessage,
   getIdCardImageUrl,
+  type IdCardImageUrl,
   type UpdateApplicationBody,
   APP_STATUS_LABEL,
   APP_STATUS_TAG,
@@ -58,6 +60,11 @@ export function useRecruitmentApplications(cycleId: string) {
   /** 改资料与单人建档各自独立码：能看能审 ≠ 能改资料 ≠ 能建档 */
   const canUpdate = hasPerms("recruitment-application.update.record");
   const canPromoteSingle = hasPerms("recruitment-application.promote.single");
+  /**
+   * 证件照是 L3 敏感材料，端点判的是**敏感码**（不是列表读码）。
+   * 只有读码的人不该看到这个按钮——看到了点下去只会吃 403。
+   */
+  const canReadSensitive = hasPerms("recruitment-application.read.sensitive");
   /** 正在建档的那一行（按钮 loading 用） */
   const promotingId = ref("");
 
@@ -541,18 +548,33 @@ export function useRecruitmentApplications(cycleId: string) {
       .catch(() => {});
   }
 
-  /** 取证件照短 TTL signed-URL,新标签打开（L3;读图后端记审计） */
+  /**
+   * 取证件照三图并在弹窗里看（原图 / 主体框 / 头像）。
+   *
+   * 改成弹窗而不是新标签：signed-URL 开在新标签会留在浏览器历史里，
+   * 而这是 L3 敏感材料。弹窗关掉即弃，链接不落任何存储（读图后端记审计）。
+   */
   async function openIdCardImage(row: RecruitmentApplication) {
+    let urls: IdCardImageUrl;
     try {
       const { code, data } = await getIdCardImageUrl(row.id);
-      if (code === 0 && data?.url) {
-        window.open(data.url, "_blank", "noopener,noreferrer");
-      }
+      if (code !== 0 || !data?.url) return;
+      urls = data;
     } catch (error: any) {
-      message(bizErrorMessage(error, "取证件照失败"), {
+      message(recruitmentBizErrorMessage(error, "取证件照失败"), {
         type: "error"
       });
+      return;
     }
+
+    addDialog({
+      title: `证件照 · ${rowSubject(row)}`,
+      width: "52%",
+      draggable: true,
+      hideFooter: true,
+      destroyOnClose: true,
+      contentRenderer: () => h(IdCardViewer, { urls, subject: rowSubject(row) })
+    });
   }
 
   /** 已发号者 → 跳队员作战室查看建好的 Member */
@@ -569,6 +591,7 @@ export function useRecruitmentApplications(cycleId: string) {
     canResolve,
     canUpdate,
     canPromoteSingle,
+    canReadSensitive,
     loading,
     statusFilter,
     statusOptions,

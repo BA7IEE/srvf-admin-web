@@ -15,7 +15,8 @@ import {
   createTeamJoinCycle,
   updateTeamJoinCycle,
   TJ_CYCLE_STATUS_LABEL,
-  type TeamJoinCycle
+  type TeamJoinCycle,
+  TJ_MAX_TARGET_ORGS_RANGE
 } from "@/api/srvf-team-join";
 
 export function useTeamJoinCycles() {
@@ -76,7 +77,10 @@ export function useTeamJoinCycles() {
         formInline: {
           isEdit,
           year: row?.year ?? new Date().getFullYear(),
-          name: row?.name ?? ""
+          name: row?.name ?? "",
+          openOrganizationIds: row?.openOrganizationIds ?? [],
+          maxTargetOrgs: row?.maxTargetOrgs ?? TJ_MAX_TARGET_ORGS_RANGE.default,
+          requiresInsurance: row?.requiresInsurance ?? false
         } as TjCycleFormModel
       },
       contentRenderer: () => h(TjCycleForm, { ref: formRef }),
@@ -89,12 +93,20 @@ export function useTeamJoinCycles() {
           }
           try {
             if (isEdit && row) {
-              await updateTeamJoinCycle(row.id, { name: curData.name });
+              await updateTeamJoinCycle(row.id, {
+                name: curData.name,
+                openOrganizationIds: curData.openOrganizationIds,
+                maxTargetOrgs: curData.maxTargetOrgs,
+                requiresInsurance: curData.requiresInsurance
+              });
               message("修改成功", { type: "success" });
             } else {
               await createTeamJoinCycle({
                 year: curData.year as number,
-                name: curData.name
+                name: curData.name,
+                openOrganizationIds: curData.openOrganizationIds,
+                maxTargetOrgs: curData.maxTargetOrgs,
+                requiresInsurance: curData.requiresInsurance
               });
               message("新建成功", { type: "success" });
             }

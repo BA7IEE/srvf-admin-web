@@ -16,7 +16,8 @@ import {
   TJ_CYCLE_STATUS_LABEL,
   TJ_APP_STATUS_LABEL,
   TJ_APP_STATUS_TAG,
-  type TeamJoinCycle
+  type TeamJoinCycle,
+  TJ_MAX_TARGET_ORGS_RANGE
 } from "@/api/srvf-team-join";
 import TjCycleForm, { type TjCycleFormModel } from "./form.vue";
 import { useTeamJoinApplications } from "../applications/utils/hook";
@@ -95,7 +96,10 @@ function openEditDialog() {
       formInline: {
         isEdit: true,
         year: c.year,
-        name: c.name
+        name: c.name,
+        openOrganizationIds: c.openOrganizationIds ?? [],
+        maxTargetOrgs: c.maxTargetOrgs ?? TJ_MAX_TARGET_ORGS_RANGE.default,
+        requiresInsurance: c.requiresInsurance
       } as TjCycleFormModel
     },
     contentRenderer: () => h(TjCycleForm, { ref: formRef }),
@@ -107,7 +111,13 @@ function openEditDialog() {
           return;
         }
         try {
-          await updateTeamJoinCycle(cycleId, { name: curData.name });
+          await updateTeamJoinCycle(cycleId, {
+            name: curData.name,
+            // 空数组照发：后端语义「空 = 全部开放」，这是清空限定的正规做法
+            openOrganizationIds: curData.openOrganizationIds,
+            maxTargetOrgs: curData.maxTargetOrgs,
+            requiresInsurance: curData.requiresInsurance
+          });
           message("修改成功", { type: "success" });
           done();
           fetchCycle();
