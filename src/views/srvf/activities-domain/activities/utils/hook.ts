@@ -1,4 +1,4 @@
-import { h, ref } from "vue";
+import { h, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import dayjs from "dayjs";
 import { ElMessageBox } from "element-plus";
@@ -6,7 +6,7 @@ import { deviceDetection } from "@pureadmin/utils";
 import { message } from "@/utils/message";
 import { hasPerms } from "@/utils/auth";
 import { addDialog } from "@/components/ReDialog";
-import { useSrvfList } from "@/srvf-kit";
+import { useSrvfList, useActionStates } from "@/srvf-kit";
 import { useMultiTagsStoreHook } from "@/store/modules/multiTags";
 import ActivityForm, {
   type ActivityFormModel,
@@ -80,6 +80,33 @@ export function useActivities() {
     fetch: getActivities,
     buildParams: () => ({}),
     errorMessage: "加载活动列表失败"
+  });
+
+  /**
+   * 批量按钮态：活动是状态机最重的一张表——已取消的活动「发布/取消」都不该点，
+   * 但这不是权限问题（超管也一样被拒，2026-08-01 实测 `state_forbidden`）。
+   * 由后端逐条裁决，把「状态不允许」与「没权限」在 tooltip 上分开。
+   *
+   * 用 watch 而不是改 useSrvfList：列表原语是多页共用的，不为一处需求动它。
+   */
+  const {
+    load: loadStates,
+    isBlocked: stateBlocked,
+    blockTip: stateTip,
+    buildItems: buildStateItems
+  } = useActionStates();
+
+  const ACTIVITY_ACTIONS = [
+    "activity.publish.record",
+    "activity.cancel.record",
+    "activity.complete.record"
+  ];
+
+  watch(dataList, rows => {
+    const ids = (rows as ActivityItem[]).map(r => r.id).filter(Boolean);
+    if (ids.length) {
+      loadStates(buildStateItems("activity", ids, ACTIVITY_ACTIONS));
+    }
   });
 
   const columns: TableColumnList = [
@@ -407,6 +434,8 @@ export function useActivities() {
     canPublish,
     canCancel,
     canComplete,
+    stateBlocked,
+    stateTip,
     loading,
     columns,
     dataList,

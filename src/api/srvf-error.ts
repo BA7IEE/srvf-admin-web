@@ -22,7 +22,10 @@ type BizErrorLike = {
 
 /** 跨域通用业务码（仅收录多域复用的码；单域码留在各自 api 层） */
 const GLOBAL_BIZ_ERROR_MESSAGE: Record<number, string> = {
-  30100: "您没有执行此操作的权限，请联系管理员开通"
+  30100: "您没有执行此操作的权限，请联系管理员开通",
+  // 限流是所有端点共用的闸，统一一句话，不按域各写各的
+  42900:
+    "操作太频繁了（42900）：请稍等几秒再试。连续快速点同一个按钮会触发这个限制"
 };
 
 export function bizErrorMessage(error: unknown, fallback: string): string {

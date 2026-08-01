@@ -30,6 +30,8 @@ const {
   canPublish,
   canCancel,
   canComplete,
+  stateBlocked,
+  stateTip,
   loading,
   columns,
   dataList,
@@ -105,16 +107,28 @@ onMounted(() => {
       >
         编辑
       </el-button>
-      <el-button
+      <!--
+        按钮态由后端逐条裁决：被状态机拒掉时置灰并说明「不是权限问题」。
+        查不到就维持原有的码门 + 状态判断，不因增强接口失败而灰掉按钮。
+      -->
+      <el-tooltip
         v-if="canPublish && row.statusCode === 'draft'"
-        class="reset-margin"
-        link
-        type="success"
-        :size="size"
-        @click="handlePublish(row)"
+        :content="stateTip(row.id, 'activity.publish.record')"
+        :disabled="!stateBlocked(row.id, 'activity.publish.record')"
       >
-        发布
-      </el-button>
+        <span class="inline-block">
+          <el-button
+            class="reset-margin"
+            link
+            type="success"
+            :size="size"
+            :disabled="stateBlocked(row.id, 'activity.publish.record')"
+            @click="handlePublish(row)"
+          >
+            发布
+          </el-button>
+        </span>
+      </el-tooltip>
       <!--
         完结:唯一完结通路(考勤提交不再推进状态)。
         显示条件必须同时满足后端 complete 的两个前置(published + phase 已结束),
@@ -132,16 +146,24 @@ onMounted(() => {
       >
         完结
       </el-button>
-      <el-button
+      <el-tooltip
         v-if="canCancel && row.statusCode !== 'cancelled'"
-        class="reset-margin"
-        link
-        type="warning"
-        :size="size"
-        @click="handleCancel(row)"
+        :content="stateTip(row.id, 'activity.cancel.record')"
+        :disabled="!stateBlocked(row.id, 'activity.cancel.record')"
       >
-        取消
-      </el-button>
+        <span class="inline-block">
+          <el-button
+            class="reset-margin"
+            link
+            type="warning"
+            :size="size"
+            :disabled="stateBlocked(row.id, 'activity.cancel.record')"
+            @click="handleCancel(row)"
+          >
+            取消
+          </el-button>
+        </span>
+      </el-tooltip>
       <el-button
         v-if="canDelete"
         class="reset-margin"

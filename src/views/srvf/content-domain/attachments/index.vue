@@ -127,6 +127,16 @@ onMounted(() => {
       >
         预览
       </el-link>
+      <!--
+        accessUrl 为空 = 签名短链已过期或存储不可用，不是「没有这个文件」。
+        给出明确文案而不是让这一格空着——空着会被当成加载失败。
+      -->
+      <el-tooltip
+        v-else
+        content="预览链接已过期，刷新列表可重新获取；仍为空说明存储服务不可用"
+      >
+        <span class="mr-2 expired-hint">链接已过期</span>
+      </el-tooltip>
       <el-button
         v-if="canUpdate(row.ownerType)"
         link
@@ -246,6 +256,11 @@ onMounted(() => {
 </template>
 
 <style scoped lang="scss">
+.expired-hint {
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
+}
+
 .upload-text {
   padding: 18px;
   color: var(--el-text-color-secondary);

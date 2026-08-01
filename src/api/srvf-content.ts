@@ -254,3 +254,23 @@ export async function uploadContentAttachment(
   if (confirmed.code !== 0) throw new Error("确认上传失败");
   return confirmed.data;
 }
+
+/**
+ * 内容域错误码人话（三段式）。
+ *
+ * `29031`：附件正被封面或正文引用着。**后端不会自动清引用**——必须先去内容里
+ * 把引用去掉再删，否则删了会留下悬空引用。文案要明确说「先移除引用」，
+ * 不能只说「删除失败」。
+ */
+export function contentBizErrorMessage(
+  error: unknown,
+  fallback: string
+): string {
+  const data = (
+    error as { response?: { data?: { code?: unknown; message?: string } } }
+  )?.response?.data;
+  const code = Number(data?.code);
+  if (code === 29031)
+    return "这个附件还在被用着（29031）：它是封面图或正文里引用的文件。请先在内容编辑器里把引用去掉，再回来删除附件";
+  return data?.message ?? fallback;
+}
