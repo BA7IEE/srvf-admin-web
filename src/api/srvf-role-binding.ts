@@ -161,13 +161,6 @@ export const getRoleBindingsLegacy = (params?: {
     { params }
   );
 
-/** 单条角色绑定详情 `GET /api/admin/v1/role-bindings/{id}`（rbac: `role-binding.read.record`）。 */
-export const getRoleBinding = (id: string) =>
-  http.request<Envelope<RoleBindingItem>>(
-    "get",
-    `/api/admin/v1/role-bindings/${id}`
-  );
-
 /** 新建入参（后端 `CreateRoleBindingDto`）。scope 字段 / principalId 是否必填由 scopeType / principalType 决定，前端不作强校验假设，一律照后端裁决。 */
 export type CreateRoleBindingBody = {
   principalType: PrincipalType;

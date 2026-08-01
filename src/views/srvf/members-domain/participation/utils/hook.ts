@@ -12,6 +12,10 @@ import {
   type MemberAttendanceRecord,
   type MemberContributionSummary
 } from "@/api/srvf-member-participation";
+import {
+  getMemberParticipationSummary,
+  type MemberParticipationSummary
+} from "@/api/srvf-member";
 import { useSrvfDictStoreHook } from "@/store/modules/srvfDict";
 
 /** 报名状态 code → tag 颜色（契约 registration_status 闭集；文案查字典）。 */
@@ -254,20 +258,34 @@ export function useMemberContribution(memberId: string) {
   const canRead = hasPerms("attendance.read.sheet");
   const loading = ref(false);
   const summary = ref<MemberContributionSummary | null>(null);
+  /**
+   * 生涯参与累计（时长 / 活动数 / 记录数 / 贡献值 一卡集齐）。
+   * 全部由后端按已终审单据算好——**前端不得把记录裸 SUM 一遍**，
+   * 那样既漏掉封顶规则，也会把未终审的算进去。
+   */
+  const participation = ref<MemberParticipationSummary | null>(null);
 
   async function onSearch() {
     if (!canRead || !memberId) {
       summary.value = null;
+      participation.value = null;
       return;
     }
     loading.value = true;
     try {
-      const { code, data } = await getMemberContributionSummary(memberId);
-      if (code === 0) summary.value = data;
-    } catch (error: any) {
-      message(bizErrorMessage(error, "加载贡献值失败"), {
-        type: "error"
-      });
+      // 两个端点各自独立：任一失败不影响另一个照常展示
+      const [sumRes, partRes] = await Promise.allSettled([
+        getMemberContributionSummary(memberId),
+        getMemberParticipationSummary(memberId)
+      ]);
+      if (sumRes.status === "fulfilled" && sumRes.value.code === 0)
+        summary.value = sumRes.value.data;
+      if (partRes.status === "fulfilled" && partRes.value.code === 0)
+        participation.value = partRes.value.data;
+      if (sumRes.status === "rejected")
+        message(bizErrorMessage(sumRes.reason, "加载贡献值失败"), {
+          type: "error"
+        });
     } finally {
       loading.value = false;
     }
@@ -277,6 +295,7 @@ export function useMemberContribution(memberId: string) {
     canRead,
     loading,
     summary,
+    participation,
     onSearch
   };
 }
