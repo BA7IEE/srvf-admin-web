@@ -209,7 +209,7 @@ export const getRecruitmentApplication = (id: string) =>
 
 /** 标/清门槛入参（`MarkThresholdDto`）。 */
 export type MarkThresholdBody = {
-  /** 仅这三项可手标——redCross/bsafe 由证书申报审核派生，手传 40000（待 P7-4） */
+  /** 仅这三项可手标——redCross/bsafe 由证书申报审核派生，手传恒 28063 */
   thresholdCode: (typeof MANUAL_THRESHOLD_CODES)[number];
   completed: boolean;
 };
@@ -539,11 +539,11 @@ export const THRESHOLD_CODES = [
  * 可**手工**标记的门槛（后端 `MarkThresholdDto` 的 enum，2026-08-01 实测核对）。
  *
  * ⚠️ 契约已收紧：急救资质（redCross）与 BSAFE **改成了证书申报审核结论的派生投影**，
- * 手工传这两个 code 后端直接以 40000「门槛 code 非法」拒绝（实测证实）。
+ * 手工传这两个 code 后端一律以 28063「该门槛由证书申报审核结论自动派生」拒绝
+ * （2026-08-02 对 live 契约核对；早期实测记的 40000 已被专用码取代）。
  * 所以界面上这两项只读展示，不给开关——给了也是白点。
  *
- * 驱动这两项的「招新证书申报审核」面**待 P7-4**（证书标准库解冻后一步到位建，
- * 不按已被移除的 v0.42 契约重复建设）。在那之前这两项只能看不能改。
+ * 驱动这两项的「证书材料」审核面已在报名详情内（P7-4）：审核通过后由后端派生这两个门槛。
  */
 export const MANUAL_THRESHOLD_CODES = [
   "patrol1",
@@ -711,4 +711,236 @@ export function recruitmentBizErrorMessage(
   if (code === 19010)
     return "紧急联系人的关系填得不对（19010）：请从关系下拉里选一个，不要手输";
   return data?.message ?? fallback;
+}
+
+/* ======================= 招新证书申报（P7-4 审核面） ======================= */
+
+/**
+ * 证书申报状态（后端闭集）。
+ * - `SUBMITTED` 待审 / `NEEDS_INFO` 已要求补充材料（申请人可重传）
+ * - `APPROVED` 已通过（可撤回结论）/ `REJECTED` 已拒绝（可重审）
+ * - `PROMOTED` 已随发号搬进证书档案（终态）/ `WITHDRAWN` 申请人自行撤回（终态）
+ */
+export type CertificateClaimStatus =
+  | "SUBMITTED"
+  | "NEEDS_INFO"
+  | "APPROVED"
+  | "REJECTED"
+  | "PROMOTED"
+  | "WITHDRAWN";
+
+export const CLAIM_STATUS_LABEL: Record<string, string> = {
+  SUBMITTED: "待审核",
+  NEEDS_INFO: "已要求补材料",
+  APPROVED: "已通过",
+  REJECTED: "已拒绝",
+  PROMOTED: "已进证书档案",
+  WITHDRAWN: "申请人已撤回"
+};
+
+export const CLAIM_STATUS_TAG: Record<
+  string,
+  "success" | "info" | "warning" | "danger" | "primary"
+> = {
+  SUBMITTED: "warning",
+  NEEDS_INFO: "warning",
+  APPROVED: "success",
+  REJECTED: "danger",
+  PROMOTED: "success",
+  WITHDRAWN: "info"
+};
+
+/** 申报里引用的标准摘要（建议标准 / 审核锁定标准共用） */
+export type ClaimStandardRef = {
+  id: string;
+  code: string;
+  name: string;
+  categoryCode: string;
+  levelCode: string | null;
+};
+
+/**
+ * 证书申报（后端 `RecruitmentCertificateClaimAdminDto`）。**一证一行，同类可多行**。
+ *
+ * 两个「标准」字段含义完全不同，别混：
+ * - `suggestedStandard` = **申请人自己选的建议**，仅作预填提示，审核员可以改（D-CERT-016）；
+ * - `standard` = **审核锁定的结论**，null 表示还没分类。
+ */
+export type RecruitmentCertificateClaim = {
+  id: string;
+  applicationId: string;
+  /** CAS 版本号：审核 / 撤回必须回传当前值，否则 28058 */
+  version: number;
+  status: CertificateClaimStatus;
+  /** 申请人选的类别提示（cert_type 字典 code）——**不是**审核结论 */
+  categoryHintCode: string;
+  /** 申请人填的证书名称（自由文本） */
+  rawCertificateName: string | null;
+  suggestedStandard: ClaimStandardRef | null;
+  standard: ClaimStandardRef | null;
+  recognitionPolicyId: string | null;
+  recognitionIssuerId: string | null;
+  issuingOrg: string | null;
+  /** 编号掩码（恒返） */
+  certNumberMasked: string | null;
+  /** 编号明文（L2；仅持 `recruitment-application.read.sensitive` 时返回） */
+  certNumberFull: string | null;
+  issuedAt: string | null;
+  expiredAt: string | null;
+  /** 证据图数量（**永不返 key**；取图走 image-urls 端点） */
+  imageCount: number;
+  /** 审核人（L2；仅持 read.sensitive 时返回） */
+  reviewedByUserId: string | null;
+  reviewedAt: string | null;
+  /** 审核备注（L2；仅持 read.sensitive 时返回） */
+  reviewNote: string | null;
+  promotedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+/**
+ * 列出某报名的全部证书申报
+ * `GET /api/admin/v1/recruitment/applications/{applicationId}/certificate-claims`
+ * （rbac: `recruitment-application.read.record`）。无分页，createdAt ASC。
+ */
+export const getApplicationCertificateClaims = (applicationId: string) =>
+  http.request<Envelope<{ items: RecruitmentCertificateClaim[] }>>(
+    "get",
+    `/api/admin/v1/recruitment/applications/${applicationId}/certificate-claims`
+  );
+
+/**
+ * 单条证书申报详情 `GET /api/admin/v1/recruitment/certificate-claims/{id}`
+ * （rbac: `recruitment-application.read.record`）。
+ * CAS 冲突（28058）后用它把最新 `version` 与内容取回来再让人重提。
+ */
+export const getCertificateClaim = (id: string) =>
+  http.request<Envelope<RecruitmentCertificateClaim>>(
+    "get",
+    `/api/admin/v1/recruitment/certificate-claims/${id}`
+  );
+
+/**
+ * 证书申报证据图短 TTL signed-URL
+ * `GET /api/admin/v1/recruitment/certificate-claims/{id}/image-urls`
+ * （rbac: `recruitment-application.read.sensitive`）。
+ *
+ * ⚠️ **敏感资源四条纪律**（写成注释免得被「优化」掉）：不预加载（点了才取）/
+ * 关页即弃 / 不写任何本地存储 / 失败给重试。TTL ≤ 300s，只返 URL 不返 key。
+ */
+export type CertificateClaimImageUrls = {
+  claimId: string;
+  urls: string[];
+  expiresAt: string;
+};
+
+export const getCertificateClaimImageUrls = (id: string) =>
+  http.request<Envelope<CertificateClaimImageUrls>>(
+    "get",
+    `/api/admin/v1/recruitment/certificate-claims/${id}/image-urls`
+  );
+
+/**
+ * 审核单张证书申报入参（后端 `ReviewCertificateClaimDto`）。
+ *
+ * `APPROVE` 会**锁定标准化事实**（Standard / Policy / 机构 / 编号 / 日期），
+ * 所以那几个字段的必填性全由所选标准的生效认定规则决定，与建证同一套口径：
+ * ALLOWLIST 必传 `recognitionIssuerId` / FREE_TEXT 必传 `issuingOrg` / FIXED 都不传；
+ * `expiredAt` 在 PERMANENT 与 FIXED_MONTHS 下**不得传**。
+ */
+export type ReviewCertificateClaimBody = {
+  decision: "APPROVE" | "REJECT" | "NEEDS_INFO";
+  /** CAS：必须等于当前 claim.version，否则 28058 */
+  version: number;
+  /** APPROVE 必填：审核员**显式选定**的 CREDENTIAL 标准（可更正申请人的建议） */
+  standardId?: string;
+  recognitionIssuerId?: string;
+  issuingOrg?: string;
+  certNumber?: string;
+  /** APPROVE 必填：纯日期 YYYY-MM-DD，不得晚于今天 */
+  issuedAt?: string;
+  expiredAt?: string;
+  /** REJECT / NEEDS_INFO 必填（申请人进度可见）；APPROVE 可选 */
+  note?: string;
+};
+
+/**
+ * 审核证书申报 `POST /api/admin/v1/recruitment/certificate-claims/{id}/review`
+ * （rbac: `recruitment-application.review.certificate`）。
+ */
+export const reviewCertificateClaim = (
+  id: string,
+  body: ReviewCertificateClaimBody
+) =>
+  http.request<Envelope<RecruitmentCertificateClaim>>(
+    "post",
+    `/api/admin/v1/recruitment/certificate-claims/${id}/review`,
+    { data: body }
+  );
+
+/**
+ * 撤回已通过的审核结论
+ * `POST /api/admin/v1/recruitment/certificate-claims/{id}/revoke-review`
+ * （rbac: `recruitment-application.review.certificate`）。
+ * APPROVED → SUBMITTED，并**清空**已锁定的标准 / 规则 / 机构与审核字段。
+ */
+export const revokeCertificateClaimReview = (
+  id: string,
+  body: { version: number; note: string }
+) =>
+  http.request<Envelope<RecruitmentCertificateClaim>>(
+    "post",
+    `/api/admin/v1/recruitment/certificate-claims/${id}/revoke-review`,
+    { data: body }
+  );
+
+/**
+ * 证书申报域错误码 → 人话三段式。
+ * 码义来源：live `/api/docs-json` 各端点 responses（2026-08-02 实测核对）。
+ */
+export function certificateClaimBizErrorMessage(
+  error: unknown,
+  fallback: string
+): string {
+  const data = (
+    error as { response?: { data?: { code?: unknown; message?: string } } }
+  )?.response?.data;
+  const code = Number(data?.code);
+  switch (code) {
+    case 28056:
+      return "找不到这条证书申报（28056）：可能刚被撤回或清理了。请刷新本条报名再看";
+    case 28057:
+      return "这条申报的当前状态不允许这个操作（28057）：它可能刚被别人审过、被申请人撤回、或已经随发号进了证书档案。请刷新后按最新状态处理";
+    case 28058:
+      return "这条申报刚被更新过（28058）：可能申请人重传了材料，或别人同时在审。已为你刷新，请核对最新内容后重新提交";
+    case 28061:
+      return "通过前必须先选定一个具体的证书标准（28061）：申请人填的名称和建议标准都只是线索，认定结论要审核员来定";
+    case 28062:
+      return "这个标准还没有生效的认定规则（28062）：标准已收录但还没配「按什么规则认定」，所以现在通不过。请先到 设置中心 → 证书标准库 给它建一条认定规则并激活";
+    case 28063:
+      return "这个门槛由证书申报的审核结论自动得出（28063），不能手工标记";
+    case 18002:
+      return "找不到这个证书标准（18002）：它可能刚被删除。请刷新标准下拉后重选";
+    case 18012:
+      return "选中的是目录节点（18012）：目录只用来分组，不能被认定。请选一个具体证书标准";
+    case 18013:
+      return "发证机构配置不符合认定规则（18013）：请按该标准的机构策略填写";
+    case 18014:
+      return "这家发证机构不在该标准的认可名单里（18014）：请从名单里选，或先到标准库新建一个认定规则版本把它加进去";
+    case 18015:
+      return "有效期不符合认定规则（18015）：该标准的有效期由规则决定，请检查到期日是否该填";
+    case 18016:
+      return "这个标准要求必须填写证书编号（18016）";
+    case 18017:
+      return "到期日不能早于发证日期（18017）";
+    case 18018:
+      return "发证日期不能晚于今天（18018）";
+    case 18020:
+      return "这个标准的认定规则不接受证书编号（18020）：请把编号留空";
+    case 18031:
+      return "这个证书标准还没启用（18031）：请先到 设置中心 → 证书标准库 把它启用";
+    default:
+      return recruitmentBizErrorMessage(error, fallback);
+  }
 }

@@ -9,6 +9,7 @@ import {
   type RecruitmentApplication
 } from "@/api/srvf-recruitment";
 import { useSrvfDictStoreHook } from "@/store/modules/srvfDict";
+import CertificateClaimsPanel from "./certificate-claims-panel.vue";
 
 /** 证件类型 code → 中文（document_type 字典;不可用时退回原 code） */
 const dict = useSrvfDictStoreHook();
@@ -19,21 +20,29 @@ type ThresholdCode = (typeof MANUAL_THRESHOLD_CODES)[number];
 /**
  * 这一项能不能手工标。
  *
- * 急救资质与 BSAFE **已改成证书申报审核结论的派生投影**，手工传后端以 40000
- * 「门槛 code 非法」拒绝（2026-08-01 实测）。所以这两项只读展示。
- *
- * 驱动它们的「招新证书申报审核」面 **待 P7-4**（证书标准库解冻后一步到位建，
- * 不按已被移除的 v0.42 契约重复建设）。
+ * 急救资质与 BSAFE **已改成证书申报审核结论的派生投影**，手工传这两个 code
+ * 后端一律以 28063「该门槛由证书申报审核结论自动派生」拒绝。所以这两项只读展示。
+ * 驱动它们的是下方「证书材料」面板的审核结论（P7-4）。
  */
 function isManual(code: string) {
   return (MANUAL_THRESHOLD_CODES as readonly string[]).includes(code);
 }
 
-/** 招新报名详情(drawer 内只读 PII + 门槛开关)。marked/可编辑由父 hook 控制,toggle 经 emit 回父处理。 */
-const props = defineProps<{
-  app: RecruitmentApplication | null;
-  canMark: boolean;
-}>();
+/**
+ * 招新报名详情(drawer 内只读 PII + 门槛开关)。marked/可编辑由父 hook 控制,toggle 经 emit 回父处理。
+ *
+ * `showCertificateClaims` 默认 **false**：本组件被招新与入队两个作战室共用，
+ * 而 `certificate-claims` 只挂在**招新报名**下，拿入队报名 id 去调必 404（28002）。
+ * 所以只有招新那侧显式打开它。
+ */
+const props = withDefaults(
+  defineProps<{
+    app: RecruitmentApplication | null;
+    canMark: boolean;
+    showCertificateClaims?: boolean;
+  }>(),
+  { showCertificateClaims: false }
+);
 const emit = defineEmits<{
   (e: "mark", code: ThresholdCode, completed: boolean): void;
 }>();
@@ -138,9 +147,15 @@ function onToggle(code: string, val: boolean) {
       </div>
     </div>
     <div class="app-detail__hint app-detail__thresholds-note">
-      急救资质与 BSAFE 不能在这里手工标——它们由证书材料的审核结论自动得出。
-      证书审核面还没建好，这两项目前只能看。
+      急救资质与 BSAFE
+      不能在这里手工标——它们由下方「证书材料」的审核结论自动得出。
     </div>
+
+    <CertificateClaimsPanel
+      v-if="showCertificateClaims"
+      :application-id="app.id"
+      :promoted-member-id="app.promotedMemberId"
+    />
   </div>
   <el-empty v-else description="暂无详情" />
 </template>
