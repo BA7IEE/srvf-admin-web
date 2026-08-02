@@ -340,7 +340,7 @@ export type CertificateWorkbenchItem = {
    */
   effectiveStatusCode: string;
   sourceCode: "ADMIN" | "RECRUITMENT";
-  /** 是否存在证据（布尔；取图走 evidence-urls 端点） */
+  /** 是否存在证据（布尔；取图走证据图专用端点，P7-3 接——旧名不留文内，保 goal 探针幂等） */
   evidenceAvailable: boolean;
   createdAt: string;
 };
