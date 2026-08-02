@@ -608,6 +608,7 @@ onMounted(() => {
         <ApplicationDetail
           :app="appDetailData"
           :can-mark="appCanMarkThreshold"
+          show-certificate-claims
           @mark="appHandleMarkThreshold"
         />
       </div>
