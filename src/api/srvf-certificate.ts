@@ -81,6 +81,21 @@ export const getMemberCertificates = (memberId: string) =>
     `/api/admin/v1/members/${memberId}/certificates`
   );
 
+/**
+ * 单张证书详情 `GET /api/admin/v1/members/{memberId}/certificates/{id}`
+ * （rbac: `certificate.read.record`，与列表同码）。
+ *
+ * ⚠️ **和列表不是同一个读模型**：列表是「精简字段」，只返 10 个字段——
+ * `certNumberMasked` / `certNumberFull` / `verifiedBy` / `verifiedAt` / `verifyNote` /
+ * `evidenceAvailable` **列表一个都不返**（2026-08-02 对 live 实测）。
+ * 要这些字段就得走本端点，别拿列表行当完整对象用。
+ */
+export const getMemberCertificate = (memberId: string, id: string) =>
+  http.request<Envelope<CertificateItem>>(
+    "get",
+    `/api/admin/v1/members/${memberId}/certificates/${id}`
+  );
+
 /* ----------------------------- 证书 写操作 ----------------------------- */
 
 /**
@@ -225,6 +240,42 @@ export const rejectMemberCertificate = (
     "patch",
     `/api/admin/v1/members/${memberId}/certificates/${id}/reject`,
     { data: body }
+  );
+
+/* --------------------------- 证据图（短 TTL signed-URL） --------------------------- */
+
+/**
+ * 证据图 signed-URL 响应（后端 `CertificateEvidenceUrlsResponseDto`）。
+ *
+ * **只返 URL 不返 key**；响应带 `Cache-Control: no-store`。
+ * `provider` / ledger 状态不确定的项**不出现在数组里**（fail-closed，绝不回退裸 key），
+ * 所以数组比 `evidenceAvailable` 少甚至为空是正常的，不是加载失败。
+ */
+export type CertificateEvidenceUrls = {
+  certificateId: string;
+  /** RECRUITMENT 读申报的 imageKeys；ADMIN 读 ownerType=certificate 的标准附件 */
+  sourceCode: string;
+  /** 短 TTL signed-URL 数组 */
+  urls: string[];
+  /** URL 过期时刻（RECRUITMENT 来源 TTL ≤300s；ADMIN 来源由 attachments 侧决定） */
+  expiresAt: string | null;
+};
+
+/**
+ * 取证书证据的短 TTL signed-URL
+ * `GET /api/admin/v1/members/{memberId}/certificates/{id}/evidence-urls`
+ * （rbac: `certificate.read.sensitive`；**`sourceCode=ADMIN` 的还另需附件查看码**）。
+ *
+ * ⚠️ **敏感资源四条纪律**（后端交接约定，写成注释免得下次有人「优化」掉）：
+ * 1. **不预加载**——只在用户点「查看证据」时才调本接口，列表渲染时绝不批量取；
+ * 2. **关页即弃**——弹窗关闭就把 URL 引用清掉，下次看重新申请；
+ * 3. **不写任何本地存储**——localStorage / sessionStorage / IndexedDB 都不碰，也不进埋点；
+ * 4. **失败给重试**——TTL 很短，图裂大概率是链接过期，要让用户能一键重取而不是刷整页。
+ */
+export const getCertificateEvidenceUrls = (memberId: string, id: string) =>
+  http.request<Envelope<CertificateEvidenceUrls>>(
+    "get",
+    `/api/admin/v1/members/${memberId}/certificates/${id}/evidence-urls`
   );
 
 /* --------------------------- 证书标准选择器（建证 / 编辑用） --------------------------- */

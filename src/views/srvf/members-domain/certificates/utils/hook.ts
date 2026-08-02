@@ -1,14 +1,17 @@
 import { bizErrorMessage } from "@/api/srvf-error";
 import dayjs from "dayjs";
 import { h, ref, watch, computed } from "vue";
-import { ElMessageBox } from "element-plus";
+import { ElButton, ElMessageBox } from "element-plus";
 import { deviceDetection } from "@pureadmin/utils";
 import { message } from "@/utils/message";
 import { hasPerms } from "@/utils/auth";
 import { addDialog } from "@/components/ReDialog";
 import CertificateForm, { type CertificateFormModel } from "../form.vue";
+import EvidenceViewer from "../evidence-viewer.vue";
 import {
   getMemberCertificates,
+  getMemberCertificate,
+  getCertificateEvidenceUrls,
   createMemberCertificate,
   updateMemberCertificate,
   deleteMemberCertificate,
@@ -49,6 +52,32 @@ export function useCertificates(externalMemberId: string) {
    * 编辑表单据此禁用编号输入并不提交，避免掩码覆盖真实编号。
    */
   const canReadSensitive = hasPerms("certificate.read.sensitive");
+  /**
+   * 附件查看码。注意后端 summary 写的是「另需 attachment.view」，但**实际种子里没有裸
+   * `attachment.view` 这个码**，只有按归属分的 `.certificate.self` / `.certificate.other`
+   * （2026-08-02 对 live effective-permissions 实测）。所以这里按「持任一即放行」判，
+   * 具体 self / other 的范围判定归后端——前端按钮只是提示，真正的闸在服务端。
+   */
+  const canViewCertAttachment =
+    hasPerms("attachment.view.certificate.other") ||
+    hasPerms("attachment.view.certificate.self");
+
+  /**
+   * 这一行的证据能不能看：端点统一要敏感码；ADMIN 来源的证据走标准附件解析，
+   * 后端**另**校验附件查看码，故前端同门控，避免点了必 403。
+   */
+  function canViewEvidence(row: CertificateItem) {
+    if (!canReadSensitive) return false;
+    return row.sourceCode === "ADMIN" ? canViewCertAttachment : true;
+  }
+
+  /** 缺哪个码，按钮 title 里说清，别让人对着灰按钮猜 */
+  function evidenceDenyHint(row: CertificateItem) {
+    if (!canReadSensitive) return "需要证书敏感信息查看权限";
+    return row.sourceCode === "ADMIN"
+      ? "管理端录入的证据还需要附件查看权限"
+      : "";
+  }
   /** 共享字典标签解析器：核验状态 / 证书类别 code → 中文 */
   const dict = useSrvfDictStoreHook();
   dict.ensureTypes(["cert_type", "cert_status"]);
@@ -125,6 +154,19 @@ export function useCertificates(externalMemberId: string) {
       slot: "certStatusCode"
     },
     {
+      // 证据图：只给「有没有」+ 按需取链接的入口，列表渲染时绝不预取 URL（纪律 1）
+      label: "证据",
+      prop: "evidenceAvailable",
+      minWidth: 110,
+      cellRenderer: ({ row }) => renderEvidenceCell(row as CertificateItem)
+    },
+    {
+      // 核验信息：无敏感码时后端恒返 null，必须显示「需敏感权限查看」而不是当作「没填」
+      label: "核验信息",
+      minWidth: 150,
+      cellRenderer: ({ row }) => renderVerifyCell(row as CertificateItem)
+    },
+    {
       label: "发证日期",
       prop: "issuedAt",
       minWidth: 130,
@@ -157,6 +199,56 @@ export function useCertificates(externalMemberId: string) {
     return CERT_STATUS_TAG[code] ?? "info";
   }
 
+  /* ------------------------------ 证据图单元格 ------------------------------ */
+  /**
+   * 证据列：`evidenceAvailable` 只是个布尔，真正的图要点了才取（纪律 1「不预加载」）。
+   *
+   * 按钮门控分两档，与后端一致：
+   * - 端点本身要 `certificate.read.sensitive`；
+   * - **`sourceCode=ADMIN` 的还另需附件查看码**（走 AttachmentsService 解析）。
+   * 无权时按钮置灰并说明缺什么，而不是把「有证据」这件事一并藏掉——
+   * 「有材料但你看不了」和「压根没材料」是两回事。
+   */
+  function renderEvidenceCell(row: CertificateItem) {
+    if (!row.evidenceAvailable) {
+      return h("span", { class: "opacity-50" }, "无");
+    }
+    const allowed = canViewEvidence(row);
+    return h(
+      ElButton,
+      {
+        link: true,
+        type: allowed ? "primary" : undefined,
+        disabled: !allowed,
+        title: allowed ? "" : evidenceDenyHint(row),
+        onClick: () => openEvidence(row)
+      },
+      () => (allowed ? "查看证据" : "有证据（无权查看）")
+    );
+  }
+
+  /**
+   * 核验信息列：`verifyNote` / `verifiedBy` 在无 `certificate.read.sensitive` 时
+   * 后端**恒返 null**。这跟「核验人没写备注」长得一样但含义完全不同，
+   * 所以无码时显式说「需敏感权限查看」，不能直接渲染成空。
+   */
+  function renderVerifyCell(row: CertificateItem) {
+    // 还没核验过的，不存在核验信息，跟权限无关
+    if (row.certStatusCode === "pending") {
+      return h("span", { class: "opacity-50" }, "—");
+    }
+    if (!canReadSensitive) {
+      return h("span", { class: "opacity-60" }, "需敏感权限查看");
+    }
+    const at = row.verifiedAt
+      ? dayjs(row.verifiedAt).format("YYYY-MM-DD HH:mm")
+      : "";
+    return h("div", { class: "text-xs leading-5" }, [
+      h("div", null, at || "—"),
+      h("div", { class: "opacity-70" }, row.verifyNote || "（无备注）")
+    ]);
+  }
+
   /**
    * 拉证书标准表。列表要靠它把 `standardId` 换成名称与类别，
    * 所以它失败时列表仍渲染（标准列退化为占位），不阻塞证书本体。
@@ -175,6 +267,37 @@ export function useCertificates(externalMemberId: string) {
     }
   }
 
+  /**
+   * 列表端点是**精简字段**（后端 summary 原话）：只返 10 个字段，
+   * `certNumberMasked` / `certNumberFull` / `verifiedBy` / `verifiedAt` / `verifyNote` /
+   * `evidenceAvailable` **一个都没有**（2026-08-02 对 live 实测确认）。
+   * 详情端点才「含敏感字段」，且与列表同码 `certificate.read.record`。
+   *
+   * 所以逐行补一次详情再渲染。代价是 N+1，但这里 N 很小：证书列表按队员维度、
+   * 后端明确无分页，一个人几张证而已。收益是三处都对：
+   * ① 编号列不再恒为「—」；② 编辑态编号能用明文回填（否则提交时会把 `certNumber`
+   * 当成「被清空」发出去——REQUIRED 规则下后端报 18016 让人改不动，
+   * OPTIONAL 规则下会真的清掉编号）；③ 证据与核验信息列有数据可显示。
+   *
+   * 单行详情失败不拖垮整表：保留该行的精简数据，降级显示。
+   */
+  async function withDetails(rows: CertificateItem[]) {
+    if (!memberId.value) return rows;
+    return Promise.all(
+      rows.map(async row => {
+        try {
+          const { code, data } = await getMemberCertificate(
+            memberId.value,
+            row.id
+          );
+          return code === 0 ? { ...row, ...data } : row;
+        } catch {
+          return row;
+        }
+      })
+    );
+  }
+
   async function onSearch() {
     if (!canRead || !memberId.value) {
       dataList.value = [];
@@ -186,7 +309,7 @@ export function useCertificates(externalMemberId: string) {
         getMemberCertificates(memberId.value),
         loadStandards()
       ]);
-      if (code === 0) dataList.value = data;
+      if (code === 0) dataList.value = await withDetails(data);
     } catch (error: any) {
       message(bizErrorMessage(error, "加载证书失败"), {
         type: "error"
@@ -394,6 +517,56 @@ export function useCertificates(externalMemberId: string) {
       .catch(() => {});
   }
 
+  /**
+   * 取一次证据 URL。失败弹后端 message 并返 null（重试由弹窗内的「重新获取」驱动）。
+   * **不做任何缓存**：每次调用都重新申请，短 TTL 链接不留在内存以外的任何地方（纪律 3）。
+   */
+  async function fetchEvidence(row: CertificateItem) {
+    if (!memberId.value) return null;
+    try {
+      const { code, data } = await getCertificateEvidenceUrls(
+        memberId.value,
+        row.id
+      );
+      return code === 0 ? data : null;
+    } catch (error: any) {
+      // 13010「附件归属类型不合法」= 这张证其实没有可解析的附件（2026-08-02 实测：
+      // ADMIN 来源且无证据时后端返这个码）。按钮已按 evidenceAvailable 门控，
+      // 正常点不到；能走到这里多半是刚被人删了证据，直出后端原文没人看得懂。
+      const code = Number(error?.response?.data?.code);
+      message(
+        code === 13010
+          ? "这张证书现在没有可查看的证据材料了（可能刚被删除）。刷新后再看看"
+          : bizErrorMessage(error, "取证据图失败"),
+        { type: "error" }
+      );
+      return null;
+    }
+  }
+
+  /**
+   * 点开才取 URL，然后在**弹窗内**看（纪律 1 + 不开新标签）。
+   * signed-URL 开新标签会落进浏览器历史，而这是敏感材料，所以一律弹窗。
+   * `destroyOnClose` 保证关闭即销毁组件 → 引用随之丢弃（纪律 2）。
+   */
+  async function openEvidence(row: CertificateItem) {
+    const data = await fetchEvidence(row);
+    if (!data) return;
+    addDialog({
+      title: `证书证据 · ${certSubject(row)}`,
+      width: "56%",
+      draggable: true,
+      hideFooter: true,
+      destroyOnClose: true,
+      contentRenderer: () =>
+        h(EvidenceViewer, {
+          data,
+          subject: certSubject(row),
+          onRefetch: () => fetchEvidence(row)
+        })
+    });
+  }
+
   /** 核验通过（pending → verified；verifyNote 可选；后端拒绝非法流转弹其 message） */
   function handleVerify(row: CertificateItem) {
     ElMessageBox.prompt(
@@ -419,7 +592,14 @@ export function useCertificates(externalMemberId: string) {
             row.id,
             value ? { verifyNote: value } : {}
           );
-          message("已核验通过", { type: "success" });
+          // 已过期的证书也允许核验通过，但结果落点是 expired 而不是 verified
+          //（后端按到期日现算展示态）。文案必须说清，否则会被读成「核验没生效」。
+          message(
+            row.expiredAt && dayjs(row.expiredAt).isBefore(dayjs(), "day")
+              ? "核验通过，但该证书已过期"
+              : "已核验通过",
+            { type: "success" }
+          );
           onSearch();
         } catch (error: any) {
           message(bizErrorMessage(error, "核验通过失败"), {
