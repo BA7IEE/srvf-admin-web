@@ -66,3 +66,47 @@ PASS：
 RP_BASE=http://localhost:8848 uv run --with playwright python tests/render/tabs_render_pass.py  # 修复前 → 5 FAILED
 RP_BASE=http://localhost:8849 uv run --with playwright python tests/render/tabs_render_pass.py  # 修复后 → ALL PASS
 ```
+
+## nav_transition_render_pass.py — 站内跳转白屏回归
+
+### 它防的 bug
+
+`src/layout/components/lay-content/index.vue` 把 router-view 套在
+`<Transition mode="out-in" appear>` 里。Vue 的 CSS 过渡靠 `nextFrame()`（**双
+`requestAnimationFrame`**）补 `*-enter-to` / `*-leave-to` 并收尾，而浏览器在**页面不可见**
+（后台标签页 / 自动化浏览器；本仓的 in-app Browser pane 是**恒定隐藏**）时挂起 rAF →
+enter/leave 的 `done` 永不触发。`mode:"out-in"` 又要等离场结束才挂载新页面，于是：
+
+- 站内 `router.push`（如队员列表点「档案」进作战室）→ **新页面根本不挂载**，DOM 里只剩上
+  一页且被 `fade-transform-enter-from / -leave-from / -leave-active` 压成 `opacity:0`；
+  一旦卡住，之后每一次跳转都卡住；
+- 整页重载「看着像好了」——重载没有离场元素，组件确实挂上了，但 appear 同样卡住 →
+  **DOM 探针全绿而实际 `opacity:0`**。这正是历史上被记成「截图发白幽灵」的真凶。
+
+修复：`transitionMain.render()` 在 `document.hidden` 时直接返回 slot，不套 `<Transition>`。
+⚠️ 只把 `css` 关掉**不够**——`css:false` + `mode:"out-in"` 会让 Vue 在 patch 中途重入
+`update()`，抛 `Cannot read properties of null (reading 'nextSibling' / 'subTree')`。
+
+### 它断言什么
+
+| 用例 | 场景                             | 断言                                          |
+| ---- | -------------------------------- | --------------------------------------------- |
+| A    | 可见态点「档案」进队员作战室     | 渲染出 tab + 可见 pane，且过渡 class 收尾干净 |
+| B    | **隐藏态**点「档案」（核心用例） | 渲染出 tab + 可见 pane                        |
+| C    | 隐藏态整页加载作战室 URL         | 渲染出 tab + 可见 pane，且 `opacity > 0.9`    |
+
+隐藏态必须**同时**伪造 `document.hidden` / `visibilityState` **和**把
+`requestAnimationFrame` 打成空实现——只做其中一样都复现不出来。
+
+「牙齿」已验：修复前 B/C FAIL、A PASS；修复后 ALL PASS。
+
+### 前置 / 运行
+
+前置同上（dev server + 后端 + 至少一条队员数据）。
+
+```bash
+uv run --with playwright python tests/render/nav_transition_render_pass.py
+```
+
+环境变量：`RP_BASE` / `RP_USER` / `RP_PWD` 同上；另有 `RP_HEADED=1` 显形跑（排查用）。
+本机没下过 playwright 自带 chromium 时脚本会自动退回系统 Chrome。

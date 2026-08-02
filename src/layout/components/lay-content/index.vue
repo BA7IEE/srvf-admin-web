@@ -80,6 +80,15 @@ const transitionMain = defineComponent({
     }
   },
   render() {
+    // 页面不可见时（后台标签页 / 自动化浏览器）浏览器会挂起 requestAnimationFrame，
+    // 而 Vue 的 CSS 过渡靠 nextFrame(双 rAF) 补 *-enter-to / *-leave-to 并收尾 →
+    // enter/leave 的 done 永不触发。本过渡是 mode:"out-in"：离场不结束就不挂载新页面，
+    // 于是站内 router.push 整页空白（DOM 里只剩上一页，且被 *-enter-from 压成 opacity:0），
+    // 只有整页重载才恢复。隐藏态本就没有动画可看，直接不套 <Transition> 让切页同步完成。
+    // （只关掉 css 不够：css:false + mode:"out-in" 会让 Vue 在 patch 中途重入 update，
+    //  抛 "Cannot read properties of null (reading 'nextSibling'/'subTree')"。）
+    // 每次渲染（= 每次切路由）现读 document.hidden，可见态下动画一切照旧。
+    if (document.hidden) return this.$slots.default();
     const transitionName =
       transitions.value(this.route)?.name || "fade-transform";
     const enterTransition = transitions.value(this.route)?.enterTransition;
