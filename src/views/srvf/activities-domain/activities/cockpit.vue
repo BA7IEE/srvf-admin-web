@@ -45,28 +45,31 @@ const activityId = route.params.id as string;
 const lifecycle = computed(() => {
   const code = detail.value?.statusCode;
   const cancelled = code === "cancelled";
+  // terminated（提前终止）= published 之后的另一个异常终点，与 cancelled 同为分支态。
+  // 少这一支时，已终止的活动会被画成「停在草稿」+ 终点写「已完结」，两处都在说假话。
+  const terminated = code === "terminated";
   const steps = [
     {
-      title: dict.label("activity_status", "draft"),
+      title: statusText("draft"),
       description: "完善信息后发布"
     },
     {
-      title: dict.label("activity_status", "published"),
+      title: statusText("published"),
       description: "审核报名、组织活动"
     },
     cancelled
-      ? {
-          title: dict.label("activity_status", "cancelled"),
-          description: "活动已取消"
-        }
-      : {
-          title: dict.label("activity_status", "completed"),
-          description: "提交考勤单并完成两级审核"
-        }
+      ? { title: statusText("cancelled"), description: "活动已取消" }
+      : terminated
+        ? { title: statusText("terminated"), description: "活动已提前终止" }
+        : {
+            title: statusText("completed"),
+            description: "提交考勤单并完成两级审核"
+          }
   ];
   if (code === "completed")
     return { steps, active: 3, status: "success" as const };
-  if (cancelled) return { steps, active: 2, status: "error" as const };
+  if (cancelled || terminated)
+    return { steps, active: 2, status: "error" as const };
   return {
     steps,
     active: code === "published" ? 1 : 0,
@@ -86,7 +89,17 @@ const STATUS_TAG_TYPE: Record<
   draft: "info",
   published: "success",
   cancelled: "danger",
-  completed: "primary"
+  completed: "primary",
+  terminated: "danger"
+};
+
+/**
+ * 字典兜不住的状态 code → 中文，镜像 activities/utils/hook.ts 的 `STATUS_LABEL_FALLBACK`。
+ * terminated 在后端状态机与库约束里真实存在，但 activity_status 字典种子是刻意的
+ * 4 值闭集 → 字典查不到它。只补展示用中文，后端补进字典后本表自动失效。
+ */
+const STATUS_LABEL_FALLBACK: Record<string, string> = {
+  terminated: "已终止"
 };
 
 /* ----------------------------- 头部：活动详情 + 发布/取消 ----------------------------- */
@@ -110,8 +123,12 @@ const showComplete = computed(
     detail.value?.phase === "ended"
 );
 
+/** 状态 code → 中文：字典优先，字典没有的（如 terminated）落本地兜底，再没有才回原 code。 */
 function statusText(code?: string) {
-  return dict.label("activity_status", code);
+  if (!code) return "";
+  const fromDict = dict.label("activity_status", code);
+  // dict.label 查不到时原样返回入参 code，据此判断是否要用本地兜底
+  return fromDict === code ? (STATUS_LABEL_FALLBACK[code] ?? code) : fromDict;
 }
 function statusType(code?: string) {
   return (code && STATUS_TAG_TYPE[code]) || "info";

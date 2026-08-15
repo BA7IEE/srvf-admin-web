@@ -78,9 +78,19 @@ const ACTIVITY_STATUS_TAG: Record<string, SrvfStatusTagType> = {
   draft: "info",
   published: "success",
   cancelled: "danger",
-  completed: "primary"
+  completed: "primary",
+  terminated: "danger"
 };
 const ACTIVITY_STATUS_CODES = Object.keys(ACTIVITY_STATUS_TAG);
+
+/**
+ * 字典兜不住的状态 code → 中文，镜像 activities/utils/hook.ts 的 `STATUS_LABEL_FALLBACK`。
+ * `terminated` 在后端状态机与库约束里真实存在，但 activity_status 字典种子是刻意的
+ * 4 值闭集 → 字典查不到它。这里只补展示用中文，后端补进字典后本表自动失效。
+ */
+const ACTIVITY_STATUS_LABEL_FALLBACK: Record<string, string> = {
+  terminated: "已终止"
+};
 
 /**
  * 全局实体搜索（P2-1）：按类型并发查队员/活动/组织/内容，分组返回。
@@ -106,10 +116,16 @@ export function useSrvfGlobalSearch() {
 
   function buildActivityStatusLabelDict(): Record<string, string> {
     return Object.fromEntries(
-      ACTIVITY_STATUS_CODES.map(code => [
-        code,
-        dict.label("activity_status", code)
-      ])
+      ACTIVITY_STATUS_CODES.map(code => {
+        // dict.label 查不到时原样返回入参 code，据此判断是否要用本地兜底
+        const fromDict = dict.label("activity_status", code);
+        return [
+          code,
+          fromDict === code
+            ? (ACTIVITY_STATUS_LABEL_FALLBACK[code] ?? code)
+            : fromDict
+        ];
+      })
     );
   }
 

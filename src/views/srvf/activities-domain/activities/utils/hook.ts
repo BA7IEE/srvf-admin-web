@@ -31,7 +31,7 @@ import { openPublishDialog, openCompleteDialog } from "./lifecycle";
 
 /**
  * 活动状态 code → tag 颜色（仅展示色；状态文案改由 activity_status 字典提供，前端不臆造）。
- * code 取自契约 activity_status 闭集（draft / published / cancelled / completed）。
+ * code 取自契约 activity_status 闭集（draft / published / cancelled / completed）+ terminated。
  */
 const STATUS_TAG_TYPE: Record<
   string,
@@ -40,7 +40,26 @@ const STATUS_TAG_TYPE: Record<
   draft: "info",
   published: "success",
   cancelled: "danger",
-  completed: "primary"
+  completed: "primary",
+  terminated: "danger"
+};
+
+/**
+ * 字典兜不住的状态 code → 中文（**只在字典查不到时用**）。
+ *
+ * `terminated`（提前终止）是后端真实存在的第五个活动状态——见后端
+ * `src/modules/activities/activity-state-machine.ts` 的 `terminate` 分支、
+ * `activities.service.ts` 的 `ACTIVITY_STATUS_TERMINATED`，以及 prisma 的
+ * `CHECK (terminatedAt IS NULL OR statusCode = 'terminated')` 约束。
+ * 但 `activity_status` 字典种子是**刻意的 4 值闭集**（后端 `prisma/seed.ts`），
+ * openapi 的 statusCode 描述也仍只写 4 值 → 字典查不到它，`dict.label` 会原样
+ * 吐出英文 code。这里只补一个**展示用**的中文兜底，不改变任何请求行为。
+ *
+ * ⚠️ 这不是前端发明状态（红线 4）：状态本身来自后端状态机，这里补的只是界面用词。
+ * 后端把 terminated 补进字典后，字典优先，本表自动失效、可删。
+ */
+const STATUS_LABEL_FALLBACK: Record<string, string> = {
+  terminated: "已终止"
 };
 
 export function useActivities() {
@@ -141,10 +160,16 @@ export function useActivities() {
     }
   ];
 
-  /** 状态 code → 展示元数据：文案查 activity_status 字典，颜色按 code 给展示色（未知 → 原 code + info 灰） */
+  /**
+   * 状态 code → 展示元数据：文案优先查 activity_status 字典，字典没有的（如 terminated）
+   * 落 `STATUS_LABEL_FALLBACK`，再没有才回原 code；颜色按 code 给展示色（未知 → info 灰）。
+   */
   function statusMeta(code: string) {
+    const fromDict = dict.label("activity_status", code);
     return {
-      text: dict.label("activity_status", code),
+      // dict.label 查不到时原样返回入参 code，据此判断是否要用本地兜底
+      text:
+        fromDict === code ? (STATUS_LABEL_FALLBACK[code] ?? code) : fromDict,
       type: STATUS_TAG_TYPE[code] ?? ("info" as const)
     };
   }
@@ -235,7 +260,7 @@ export function useActivities() {
   }
 
   /**
-   * 终态（completed / cancelled）编辑提交体：**只发展示字段**。
+   * 终态（completed / cancelled / terminated）编辑提交体：**只发展示字段**。
    *
    * 后端源码里对终态有个五字段白名单（description / coverImageUrl / galleryImageUrls /
    * content / registrationNotes），判据是「dto 里出现白名单之外的 key」就整单拒，
@@ -306,9 +331,13 @@ export function useActivities() {
           }
           try {
             if (isEdit && row) {
+              // terminated（提前终止）与 completed / cancelled 同属终态：
+              // 后端状态机只有 published 能被 terminate，之后不再有任何出边。
+              // 漏判它会走 buildBody 发全量字段，被 20030 拒之后还给出错误成因文案。
               const isTerminal =
                 row.statusCode === "completed" ||
-                row.statusCode === "cancelled";
+                row.statusCode === "cancelled" ||
+                row.statusCode === "terminated";
               try {
                 await updateActivity(
                   row.id,
@@ -320,7 +349,7 @@ export function useActivities() {
                 // 终态被拒时给准确成因,别让人以为是自己填错了哪一项
                 if (isTerminal && Number(err?.response?.data?.code) === 20030) {
                   message(
-                    "已完结 / 已取消的活动不能再修改（20030）：如果确实需要更正，请联系后端管理员",
+                    "已完结 / 已取消 / 已终止的活动不能再修改（20030）：如果确实需要更正，请联系后端管理员",
                     { type: "error", duration: 6000 }
                   );
                   closeLoading();

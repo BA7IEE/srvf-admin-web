@@ -15,8 +15,14 @@ export type NotificationVisibility =
   | "department"
   | "management";
 
-/** 渠道(后端 channels 枚举;站内恒发,后端强制含 in-app)。 */
-export type NotificationChannel = "in-app" | "wechat" | "sms";
+/**
+ * 渠道(后端 `CreateNotificationDto.channels` 枚举;站内恒发,后端强制含 in-app)。
+ *
+ * `wecom`(企业微信)是后端 v0.66.0 新增的**第四条通道**,与 `wechat`(微信小程序)
+ * 是两套完全独立的身份体系与订阅前提——**同一个人可能同时收到两条**,文案必须分开写。
+ * 该通道出厂默认关闭(后端 `enabled=false && messageEnabled=false`),勾了也不会投递。
+ */
+export type NotificationChannel = "in-app" | "wechat" | "wecom" | "sms";
 
 /** 通知列表项(后端 `NotificationAdminListItemDto`;字段以 `/api/docs-json` 为准;列表不含 body)。 */
 export type NotificationListItem = {
@@ -50,7 +56,11 @@ export type CreateNotificationBody = {
   visibilityCode: NotificationVisibility;
   visibleOrganizationIds?: string[];
   pinned?: boolean;
-  /** 不传 = 仅站内;后端强制含 in-app。短信仅声明可兜底,永不随 publish 自动发。 */
+  /**
+   * 不传 = 仅站内;后端强制含 in-app。
+   * `wechat` / `wecom` 随 publish 自动推送且不计费;`sms` 只是声明可兜底,
+   * **永不随 publish 自动发**,须在列表「发送短信」显式发起并二次确认计费。
+   */
   channels?: NotificationChannel[];
 };
 
@@ -208,15 +218,21 @@ export const VISIBILITY_OPTIONS: {
   { value: "management", label: "管理层可见" }
 ];
 
-/** 渠道 → 中文。 */
+/**
+ * 渠道 → 中文。
+ * ⚠️ `wechat` 与 `wecom` 是两条独立通道,文案不得含混("微信"这种旧写法会让人
+ * 以为勾一个就够)——`wechat` = 微信小程序订阅,`wecom` = 企业微信应用消息。
+ */
 export const CHANNEL_LABEL: Record<string, string> = {
   "in-app": "站内",
-  wechat: "微信",
+  wechat: "微信小程序",
+  wecom: "企业微信",
   sms: "短信"
 };
 export const CHANNEL_OPTIONS: { value: NotificationChannel; label: string }[] =
   [
     { value: "in-app", label: "站内(恒发)" },
-    { value: "wechat", label: "微信订阅" },
+    { value: "wechat", label: "微信小程序订阅" },
+    { value: "wecom", label: "企业微信" },
     { value: "sms", label: "短信兜底" }
   ];
