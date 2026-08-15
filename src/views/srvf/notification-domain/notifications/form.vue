@@ -123,7 +123,7 @@ defineExpose({ getRef });
         v-model="model.channels"
         multiple
         class="w-full!"
-        placeholder="站内恒发;可加微信 / 短信"
+        placeholder="站内恒发;可加微信小程序 / 企业微信 / 短信"
       >
         <el-option
           v-for="o in CHANNEL_OPTIONS"
@@ -133,9 +133,15 @@ defineExpose({ getRef });
         />
       </el-select>
       <div class="mt-1 text-xs text-gray-400">
-        站内恒发(后端强制含 in-app)。勾「微信」→
-        发布时向已订阅会员机会式推送;勾「短信」仅声明可兜底
+        站内恒发(后端强制含 in-app)。勾「微信小程序」→
+        发布时向已订阅会员机会式推送;勾「企业微信」→
+        发布时向已绑定企业微信的队员推送——两者是**互相独立的两条通道**,同一个人可能同时收到两条,
+        需要哪条勾哪条。勾「短信」仅声明可兜底
         ——短信**永不随发布自动发**,需在列表「发送短信」显式发起并二次确认计费。
+      </div>
+      <div class="mt-1 text-xs text-orange-400">
+        ⚠️ 企业微信通道目前是**关着的**(后端出厂默认关闭),勾上也不会真的投递
+        ——这是刻意的,等企业微信正式接通后自动生效,届时无需回来改这里。
       </div>
     </el-form-item>
     <el-form-item label="置顶">

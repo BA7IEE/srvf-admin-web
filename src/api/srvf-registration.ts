@@ -273,6 +273,14 @@ export const exportRegistrations = (
  *   只有一个赢家，输家就落在这里（UX 十条第 5 条：说「已被他人处理」并刷新，不静默重试）
  * - 20126 / 20124：活动本身不允许再通过报名（草稿 / 已取消·已完结·已结束）——
  *   由 `activityBizErrorMessage` 统一翻译，两处文案不各写一份
+ * - 21038 / 21040 / 21041：活动 v1.1 报名主链与资格 runtime 的三个终止码（后端
+ *   `ACTIVITY_REGISTRATION_V11_FLOW_REQUIRED` / `ACTIVITY_QUALIFICATION_NOT_MET` /
+ *   `ACTIVITY_QUALIFICATION_CONFIGURATION_INVALID`）。三者**都是 409 且零写**——
+ *   ⚠️ UI 不得自动重试，也不得把它们当成「参数填错了」引导用户改表单重来。
+ *   21038 当前**没有后台替代入口**（后端也没给可判定字段让前端提前灰掉按钮，已登记
+ *   v066 蓝图 Q3-1 等后端答复），所以文案只能是解释性的，不给可点路径。
+ * - 26030 `INSURANCE_REQUIRED`：活动要求保险而队员无覆盖活动日期的有效保险。
+ *   ⚠️ 后端明确不得手选历史证据，所以文案指向队员档案而**不是**在这里做凭证选择器。
  */
 export function registrationReviewErrorMessage(
   error: unknown,
@@ -289,6 +297,14 @@ export function registrationReviewErrorMessage(
   if (code === 21035) return "这个活动按岗位报名，必须先选岗位（21035）";
   if (code === 17030)
     return "该队员已停用（17030）：停用的队员不能报名，也不能通过审核";
+  if (code === 21038)
+    return "这个活动只能由队员自己在 App 里报名（21038）：它启用了新版报名主链（有场次 / 报名表 / 岗位资格规则），后台没有代报名和代审批的通路，请引导队员自行提交";
+  if (code === 21040)
+    return "这名队员不满足该活动的资格条件（21040）：这不是填错了，改参数重试没用；需要先把等级 / 证书 / 保险等事实补齐再来";
+  if (code === 21041)
+    return "活动的资格规则配置有问题，系统无法安全判定（21041）：这不是操作问题，请联系运营检查该活动的资格规则配置";
+  if (code === 26030)
+    return "该活动要求保险，这名队员当前没有覆盖活动日期的有效保险（26030）：请先到队员档案的「保险」页签处理，不要在这里挑选历史凭证";
   return activityBizErrorMessage(error, fallback);
 }
 
@@ -310,6 +326,14 @@ export function bulkFailureText(failure: BulkReviewFailure): string {
       return "活动已取消 / 已完结 / 已结束，不能再通过";
     case 20126:
       return "活动还是草稿，需先发布";
+    case 21038:
+      return "该活动只能由队员在 App 自行报名，后台无代批通路";
+    case 21040:
+      return "不满足活动资格条件（重试无用）";
+    case 21041:
+      return "活动资格规则配置有问题，需运营检查";
+    case 26030:
+      return "无覆盖活动日期的有效保险";
     case 30100:
       return "没有该操作的权限";
     default:
