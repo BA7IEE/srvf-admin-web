@@ -1,0 +1,83 @@
+{
+  "time": {
+    "defaultCategory": "volunteer_service",
+    "roleMappings": [
+      { "attendanceRoleCode": "volunteer", "category": "volunteer_service" },
+      { "attendanceRoleCode": "trainee", "category": "training" }
+    ],
+    "allowSplit": true,
+    "specialIntervals": {
+      "preparation": { "mode": "exclude" },
+      "duty": { "mode": "category", "category": "organization" },
+      "travel": { "mode": "manual" }
+    },
+    "rounding": { "mode": "floor", "quantumSeconds": 60 },
+    "evidence": {
+      "requiredSources": ["punch_event", "service_segment", "attachment"],
+      "requireManualRecognition": true
+    },
+    "manualAdjustment": {
+      "enabled": true,
+      "reasonRequired": true,
+      "evidenceRequired": true
+    }
+  },
+  "contribution": {
+    "defaultResult": {
+      "recognizedPoints": "0.00",
+      "explanationCode": "no_matching_rule"
+    },
+    "roleRules": [
+      {
+        "attendanceRoleCode": "volunteer",
+        "categoryRules": [
+          {
+            "timeCategoryCode": "volunteer_service",
+            "durationBands": [
+              {
+                "maxSecondsInclusive": 3600,
+                "recognizedPoints": "3.00",
+                "explanationCode": "service_first_band"
+              },
+              {
+                "maxSecondsInclusive": 7200,
+                "recognizedPoints": "5.00",
+                "explanationCode": "service_second_band"
+              },
+              {
+                "maxSecondsInclusive": null,
+                "recognizedPoints": "8.00",
+                "explanationCode": "service_final_band"
+              }
+            ]
+          },
+          {
+            "timeCategoryCode": "training",
+            "durationBands": [
+              {
+                "maxSecondsInclusive": null,
+                "recognizedPoints": "1.25",
+                "explanationCode": "training_band"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "attendanceRoleCode": "support",
+        "categoryRules": [
+          {
+            "timeCategoryCode": "organization",
+            "durationBands": [
+              {
+                "maxSecondsInclusive": null,
+                "recognizedPoints": "2.00",
+                "explanationCode": "organization_band"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

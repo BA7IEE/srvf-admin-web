@@ -1,0 +1,114 @@
+SRVF reviewer referenced-policy contract v1 (local candidate, not deployed)
+
+Base: ea4a35792e3d107cebb975235821a21de9070b34.
+Independent branch: fix/review-referenced-policy-read.
+State: endpoint and DTO implemented locally; 65 targeted unit/parser tests passed. Real API/PostgreSQL verification has not run at this handoff point. No push, PR, merge or deployment. The original ea4a worktree is unchanged.
+
+GET /api/admin/v1/activity-publish-reviews/{reviewId}/referenced-policies
+Authorization: activity-review.read.request and the same activity_publish_review resource/organization scope as existing review GET. No catalogue-read permission is required or granted. No body. No query parameters; policyId/versionId query attempts are rejected by the existing global ValidationPipe. This is not an arbitrary policy lookup.
+
+Success HTTP 200: {code:0,message:"ok",data:{reviewId,activityId,snapshotSchemaVersion,snapshotHash,timePolicies,contributionPolicies}}.
+Both arrays contain deduplicated policy versions actually referenced by the frozen base OR target, including explicit selections that are overridden in resolved winners. They contain no unrelated catalogue versions. Each entry: policyId:string, versionId:string, version:number, schemaVersion:1, evaluatorVersion:1, definitionHash:64 lower-case hex, effectiveFrom:ISO string, effectiveUntil:ISO string|null, definition:full typed definition. No catalogue name, creator, actor metadata or current mutable policy description is exposed.
+
+Time definition:
+{defaultCategory:'volunteer_service'|'training'|'organization'|'non_creditable',roleMappings:[{attendanceRoleCode,category}],allowSplit:boolean,specialIntervals:{preparation,duty,travel},rounding:{mode:'floor',quantumSeconds:integer 1..3600},evidence:{requiredSources:('punch_event'|'service_segment'|'attachment')[],requireManualRecognition:boolean},manualAdjustment}.
+Each special interval is {mode:'exclude'} | {mode:'manual'} | {mode:'category',category}. manualAdjustment is {enabled:false} | {enabled:true,reasonRequired:true,evidenceRequired:boolean}.
+
+Contribution definition:
+{defaultResult:{recognizedPoints:string,explanationCode:string},roleRules:[{attendanceRoleCode,categoryRules:[{timeCategoryCode,durationBands:[{maxSecondsInclusive:integer|null,recognizedPoints:string,explanationCode:string}]}]}]}.
+Time categories are the four above. Points remain exact two-decimal strings (0.00..999.99). Duration band maxima increase; the last is null (unbounded). Preserve these distinctions in rendering. This endpoint does not evaluate or change either policy.
+
+Binding before displaying complete approval facts: compare reviewId, activityId and snapshotHash with the detail currently shown. Then match every frozen time/contribution pointer (base and target, selected and resolved) by kind+policyId+versionId+definitionHash; contribution also binds evaluatorVersion. Do not accept a missing/mismatched definition as an empty policy. The existing snapshot already carries scope/source/reference-kind mappings; this read adds complete immutable definitions, not new bindings. The same version may be shared across multiple scopes.
+
+The server reads authorization, review and version rows in one REPEATABLE READ database snapshot. It uses the existing full proposal parser to check snapshot/base hashes, requires the frozen base revision to match the review row, re-fingerprints complete version definitions plus evaluator/effective interval, and checks resolved frozen interval metadata. Missing, draft, corrupt or inconsistent versions cause whole-response rejection. Exact retired immutable versions remain readable for historical inspection; this does not imply they are currently approvable.
+
+Errors: HTTP 400/code40000 invalid ID/query;401/40100 invalid identity;403/30100 permission or scope denied;404/20004 review not found;409/20022 invalid frozen snapshot/reference/full-definition hash or inconsistent metadata. Error body stays {code,message,data:null}. There is no partial-success response. Legacy V1 unsupported frozen shapes reject; valid V2-V7 with no policy pointers return empty arrays. This does not make a fabricated policy-free fixture representative of normal simple V4/V5 activities.
+
+Approval/return request fields, existing approval reference/state checks, self-review restriction, transaction logic, operationKey replay and error semantics are unchanged. This read neither publishes nor authorizes a new decision. Initial approval still atomically publishes via the existing approve command. Unknown sends must continue to preserve exact original decision bodies.
+
+Protected files NOT modified/authorized: test/contract/openapi.contract-spec.ts (new route/schema assertions); test/contract/__snapshots__/openapi.contract-spec.ts.snap (new documented contract); docs/ai-harness/ROUTE_AUTHZ.md and harness/authz-assertion-patterns.json (official generated input/route changes). These four require separate exact authorization before contract/manifest closure. No protection token exists for this local candidate.
+
+Business purpose: let an already-authorized reviewer inspect the policies this exact frozen review proposes. No new sensitive user fields, storage, retention rules, policy-catalogue grants or decision privileges are introduced.
+
+Actual local DTO source follows:
+
+import { ApiProperty } from '@nestjs/swagger';
+import { TimePolicyDefinitionDto } from './dto/admin/activity-time-policy.dto';
+import { ContributionPolicyDefinitionDto } from './dto/system/contribution-policy.dto';
+
+/** This review-scoped endpoint accepts no catalogue identifiers or other query parameters. */
+export class ActivityPublishReviewReferencedPoliciesQueryDto {}
+
+export class ActivityPublishReviewReferencedPolicyVersionDto {
+  @ApiProperty({ description: '冻结审核实际引用的政策ID' })
+  policyId!: string;
+
+  @ApiProperty({ description: '冻结审核实际引用的不可变版本ID' })
+  versionId!: string;
+
+  @ApiProperty({ description: '版本号' })
+  version!: number;
+
+  @ApiProperty({ description: '政策定义结构版本', enum: [1] })
+  schemaVersion!: number;
+
+  @ApiProperty({ description: '政策解释器版本', enum: [1] })
+  evaluatorVersion!: number;
+
+  @ApiProperty({
+    description: '与冻结引用和完整政策定义重新计算结果一致的摘要',
+    pattern: '^[0-9a-f]{64}$',
+  })
+  definitionHash!: string;
+
+  @ApiProperty({ description: '已绑定到定义摘要的生效开始时刻' })
+  effectiveFrom!: string;
+
+  @ApiProperty({ description: '已绑定到定义摘要的生效结束时刻', type: String, nullable: true })
+  effectiveUntil!: string | null;
+}
+
+export class ActivityPublishReviewReferencedTimePolicyDto extends ActivityPublishReviewReferencedPolicyVersionDto {
+  @ApiProperty({ description: '审核引用版本的完整时长政策定义', type: TimePolicyDefinitionDto })
+  definition!: TimePolicyDefinitionDto;
+}
+
+export class ActivityPublishReviewReferencedContributionPolicyDto extends ActivityPublishReviewReferencedPolicyVersionDto {
+  @ApiProperty({
+    description: '审核引用版本的完整贡献政策定义',
+    type: ContributionPolicyDefinitionDto,
+  })
+  definition!: ContributionPolicyDefinitionDto;
+}
+
+export class ActivityPublishReviewReferencedPoliciesResponseDto {
+  @ApiProperty({ description: '关联的审核记录ID' })
+  reviewId!: string;
+
+  @ApiProperty({ description: '关联的活动ID' })
+  activityId!: string;
+
+  @ApiProperty({ description: '经现有提案解析器验证的冻结快照结构版本' })
+  snapshotSchemaVersion!: number;
+
+  @ApiProperty({ description: '关联冻结快照的摘要；不是当前草稿hash', pattern: '^[0-9a-f]{64}$' })
+  snapshotHash!: string;
+
+  @ApiProperty({
+    description: '冻结base和target中实际引用的时长版本，去重且不包含目录其他版本',
+    type: [ActivityPublishReviewReferencedTimePolicyDto],
+  })
+  timePolicies!: ActivityPublishReviewReferencedTimePolicyDto[];
+
+  @ApiProperty({
+    description: '冻结base和target中实际引用的贡献版本，去重且不包含目录其他版本',
+    type: [ActivityPublishReviewReferencedContributionPolicyDto],
+  })
+  contributionPolicies!: ActivityPublishReviewReferencedContributionPolicyDto[];
+}
+
+
+SOURCE SHA-256
+3c0c37b8bb8f0fe7cd355875bbf6fbdb42f787d9a5bd6beaa81b9a2801cb199f  src/modules/activities/activity-publish-review-policy.dto.ts
+928f531054e82f0e03e06e9863f0bfb91b3b628b0e2a8ed75177c2adbe39ce1f  src/modules/activities/activity-publish-review-policy-query.service.ts
+bbf69865c339cb9f2799fbfeb30d491c4e5e89b3d869ec3c0d0cf39cb9293b2e  src/modules/activities/controllers/admin-activity-publish-reviews.controller.ts

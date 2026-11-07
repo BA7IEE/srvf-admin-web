@@ -16,6 +16,7 @@ import { useApprovalRegistrations, useApprovalAttendance } from "./utils/hook";
 import { useWorkbenchDashboard } from "./utils/dashboard-hook";
 import AttendanceTrendChart from "./attendance-trend-chart.vue";
 import SetupProgressCard from "./setup-progress-card.vue";
+import PendingPublishReviews from "./publish-review/pending-list.vue";
 
 defineOptions({
   name: "SrvfWorkbench"
@@ -31,8 +32,23 @@ dayjs.locale("zh-cn", { weekStart: 1 });
  * 作为工作台落地页：顶部 dashboard-summary 做聚合摘要 + KPI 卡 + 出勤趋势 + 活动日历
  * （Phase 3 按设计稿升级新增），下面保留横扫列表。
  */
-const activeTab = ref<"registrations" | "attendances">("registrations");
+const canReadPublishReviews = computed(() =>
+  hasPerms("activity-review.read.request")
+);
+const activeTab = ref<"registrations" | "attendances" | "publish">(
+  canReadPublishReviews.value && !hasPerms("activity-registration.read.record")
+    ? "publish"
+    : "registrations"
+);
 const router = useRouter();
+watch(
+  () => router.currentRoute.value.query.task,
+  task => {
+    if (task === "publish" && canReadPublishReviews.value)
+      activeTab.value = "publish";
+  },
+  { immediate: true }
+);
 
 const {
   canReadMembers,
@@ -476,6 +492,14 @@ onMounted(() => {
     </div>
 
     <el-tabs v-model="activeTab" class="workbench-tabs">
+      <el-tab-pane
+        v-if="canReadPublishReviews"
+        label="活动发布审核"
+        name="publish"
+        lazy
+      >
+        <PendingPublishReviews />
+      </el-tab-pane>
       <!-- 报名审批：跨所有活动横扫 -->
       <el-tab-pane label="报名审批" name="registrations">
         <template v-if="regCanRead">

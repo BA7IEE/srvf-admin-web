@@ -1,0 +1,186 @@
+{
+  "id": "review-synthetic-0001",
+  "activityId": "activity-synthetic-0001",
+  "requestType": "initial",
+  "requestVersion": 2,
+  "baseRevision": 3,
+  "status": "pending",
+  "directPublish": false,
+  "audienceTagCodes": null,
+  "audienceOrganizationIds": null,
+  "submittedByUserId": "organizer-synthetic-0001",
+  "submittedAt": "2099-01-01T00:00:00.000Z",
+  "reviewedByUserId": null,
+  "reviewedAt": null,
+  "reviewNote": null,
+  "createdAt": "2099-01-01T00:00:00.000Z",
+  "updatedAt": "2099-01-01T00:00:00.000Z",
+  "activityTitle": "当前活动标题（非冻结标题）",
+  "organizationId": "organization-synthetic-0001",
+  "initiatorMemberId": "member-organizer-synthetic",
+  "affectedMemberCount": 0,
+  "changeDiff": { "kind": "proposal-v7", "activityFields": [] },
+  "snapshot": {
+    "schemaVersion": 7,
+    "baseWorkflowRevision": 3,
+    "baseSnapshotHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "snapshotHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "metricSelectionExplicit": false,
+    "base": null,
+    "templateVersionId": "template-synthetic-0001",
+    "resolvedConfig": {
+      "templateVersionId": "template-synthetic-0001",
+      "activity": {
+        "registrationModeCode": { "value": "open", "source": "template" },
+        "locationRequired": { "value": false, "source": "activity" },
+        "checkInRadiusMeters": { "value": 100, "source": "system-default" },
+        "archiveWaitingDays": { "value": 3, "source": "system-default" }
+      },
+      "sessions": [
+        {
+          "sessionId": "session-synthetic-0001",
+          "code": "main",
+          "statusCode": "scheduled",
+          "locationRequired": false,
+          "radiusMeters": 100,
+          "locationPolicySourceCode": "activity",
+          "checkInOpenAt": "2099-12-01T01:00:00.000Z",
+          "checkInCloseAt": "2099-12-01T01:20:00.000Z",
+          "checkOutOpenAt": "2099-12-01T02:40:00.000Z",
+          "checkOutCloseAt": "2099-12-01T03:00:00.000Z",
+          "lateGraceMinutes": 0,
+          "earlyLeaveThresholdMinutes": 0,
+          "resolution": {
+            "locationRequired": { "value": false, "source": "activity" },
+            "radiusMeters": { "value": 100, "source": "system-default" },
+            "checkInOpenAt": {
+              "value": "2099-12-01T01:00:00.000Z",
+              "source": "activity"
+            },
+            "checkInCloseAt": {
+              "value": "2099-12-01T01:20:00.000Z",
+              "source": "activity"
+            },
+            "checkOutOpenAt": {
+              "value": "2099-12-01T02:40:00.000Z",
+              "source": "activity"
+            },
+            "checkOutCloseAt": {
+              "value": "2099-12-01T03:00:00.000Z",
+              "source": "activity"
+            },
+            "lateGraceMinutes": { "value": 0, "source": "activity" },
+            "earlyLeaveThresholdMinutes": { "value": 0, "source": "activity" }
+          },
+          "positions": [
+            {
+              "positionId": "position-synthetic-0001",
+              "code": "participant",
+              "cancelled": false,
+              "locationRequired": false,
+              "radiusMeters": 100,
+              "locationPolicySourceCode": "session",
+              "resolution": {
+                "locationRequired": { "value": false, "source": "activity" },
+                "radiusMeters": { "value": 100, "source": "system-default" }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "activity": {
+      "title": "冻结的合成培训",
+      "activityTypeCode": "training",
+      "allocationModeCode": "first_come",
+      "organizationId": "organization-synthetic-0001",
+      "startAt": "2099-12-01T01:00:00.000Z",
+      "endAt": "2099-12-01T03:00:00.000Z",
+      "location": "合成社区中心",
+      "description": "核对这次提交的内容",
+      "capacity": 12,
+      "genderRequirementCode": null,
+      "registrationDeadline": null,
+      "registrationNotes": "带水",
+      "isPublicRegistration": false,
+      "requiresInsurance": false,
+      "registrationSchema": null,
+      "coverImageUrl": null,
+      "galleryImageUrls": null,
+      "content": null,
+      "locationLongitude": null,
+      "locationLatitude": null,
+      "registrationModeCode": "open",
+      "visibilityCode": "public",
+      "defaultCheckInRadiusMeters": 100,
+      "defaultLocationRequired": false,
+      "archiveWaitingDays": 3
+    },
+    "sessions": [
+      {
+        "sessionId": "session-synthetic-0001",
+        "clientRef": null,
+        "code": "main",
+        "name": "本次活动",
+        "startAt": "2099-12-01T01:00:00.000Z",
+        "endAt": "2099-12-01T03:00:00.000Z",
+        "locationText": "合成社区中心",
+        "meetingPoint": null,
+        "executionPoint": null,
+        "evacuationPoint": null,
+        "longitude": null,
+        "latitude": null,
+        "capacity": 12,
+        "checkInOpenAt": "2099-12-01T01:00:00.000Z",
+        "checkInCloseAt": "2099-12-01T01:20:00.000Z",
+        "checkOutOpenAt": "2099-12-01T02:40:00.000Z",
+        "checkOutCloseAt": "2099-12-01T03:00:00.000Z",
+        "preparationStartAt": null,
+        "locationRequired": false,
+        "radiusMeters": 100,
+        "locationPolicySourceCode": "activity",
+        "accuracyWarningMeters": 100,
+        "lateGraceMinutes": 0,
+        "earlyLeaveThresholdMinutes": 0,
+        "statusCode": "scheduled",
+        "sortOrder": 0,
+        "positions": [
+          {
+            "positionId": "position-synthetic-0001",
+            "clientRef": null,
+            "code": "participant",
+            "name": "参与者",
+            "attendanceRoleCode": "volunteer",
+            "capacity": 12,
+            "startAt": null,
+            "endAt": null,
+            "genderRequirementCode": null,
+            "qualificationRuleSetId": null,
+            "locationRequired": null,
+            "radiusMeters": null,
+            "leaderMemberId": null,
+            "description": null,
+            "equipmentNotes": null,
+            "sortOrder": 0,
+            "cancelled": false
+          }
+        ]
+      }
+    ],
+    "registrationForm": null,
+    "qualificationRuleSets": { "ruleSets": [] },
+    "categoryCode": "routine",
+    "plannedSemanticAssignments": [],
+    "selectedTemplateVersionId": "template-synthetic-0001",
+    "activityPlaces": [],
+    "contentVisibilitySummary": {
+      "visibilityCode": "public",
+      "isPublicRegistration": false
+    },
+    "metricRequirementCode": "not_required",
+    "metricSelectionRevision": 1,
+    "metricSetPointer": null,
+    "timePolicyPointers": null,
+    "contributionPolicyPointers": null
+  }
+}
