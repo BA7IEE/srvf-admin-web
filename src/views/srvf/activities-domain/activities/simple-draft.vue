@@ -12,6 +12,7 @@ import { hasPerms } from "@/utils/auth";
 import { getAdminMe } from "@/api/user";
 import { bizErrorMessage } from "@/api/srvf-error";
 import ReviewSubmission from "./simple/review.vue";
+import ReturnedReview from "./simple/returned-review.vue";
 import { reviewDraft } from "./simple/review-state";
 import {
   getSimpleDraft,
@@ -88,7 +89,7 @@ const nextStep = computed(() => {
   if (d.statusCode !== "draft")
     return "此活动已不在草稿阶段，请按当前活动状态处理。";
   if (d.review?.status === "returned")
-    return "审核已退回。请与审核人员核对修改要求，保存修改后重新提交审核。";
+    return "审核已退回。请先阅读上方退回意见，修改并保存草稿，再核对提交新的审核申请。";
   if (!d.editable)
     return "当前草稿暂不可编辑。请核实审核状态、模板有效性或联系管理员。";
   return "核对场次、名额和地点后，可在下方提交发布审核。审核期间不能修改草稿，审核通过后才会发布。";
@@ -443,6 +444,25 @@ onBeforeUnmount(() => {
       :title="storageWarning"
     />
     <template v-if="draft">
+      <ReturnedReview
+        v-if="draft.review?.status === 'returned'"
+        :draft="draft"
+        :user-id="userId"
+        :account-invalid="accountInvalid"
+        :editing="editing"
+        :can-edit="
+          canSave &&
+          draft.statusCode === 'draft' &&
+          !loading &&
+          !saving &&
+          !checking &&
+          !uncertainTarget &&
+          !conflict &&
+          !reviewState.locked
+        "
+        @edit="beginEdit"
+        @identity-invalid="invalidateAccount"
+      />
       <el-alert
         class="mb-3"
         type="info"

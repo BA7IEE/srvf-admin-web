@@ -21,6 +21,39 @@ export function validDraftHash(value: unknown): value is string {
 
 export class ReviewDataError extends Error {}
 
+/** Join two independently authorized reads; a newer or unrelated review is not this reason. */
+export function readReturnedReviewNote(
+  draft: AdminSimpleDraftResponseDto,
+  detail: unknown
+): string | null {
+  const record = (value: unknown): Record<string, unknown> | null =>
+    value !== null && typeof value === "object" && !Array.isArray(value)
+      ? (value as Record<string, unknown>)
+      : null;
+  const data = record(detail);
+  const activity = record(data?.activity);
+  const review = record(data?.publishReview);
+  if (
+    draft.review?.status !== "returned" ||
+    !activity ||
+    !review ||
+    activity.id !== draft.activityId ||
+    activity.organizationId !== draft.organizationId ||
+    activity.statusCode !== draft.statusCode ||
+    review.latestRequestId !== draft.review.id ||
+    review.requestType !== draft.review.requestType ||
+    review.status !== "returned"
+  )
+    throw new ReviewDataError(
+      "审核或活动状态已变化，退回原因与当前详情不一致。请刷新活动后重新核对。"
+    );
+  if (review.reviewNote !== null && typeof review.reviewNote !== "string")
+    throw new ReviewDataError("退回原因数据不完整，请重新读取或联系审核人员。");
+  return typeof review.reviewNote === "string" && review.reviewNote.trim()
+    ? review.reviewNote
+    : null;
+}
+
 export function isVersionedReviewBody(
   body: AdminSubmitSimpleActivityReviewDto
 ): body is ConfirmedSimpleReviewBody {
