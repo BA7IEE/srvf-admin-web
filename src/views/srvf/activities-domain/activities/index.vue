@@ -6,8 +6,8 @@ import { useRenderIcon } from "@/components/ReIcon/src/hooks";
 
 import Delete from "~icons/ep/delete";
 import EditPen from "~icons/ep/edit-pen";
-import AddFill from "~icons/ri/add-circle-line";
 import { SrvfListPage } from "@/srvf-kit";
+import SimpleEntry from "./simple/entry.vue";
 
 defineOptions({
   name: "SrvfActivities"
@@ -15,16 +15,15 @@ defineOptions({
 
 const route = useRoute();
 const router = useRouter();
+const quickCreate = route.query.create === "1";
 
-/** 工作台「快捷发起」入口：带 ?create=1 进来时自动打开新建弹窗（无创建权限则静默忽略） */
+/** 快捷发起交由本人单场次入口；创建成功直接读取 simple-draft。 */
 function consumeQuickCreate() {
   if (route.query.create !== "1") return;
   router.replace({ path: route.path });
-  if (canCreate) openDialog("新建");
 }
 
 const {
-  canCreate,
   canUpdate,
   canDelete,
   canPublish,
@@ -58,7 +57,7 @@ onMounted(() => {
   <SrvfListPage
     :can-read="true"
     title="活动列表"
-    intro="发布和管理全队活动：新建后点「管理」进入活动详情，在那里发布活动、审核报名、提交和审核考勤。"
+    intro="先筹备本人的单场次活动；下方列表用于查看当前有权访问的活动。草稿可从本设备入口或已收藏的详情链接重新打开。"
     :columns="columns"
     :loading="loading"
     :data-list="dataList"
@@ -68,16 +67,7 @@ onMounted(() => {
     @page-size-change="handleSizeChange"
     @page-current-change="handleCurrentChange"
   >
-    <template #buttons>
-      <el-button
-        v-if="canCreate"
-        type="primary"
-        :icon="useRenderIcon(AddFill)"
-        @click="openDialog('新建')"
-      >
-        新建
-      </el-button>
-    </template>
+    <template #banner><SimpleEntry :quick-create="quickCreate" /></template>
     <template #statusCode="{ row }">
       <el-tag :type="statusMeta(row.statusCode).type">
         {{ statusMeta(row.statusCode).text }}
