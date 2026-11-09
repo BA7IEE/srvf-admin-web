@@ -23,6 +23,17 @@ export default [
         }
       },
       {
+        path: "/srvf/activities-domain/activities/:id/simple-draft",
+        name: "SrvfSimpleActivityDraft",
+        component: () =>
+          import("@/views/srvf/activities-domain/activities/simple-draft.vue"),
+        meta: {
+          title: "本人活动草稿",
+          showLink: false,
+          activePath: "/srvf/activities-domain/activities"
+        }
+      },
+      {
         // 活动作战室（实体详情页）：由活动列表行「管理」router.push 进入，非侧栏菜单项。
         // showLink:false 不进侧栏；activePath 指回活动列表，停留时「活动列表」菜单保持高亮。
         path: "/srvf/activities-domain/activities/:id",

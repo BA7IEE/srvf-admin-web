@@ -1,5 +1,62 @@
 # tests/render — 本地渲染回归冒烟
 
+## simple_review_clone_render_pass.py / simple_review_pending_render_pass.py — 已发送请求保留回归
+
+依据真实 Chromium opener 复制 sessionStorage 的新复现，修正旧测试中“首次确定失败可清空并换键”的期望。页面内 busy 不能排除复制页已发出的同键请求；首次 20255/20256 与恢复失败均保留原键原体。当前失败不等于所有发送终结，也不永久取消键。401/403/404 和一般 GET 不证明原请求未落库；20143 保留记录并停止重发。只有关联原请求的成功回执允许归档。
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 RP_BASE=http://127.0.0.1:8848 uv run --offline --with playwright python tests/render/simple_review_clone_render_pass.py
+PYTHONDONTWRITEBYTECODE=1 RP_BASE=http://127.0.0.1:8848 uv run --offline --with playwright python tests/render/simple_review_pending_render_pass.py
+```
+
+复制页测试不手动种恢复记录：A 首次请求在途时用 window.open 实际复制到 B；B 发同体恢复，A 首次 20256 后保留记录，重载也不能换键；B 原请求随后成功，A 仅原样重放取得同一回执，最终一条合成审核。旧候选在同一安全断言失败，新候选通过，红绿日志在独立交付包保留。
+
+第二组覆盖首次 20255/20256、刷新/重载、401（含既有认证刷新失败后的整页重开/重新登录）、403/404、20143、无关活动的 200 回执、发送前校验/读取/存储失败不制造未知记录，以及正常提交的原请求回执归档。所有 API 都被拦截；不是后端真实联调，也不是跨设备恢复系统。
+
+可用性代价：当前页不能证明所有副本/迟到发送已经结束，所以单页明确失败也可能保守保留，不能立即改稿或另建提审；20255 原版本可能持续不可提交，需要人工协助核对。未添加永久取消、自动解锁、清除未知记录或重绑新 hash 的入口。认证刷新失败保留既有框架行为，不修改认证文件；本测试验证整页重新登录后仍恢复原意图。
+
+## simple_review_version_render_pass.py — 确认版本候选回归
+
+依据 `tests/fixtures/simple-review.candidate-contract.md` 的未提交后端候选；所有 API 均由合成夹具拦截，没有真实联调。
+
+```bash
+node --test tests/simple_review_version.test.mjs tests/simple_activity_review.test.mjs tests/simple_activity_state.test.mjs
+PYTHONDONTWRITEBYTECODE=1 RP_BASE=http://127.0.0.1:8848 uv run --offline --with playwright python tests/render/simple_review_version_render_pass.py
+```
+
+先在旧实现上实测红灯：最后一次 GET 之后发生保存，旧两字段 POST 会创建未确认事实的 review。Node 红灯分别覆盖 20255/20256 分类、无效指纹、三字段恢复。升级后覆盖同一竞态、确定首次失败仍保留原体、保存最终事实、专业配置拒绝、未知恢复失败仍保留原体、已归档成功后退回的新意图、旧记录只读、旧后端 400 不降级、错误活动/非法指纹、读取期间编辑与导航互锁、取消重开及 390px 窄屏。
+
+新请求在用户确认后绑定 `draftHash`，最后一次读回若发现变化则重新确认（此时尚未发送）；GET 与 POST 间的后续竞态由候选后端锁内检查拒绝。已发送请求永不从轮询结果替换原 hash。当前页面不能证明关闭标签页、超时或其他发送已终结，因此首次或恢复得到 20255/20256 后都保留未知状态，不提供“已取消”或自动新意图。旧两字段未知请求保留原体、仅做读取；有明确回执时可只读恢复。已知回执按当前标签页的账号/活动/原操作键保留最小关联，不保存 snapshot。
+
+## simple_review_render_pass.py — 草稿发布提审夹具验证
+
+在已登录的本人草稿详情中验证提审，不接入审核员决策。全部 `/api` 请求均由合成夹具拦截，不能作为真实后端联调证据。
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 RP_BASE=http://127.0.0.1:8848 uv run --offline --with playwright python tests/render/simple_review_render_pass.py
+node --experimental-strip-types --test tests/simple_activity_review.test.mjs tests/simple_activity_state.test.mjs
+```
+
+覆盖编辑未完成时禁止提审、读取失败恢复、取消重开、明确勾选确认、保存内容变化后重新核对、过期截止时间、双击、待审仍为草稿、明确拒绝、响应丢失／刷新后的同键恢复、恢复时撤权保留记录、已收到回执后的 GET-only 恢复、历史退回请求重放、已有待审／操作键冲突、浏览器存储失败和账号切换后的迟到响应。此脚本使用后端允许的场次窗口和单主地点；旧活动显示夹具的额外地点、窗口不作为有效后端实例证明。
+
+此脚本现按带版本的候选合同验证；历史 `15421e9c` live 证据仍原样保留。接口为本人正式成员登录准入，不应套用审核员的 `activity.publish.record` 码；资格、政策及专业白名单仍由服务端复核。GET 成功和 editable=true 不保证专业配置通过，页面也不声称用户已阅读完整审核快照。
+
+恢复记录仅在当前账号／活动／站点的 sessionStorage 中保存原操作键、确认版本、明确确认及最小回执，不保存 proposal snapshot。未知结果没有自动重发；用户继续核对时复用原三字段，不提交当前新版本。收到回执后刷新失败只读恢复。关闭标签页或清除浏览器数据的恢复缺口在页面提示，跨设备找回不在本轮。
+
+## simple_activity_render_pass.py — 单场次草稿交互夹具验证
+
+此脚本只需本工作树的 `pnpm dev`。它在浏览器网络层拦截全部 `/api/` 请求，登录、组织选项、模板与活动均为明确的测试夹具；不启动后端、不接触真实数据库，也不构成真实联调证明。夹具依据 `tests/fixtures/simple-activity.live.openapi.json`，来源和摘要见同目录 README。
+
+```bash
+RP_BASE=http://127.0.0.1:8848 uv run --offline --with playwright python tests/render/simple_activity_render_pass.py
+```
+
+使用当前 dev 实际端口；脚本默认 `/usr/bin/chromium`。`RP_SHOT_DIR` 可指定截图目录。
+
+覆盖必填与北京时间同日校验、组织资格失败／空列表、模板加载失败／空列表／分页、双击防重复、创建丢失响应后的同键同体恢复、GET 覆盖历史创建回执、普通 USER 不依赖旧列表与详情、完整保存保留其他用途地点、取消重开、并发指纹冲突、保存响应丢失后匹配／不匹配读回、权限失败保留输入、待审核仍为草稿且只读、本机找回／404 重试／账号隔离、移除本机引用及切换账号后隐藏迟到响应。
+
+其余两个历史脚本依赖真实后端，前置条件如下。
+
 > 本地冒烟工具，**不是 CI 门禁**。依赖本地已起的 dev server + 后端 + seed 数据。
 
 ## tabs_render_pass.py — el-tabs 默认 tab 内容区渲染回归
