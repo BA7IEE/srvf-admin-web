@@ -13,6 +13,17 @@ export default [
     },
     children: [
       {
+        path: "/srvf/workbench/publish-reviews/:reviewId",
+        name: "SrvfPublishReviewDetail",
+        component: () =>
+          import("@/views/srvf/workbench/publish-review/detail.vue"),
+        meta: {
+          title: "活动发布审核",
+          showLink: false,
+          activePath: "/srvf/workbench/approvals"
+        }
+      },
+      {
         // 审批工作台 = 工作台落地页兜底（跨轴横扫待处理报名/考勤；后端暂无聚合 stats 端点）。
         path: "/srvf/workbench/approvals",
         name: "SrvfWorkbench",

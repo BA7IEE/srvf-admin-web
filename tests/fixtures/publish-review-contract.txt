@@ -1,0 +1,228 @@
+# SRVF 审核员处理／发布合同交接
+
+固定源码：`ea4a35792e3d107cebb975235821a21de9070b34`，仓库 `BA7IEE/srvf-nest-api`。本文件是针对现有实现的只读交接；未修改代码、运行测试、授权、推送、执行审核或部署。不是新 API 设计，也不是已完成前端联调的声明。
+
+## 可以完成的现有闭环
+
+审核员可以读取待审集合与单条审核、通过或退回。**初发审核的 approve 在同一数据库事务中将审核置为 approved、应用冻结提案并将活动发布为 published；不需要第二个发布命令。** change 类型的 approve 则应用冻结变更。返回对象是审核 DTO，不是 Activity DTO。
+
+依据：[Controller 路由](https://github.com/BA7IEE/srvf-nest-api/blob/ea4a35792e3d107cebb975235821a21de9070b34/src/modules/activities/controllers/admin-activity-publish-reviews.controller.ts#L54)、[审批 apply(publish: initial)](https://github.com/BA7IEE/srvf-nest-api/blob/ea4a35792e3d107cebb975235821a21de9070b34/src/modules/activities/activity-publish-review.service.ts#L899)、[实际 Activity 更新](https://github.com/BA7IEE/srvf-nest-api/blob/ea4a35792e3d107cebb975235821a21de9070b34/src/modules/activities/activity-publish-proposal-v2.service.ts#L1814)。旧 V1 分支也在事务内发布，见 review.service.ts:347。
+
+## 1. HTTP 入口与外壳
+
+所有路径前缀为 `/api`，使用当前有效 Bearer 登录。`{reviewId}` 是**提审响应的 id／审核记录 id**，不是 activityId；路径 ID 验证是 8–64 字符字符串，不要求客户端自行套 UUID 正则。
+
+| 用途 | 当前入口 | 返回／权限码 |
+|---|---|---|
+| 待审列表 | `GET /api/admin/v1/activity-publish-reviews?status=pending&page=1&pageSize=20` | HTTP 200，分页 Review；`activity-review.read.request` |
+| 单条审核 | `GET /api/admin/v1/activity-publish-reviews/{reviewId}` | HTTP 200，详情 Review；同读权限 |
+| 通过并发布／应用变更 | `POST /api/admin/v1/activity-publish-reviews/{reviewId}/approve` | HTTP 200，基础 Review；`activity.publish.record` |
+| 退回修改 | `POST /api/admin/v1/activity-publish-reviews/{reviewId}/return` | HTTP 200，基础 Review；`activity-review.return.request` |
+
+这里没有审核员 reject、claim/领取、批量决策、二审／终审、编辑审核快照或独立 review-publish 端点。withdraw/cancel 不是这两个审核员决策的别名。不要把考勤或结算审核接口当活动发布审核接口。
+
+成功：`{ "code": 0, "message": "ok", "data": ... }`。失败：HTTP 为实际错误状态，body 为 `{ "code": <BizCode整数>, "message": <字符串>, "data": null }`；字段校验失败的 message 可为拼接的校验说明。没有统一的额外 currentSnapshot、conflictPayload 或 operation receipt 字段。
+
+依据：[全局前缀／参数验证](https://github.com/BA7IEE/srvf-nest-api/blob/ea4a35792e3d107cebb975235821a21de9070b34/src/bootstrap/apply-global-setup.ts#L214)、[成功外壳](https://github.com/BA7IEE/srvf-nest-api/blob/ea4a35792e3d107cebb975235821a21de9070b34/src/common/interceptors/response.interceptor.ts#L32)、[错误外壳](https://github.com/BA7IEE/srvf-nest-api/blob/ea4a35792e3d107cebb975235821a21de9070b34/src/common/filters/all-exceptions.filter.ts#L33)、[ID DTO](https://github.com/BA7IEE/srvf-nest-api/blob/ea4a35792e3d107cebb975235821a21de9070b34/src/common/dto/id-param.dto.ts#L6)。
+
+## 2. 列表查询与可直接消费的响应
+
+不传 status 会列所有状态，待审页应明确传 `status=pending`。没有 `simpleOnly`、assigneeId、reviewerId、activityId 或“仅我能通过”的查询项。
+
+| query | 验证／语义 |
+|---|---|
+| page | 整数 ≥1，默认 1 |
+| pageSize | 整数 1–100，默认 20 |
+| status | pending / approved / returned / withdrawn / cancelled |
+| requestType | initial / change |
+| organizationId | 可选，8–64 字符 |
+| includeDescendants | 默认 false；接受布尔或 query 字符串 true/false，组织过滤不扩大已有授权 |
+| initiatorQ | 可选字符串 ≤100；按活动当前 initiator 的 realName/memberNo 不区分大小写包含搜索，不等于 submittedByUserId 搜索 |
+| activityQ | 可选字符串 ≤200；按当前活动 title 不区分大小写包含搜索 |
+| submittedFrom / submittedTo | 可选 ISO 日期字符串；submittedAt 的包含边界 gte / lte |
+
+分页为 `data: {items: Review[], total, page, pageSize}`，按 submittedAt 降序，无 cursor。列表与 count 使用同一查询过滤。组织过滤与读权限可见组织取交集；有合法码但可见集合为空时可返回空页，不一定是 403。列表可包含本人提交的待审项，并不等于每行都可由本人审核。
+
+依据：[查询 DTO](https://github.com/BA7IEE/srvf-nest-api/blob/ea4a35792e3d107cebb975235821a21de9070b34/src/modules/activities/activity-publish-review.dto.ts#L102)、[分页约束](https://github.com/BA7IEE/srvf-nest-api/blob/ea4a35792e3d107cebb975235821a21de9070b34/src/common/dto/pagination.dto.ts#L9)、[列表实际过滤／分页](https://github.com/BA7IEE/srvf-nest-api/blob/ea4a35792e3d107cebb975235821a21de9070b34/src/modules/activities/activity-publish-review-query.service.ts#L94)。
+
+基础 Review 真实字段如下。日期在 HTTP JSON 中为序列化后的日期字符串；不要把 null 改成 0、空数组或未定义业务事实。
+
+```ts
+type ReviewStatus = 'pending' | 'approved' | 'returned' | 'withdrawn' | 'cancelled';
+interface Review {
+  id: string;
+  activityId: string;
+  requestType: 'initial' | 'change';
+  requestVersion: number; // 该活动的提审序号，不是 snapshot schemaVersion
+  baseRevision: number;
+  status: ReviewStatus;
+  snapshot: Record<string, unknown>;
+  directPublish: boolean; // 来源属性，不是当前 Activity.statusCode
+  audienceTagCodes: string[] | null;
+  audienceOrganizationIds: string[] | null;
+  submittedByUserId: string;
+  submittedAt: string;
+  reviewedByUserId: string | null;
+  reviewedAt: string | null;
+  reviewNote: string | null;
+  createdAt: string;
+  updatedAt: string;
+  activityTitle: string;
+  organizationId: string;
+  initiatorMemberId: string | null;
+  changeDiff?: Record<string, unknown>; // GET 单条详情附加
+  affectedMemberCount?: number;         // GET 单条详情附加
+}
+```
+
+`GET {reviewId}` 额外计算 changeDiff 和 affectedMemberCount。后者是当前 populationIncluded 参与身份按 memberId 去重的人数，不是提审时冻结人数。列表和 approve/return 的基础 presenter 响应不附加这两个详情字段。
+
+activityTitle、organizationId、initiatorMemberId 来自**当前 Activity 关联**；snapshot 来自已存审核 JSON。不能把前者冒充冻结标题／组织。响应没有申请人／审核人 displayName、组织名称、canApprove/canReturn、Activity 当前 statusCode、reviewOperationKey、reviewRequestHash、提交入口标识或 expectedDraftHash。
+
+依据：[Response DTO](https://github.com/BA7IEE/srvf-nest-api/blob/ea4a35792e3d107cebb975235821a21de9070b34/src/modules/activities/activity-publish-review.dto.ts#L40)、[实际 presenter／关联投影](https://github.com/BA7IEE/srvf-nest-api/blob/ea4a35792e3d107cebb975235821a21de9070b34/src/modules/activities/activity-publish-review-presenter.ts#L31)、[详情附加字段](https://github.com/BA7IEE/srvf-nest-api/blob/ea4a35792e3d107cebb975235821a21de9070b34/src/modules/activities/activity-publish-review-query.service.ts#L165)。
+
+## 3. 两种审核请求
+
+通过：
+
+```json
+{
+  "operationKey": "<本次意图的新键，8–128字符>",
+  "requiresInsuranceConfirmed": true,
+  "reviewNote": "已核对提审快照"
+}
+```
+
+requiresInsuranceConfirmed 必须为布尔 true，每次 approve 都要求，不能传字符串 true，也不能因 snapshot.activity.requiresInsurance=false 就省略。它是确认，不会把保险配置改为 true。reviewNote 可省略，≤500 字符；当前 IsOptional 也容许 null，服务存为 null；有字符串时原样保存、不 trim。
+
+退回：
+
+```json
+{
+  "operationKey": "<本次退回意图的新键，8–128字符>",
+  "reviewNote": "请修正活动时间"
+}
+```
+
+reviewNote 必填字符串 1–500，服务还要求 trim 后非空，存储的是 trim 后值。空串会先触发 DTO 40000，纯空白触发 20021。没有 requiresInsuranceConfirmed 字段。
+
+operationKey 的 DTO 声明为可省略，但 **运行时只要是被识别的 V2–V9 提案就要求它，approve 和 return 均如此**；当前简单提审产生 V7/V8/V9，必须带键。只有历史 V1 路径才保留可省略兼容。OmittableOnly 不接受 operationKey=null；键为字符串 8–128，没有额外 UUID 正则。部分旧注释／Swagger 仅强调 V8 强制，不能据此让新简单流程省略键。
+
+approve/return **不接受** confirmation、expectedDraftHash、expectedSnapshotHash、requestVersion、baseRevision、snapshot 或 activity patch。全局 forbidNonWhitelisted=true，不能给审核 DTO 加组织者提审字段来“补版本”。
+
+依据：[approve/return DTO](https://github.com/BA7IEE/srvf-nest-api/blob/ea4a35792e3d107cebb975235821a21de9070b34/src/modules/activities/activity-publish-review.dto.ts#L149)、[approve 实际强制键／自审](https://github.com/BA7IEE/srvf-nest-api/blob/ea4a35792e3d107cebb975235821a21de9070b34/src/modules/activities/activity-publish-review.service.ts#L248)、[return trim／强制键](https://github.com/BA7IEE/srvf-nest-api/blob/ea4a35792e3d107cebb975235821a21de9070b34/src/modules/activities/activity-publish-review.service.ts#L1062)、[现代快照识别条件](https://github.com/BA7IEE/srvf-nest-api/blob/ea4a35792e3d107cebb975235821a21de9070b34/src/modules/activities/activity-publish-proposal-v2.service.ts#L1302)。
+
+## 4. 权限、组织范围与自审
+
+读、通过、退回是三个独立权限码，不能互相替代。seed 提供 activity-publish-reviewer 角色，仅含这三个码，零默认持有人、零默认 PositionRolePolicy；本次没有读取实际 RoleBinding，因此不能声称哪个真实账号已可审核。运行时依据有效授权，不只看角色字符串、ADMIN 头衔或组织者身份。
+
+列表用 getVisibleOrganizationScope(read.request)：GLOBAL 或组织／组织树范围；organizationId/includeDescendants 只做过滤交集。ACTIVITY/RESOURCE 等非组织 scope 不会被自动扩大为可见组织列表，可能出现详情可授权、工作台为空。单条和决策以 activity_publish_review 资源判权，组织取 review 关联的**当前 activity.organizationId**。SUPER_ADMIN 有权限短路，但**不豁免业务自审限制**。
+
+新决策要求 review.status=pending。通过和退回均禁止 `review.submittedByUserId === 当前 user.id`，不是比较 initiatorMemberId，也不是比较 reviewer 的组织。自己可在列表看到自己的 pending，仍不得审批或退回。这里只是一层发布审核，不存在考勤式一审／终审人员规则。
+
+前端已有有效权限读面是 `GET /api/system/v1/authz/me/effective-permissions`，data 为 `{permissions:string[]}`；它合并 scoped 来源，仍不证明某个 review 的组织覆盖、状态、自审或引用有效。旧 GLOBAL-only `/rbac/me/permissions` 不能替代。诊断 authz/explain 另需 authz.explain.decision，reviewer 默认未带该码，也不能替代命令自审规则。
+
+依据：[seed 精确三码](https://github.com/BA7IEE/srvf-nest-api/blob/ea4a35792e3d107cebb975235821a21de9070b34/prisma/seed.ts#L2342)、[可见范围](https://github.com/BA7IEE/srvf-nest-api/blob/ea4a35792e3d107cebb975235821a21de9070b34/src/modules/authz/authz.service.ts#L147)、[review 资源组织](https://github.com/BA7IEE/srvf-nest-api/blob/ea4a35792e3d107cebb975235821a21de9070b34/src/modules/authz/resource-resolver.service.ts#L133)、[有效权限入口](https://github.com/BA7IEE/srvf-nest-api/blob/ea4a35792e3d107cebb975235821a21de9070b34/src/modules/authz/effective-permissions.controller.ts#L22)、[自审实际拦截](https://github.com/BA7IEE/srvf-nest-api/blob/ea4a35792e3d107cebb975235821a21de9070b34/src/modules/activities/activity-publish-review.service.ts#L255)。RequiresPermission 的 engine 字样是声明；实际权限／范围仍由 service 执行，见 route-authz.decorator.ts:65。
+
+## 5. 并发、回放与结果未知
+
+决策事务锁顺序为 Activity 行 → review 行。新决定只能从 pending 进入 approved 或 returned。同一记录并发通过／退回时，第一个有效事务获胜，另一新键请求通常收到状态已不可操作；不能以第二次“发布”强行覆盖。
+
+有键时，审核指纹为：
+
+```ts
+hashCanonical({
+  action: 'publish-review-approve' /* 或 publish-review-return */,
+  reviewId,
+  payload: dto // 包含 operationKey、确认字段和 reviewNote 的原请求值
+})
+```
+
+reviewOperationKey 在审核操作列全局唯一，跨 review／approve／return；提审 operationKey 列与它是分开的。相同审核键、同 action、同 reviewId、同 DTO 指纹可读回原审核决定，不再次发布／应用变更或重写副作用。不同内容返回 20143。键不是按当前 reviewer 分区，响应中的 reviewedByUserId 应显示真实已落库审核人，不自行改为当前操作者。
+
+对象键顺序按 canonical JSON 排序，数组顺序保留；省略/null、字符串空白等仍是不同内容。尤其退回保存 trim 后说明，但指纹使用原始 DTO，因此不能把存储后的 trim 文本拿来重建原请求。
+
+执行顺序有边界：
+
+- approve：先验证 true、外层 scoped 权限；锁内先检查紧急起源、受众 HTTP 闸、现代键、自审、当前分配一致性，之后才查精确回放；新命令再走状态／快照／引用校验和发布。现代 V7+ 新审批还在引用锁相关阶段复核当前 actor 与 scope。
+- return：trim 非空、外层权限；锁内再读 active actor 并重新 scoped 鉴权、检查现代键，再查精确回放，之后才做自审和 pending 状态检查。
+- 所以权限撤回等可在回放前拒绝，不能承诺“成功过就永远能重放”。也不能把 approve 与 return 的自审／回放顺序说成完全相同。
+
+网络断开／超时后，现有可靠恢复方式是保留 reviewId、action、同一 operationKey 与原 DTO，做精确重试。GET 详情不返回键／hash，也无 replayed 标志；看到 approved 或相同说明不等于证明是本次键落库。失败也不证明其他标签页／在途尝试从未成功，不能自动换键或发送旧 publish 来“修复”。回放 DTO 的 activityTitle 等关联字段来自当前 Activity，因此不承诺响应字节逐字相同。
+
+依据：[锁及 approve 顺序](https://github.com/BA7IEE/srvf-nest-api/blob/ea4a35792e3d107cebb975235821a21de9070b34/src/modules/activities/activity-publish-review.service.ts#L208)、[return 顺序](https://github.com/BA7IEE/srvf-nest-api/blob/ea4a35792e3d107cebb975235821a21de9070b34/src/modules/activities/activity-publish-review.service.ts#L1091)、[hash／回放／P2002 收口](https://github.com/BA7IEE/srvf-nest-api/blob/ea4a35792e3d107cebb975235821a21de9070b34/src/modules/activities/activity-publish-review.service.ts#L1259)、[数据库唯一列](https://github.com/BA7IEE/srvf-nest-api/blob/ea4a35792e3d107cebb975235821a21de9070b34/prisma/schema.prisma#L1734)。
+
+## 6. 冻结快照、当前事实与差异展示
+
+当前简单初发提审调用 buildInitial，可能返回 V7、V8 或 V9：分别随已有时长政策／贡献政策选择演进。**不能把只有 V7 才算简单，也不能把 requestVersion 当 schemaVersion。** response.snapshot 包括：
+
+| 位置 | 实际字段／含义 |
+|---|---|
+| snapshot 顶层 | schemaVersion、baseWorkflowRevision、baseSnapshotHash、snapshotHash、base、templateVersionId、resolvedConfig、activity、sessions、registrationForm、qualificationRuleSets |
+| 其他冻结配置 | categoryCode、plannedSemanticAssignments、selectedTemplateVersionId、activityPlaces、contentVisibilitySummary、metricRequirementCode、metricSelectionRevision、metricSetPointer、timePolicyPointers、contributionPolicyPointers；按版本有选择显式标志 |
+| snapshot.activity | title、activityTypeCode、allocationModeCode、organizationId、startAt/endAt、location、description、capacity、genderRequirementCode、registrationDeadline/Notes、isPublicRegistration、requiresInsurance、registrationSchema、content、locationLongitude/Latitude、registrationModeCode、visibilityCode、defaultCheckInRadiusMeters、defaultLocationRequired、archiveWaitingDays；历史 coverImageUrl/galleryImageUrls 键仍保留 null |
+| snapshot.sessions[] | sessionId/clientRef、code/name、startAt/endAt、locationText、meetingPoint/executionPoint/evacuationPoint、longitude/latitude、capacity、签到签退窗口、preparationStartAt、locationRequired/radiusMeters、locationPolicySourceCode、accuracyWarningMeters、lateGraceMinutes、earlyLeaveThresholdMinutes、statusCode、sortOrder、positions[] |
+| sessions[].positions[] | positionId/clientRef、code/name、attendanceRoleCode、capacity、startAt/endAt、genderRequirementCode、qualificationRuleSetId、locationRequired/radiusMeters、leaderMemberId、description、equipmentNotes、sortOrder、cancelled |
+| snapshot.base | 提审时冻结的原 activity/sessions/相关配置；target 在同一 snapshot 顶层，不是 GET 时的当前草稿 |
+| resolvedConfig | 冻结解析值及 source；例如 activity.registrationModeCode.value/source，source 为 template/activity/system-default；不要把 raw selectedTemplateVersionId 与 fallback 后 templateVersionId 混为一谈 |
+
+上述是当前已存在字段，不表示每个版本都有完全一样的键；按 schemaVersion 消费。指针、政策、表单与资格字段不能因为简单组织者页面没展示就当不存在或清空。
+
+依据：[实际 Activity／Session／Position 形状](https://github.com/BA7IEE/srvf-nest-api/blob/ea4a35792e3d107cebb975235821a21de9070b34/src/modules/activities/activity-publish-proposal-v2.service.ts#L121)、[V7–V9 envelope](https://github.com/BA7IEE/srvf-nest-api/blob/ea4a35792e3d107cebb975235821a21de9070b34/src/modules/activities/activity-publish-proposal-v2.service.ts#L452)、[当前 buildInitial](https://github.com/BA7IEE/srvf-nest-api/blob/ea4a35792e3d107cebb975235821a21de9070b34/src/modules/activities/activity-publish-proposal-v2.service.ts#L868)。
+
+详情 changeDiff 的真实范围：
+
+- kind 为 proposal-v2（也承载 V3/V4）、proposal-v5/v6/v7/v8/v9，或 legacy / unparseable。
+- activityFields 是变更字段名；sessions 包含 create/update/cancel，update 项为 `{id, changedFields, positions:{create,update,cancel}}`。实现会为已有项产生 update 条目，即使 changedFields 为空，不要用数组长度当实际变更数。
+- V5+ 有 qualificationRuleSets 的 scope 创建／更新／取消摘要；V6 有 v6Fields.changedFields；V7+ 有 v7Fields.changedFields；V8+ 有 timePolicyFields.changedFields；V9 有 contributionPolicyFields.changedFields。
+- 它只比较冻结 base 与冻结 target，不读当前 draft；也不是所有表单／政策内容的完整 before/after 展示。专业部分有些仅给字段名／scope。
+- 初发 base 和 target 通常一致，因此摘要可为空；**不能据此显示“当前草稿与提审完全一致”**。legacy/unparseable 也不能当零差异。
+
+审批时服务器会锁内 rebuildCurrent 并核对 review.baseRevision、snapshot.baseWorkflowRevision 和 baseSnapshotHash；漂移会拒绝 20144。没有审核员专用的实时 currentDraftHash 或 current-vs-review diff 响应。snapshotHash、baseSnapshotHash 与组织者 simple draftHash 是不同用途，不能互换。
+
+组织者 `GET /api/admin/v1/activities/{activityId}/simple-draft` 是本人发起身份读面：须 app 身份且 memberId 等于 initiatorMemberId，SUPER_ADMIN 也不能靠角色绕过该显式检查。审核员默认角色不提供此能力。已有 Activity GET 是另一条 activity-visibility 规则，审核读取授权不自动保证可读所有当前草稿／专业子资源；不能把当前活动 DTO 或 simple 投影当审核冻结快照。
+
+依据：[changeDiff 计算](https://github.com/BA7IEE/srvf-nest-api/blob/ea4a35792e3d107cebb975235821a21de9070b34/src/modules/activities/activity-publish-review-query.service.ts#L194)、[collectionDiff](https://github.com/BA7IEE/srvf-nest-api/blob/ea4a35792e3d107cebb975235821a21de9070b34/src/modules/activities/activity-publish-review-query.service.ts#L535)、[审批现场 hash 检查](https://github.com/BA7IEE/srvf-nest-api/blob/ea4a35792e3d107cebb975235821a21de9070b34/src/modules/activities/activity-publish-review.service.ts#L845)、[simple 本人授权](https://github.com/BA7IEE/srvf-nest-api/blob/ea4a35792e3d107cebb975235821a21de9070b34/src/modules/activities/activity-simple-draft.service.ts#L348)。
+
+## 7. 发布事实、旧接口与真实缺口
+
+approve 的 initial 成功即完成发布事务；不必等待另一个 worker 发布。返回的 status=approved 是审核决定，review DTO 没有 Activity 当前 statusCode。后来活动可能取消／完结，历史审核仍 approved；查看今天的活动状态应走已有活动可见性读面，不能把历史 approved 当永久 published。
+
+退回后审核状态是 returned，活动不因退回而发布。没有审核记录 PATCH pending 的 API；组织者修改后再次提审，产生新 review/version，不在旧 returned 记录上改 snapshot。
+
+旧 `PATCH /api/admin/v1/activities/{activityId}/publish` 在责任工作流启用时走 compatibilityPublish：已有 pending 初发直接 20032；否则只引导本人发起一份新提审，**永不批准现有 review**。不要用它补发布、绕过 20144/20146 或替换 review approve。App managed 的提审／direct-publish 也不是审核员决定接口。
+
+读面没有“由新 simple expectedDraftHash 路径提交”的可信标志，requestType=initial 和 schemaVersion 都不证明来自简单入口。approve 不运行 simple 提审白名单。队列可能混有专业或旧客户端提案；只展示几个 simple 字段不能声称完整审核其全部配置。没有 simple-only 工作台过滤，也没有完整专业展示就绪／canApprove 字段。前端覆盖不了的冻结字段应如实标为未支持，不能默默忽略、调用旧接口或修改快照来完成所谓闭环。
+
+依据：[旧发布分流](https://github.com/BA7IEE/srvf-nest-api/blob/ea4a35792e3d107cebb975235821a21de9070b34/src/modules/activities/activity-status-command.service.ts#L177)、[兼容桥明确不审批](https://github.com/BA7IEE/srvf-nest-api/blob/ea4a35792e3d107cebb975235821a21de9070b34/src/modules/activities/activity-publish-review-submit.service.ts#L397)、[新简单提交保留审核 id／冻结快照](https://github.com/BA7IEE/srvf-nest-api/blob/ea4a35792e3d107cebb975235821a21de9070b34/src/modules/activities/activity-publish-review-submit.service.ts#L544)。
+
+## 8. 需要明确处理的错误
+
+| HTTP / BizCode | 当前含义 |
+|---|---|
+| 400 / 40000 | DTO 类型／长度／额外字段、缺确认、现代提案缺 operationKey 等 |
+| 401 / 40100 | 未登录或身份失效 |
+| 403 / 30100 | 当前权限／组织范围不允许 |
+| 404 / 20004 | 审核记录不存在 |
+| 404 / 20001 | 活动不存在／不能锁到未删除活动 |
+| 400 / 20021 | 退回原因 trim 后为空 |
+| 409 / 20022 | 快照损坏、无法解析或旧快照校验失败 |
+| 409 / 20033 | 审核状态非 pending，不能执行新决定 |
+| 409 / 20143 | 审核 operationKey 已用于不同 action/review/body |
+| 409 / 20144 | 冻结 base 与锁内当前事实／revision 不符，不能把新现场替换进旧提案继续批 |
+| 409 / 20145 | 发布至少需要一个有效 scheduled 场次 |
+| 403 / 20146 | 提交者不能审核本人申请，SA 也适用 |
+| 409 / 20030 | 活动状态不允许；紧急起源也拒绝正式发布 |
+| 409 / 20123 | 初发时活动报名截止已过去 |
+| 409 / 20147、20152 | 容量协调／分配方式一致性失败 |
+| 503 / 50300 | 例如带受众标签而相关 HTTP 能力未开启 |
+
+专业配置还会沿既有校验抛出指标引用／选择、时长政策、贡献政策等拒绝，如 20172/409、20175/409、20206/404、20207/409、20210/409、20248/404、20249/409、20252/409；以上不是专业校验全部错误码。不能把未知 4xx/5xx 默认为成功、未提交或允许换键重发。
+
+20144 是审核服务器内部预期快照检查；组织者 simple 提审的 20255/20256 不是这两个审核端点的版本确认参数／成功判据。遇到旧提案漂移，刷新事实并回到重提流程；单改 operationKey 不能修复已经冻结的旧 base。20143 不能通过改审核体后沿用同键解决。
+
+依据：[核心 BizCode 定义](https://github.com/BA7IEE/srvf-nest-api/blob/ea4a35792e3d107cebb975235821a21de9070b34/src/common/exceptions/biz-code.constant.ts#L1694)、[状态／快照错误](https://github.com/BA7IEE/srvf-nest-api/blob/ea4a35792e3d107cebb975235821a21de9070b34/src/common/exceptions/biz-code.constant.ts#L814)、[紧急起源拒绝策略](https://github.com/BA7IEE/srvf-nest-api/blob/ea4a35792e3d107cebb975235821a21de9070b34/src/modules/activities/activity-emergency-publication-policy.ts#L4)。
+
+## 本次未做
+
+仅阅读固定提交的相关实现并保存交接文件。没有运行测试、请求实际业务 API、查询实际 RoleBinding/用户数据、修改代码或受保护产物、发放授权、更新 PR、推送、审核活动、发送通知、部署或开展全仓审查。这里确认的是源码合同；前端接线及真实审核员联调仍未执行。

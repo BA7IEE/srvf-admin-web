@@ -1,0 +1,898 @@
+{
+  "review": {
+    "id": "review-synthetic-0001",
+    "activityId": "activity-synthetic-0001",
+    "requestType": "initial",
+    "requestVersion": 2,
+    "baseRevision": 3,
+    "status": "pending",
+    "directPublish": false,
+    "audienceTagCodes": null,
+    "audienceOrganizationIds": null,
+    "submittedByUserId": "organizer-synthetic-0001",
+    "submittedAt": "2099-01-01T00:00:00.000Z",
+    "reviewedByUserId": null,
+    "reviewedAt": null,
+    "reviewNote": null,
+    "createdAt": "2099-01-01T00:00:00.000Z",
+    "updatedAt": "2099-01-01T00:00:00.000Z",
+    "activityTitle": "当前活动标题（非冻结标题）",
+    "organizationId": "organization-synthetic-0001",
+    "initiatorMemberId": "member-organizer-synthetic",
+    "affectedMemberCount": 0,
+    "changeDiff": {
+      "kind": "proposal-v7",
+      "activityFields": []
+    },
+    "snapshot": {
+      "schemaVersion": 9,
+      "baseWorkflowRevision": 3,
+      "baseSnapshotHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "snapshotHash": "ee766c7bcff46b2b1237fbe44656b03d07d5aef4420e1283e7d1815a97aa00ca",
+      "metricSelectionExplicit": true,
+      "base": {
+        "templateVersionId": "template-synthetic-0001",
+        "resolvedConfig": {
+          "templateVersionId": "template-synthetic-0001",
+          "activity": {
+            "registrationModeCode": {
+              "value": "open",
+              "source": "template"
+            },
+            "locationRequired": {
+              "value": false,
+              "source": "activity"
+            },
+            "checkInRadiusMeters": {
+              "value": 100,
+              "source": "system-default"
+            },
+            "archiveWaitingDays": {
+              "value": 3,
+              "source": "system-default"
+            }
+          },
+          "sessions": [
+            {
+              "sessionId": "session-synthetic-0001",
+              "code": "main",
+              "statusCode": "scheduled",
+              "locationRequired": false,
+              "radiusMeters": 100,
+              "locationPolicySourceCode": "activity",
+              "checkInOpenAt": "2099-12-01T01:00:00.000Z",
+              "checkInCloseAt": "2099-12-01T01:20:00.000Z",
+              "checkOutOpenAt": "2099-12-01T02:40:00.000Z",
+              "checkOutCloseAt": "2099-12-01T03:00:00.000Z",
+              "lateGraceMinutes": 0,
+              "earlyLeaveThresholdMinutes": 0,
+              "resolution": {
+                "locationRequired": {
+                  "value": false,
+                  "source": "activity"
+                },
+                "radiusMeters": {
+                  "value": 100,
+                  "source": "system-default"
+                },
+                "checkInOpenAt": {
+                  "value": "2099-12-01T01:00:00.000Z",
+                  "source": "activity"
+                },
+                "checkInCloseAt": {
+                  "value": "2099-12-01T01:20:00.000Z",
+                  "source": "activity"
+                },
+                "checkOutOpenAt": {
+                  "value": "2099-12-01T02:40:00.000Z",
+                  "source": "activity"
+                },
+                "checkOutCloseAt": {
+                  "value": "2099-12-01T03:00:00.000Z",
+                  "source": "activity"
+                },
+                "lateGraceMinutes": {
+                  "value": 0,
+                  "source": "activity"
+                },
+                "earlyLeaveThresholdMinutes": {
+                  "value": 0,
+                  "source": "activity"
+                }
+              },
+              "positions": [
+                {
+                  "positionId": "position-synthetic-0001",
+                  "code": "participant",
+                  "cancelled": false,
+                  "locationRequired": false,
+                  "radiusMeters": 100,
+                  "locationPolicySourceCode": "session",
+                  "resolution": {
+                    "locationRequired": {
+                      "value": false,
+                      "source": "activity"
+                    },
+                    "radiusMeters": {
+                      "value": 100,
+                      "source": "system-default"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "activity": {
+          "title": "冻结的合成培训",
+          "activityTypeCode": "training",
+          "allocationModeCode": "first_come",
+          "organizationId": "organization-synthetic-0001",
+          "startAt": "2099-12-01T01:00:00.000Z",
+          "endAt": "2099-12-01T03:00:00.000Z",
+          "location": "合成社区中心",
+          "description": "核对这次提交的内容",
+          "capacity": 12,
+          "genderRequirementCode": null,
+          "registrationDeadline": null,
+          "registrationNotes": "带水",
+          "isPublicRegistration": false,
+          "requiresInsurance": false,
+          "registrationSchema": null,
+          "coverImageUrl": null,
+          "galleryImageUrls": null,
+          "content": null,
+          "locationLongitude": null,
+          "locationLatitude": null,
+          "registrationModeCode": "open",
+          "visibilityCode": "public",
+          "defaultCheckInRadiusMeters": 100,
+          "defaultLocationRequired": false,
+          "archiveWaitingDays": 3
+        },
+        "sessions": [
+          {
+            "sessionId": "session-synthetic-0001",
+            "clientRef": null,
+            "code": "main",
+            "name": "本次活动",
+            "startAt": "2099-12-01T01:00:00.000Z",
+            "endAt": "2099-12-01T03:00:00.000Z",
+            "locationText": "合成社区中心",
+            "meetingPoint": null,
+            "executionPoint": null,
+            "evacuationPoint": null,
+            "longitude": null,
+            "latitude": null,
+            "capacity": 12,
+            "checkInOpenAt": "2099-12-01T01:00:00.000Z",
+            "checkInCloseAt": "2099-12-01T01:20:00.000Z",
+            "checkOutOpenAt": "2099-12-01T02:40:00.000Z",
+            "checkOutCloseAt": "2099-12-01T03:00:00.000Z",
+            "preparationStartAt": null,
+            "locationRequired": false,
+            "radiusMeters": null,
+            "locationPolicySourceCode": "template",
+            "accuracyWarningMeters": 100,
+            "lateGraceMinutes": 0,
+            "earlyLeaveThresholdMinutes": 0,
+            "statusCode": "scheduled",
+            "sortOrder": 0,
+            "positions": [
+              {
+                "positionId": "position-synthetic-0001",
+                "clientRef": null,
+                "code": "participant",
+                "name": "参与者",
+                "attendanceRoleCode": "volunteer",
+                "capacity": 12,
+                "startAt": null,
+                "endAt": null,
+                "genderRequirementCode": null,
+                "qualificationRuleSetId": null,
+                "locationRequired": null,
+                "radiusMeters": null,
+                "leaderMemberId": null,
+                "description": null,
+                "equipmentNotes": null,
+                "sortOrder": 0,
+                "cancelled": false
+              }
+            ]
+          }
+        ],
+        "registrationForm": null,
+        "qualificationRuleSets": {
+          "ruleSets": []
+        },
+        "categoryCode": "routine",
+        "plannedSemanticAssignments": [],
+        "selectedTemplateVersionId": "template-synthetic-0001",
+        "activityPlaces": [],
+        "contentVisibilitySummary": {
+          "visibilityCode": "public",
+          "isPublicRegistration": false
+        },
+        "metricRequirementCode": "not_required",
+        "metricSelectionRevision": 1,
+        "metricSetPointer": null,
+        "timePolicyPointers": {
+          "schemaVersion": 1,
+          "selectionRevision": 1,
+          "proposalSelectionHash": "af649600c27305f8aa746bb577acff8db62fb876ea770bb2507f48df339f3492",
+          "selection": {
+            "schemaVersion": 1,
+            "items": {
+              "template:-:-": {
+                "scope": {
+                  "layerCode": "template",
+                  "sessionId": null,
+                  "positionId": null
+                },
+                "selection": {
+                  "mode": "explicit",
+                  "pointer": {
+                    "policyId": "time-policy-synthetic",
+                    "versionId": "time-version-synthetic",
+                    "definitionHash": "2ab20a1f032c9235d18ae82e9a39f895cfc03d809d402222a1e872b2cf1a55f8"
+                  }
+                }
+              },
+              "activity:-:-": {
+                "scope": {
+                  "layerCode": "activity",
+                  "sessionId": null,
+                  "positionId": null
+                },
+                "selection": {
+                  "mode": "inherit",
+                  "pointer": null
+                }
+              }
+            }
+          },
+          "resolved": [
+            {
+              "scope": {
+                "layerCode": "activity",
+                "sessionId": null,
+                "positionId": null
+              },
+              "pointer": {
+                "policyId": "time-policy-synthetic",
+                "versionId": "time-version-synthetic",
+                "definitionHash": "2ab20a1f032c9235d18ae82e9a39f895cfc03d809d402222a1e872b2cf1a55f8"
+              },
+              "evaluatorVersion": 1,
+              "sourceScope": {
+                "layerCode": "template",
+                "sessionId": null,
+                "positionId": null
+              },
+              "effectiveFrom": "2099-12-01T01:00:00.000Z",
+              "effectiveUntil": "2099-12-01T03:00:00.000Z"
+            },
+            {
+              "scope": {
+                "layerCode": "position",
+                "sessionId": "session-synthetic-0001",
+                "positionId": "position-synthetic-0001"
+              },
+              "pointer": {
+                "policyId": "time-policy-synthetic",
+                "versionId": "time-version-synthetic",
+                "definitionHash": "2ab20a1f032c9235d18ae82e9a39f895cfc03d809d402222a1e872b2cf1a55f8"
+              },
+              "evaluatorVersion": 1,
+              "sourceScope": {
+                "layerCode": "template",
+                "sessionId": null,
+                "positionId": null
+              },
+              "effectiveFrom": "2099-12-01T01:00:00.000Z",
+              "effectiveUntil": "2099-12-01T03:00:00.000Z"
+            },
+            {
+              "scope": {
+                "layerCode": "session",
+                "sessionId": "session-synthetic-0001",
+                "positionId": null
+              },
+              "pointer": {
+                "policyId": "time-policy-synthetic",
+                "versionId": "time-version-synthetic",
+                "definitionHash": "2ab20a1f032c9235d18ae82e9a39f895cfc03d809d402222a1e872b2cf1a55f8"
+              },
+              "evaluatorVersion": 1,
+              "sourceScope": {
+                "layerCode": "template",
+                "sessionId": null,
+                "positionId": null
+              },
+              "effectiveFrom": "2099-12-01T01:00:00.000Z",
+              "effectiveUntil": "2099-12-01T03:00:00.000Z"
+            }
+          ],
+          "referenceKinds": {
+            "template:-:-": {
+              "sessionRefKind": null,
+              "positionRefKind": null
+            },
+            "activity:-:-": {
+              "sessionRefKind": null,
+              "positionRefKind": null
+            },
+            "session:c2Vzc2lvbi1zeW50aGV0aWMtMDAwMQ==:-": {
+              "sessionRefKind": "id",
+              "positionRefKind": null
+            },
+            "position:c2Vzc2lvbi1zeW50aGV0aWMtMDAwMQ==:cG9zaXRpb24tc3ludGhldGljLTAwMDE=": {
+              "sessionRefKind": "id",
+              "positionRefKind": "id"
+            }
+          }
+        },
+        "contributionPolicyPointers": {
+          "schemaVersion": 1,
+          "selectionRevision": 1,
+          "proposalSelectionHash": "c46961bbe5991405426020d7da0e40f90afc0634c948b3b7650ee0650b99dc9d",
+          "selection": {
+            "schemaVersion": 1,
+            "items": {
+              "activity:-:-": {
+                "scope": {
+                  "layerCode": "activity",
+                  "sessionId": null,
+                  "positionId": null
+                },
+                "selection": {
+                  "mode": "inherit",
+                  "pointer": null
+                }
+              }
+            }
+          },
+          "resolved": [
+            {
+              "scope": {
+                "layerCode": "activity",
+                "sessionId": null,
+                "positionId": null
+              },
+              "pointer": {
+                "policyId": "contribution-policy-synthetic",
+                "versionId": "contribution-version-synthetic",
+                "definitionHash": "a90f5abfb1278fd33df67b240d662fd6bb2e4bac469b0219a0f403ec87698023",
+                "evaluatorVersion": 1
+              },
+              "sourceLayerCode": "template",
+              "effectiveFrom": "2098-01-01T00:00:00.000Z",
+              "effectiveUntil": null
+            },
+            {
+              "scope": {
+                "layerCode": "position",
+                "sessionId": "session-synthetic-0001",
+                "positionId": "position-synthetic-0001"
+              },
+              "pointer": {
+                "policyId": "contribution-policy-synthetic",
+                "versionId": "contribution-version-synthetic",
+                "definitionHash": "a90f5abfb1278fd33df67b240d662fd6bb2e4bac469b0219a0f403ec87698023",
+                "evaluatorVersion": 1
+              },
+              "sourceLayerCode": "template",
+              "effectiveFrom": "2098-01-01T00:00:00.000Z",
+              "effectiveUntil": null
+            }
+          ],
+          "referenceKinds": {
+            "activity:-:-": {
+              "sessionRefKind": null,
+              "positionRefKind": null
+            },
+            "position:c2Vzc2lvbi1zeW50aGV0aWMtMDAwMQ==:cG9zaXRpb24tc3ludGhldGljLTAwMDE=": {
+              "sessionRefKind": "id",
+              "positionRefKind": "id"
+            }
+          }
+        }
+      },
+      "templateVersionId": "template-synthetic-0001",
+      "resolvedConfig": {
+        "templateVersionId": "template-synthetic-0001",
+        "activity": {
+          "registrationModeCode": {
+            "value": "open",
+            "source": "template"
+          },
+          "locationRequired": {
+            "value": false,
+            "source": "activity"
+          },
+          "checkInRadiusMeters": {
+            "value": 100,
+            "source": "system-default"
+          },
+          "archiveWaitingDays": {
+            "value": 3,
+            "source": "system-default"
+          }
+        },
+        "sessions": [
+          {
+            "sessionId": "session-synthetic-0001",
+            "code": "main",
+            "statusCode": "scheduled",
+            "locationRequired": false,
+            "radiusMeters": 100,
+            "locationPolicySourceCode": "activity",
+            "checkInOpenAt": "2099-12-01T01:00:00.000Z",
+            "checkInCloseAt": "2099-12-01T01:20:00.000Z",
+            "checkOutOpenAt": "2099-12-01T02:40:00.000Z",
+            "checkOutCloseAt": "2099-12-01T03:00:00.000Z",
+            "lateGraceMinutes": 0,
+            "earlyLeaveThresholdMinutes": 0,
+            "resolution": {
+              "locationRequired": {
+                "value": false,
+                "source": "activity"
+              },
+              "radiusMeters": {
+                "value": 100,
+                "source": "system-default"
+              },
+              "checkInOpenAt": {
+                "value": "2099-12-01T01:00:00.000Z",
+                "source": "activity"
+              },
+              "checkInCloseAt": {
+                "value": "2099-12-01T01:20:00.000Z",
+                "source": "activity"
+              },
+              "checkOutOpenAt": {
+                "value": "2099-12-01T02:40:00.000Z",
+                "source": "activity"
+              },
+              "checkOutCloseAt": {
+                "value": "2099-12-01T03:00:00.000Z",
+                "source": "activity"
+              },
+              "lateGraceMinutes": {
+                "value": 0,
+                "source": "activity"
+              },
+              "earlyLeaveThresholdMinutes": {
+                "value": 0,
+                "source": "activity"
+              }
+            },
+            "positions": [
+              {
+                "positionId": "position-synthetic-0001",
+                "code": "participant",
+                "cancelled": false,
+                "locationRequired": false,
+                "radiusMeters": 100,
+                "locationPolicySourceCode": "session",
+                "resolution": {
+                  "locationRequired": {
+                    "value": false,
+                    "source": "activity"
+                  },
+                  "radiusMeters": {
+                    "value": 100,
+                    "source": "system-default"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "activity": {
+        "title": "冻结的合成培训",
+        "activityTypeCode": "training",
+        "allocationModeCode": "first_come",
+        "organizationId": "organization-synthetic-0001",
+        "startAt": "2099-12-01T01:00:00.000Z",
+        "endAt": "2099-12-01T03:00:00.000Z",
+        "location": "合成社区中心",
+        "description": "核对这次提交的内容",
+        "capacity": 12,
+        "genderRequirementCode": null,
+        "registrationDeadline": null,
+        "registrationNotes": "带水",
+        "isPublicRegistration": false,
+        "requiresInsurance": false,
+        "registrationSchema": null,
+        "coverImageUrl": null,
+        "galleryImageUrls": null,
+        "content": null,
+        "locationLongitude": null,
+        "locationLatitude": null,
+        "registrationModeCode": "open",
+        "visibilityCode": "public",
+        "defaultCheckInRadiusMeters": 100,
+        "defaultLocationRequired": false,
+        "archiveWaitingDays": 3
+      },
+      "sessions": [
+        {
+          "sessionId": "session-synthetic-0001",
+          "clientRef": null,
+          "code": "main",
+          "name": "本次活动",
+          "startAt": "2099-12-01T01:00:00.000Z",
+          "endAt": "2099-12-01T03:00:00.000Z",
+          "locationText": "合成社区中心",
+          "meetingPoint": null,
+          "executionPoint": null,
+          "evacuationPoint": null,
+          "longitude": null,
+          "latitude": null,
+          "capacity": 12,
+          "checkInOpenAt": "2099-12-01T01:00:00.000Z",
+          "checkInCloseAt": "2099-12-01T01:20:00.000Z",
+          "checkOutOpenAt": "2099-12-01T02:40:00.000Z",
+          "checkOutCloseAt": "2099-12-01T03:00:00.000Z",
+          "preparationStartAt": null,
+          "locationRequired": false,
+          "radiusMeters": null,
+          "locationPolicySourceCode": "template",
+          "accuracyWarningMeters": 100,
+          "lateGraceMinutes": 0,
+          "earlyLeaveThresholdMinutes": 0,
+          "statusCode": "scheduled",
+          "sortOrder": 0,
+          "positions": [
+            {
+              "positionId": "position-synthetic-0001",
+              "clientRef": null,
+              "code": "participant",
+              "name": "参与者",
+              "attendanceRoleCode": "volunteer",
+              "capacity": 12,
+              "startAt": null,
+              "endAt": null,
+              "genderRequirementCode": null,
+              "qualificationRuleSetId": null,
+              "locationRequired": null,
+              "radiusMeters": null,
+              "leaderMemberId": null,
+              "description": null,
+              "equipmentNotes": null,
+              "sortOrder": 0,
+              "cancelled": false
+            }
+          ]
+        }
+      ],
+      "registrationForm": null,
+      "qualificationRuleSets": {
+        "ruleSets": []
+      },
+      "categoryCode": "routine",
+      "plannedSemanticAssignments": [],
+      "selectedTemplateVersionId": "template-synthetic-0001",
+      "activityPlaces": [],
+      "contentVisibilitySummary": {
+        "visibilityCode": "public",
+        "isPublicRegistration": false
+      },
+      "metricRequirementCode": "not_required",
+      "metricSelectionRevision": 1,
+      "metricSetPointer": null,
+      "timePolicyPointers": {
+        "schemaVersion": 1,
+        "selectionRevision": 1,
+        "proposalSelectionHash": "af649600c27305f8aa746bb577acff8db62fb876ea770bb2507f48df339f3492",
+        "selection": {
+          "schemaVersion": 1,
+          "items": {
+            "template:-:-": {
+              "scope": {
+                "layerCode": "template",
+                "sessionId": null,
+                "positionId": null
+              },
+              "selection": {
+                "mode": "explicit",
+                "pointer": {
+                  "policyId": "time-policy-synthetic",
+                  "versionId": "time-version-synthetic",
+                  "definitionHash": "2ab20a1f032c9235d18ae82e9a39f895cfc03d809d402222a1e872b2cf1a55f8"
+                }
+              }
+            },
+            "activity:-:-": {
+              "scope": {
+                "layerCode": "activity",
+                "sessionId": null,
+                "positionId": null
+              },
+              "selection": {
+                "mode": "inherit",
+                "pointer": null
+              }
+            }
+          }
+        },
+        "resolved": [
+          {
+            "scope": {
+              "layerCode": "activity",
+              "sessionId": null,
+              "positionId": null
+            },
+            "pointer": {
+              "policyId": "time-policy-synthetic",
+              "versionId": "time-version-synthetic",
+              "definitionHash": "2ab20a1f032c9235d18ae82e9a39f895cfc03d809d402222a1e872b2cf1a55f8"
+            },
+            "evaluatorVersion": 1,
+            "sourceScope": {
+              "layerCode": "template",
+              "sessionId": null,
+              "positionId": null
+            },
+            "effectiveFrom": "2099-12-01T01:00:00.000Z",
+            "effectiveUntil": "2099-12-01T03:00:00.000Z"
+          },
+          {
+            "scope": {
+              "layerCode": "position",
+              "sessionId": "session-synthetic-0001",
+              "positionId": "position-synthetic-0001"
+            },
+            "pointer": {
+              "policyId": "time-policy-synthetic",
+              "versionId": "time-version-synthetic",
+              "definitionHash": "2ab20a1f032c9235d18ae82e9a39f895cfc03d809d402222a1e872b2cf1a55f8"
+            },
+            "evaluatorVersion": 1,
+            "sourceScope": {
+              "layerCode": "template",
+              "sessionId": null,
+              "positionId": null
+            },
+            "effectiveFrom": "2099-12-01T01:00:00.000Z",
+            "effectiveUntil": "2099-12-01T03:00:00.000Z"
+          },
+          {
+            "scope": {
+              "layerCode": "session",
+              "sessionId": "session-synthetic-0001",
+              "positionId": null
+            },
+            "pointer": {
+              "policyId": "time-policy-synthetic",
+              "versionId": "time-version-synthetic",
+              "definitionHash": "2ab20a1f032c9235d18ae82e9a39f895cfc03d809d402222a1e872b2cf1a55f8"
+            },
+            "evaluatorVersion": 1,
+            "sourceScope": {
+              "layerCode": "template",
+              "sessionId": null,
+              "positionId": null
+            },
+            "effectiveFrom": "2099-12-01T01:00:00.000Z",
+            "effectiveUntil": "2099-12-01T03:00:00.000Z"
+          }
+        ],
+        "referenceKinds": {
+          "template:-:-": {
+            "sessionRefKind": null,
+            "positionRefKind": null
+          },
+          "activity:-:-": {
+            "sessionRefKind": null,
+            "positionRefKind": null
+          },
+          "session:c2Vzc2lvbi1zeW50aGV0aWMtMDAwMQ==:-": {
+            "sessionRefKind": "id",
+            "positionRefKind": null
+          },
+          "position:c2Vzc2lvbi1zeW50aGV0aWMtMDAwMQ==:cG9zaXRpb24tc3ludGhldGljLTAwMDE=": {
+            "sessionRefKind": "id",
+            "positionRefKind": "id"
+          }
+        }
+      },
+      "contributionPolicyPointers": {
+        "schemaVersion": 1,
+        "selectionRevision": 1,
+        "proposalSelectionHash": "c46961bbe5991405426020d7da0e40f90afc0634c948b3b7650ee0650b99dc9d",
+        "selection": {
+          "schemaVersion": 1,
+          "items": {
+            "activity:-:-": {
+              "scope": {
+                "layerCode": "activity",
+                "sessionId": null,
+                "positionId": null
+              },
+              "selection": {
+                "mode": "inherit",
+                "pointer": null
+              }
+            }
+          }
+        },
+        "resolved": [
+          {
+            "scope": {
+              "layerCode": "activity",
+              "sessionId": null,
+              "positionId": null
+            },
+            "pointer": {
+              "policyId": "contribution-policy-synthetic",
+              "versionId": "contribution-version-synthetic",
+              "definitionHash": "a90f5abfb1278fd33df67b240d662fd6bb2e4bac469b0219a0f403ec87698023",
+              "evaluatorVersion": 1
+            },
+            "sourceLayerCode": "template",
+            "effectiveFrom": "2098-01-01T00:00:00.000Z",
+            "effectiveUntil": null
+          },
+          {
+            "scope": {
+              "layerCode": "position",
+              "sessionId": "session-synthetic-0001",
+              "positionId": "position-synthetic-0001"
+            },
+            "pointer": {
+              "policyId": "contribution-policy-synthetic",
+              "versionId": "contribution-version-synthetic",
+              "definitionHash": "a90f5abfb1278fd33df67b240d662fd6bb2e4bac469b0219a0f403ec87698023",
+              "evaluatorVersion": 1
+            },
+            "sourceLayerCode": "template",
+            "effectiveFrom": "2098-01-01T00:00:00.000Z",
+            "effectiveUntil": null
+          }
+        ],
+        "referenceKinds": {
+          "activity:-:-": {
+            "sessionRefKind": null,
+            "positionRefKind": null
+          },
+          "position:c2Vzc2lvbi1zeW50aGV0aWMtMDAwMQ==:cG9zaXRpb24tc3ludGhldGljLTAwMDE=": {
+            "sessionRefKind": "id",
+            "positionRefKind": "id"
+          }
+        }
+      },
+      "timePolicySelectionExplicit": true,
+      "contributionPolicySelectionExplicit": true
+    }
+  },
+  "policies": {
+    "reviewId": "review-synthetic-0001",
+    "activityId": "activity-synthetic-0001",
+    "snapshotSchemaVersion": 9,
+    "snapshotHash": "ee766c7bcff46b2b1237fbe44656b03d07d5aef4420e1283e7d1815a97aa00ca",
+    "timePolicies": [
+      {
+        "policyId": "time-policy-synthetic",
+        "versionId": "time-version-synthetic",
+        "version": 1,
+        "schemaVersion": 1,
+        "evaluatorVersion": 1,
+        "effectiveFrom": "2098-01-01T00:00:00.000Z",
+        "effectiveUntil": null,
+        "definition": {
+          "defaultCategory": "volunteer_service",
+          "roleMappings": [
+            {
+              "attendanceRoleCode": "trainee",
+              "category": "training"
+            },
+            {
+              "attendanceRoleCode": "volunteer",
+              "category": "volunteer_service"
+            }
+          ],
+          "allowSplit": true,
+          "specialIntervals": {
+            "preparation": {
+              "mode": "exclude"
+            },
+            "duty": {
+              "mode": "category",
+              "category": "organization"
+            },
+            "travel": {
+              "mode": "manual"
+            }
+          },
+          "rounding": {
+            "mode": "floor",
+            "quantumSeconds": 60
+          },
+          "evidence": {
+            "requiredSources": ["punch_event", "service_segment", "attachment"],
+            "requireManualRecognition": true
+          },
+          "manualAdjustment": {
+            "enabled": true,
+            "reasonRequired": true,
+            "evidenceRequired": true
+          }
+        },
+        "definitionHash": "2ab20a1f032c9235d18ae82e9a39f895cfc03d809d402222a1e872b2cf1a55f8"
+      }
+    ],
+    "contributionPolicies": [
+      {
+        "policyId": "contribution-policy-synthetic",
+        "versionId": "contribution-version-synthetic",
+        "version": 1,
+        "schemaVersion": 1,
+        "evaluatorVersion": 1,
+        "effectiveFrom": "2098-01-01T00:00:00.000Z",
+        "effectiveUntil": null,
+        "definition": {
+          "defaultResult": {
+            "recognizedPoints": "0.00",
+            "explanationCode": "no_matching_rule"
+          },
+          "roleRules": [
+            {
+              "attendanceRoleCode": "support",
+              "categoryRules": [
+                {
+                  "timeCategoryCode": "organization",
+                  "durationBands": [
+                    {
+                      "maxSecondsInclusive": null,
+                      "recognizedPoints": "2.00",
+                      "explanationCode": "organization_band"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "attendanceRoleCode": "volunteer",
+              "categoryRules": [
+                {
+                  "timeCategoryCode": "volunteer_service",
+                  "durationBands": [
+                    {
+                      "maxSecondsInclusive": 3600,
+                      "recognizedPoints": "3.00",
+                      "explanationCode": "service_first_band"
+                    },
+                    {
+                      "maxSecondsInclusive": 7200,
+                      "recognizedPoints": "5.00",
+                      "explanationCode": "service_second_band"
+                    },
+                    {
+                      "maxSecondsInclusive": null,
+                      "recognizedPoints": "8.00",
+                      "explanationCode": "service_final_band"
+                    }
+                  ]
+                },
+                {
+                  "timeCategoryCode": "training",
+                  "durationBands": [
+                    {
+                      "maxSecondsInclusive": null,
+                      "recognizedPoints": "1.25",
+                      "explanationCode": "training_band"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "definitionHash": "a90f5abfb1278fd33df67b240d662fd6bb2e4bac469b0219a0f403ec87698023"
+      }
+    ]
+  }
+}
