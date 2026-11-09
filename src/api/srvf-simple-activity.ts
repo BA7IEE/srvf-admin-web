@@ -35,6 +35,25 @@ export const getSimpleDraft = (id: string) =>
     `${base}/${encodeURIComponent(id)}/simple-draft`
   );
 
+/** Existing member/responsibility read surface; no reviewer permission is needed.
+ * Pinned DTO/controller: srvf-nest-api 923c6c57. Only this projection is consumed.
+ */
+export type ManagedActivityReviewContext = {
+  activity: { id: string; organizationId: string; statusCode: string };
+  publishReview: {
+    latestRequestId: string | null;
+    requestType: "initial" | "change" | null;
+    status: ActivityPublishReviewResponseDto["status"] | null;
+    reviewNote: string | null;
+  };
+};
+
+export const getManagedActivityReviewContext = (id: string) =>
+  http.request<ApiEnvelope<ManagedActivityReviewContext>>(
+    "get",
+    `/api/app/v1/my/managed-activities/${encodeURIComponent(id)}`
+  );
+
 export const saveSimpleDraft = (id: string, data: AdminSaveSimpleActivityDto) =>
   http.request<ApiEnvelope<AdminSimpleDraftResponseDto>>(
     "put",

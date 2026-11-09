@@ -1,0 +1,220 @@
+Pinned backend source contract for organizer returned reason
+Commit: 923c6c57673883d4b4834ea7e2ff0c8e18b5da5d
+Source: official repository BA7IEE/srvf-nest-api; not a live OpenAPI export.
+No backend changes. Existing member-scoped managed detail only.
+
+--- admin-simple-activity-response.dto.ts:61-69 ---
+export class AdminSimpleDraftReviewDto {
+  @ApiProperty({ description: '最新审核 ID' }) id!: string;
+  @ApiProperty({
+    description: '真实审核状态',
+    enum: ['pending', 'approved', 'returned', 'withdrawn', 'cancelled'],
+  })
+  status!: string;
+  @ApiProperty({ description: '审核类型', enum: ['initial', 'change'] }) requestType!: string;
+}
+
+--- activity-simple-draft.service.ts:438-444 ---
+        orderBy: { id: 'asc' },
+      }),
+      tx.activityPublishReview.findFirst({
+        where: { activityId: activity.id },
+        select: { id: true, status: true, requestType: true },
+        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      }),
+
+--- app-managed-activities.controller.ts:1237-1257 ---
+  @Get(':activityId')
+  @LoginScoped({
+    admission: 'app-member',
+    require: 'all',
+    scopes: ['responsibility'],
+    engine: 'authz-scoped',
+  })
+  @ApiOperation({ summary: 'App 我管理的活动详情、责任、审核与待办摘要 [auth]' })
+  @ApiWrappedOkResponse(AppManagedActivityDetailDto)
+  @ApiBizErrorResponse(
+    BizCode.BAD_REQUEST,
+    BizCode.UNAUTHORIZED,
+    BizCode.FORBIDDEN,
+    BizCode.ACTIVITY_NOT_FOUND,
+  )
+  async detail(
+    @CurrentUser() user: CurrentUserPayload,
+    @Param() params: AppManagedActivityParamsDto,
+  ): Promise<AppManagedActivityDetailDto> {
+    return this.service.detail(params.activityId, await this.resolveMemberId(user), user);
+  }
+
+--- app-managed-activity.dto.ts:444-462 ---
+export class AppManagedPublishReviewSummaryDto {
+  @ApiPropertyOptional({ nullable: true, type: String })
+  latestRequestId!: string | null;
+
+  @ApiPropertyOptional({ enum: ['initial', 'change'], nullable: true })
+  requestType!: 'initial' | 'change' | null;
+
+  @ApiPropertyOptional({
+    enum: ['pending', 'approved', 'returned', 'withdrawn', 'cancelled'],
+    nullable: true,
+  })
+  status!: 'pending' | 'approved' | 'returned' | 'withdrawn' | 'cancelled' | null;
+
+  @ApiPropertyOptional({ nullable: true, type: String })
+  reviewNote!: string | null;
+
+  @ApiProperty()
+  canDirectPublish!: boolean;
+}
+
+--- app-managed-activity.dto.ts:598-619 ---
+export class AppManagedActivityDetailDto {
+  @ApiProperty({ type: AppManagedActivityProjectionDto })
+  activity!: AppManagedActivityProjectionDto;
+
+  @ApiPropertyOptional({ type: AppManagedMemberSummaryDto, nullable: true })
+  initiator!: AppManagedMemberSummaryDto | null;
+
+  @ApiPropertyOptional({ type: AppManagedMemberSummaryDto, nullable: true })
+  owner!: AppManagedMemberSummaryDto | null;
+
+  @ApiPropertyOptional({ type: AppManagedMyResponsibilityDto, nullable: true })
+  myResponsibility!: AppManagedMyResponsibilityDto | null;
+
+  @ApiProperty({ type: AppManagedPublishReviewSummaryDto })
+  publishReview!: AppManagedPublishReviewSummaryDto;
+
+  @ApiProperty({ type: AppManagedActivityCountsDto })
+  counts!: AppManagedActivityCountsDto;
+
+  @ApiProperty({ type: AppManagedActivityClosureDto })
+  closure!: AppManagedActivityClosureDto;
+}
+
+--- activity-workflow-query.service.ts:65-76 ---
+  publishReviews: {
+    orderBy: [{ requestVersion: 'desc' }],
+    take: 1,
+    select: {
+      id: true,
+      requestType: true,
+      status: true,
+      reviewNote: true,
+    },
+  },
+  _count: {
+    select: {
+
+--- activity-workflow-query.service.ts:202-288 ---
+  async detail(
+    activityId: string,
+    memberId: string,
+    user: CurrentUserPayload,
+  ): Promise<AppManagedActivityDetailDto> {
+    const row = await this.loadManaged(activityId, memberId, user.role);
+    const [registrationGroups, attendanceGroups] = await Promise.all([
+      this.prisma.activityRegistration.groupBy({
+        by: ['statusCode'],
+        where: {
+          activityId,
+          deletedAt: null,
+          statusCode: { in: ['pending', 'waitlisted'] },
+        },
+        _count: { _all: true },
+      }),
+      this.prisma.attendanceSheet.groupBy({
+        by: ['activityId', 'statusCode'],
+        where: { activityId, deletedAt: null },
+        _count: { _all: true },
+      }),
+    ]);
+    const registrationCount = (statusCode: string) =>
+      registrationGroups.find((group) => group.statusCode === statusCode)?._count._all ?? 0;
+    const attendance =
+      this.indexAttendanceCounts(attendanceGroups).get(activityId) ?? EMPTY_ATTENDANCE_COUNTS;
+    const owner = row.responsibilityAssignments.find(
+      (assignment) => assignment.responsibilityType === 'owner',
+    );
+    const mine = row.responsibilityAssignments.find(
+      (assignment) => assignment.memberId === memberId,
+    );
+    const latest = row.publishReviews[0] ?? null;
+    const closure = this.closurePolicy.decide(this.toClosureInput(row, attendance));
+
+    return {
+      activity: await this.toProjection(row),
+      // issue #1048 T1:`label` 由后端拼装,Prisma 行里没有。
+      initiator:
+        row.initiator === null
+          ? null
+          : {
+              id: row.initiator.id,
+              gradeCode: row.initiator.gradeCode,
+              ...toMemberLabelFields(row.initiator),
+            },
+      owner:
+        owner?.member == null
+          ? null
+          : {
+              id: owner.member.id,
+              gradeCode: owner.member.gradeCode,
+              ...toMemberLabelFields(owner.member),
+            },
+      myResponsibility: mine
+        ? {
+            responsibilityType: mine.responsibilityType === 'owner' ? 'owner' : 'collaborator',
+            canManageRegistrations: mine.canManageRegistrations,
+            canManageAttendance: mine.canManageAttendance,
+          }
+        : null,
+      publishReview: {
+        latestRequestId: latest?.id ?? null,
+        requestType:
+          latest?.requestType === 'initial' || latest?.requestType === 'change'
+            ? latest.requestType
+            : null,
+        status:
+          latest?.status === 'pending' ||
+          latest?.status === 'approved' ||
+          latest?.status === 'returned' ||
+          latest?.status === 'withdrawn' ||
+          latest?.status === 'cancelled'
+            ? latest.status
+            : null,
+        reviewNote: latest?.reviewNote ?? null,
+        // 第 3 批第二刀封死 directPublish：发布能力只表示可发起审核，不再表示可直接 approved。
+        canDirectPublish: false,
+      },
+      counts: {
+        pendingRegistrations: registrationCount('pending'),
+        waitlistedRegistrations: registrationCount('waitlisted'),
+        attendanceSheets: attendance.total,
+        unresolvedAttendanceSheets: attendance.unresolved,
+      },
+      closure: {
+        attendanceDeclaredCompleteAt: row.attendanceDeclaredCompleteAt,
+
+--- activity-workflow-query.service.ts:309-331 ---
+  async loadManaged(
+    activityId: string,
+    memberId: string,
+    role: Role = Role.USER,
+  ): Promise<ManagedActivityRow> {
+    const activity = await this.prisma.activity.findFirst({
+      where: {
+        id: activityId,
+        deletedAt: null,
+        ...(role === Role.SUPER_ADMIN
+          ? {}
+          : {
+              OR: [
+                { initiatorMemberId: memberId },
+                { responsibilityAssignments: { some: { memberId, status: 'active' } } },
+              ],
+            }),
+      },
+      select: managedActivitySelect,
+    });
+    if (!activity) throw new BizException(BizCode.ACTIVITY_NOT_FOUND);
+    return activity;
+  }
