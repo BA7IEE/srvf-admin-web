@@ -47,8 +47,10 @@ export const MEMBERSHIP_CONFLICT_TYPE_LABEL: Record<string, string> = {
 export type MembershipExpandedMember = {
   id: string;
   memberNo: string;
-  displayName: string;
-  gradeCode: string | null;
+  realName: string;
+  nickname: string | null;
+  label: string;
+  gradeCode?: string | null;
 };
 
 /** expand=organization 时出现的组织摘要（后端 `MembershipExpandedOrganizationDto`）。 */
@@ -89,7 +91,7 @@ export type MembershipConflictItem = {
 
 /**
  * 总表查询入参。status 缺省 = 全部未软删（含 ENDED 历史）——默认视图应显式传 ACTIVE；
- * q 模糊命中队员 memberNo+displayName 与组织 name+code；expand 白名单 member,organization。
+ * q 模糊命中队员 memberNo+realName 与组织 name+code；expand 白名单 member,organization。
  */
 export type MembershipListQuery = {
   page?: number;
