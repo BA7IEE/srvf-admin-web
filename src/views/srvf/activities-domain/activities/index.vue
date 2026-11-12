@@ -168,3 +168,12 @@ onMounted(() => {
     </template>
   </SrvfListPage>
 </template>
+
+<style scoped>
+/* A 300px fixed action column otherwise covers the activity data on phones. */
+@media (width <= 760px) {
+  :deep(.el-table__cell.el-table-fixed-column--right) {
+    position: static !important;
+  }
+}
+</style>
