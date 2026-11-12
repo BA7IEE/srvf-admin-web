@@ -20,6 +20,7 @@ import {
 } from "@/api/srvf-membership";
 import { getOrgScopedMemberOptions } from "@/api/srvf-organization";
 import { SrvfStatusTag } from "@/srvf-kit";
+import { formatMembershipMember } from "@/views/srvf/org-hr/memberships/utils/member-label";
 
 defineOptions({
   name: "SrvfOrgMembersDrawer"
@@ -208,8 +209,7 @@ onMounted(onSearch);
         label: '队员',
         prop: 'member',
         minWidth: 160,
-        formatter: ({ member, memberId }) =>
-          member ? `${member.displayName}（${member.memberNo}）` : memberId
+        formatter: formatMembershipMember
       },
       {
         label: '类型',

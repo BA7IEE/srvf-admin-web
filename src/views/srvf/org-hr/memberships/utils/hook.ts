@@ -11,12 +11,13 @@ import {
   type MembershipItem,
   type MembershipListQuery
 } from "@/api/srvf-membership";
+import { formatMembershipMember } from "@/views/srvf/org-hr/memberships/utils/member-label";
 
 /**
  * 会籍总表（跨队员跨组织横扫,F4「D组」,只读）。
  * 默认只看在册：总表缺省 = 全部未软删含 ENDED 历史 → 显式 status=ACTIVE；
  * expand=member,organization 直接出队员/组织摘要,无需二次解析；
- * q 模糊命中队员 memberNo+displayName 与组织 name+code（组织过滤靠 q 已够用,
+ * q 模糊命中队员 memberNo+realName 与组织 name+code（组织过滤靠 q 已够用,
  * orgId 精确过滤场景在组织架构页「成员」面板承载）。
  */
 export function useMembershipList() {
@@ -67,8 +68,7 @@ export function useMembershipList() {
       label: "队员",
       prop: "member",
       minWidth: 160,
-      formatter: ({ member, memberId }) =>
-        member ? `${member.displayName}（${member.memberNo}）` : memberId
+      formatter: formatMembershipMember
     },
     {
       label: "组织",
