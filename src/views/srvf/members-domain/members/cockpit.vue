@@ -307,7 +307,8 @@ function goAccountAuthz() {
     query: {
       principalType: "USER",
       principalId: detail.value.userId,
-      principalLabel: detail.value.displayName
+      principalLabel:
+        detail.value.label || detail.value.realName || detail.value.memberNo
     }
   });
 }
@@ -460,7 +461,7 @@ async function handleOffboard() {
   try {
     await ElMessageBox.confirm(
       consequences,
-      `一键离队 · ${detail.value.displayName}`,
+      `一键离队 · ${detail.value.label || detail.value.realName || detail.value.memberNo}`,
       {
         confirmButtonText: "确定离队",
         cancelButtonText: "再想想",
@@ -662,7 +663,9 @@ onMounted(() => {
       @back="router.push('/srvf/members-domain/members')"
     >
       <template #title>
-        <span class="cockpit-header__name">{{ detail.displayName }}</span>
+        <span class="cockpit-header__name">{{
+          detail.label || detail.realName || detail.memberNo
+        }}</span>
         <el-tag :type="detail.status === 'ACTIVE' ? 'success' : 'info'">
           {{ detail.status === "ACTIVE" ? "在队" : "离队" }}
         </el-tag>
@@ -1599,7 +1602,10 @@ onMounted(() => {
     <GrantWizard
       v-if="detail"
       v-model="grantWizardVisible"
-      :preset-member="{ id: memberId, label: detail.displayName }"
+      :preset-member="{
+        id: memberId,
+        label: detail.label || detail.realName || detail.memberNo
+      }"
     />
   </div>
 </template>

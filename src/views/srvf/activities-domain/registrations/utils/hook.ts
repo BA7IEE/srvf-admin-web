@@ -516,7 +516,7 @@ export function useRegistrations(externalActivityId: string) {
       });
       if (code === 0) {
         memberOptions.value = data.items.map(m => ({
-          label: `${m.displayName}（${m.memberNo}）`,
+          label: m.label?.trim() || m.realName?.trim() || m.memberNo || m.id,
           value: m.id
         }));
       }
