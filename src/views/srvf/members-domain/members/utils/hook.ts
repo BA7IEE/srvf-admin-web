@@ -14,6 +14,7 @@ import MemberForm, {
   type MemberGradeOption
 } from "../form.vue";
 import BulkGrantForm, { type BulkGrantFormModel } from "../bulk-grant-form.vue";
+import { createMemberSaveGate, saveMemberForm } from "../member-form-state";
 import {
   getMembers,
   createMember,
@@ -56,7 +57,7 @@ export function useMembers() {
     selectedRows.value = rows;
   }
 
-  /** 列表筛选（均为契约既有参数：q 模糊命中 displayName+memberNo；gradeCode / status 精确；hasAccount 布尔） */
+  /** 列表筛选：q 匹配编号、真实姓名或昵称。 */
   const searchForm = reactive({
     q: "",
     gradeCode: "",
@@ -71,7 +72,13 @@ export function useMembers() {
       ? [{ type: "selection" as const, width: 50, align: "center" as const }]
       : []),
     { label: "队员编号", prop: "memberNo", minWidth: 150 },
-    { label: "称呼", prop: "displayName", minWidth: 120 },
+    {
+      label: "队员",
+      prop: "label",
+      minWidth: 160,
+      formatter: (row: MemberItem) =>
+        row.label?.trim() || row.realName?.trim() || row.memberNo || row.id
+    },
     {
       label: "等级",
       prop: "gradeCode",
@@ -150,10 +157,28 @@ export function useMembers() {
     }
   }
 
-  /** 新建 / 编辑弹窗（编辑时 memberNo 置灰只读，仅提交后端白名单 displayName / gradeCode） */
+  /** 新建/编辑使用各自的 DTO；身份事实不能混入日常 PATCH。 */
   async function openDialog(title: "新建" | "编辑", row?: MemberItem) {
-    await ensureGradeOptions();
+    await Promise.all([ensureGradeOptions(), dict.ensureType("join_source")]);
     const isEdit = title === "编辑";
+    const formInline = reactive<MemberFormModel>({
+      isEdit,
+      isSaving: false,
+      memberNo: row?.memberNo ?? "",
+      realName: row?.realName ?? "",
+      nickname: row?.nickname ?? "",
+      memberSinceDate: "",
+      memberOriginCode: "",
+      gradeCode: row?.gradeCode ?? ""
+    });
+    const closeWhenIdle = (done: () => void) => {
+      if (formInline.isSaving) {
+        message("正在保存，请等待结果。", { type: "warning" });
+        return;
+      }
+      done();
+    };
+    const runSave = createMemberSaveGate();
     addDialog({
       title: `${title}队员`,
       width: "42%",
@@ -162,46 +187,47 @@ export function useMembers() {
       fullscreenIcon: true,
       closeOnClickModal: false,
       sureBtnLoading: true,
+      beforeClose: closeWhenIdle,
+      beforeCancel: closeWhenIdle,
       props: {
-        formInline: {
-          isEdit,
-          memberNo: row?.memberNo ?? "",
-          displayName: row?.displayName ?? "",
-          gradeCode: row?.gradeCode ?? ""
-        } as MemberFormModel,
-        gradeOptions: gradeOptions.value
+        formInline,
+        gradeOptions: gradeOptions.value,
+        originOptions: dict.options("join_source")
       },
       contentRenderer: () => h(MemberForm, { ref: formRef }),
       beforeSure: (done, { options, closeLoading }) => {
-        const formComp = formRef.value;
-        const curData = options.props.formInline as MemberFormModel;
-        formComp.getRef().validate(async (valid: boolean) => {
-          if (!valid) {
-            closeLoading();
-            return;
-          }
+        void runSave(async confirm => {
+          const curData = options.props.formInline as MemberFormModel;
+          curData.isSaving = true;
           try {
-            if (isEdit && row) {
-              // 后端 PATCH 白名单：仅 displayName / gradeCode（memberNo / status 禁改）
-              await updateMember(row.id, {
-                displayName: curData.displayName,
-                ...(curData.gradeCode ? { gradeCode: curData.gradeCode } : {})
-              });
-              message("修改成功", { type: "success" });
-            } else {
-              await createMember({
-                memberNo: curData.memberNo,
-                displayName: curData.displayName,
-                ...(curData.gradeCode ? { gradeCode: curData.gradeCode } : {})
-              });
-              message("新建成功", { type: "success" });
+            const form = formRef.value?.getRef();
+            if (!form) {
+              message("无法读取表单，请关闭后重新打开。", { type: "error" });
+              return;
             }
+            const valid = await form.validate().catch(() => false);
+            if (!valid) return;
+            const saved = await saveMemberForm(curData, row, {
+              create: createMember,
+              update: updateMember
+            });
+            if (saved.ok === false) {
+              message(saved.message, { type: "error" });
+              return;
+            }
+            confirm();
+            message(`${title}成功`, { type: "success" });
             done();
             onSearch();
-          } catch (error: any) {
-            message(bizErrorMessage(error, "保存失败"), {
-              type: "error"
-            });
+          } catch {
+            message(
+              isEdit
+                ? "修改结果未确认，请重新读取队员后再操作。"
+                : "新建结果未确认，请先按编号查询后再操作。",
+              { type: "error" }
+            );
+          } finally {
+            curData.isSaving = false;
             closeLoading();
           }
         });
@@ -214,7 +240,7 @@ export function useMembers() {
     const next = row.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
     const action = next === "ACTIVE" ? "启用" : "停用";
     ElMessageBox.confirm(
-      `确定要${action}队员「${row.displayName}（${row.memberNo}）」吗？`,
+      `确定要${action}队员「${row.label?.trim() || row.realName || row.memberNo}」吗？`,
       "系统提示",
       {
         confirmButtonText: "确定",
@@ -239,7 +265,7 @@ export function useMembers() {
   /** 删除（删前 confirm；后端软删，有 active 部门 / 绑定 user 会拒绝并回传 message） */
   function handleDelete(row: MemberItem) {
     ElMessageBox.confirm(
-      `确定要删除队员「${row.displayName}（${row.memberNo}）」吗？`,
+      `确定要删除队员「${row.label?.trim() || row.realName || row.memberNo}」吗？`,
       "系统提示",
       {
         confirmButtonText: "确定",
@@ -281,7 +307,7 @@ export function useMembers() {
     const rows = selectedRows.value.map(r => ({
       memberId: r.id,
       memberNo: r.memberNo,
-      displayName: r.displayName,
+      displayName: r.realName?.trim() || r.label?.trim() || r.memberNo,
       phone: ""
     }));
     addDialog({
@@ -343,7 +369,7 @@ export function useMembers() {
       path: `/srvf/members-domain/members/${row.id}`,
       name: "SrvfMemberCockpit",
       params: { id: row.id },
-      meta: { title: `队员 · ${row.displayName}` }
+      meta: { title: `队员 · ${row.realName?.trim() || row.memberNo}` }
     });
     router.push(`/srvf/members-domain/members/${row.id}`);
   }
