@@ -21,13 +21,18 @@ export type MemberItem = {
   id: string;
   /** 队员业务唯一编号 */
   memberNo: string;
-  /** 称呼 / 显示名 */
-  displayName: string;
+  /** 真实姓名、可选称呼与后端统一展示标签 */
+  realName: string;
+  nickname: string | null;
+  label: string;
+  /** 发号日（北京日历日）与建档来源 */
+  memberSinceDate: string;
+  memberOriginCode: string;
   /** 等级字典 code（隐含 type code = member_grade），可空 */
   gradeCode: string | null;
   /** 在队 / 离队 */
   status: MemberStatus;
-  /** 是否已开通登录账号（队员账号闭环；存在 live 关联 User 即 true，软删/解绑后回落 false） */
+  /** 是否曾关联账号；不代表当前可登录 */
   hasAccount: boolean;
   /** 关联账号状态（无关联为 null） */
   accountStatus: AccountStatus | null;
@@ -43,7 +48,7 @@ export type MemberListQuery = {
   memberNo?: string;
   gradeCode?: string;
   status?: MemberStatus;
-  /** 模糊搜索（契约：跨字段命中 displayName + memberNo，contains + insensitive） */
+  /** 模糊搜索（编号、真实姓名或昵称） */
   q?: string;
   /** 按是否已开通登录账号过滤（队员账号闭环；不传 = 不过滤） */
   hasAccount?: boolean;
@@ -62,7 +67,7 @@ export type MemberDetailResult = Envelope<MemberItem>;
 
 /**
  * 队员详情 `GET /api/admin/v1/members/{id}`（rbac: `member.read.record`）。
- * 返回 `MemberResponseDto`，与列表项同 shape（id / memberNo / displayName / gradeCode / status / 时间戳）。
+ * 返回 `MemberResponseDto`，与列表项同 shape。
  */
 export const getMember = (id: string) =>
   http.request<MemberDetailResult>("get", `/api/admin/v1/members/${id}`);
@@ -71,24 +76,31 @@ export const getMember = (id: string) =>
 
 /**
  * 创建队员入参（后端 `CreateMemberDto`；字段以 `/api/docs-json` 为准）。
- * 后端"不接收任何敏感字段"——仅以下三项。
+ * 此接口不接收档案类敏感字段；发号日与来源必须由操作者明确提供。
  */
 export type CreateMemberBody = {
   /** 业务唯一编号（必填；trim 后保存，保留大小写；字母 / 数字 / 连字符；长度 1-32） */
   memberNo: string;
-  /** 称呼 / 显示名（必填；≤ 100） */
-  displayName: string;
+  /** 真实姓名（必填；1-64） */
+  realName: string;
+  /** 昵称（可选；不传表示无昵称） */
+  nickname?: string;
+  /** 发号日（必填；ISO 8601，北京日历日） */
+  memberSinceDate: string;
+  /** 来源代码（必填；join_source 是候选字典，不是闭集） */
+  memberOriginCode: string;
   /** 等级字典 code（可选；提供时须在 type=member_grade 字典中存在且 ACTIVE；≤ 64） */
   gradeCode?: string;
 };
 
 /**
  * 更新队员入参（后端 `UpdateMemberDto`）。
- * 后端 PATCH 白名单**仅** `displayName / gradeCode`；
- * `memberNo / status` 禁改（memberNo 改不了 → 编辑时置灰；status 走 /status 端点）。
+ * 后端 PATCH 白名单仅 `realName / nickname / gradeCode`；
+ * 编号、发号日与来源走独立的身份订正接口，状态走 /status。
  */
 export type UpdateMemberBody = {
-  displayName?: string;
+  realName?: string;
+  nickname?: string | null;
   gradeCode?: string;
 };
 

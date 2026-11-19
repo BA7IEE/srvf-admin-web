@@ -77,7 +77,7 @@ onMounted(() => {
       <el-input
         v-model="searchForm.q"
         class="w-48! mr-2!"
-        placeholder="搜编号 / 称呼（回车）"
+        placeholder="搜编号 / 姓名 / 昵称（回车）"
         clearable
         @keyup.enter="onFilterChange"
         @clear="onFilterChange"

@@ -2,44 +2,67 @@
 import { ref } from "vue";
 import ReCol from "@/components/ReCol";
 import type { FormRules } from "element-plus";
+import { memberFieldError, type MemberFormModel } from "./member-form-state";
+
+export type { MemberFormModel } from "./member-form-state";
 
 /** 等级下拉选项（来自 type=member_grade 字典；为空数组 = 退化为文本输入） */
 export type MemberGradeOption = { label: string; value: string };
-
-/** 弹窗表单模型（字段对齐后端 Create/Update DTO，见 @/api/srvf-member） */
-export type MemberFormModel = {
-  /** true=编辑：memberNo 后端禁改，置灰只读 */
-  isEdit: boolean;
-  memberNo: string;
-  displayName: string;
-  /** 等级字典 code（type=member_grade；可空） */
-  gradeCode: string;
-};
 
 const props = withDefaults(
   defineProps<{
     formInline?: MemberFormModel;
     gradeOptions?: MemberGradeOption[];
+    originOptions?: MemberGradeOption[];
   }>(),
   {
     formInline: () => ({
       isEdit: false,
+      isSaving: false,
       memberNo: "",
-      displayName: "",
+      realName: "",
+      nickname: "",
+      memberSinceDate: "",
+      memberOriginCode: "",
       gradeCode: ""
     }),
-    gradeOptions: () => []
+    gradeOptions: () => [],
+    originOptions: () => []
   }
 );
 
 const ruleFormRef = ref();
 const newFormInline = ref(props.formInline);
 
+const validateField =
+  (field: Parameters<typeof memberFieldError>[0]) =>
+  (_rule: unknown, value: string, callback: (error?: Error) => void) => {
+    const error = memberFieldError(field, value ?? "");
+    callback(error ? new Error(error) : undefined);
+  };
 const rules: FormRules = {
-  memberNo: [{ required: true, message: "请输入队员编号", trigger: "blur" }],
-  displayName: [
-    { required: true, message: "请输入称呼 / 显示名", trigger: "blur" }
-  ]
+  memberNo: [
+    { required: true, validator: validateField("memberNo"), trigger: "blur" }
+  ],
+  realName: [
+    { required: true, validator: validateField("realName"), trigger: "blur" }
+  ],
+  nickname: [{ validator: validateField("nickname"), trigger: "blur" }],
+  memberSinceDate: [
+    {
+      required: true,
+      validator: validateField("memberSinceDate"),
+      trigger: "change"
+    }
+  ],
+  memberOriginCode: [
+    {
+      required: true,
+      validator: validateField("memberOriginCode"),
+      trigger: "blur"
+    }
+  ],
+  gradeCode: [{ validator: validateField("gradeCode"), trigger: "blur" }]
 };
 
 function getRef() {
@@ -54,6 +77,7 @@ defineExpose({ getRef });
     ref="ruleFormRef"
     :model="newFormInline"
     :rules="rules"
+    :disabled="newFormInline.isSaving"
     label-width="92px"
   >
     <el-row :gutter="30">
@@ -69,17 +93,69 @@ defineExpose({ getRef });
         </el-form-item>
       </re-col>
       <re-col>
-        <el-form-item label="称呼" prop="displayName">
+        <el-form-item label="真实姓名" prop="realName">
           <el-input
-            v-model="newFormInline.displayName"
+            v-model="newFormInline.realName"
             clearable
-            maxlength="100"
-            placeholder="称呼 / 显示名"
+            maxlength="64"
+            placeholder="请输入真实姓名"
           />
         </el-form-item>
       </re-col>
       <re-col>
-        <el-form-item label="等级">
+        <el-form-item label="昵称" prop="nickname">
+          <el-input
+            v-model="newFormInline.nickname"
+            clearable
+            maxlength="64"
+            placeholder="选填；队内称呼"
+          />
+        </el-form-item>
+      </re-col>
+      <re-col v-if="!newFormInline.isEdit">
+        <el-form-item label="发号日" prop="memberSinceDate">
+          <el-date-picker
+            v-model="newFormInline.memberSinceDate"
+            class="w-full!"
+            type="date"
+            value-format="YYYY-MM-DD"
+            placeholder="选择该编号的发号日"
+          />
+        </el-form-item>
+      </re-col>
+      <re-col v-if="!newFormInline.isEdit">
+        <el-form-item label="来源" prop="memberOriginCode">
+          <el-select
+            v-if="originOptions.length"
+            v-model="newFormInline.memberOriginCode"
+            class="w-full!"
+            filterable
+            allow-create
+            default-first-option
+            clearable
+            placeholder="选择或输入实际来源代码"
+          >
+            <el-option
+              v-for="opt in originOptions"
+              :key="opt.value"
+              :label="opt.label"
+              :value="opt.value"
+            />
+          </el-select>
+          <el-input
+            v-else
+            v-model="newFormInline.memberOriginCode"
+            clearable
+            maxlength="64"
+            placeholder="输入实际来源代码（join_source）"
+          />
+          <p class="text-sm text-gray-500">
+            来源可从字典选择，也可填写实际来源代码。
+          </p>
+        </el-form-item>
+      </re-col>
+      <re-col>
+        <el-form-item label="等级" prop="gradeCode">
           <el-select
             v-if="gradeOptions.length"
             v-model="newFormInline.gradeCode"
