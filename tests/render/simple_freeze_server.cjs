@@ -8,7 +8,12 @@ const list = origin + "/#/srvf/activities-domain/activities";
 const password = fs
   .readFileSync(process.env.FIXTURE_PASSWORD_FILE, "utf8")
   .trim();
-const noMetrics = process.env.SCENARIO === "not_required";
+const noMetrics = ["not_required", "text_change_race"].includes(
+  process.env.SCENARIO
+);
+const paired = process.env.SCENARIO === "text_change_race";
+const description = "T38 参与者请携带训练记录本";
+const originalDescription = "T38 由草稿发起人保存的说明";
 const title = noMetrics ? "T37 无需指标" : "T37 指标训练";
 async function login(browser, actor) {
   const ctx = await browser.newContext();
@@ -107,11 +112,102 @@ async function submit(p, id, legacy) {
   if (!legacy) assert.equal(result.data.status, "pending");
   return result.data?.id;
 }
+// Allow an ordinary draft save to commit between the browser's final GET and POST.
+// The held request is forwarded unchanged. The editor uses the initiator's normal App session.
+async function concurrentEdit(browser, page, id) {
+  const editor = await browser.newPage();
+  await editor.goto(origin);
+  await page.getByRole("button", { name: "核对并提交审核" }).click();
+  await page
+    .locator("label.el-checkbox")
+    .filter({ hasText: "我已核对" })
+    .click();
+  const endpoint = "**/api/admin/v1/activities/" + id + "/publish-reviews";
+  let release;
+  const held = new Promise(resolve => {
+    release = resolve;
+  });
+  await page.route(endpoint, async route => {
+    await held;
+    await route.continue();
+  });
+  const outgoing = page.waitForRequest(
+    r => r.method() === "POST" && r.url().endsWith("/publish-reviews")
+  );
+  const result = page.waitForResponse(
+    r => r.request().method() === "POST" && r.url().endsWith("/publish-reviews")
+  );
+  await page.getByRole("button", { name: "确认提交发布审核" }).click();
+  const request = await outgoing;
+  const confirmed = request.postDataJSON().expectedDraftHash;
+  assert.match(confirmed, /^[a-f0-9]{64}$/);
+  try {
+    // The second browser context signs in independently and calls the published
+    // managed PATCH. Only status, business code and request ID leave the page.
+    const saved = await editor.evaluate(
+      async ({ id, password, description }) => {
+        const response = await fetch("/api/auth/v1/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username: "lab", password })
+        });
+        const login = await response.json();
+        if (response.status !== 200 || login.code !== 0)
+          throw Error("editor login failed");
+        const edited = await fetch(
+          "/api/app/v1/my/managed-activities/" + encodeURIComponent(id),
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: "Bearer " + login.data.accessToken
+            },
+            body: JSON.stringify({ description })
+          }
+        );
+        const body = await edited.json();
+        return {
+          status: edited.status,
+          code: body.code,
+          reqId: edited.headers.get("x-request-id")
+        };
+      },
+      { id, password, description: originalDescription }
+    );
+    console.log(
+      JSON.stringify({
+        actor: "lab-editor",
+        path: "/api/app/v1/my/managed-activities/" + id,
+        ...saved
+      })
+    );
+    assert.equal(saved.status, 200);
+    assert.equal(saved.code, 0);
+  } finally {
+    release();
+    await editor.close();
+  }
+  const rejected = await result;
+  assert.equal(rejected.status(), 409);
+  assert.equal((await rejected.json()).code, 20255);
+  await page
+    .getByText(/本次尝试遇到草稿版本变化/)
+    .first()
+    .waitFor();
+  console.log(
+    "PASS confirmed browser POST rejected after committed browser edit"
+  );
+  await page.unroute(endpoint);
+  // A fresh login independently reads and confirms the saved version.
+  const fresh = await login(browser, "lab");
+  await fresh.goto(list + "/" + id + "/simple-draft");
+  return { fresh, confirmed };
+}
 async function decide(p, id, change) {
   const route = origin + "/#/srvf/workbench/publish-reviews/" + id;
   await p.goto(route);
   const button = p.getByRole("button", {
-    name: change ? "通过标题变更" : "通过并发布",
+    name: change ? "通过活动变更" : "通过并发布",
     exact: true
   });
   await button.waitFor();
@@ -133,6 +229,22 @@ async function decide(p, id, change) {
       .first()
       .waitFor({ state: "visible" });
   }
+  if (change && paired) {
+    const section = p.locator(".el-collapse-item.is-active").filter({
+      has: p.getByRole("button", { name: "本次变更", exact: true })
+    });
+    for (const value of [
+      title,
+      title + " 修订",
+      originalDescription,
+      description
+    ]) {
+      await section.getByText(value, { exact: true }).waitFor();
+    }
+    console.log(
+      "PASS reviewer saw both original and proposed values for both fields"
+    );
+  }
   const approved = await post(
     p,
     "/approve",
@@ -144,7 +256,7 @@ async function decide(p, id, change) {
         .click();
       await p
         .getByRole("button", {
-          name: change ? "确认通过标题变更" : "确认通过并发布",
+          name: change ? "确认通过活动变更" : "确认通过并发布",
           exact: true
         })
         .click();
@@ -189,12 +301,18 @@ async function run() {
     executablePath: process.env.CHROMIUM_EXECUTABLE
   });
   try {
-    const p = await login(b, "lab");
+    let p = await login(b, "lab");
     const legacy = process.env.SCENARIO === "unconfigured";
     const id = process.env.ACTIVITY_ID || (await create(p, legacy));
     if (process.env.ACTIVITY_ID)
       await p.goto(list + "/" + id + "/simple-draft");
-    if (!process.env.REVIEW_ID) {
+    let staleHash;
+    if (paired) {
+      const race = await concurrentEdit(b, p, id);
+      p = race.fresh;
+      staleHash = race.confirmed;
+    }
+    if (!process.env.REVIEW_ID && !paired) {
       await rejectAs(
         "lab",
         "/api/admin/v1/activities/" + id + "/publish-reviews",
@@ -207,7 +325,17 @@ async function run() {
         20255
       );
     }
+    const nextRequest = paired
+      ? p.waitForRequest(
+          r => r.method() === "POST" && r.url().endsWith("/publish-reviews")
+        )
+      : null;
     const initial = process.env.REVIEW_ID || (await submit(p, id, legacy));
+    if (nextRequest)
+      assert.notEqual(
+        (await nextRequest).postDataJSON().expectedDraftHash,
+        staleHash
+      );
     if (legacy) {
       console.log("PASS unconfigured refused");
       return;
@@ -258,15 +386,68 @@ async function run() {
       await p
         .getByRole("textbox", { name: "申请的新标题" })
         .fill(title + " 修订");
+      if (paired)
+        await p
+          .getByRole("textbox", { name: "申请的新活动说明" })
+          .fill(description);
       const submitted = await post(
         p,
         "/change-reviews",
-        () => p.getByRole("button", { name: "提交标题变更审核" }).click(),
+        () => p.getByRole("button", { name: "提交活动变更审核" }).click(),
         200,
         0
       );
       assert.equal(submitted.data.status, "pending");
       change = submitted.data.id;
+      if (paired) {
+        assert.deepEqual(submitted.r.request().postDataJSON().activityPatch, {
+          title: title + " 修订",
+          description
+        });
+        const facts = submitted.data.snapshot;
+        assert.equal(facts.base.activity.description, originalDescription);
+        assert.equal(facts.activity.description, description);
+        assert.equal(facts.base.activity.title, title);
+        assert.equal(facts.activity.title, title + " 修订");
+        console.log(
+          "PASS two changes in one frozen proposal; original and target matched"
+        );
+      }
+    }
+    if (paired) {
+      // An extra frozen difference outside the text form must block approval.
+      const detail = "**/api/admin/v1/activity-publish-reviews/" + change;
+      let sends = 0;
+      const observe = r => {
+        if (r.method() === "POST" && r.url().endsWith("/approve")) sends++;
+      };
+      reviewer.on("request", observe);
+      await reviewer.route(detail, async route => {
+        const response = await route.fetch();
+        const data = await response.json();
+        const activity = data.data.snapshot.activity;
+        activity.capacity = (activity.capacity ?? 0) + 1;
+        await route.fulfill({ response, json: data });
+      });
+      await reviewer.goto(
+        origin + "/#/srvf/workbench/publish-reviews/" + change
+      );
+      await reviewer
+        .getByText(/本页仅支持完整核对的标题和活动说明变更/)
+        .first()
+        .waitFor();
+      assert(
+        await reviewer
+          .getByRole("button", { name: "通过活动变更", exact: true })
+          .isDisabled()
+      );
+      assert.equal(sends, 0);
+      console.log(
+        "PASS unsupported third field blocked; zero approve requests"
+      );
+      await reviewer.unroute(detail);
+      reviewer.off("request", observe);
+      await reviewer.reload();
     }
     await decide(reviewer, change, true);
     await rejectAs(
@@ -287,6 +468,10 @@ async function run() {
       .getByText(title + " 修订", { exact: true })
       .first()
       .waitFor();
+    if (paired) {
+      await p.getByText(description, { exact: true }).first().waitFor();
+      console.log("PASS title and description both read back after approval");
+    }
     console.log(
       "PASS " +
         (noMetrics ? "not_required" : "required") +

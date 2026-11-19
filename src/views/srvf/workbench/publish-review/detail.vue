@@ -99,7 +99,7 @@ const canReturn = computed(
     canDecide(review.value, userId.value, permissions.value, "return")
 );
 const approveTitle = computed(() =>
-  review.value?.requestType === "change" ? "确认通过标题变更" : "确认通过并发布"
+  review.value?.requestType === "change" ? "确认通过活动变更" : "确认通过并发布"
 );
 const title = computed(() => {
   const activity = review.value?.snapshot.activity;
@@ -606,7 +606,7 @@ onBeforeUnmount(() => {
             :disabled="!canApprove"
             @click="open('approve')"
             >{{
-              review.requestType === "change" ? "通过标题变更" : "通过并发布"
+              review.requestType === "change" ? "通过活动变更" : "通过并发布"
             }}</el-button
           >
           <el-button :disabled="!canReturn" @click="open('return')"
@@ -629,7 +629,7 @@ onBeforeUnmount(() => {
         {{
           dialog === "approve"
             ? review?.requestType === "change"
-              ? "通过后将按冻结申请更新活动标题，请核对原值、新值及保险要求。"
+              ? "通过后将按冻结申请更新活动，请核对原值、新值及保险要求。"
               : "此操作会通过这份冻结申请，并在同一事务发布活动。请核对活动安排及保险要求。"
             : "请写清组织者需要修改的内容；组织者修改后需重新提审。"
         }}

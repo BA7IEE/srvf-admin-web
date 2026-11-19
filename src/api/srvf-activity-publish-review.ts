@@ -100,7 +100,12 @@ export const decidePublishReview = (
 const managedActivity = (id: string) =>
   "/api/app/v1/my/managed-activities/" + encodeURIComponent(id);
 type ManagedChangeState = {
-  activity: { id: string; title: string; statusCode: string };
+  activity: {
+    id: string;
+    title: string;
+    description: string | null;
+    statusCode: string;
+  };
   myResponsibility: { responsibilityType: "owner" | "collaborator" } | null;
   publishReview: {
     status: PublishReviewStatus | null;
@@ -109,7 +114,10 @@ type ManagedChangeState = {
 };
 export const getManagedChangeState = (id: string) =>
   http.request<ApiEnvelope<ManagedChangeState>>("get", managedActivity(id));
-export const submitTitleChange = (id: string, title: string) =>
+export const submitActivityTextChange = (
+  id: string,
+  activityPatch: { title?: string; description?: string }
+) =>
   http.request<ApiEnvelope<PublishReview>>(
     "post",
     managedActivity(id) + "/change-reviews",
@@ -117,7 +125,7 @@ export const submitTitleChange = (id: string, title: string) =>
       data: {
         operationKey: crypto.randomUUID(),
         confirmation: true,
-        activityPatch: { title },
+        activityPatch,
         sessions: { create: [], update: [], cancel: [] },
         positions: { create: [], update: [], cancel: [] }
       }
