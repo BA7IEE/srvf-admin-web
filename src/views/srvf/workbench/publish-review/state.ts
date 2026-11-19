@@ -1,3 +1,4 @@
+import { changeFacts } from "./change-facts";
 import { canonical } from "./metrics";
 import type {
   PublishReview,
@@ -65,11 +66,6 @@ export function reviewRecord(value: unknown, reviewId: string): PublishReview {
     throw Error("未取得本申请的有效审核内容，请重试。");
   return structuredClone(value) as PublishReview;
 }
-// Preserve the distinction between an unset description and stored empty text.
-function reviewDescription(value: unknown) {
-  if (value === null) return "未设置";
-  return typeof value === "string" && value !== "" ? value : "空文本";
-}
 export function projectReview(
   review: PublishReview,
   coverage?: PolicyCoverage | null
@@ -109,65 +105,11 @@ export function projectReview(
       result.issues.push("指标要求未配置或冻结选择不完整。");
   }
   if (review.requestType === "change") {
-    const base = snapshot.base,
-      after = snapshot.activity;
-    const original =
-      objectValue(base) && objectValue(base.activity) ? base.activity : null;
-    if (
-      original &&
-      objectValue(base) &&
-      objectValue(after) &&
-      typeof original.title === "string" &&
-      typeof after.title === "string" &&
-      (original.description === null ||
-        typeof original.description === "string") &&
-      (after.description === null || typeof after.description === "string") &&
-      (original.title !== after.title ||
-        original.description !== after.description) &&
-      !snapshot.metricSelectionExplicit &&
-      !snapshot.timePolicySelectionExplicit &&
-      !snapshot.contributionPolicySelectionExplicit &&
-      review.changeDiff?.kind === "proposal-v" + snapshot.schemaVersion &&
-      Object.keys(base).every(
-        k =>
-          canonical(base[k]) ===
-          canonical(
-            k === "activity"
-              ? {
-                  ...after,
-                  title: original.title,
-                  description: original.description
-                }
-              : snapshot[k]
-          )
-      )
-    ) {
-      result.sections.unshift({
-        label: "本次变更",
-        children: [
-          ...(original.title === after.title
-            ? []
-            : [
-                { label: "原活动标题", value: original.title },
-                { label: "申请的新标题", value: after.title }
-              ]),
-          ...(original.description === after.description
-            ? []
-            : [
-                {
-                  label: "原活动说明",
-                  value: reviewDescription(original.description)
-                },
-                {
-                  label: "申请的新活动说明",
-                  value: reviewDescription(after.description)
-                }
-              ])
-        ]
-      });
-    } else
+    const children = changeFacts(review);
+    if (children) result.sections.unshift({ label: "本次变更", children });
+    else
       result.issues.unshift(
-        "本页仅支持完整核对的标题和活动说明变更，其他差异请退回或交完整审核流程。"
+        "申请差异未完整核对，不能通过。请核实活动、场次、岗位和原地点安排。"
       );
   }
   if (

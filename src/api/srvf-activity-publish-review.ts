@@ -99,11 +99,33 @@ export const decidePublishReview = (
 // The organizer always acts as the signed-in App member. Management privileges do not carry over.
 const managedActivity = (id: string) =>
   "/api/app/v1/my/managed-activities/" + encodeURIComponent(id);
+export type ActivityChangeFields = {
+  title: string;
+  description: string | null;
+  startAt: string;
+  endAt: string;
+  location: string;
+  capacity: number | null;
+};
+export type ActivityChangePatch = Partial<
+  Omit<ActivityChangeFields, "description"> & { description: string }
+>;
+export type SessionChange = Partial<
+  Pick<ActivityChangeFields, "startAt" | "endAt" | "capacity">
+> & {
+  locationText?: string;
+  checkInOpenAt?: string;
+  checkInCloseAt?: string;
+  checkOutOpenAt?: string;
+  checkOutCloseAt?: string;
+  preparationStartAt?: string;
+};
+export type PositionChange = Partial<
+  Pick<ActivityChangeFields, "startAt" | "endAt" | "capacity">
+>;
 type ManagedChangeState = {
-  activity: {
+  activity: ActivityChangeFields & {
     id: string;
-    title: string;
-    description: string | null;
     statusCode: string;
   };
   myResponsibility: { responsibilityType: "owner" | "collaborator" } | null;
@@ -114,9 +136,14 @@ type ManagedChangeState = {
 };
 export const getManagedChangeState = (id: string) =>
   http.request<ApiEnvelope<ManagedChangeState>>("get", managedActivity(id));
-export const submitActivityTextChange = (
+export const submitPublishedChange = (
   id: string,
-  activityPatch: { title?: string; description?: string }
+  activityPatch: ActivityChangePatch,
+  sessionUpdates: (SessionChange & { sessionId: string })[],
+  positionUpdates: (PositionChange & {
+    sessionId: string;
+    positionId: string;
+  })[]
 ) =>
   http.request<ApiEnvelope<PublishReview>>(
     "post",
@@ -126,8 +153,8 @@ export const submitActivityTextChange = (
         operationKey: crypto.randomUUID(),
         confirmation: true,
         activityPatch,
-        sessions: { create: [], update: [], cancel: [] },
-        positions: { create: [], update: [], cancel: [] }
+        sessions: { create: [], update: sessionUpdates, cancel: [] },
+        positions: { create: [], update: positionUpdates, cancel: [] }
       }
     }
   );

@@ -447,7 +447,7 @@ onBeforeUnmount(() => {
     <template v-if="draft">
       <PublishedChange
         v-if="draft.statusCode === 'published' && !accountInvalid"
-        :activity-id="id"
+        :draft="draft"
         :user-id="userId"
         @submitted="load"
       />
@@ -677,7 +677,10 @@ onBeforeUnmount(() => {
               displayTime(draft.session.preparationStartAt)
             }}</el-descriptions-item
           >
-          <el-descriptions-item label="地点"
+          <el-descriptions-item label="活动地点文字">{{
+            draft.location
+          }}</el-descriptions-item>
+          <el-descriptions-item label="地点安排（地址及可见范围）"
             ><p v-for="place in draft.places" :key="place.roleCode">
               {{ roleLabels[place.roleCode] }}：{{ place.inline?.name }} ·
               {{ place.inline?.addressText }} ·

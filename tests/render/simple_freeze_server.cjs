@@ -14,7 +14,14 @@ const noMetrics = ["not_required", "text_change_race"].includes(
 const paired = process.env.SCENARIO === "text_change_race";
 const description = "T38 参与者请携带训练记录本";
 const originalDescription = "T38 由草稿发起人保存的说明";
-const title = noMetrics ? "T37 无需指标" : "T37 指标训练";
+const layout = ["published_layout", "occupied_layout"].includes(
+  process.env.SCENARIO
+);
+const title = layout
+  ? "T41 单场次变更"
+  : noMetrics
+    ? "T37 无需指标"
+    : "T37 指标训练";
 async function login(browser, actor) {
   const ctx = await browser.newContext();
   const p = await ctx.newPage();
@@ -203,7 +210,7 @@ async function concurrentEdit(browser, page, id) {
   await fresh.goto(list + "/" + id + "/simple-draft");
   return { fresh, confirmed };
 }
-async function decide(p, id, change) {
+async function decide(p, id, change, { inspect, status = 200, code = 0 } = {}) {
   const route = origin + "/#/srvf/workbench/publish-reviews/" + id;
   await p.goto(route);
   const button = p.getByRole("button", {
@@ -223,7 +230,7 @@ async function decide(p, id, change) {
       .first()
       .waitFor({ state: "visible" });
   }
-  if (change) {
+  if (change && !inspect) {
     await p
       .getByText("申请的新标题", { exact: true })
       .first()
@@ -245,6 +252,7 @@ async function decide(p, id, change) {
       "PASS reviewer saw both original and proposed values for both fields"
     );
   }
+  if (inspect) await inspect(p);
   const approved = await post(
     p,
     "/approve",
@@ -261,10 +269,10 @@ async function decide(p, id, change) {
         })
         .click();
     },
-    200,
-    0
+    status,
+    code
   );
-  assert.equal(approved.data.status, "approved");
+  if (status === 200) assert.equal(approved.data.status, "approved");
 }
 // Independent password login for contract negatives. Only status, business code and reqId leave this function.
 async function rejectAs(actor, path, body, status, code) {
@@ -302,6 +310,52 @@ async function run() {
   });
   try {
     let p = await login(b, "lab");
+    if (layout) {
+      const reviewer = await login(b, "reviewer");
+      const check = require("./simple_published_layout.cjs");
+      const open = async id => {
+        const read = p.waitForResponse(
+          r =>
+            r.request().method() === "GET" &&
+            r.url().endsWith("/" + id + "/simple-draft")
+        );
+        if (p.url() === list + "/" + id + "/simple-draft") await p.reload();
+        else await p.goto(list + "/" + id + "/simple-draft");
+        const response = await read,
+          json = await response.json();
+        assert.equal(response.status(), 200);
+        assert.equal(json.code, 0);
+        return json.data;
+      };
+      if (process.env.SCENARIO === "occupied_layout") {
+        assert(process.env.ACTIVITY_ID);
+        await check.occupied({
+          p,
+          reviewer,
+          id: process.env.ACTIVITY_ID,
+          open,
+          post,
+          decide
+        });
+      } else {
+        const id = process.env.ACTIVITY_ID || (await create(p, false));
+        if (!process.env.ACTIVITY_ID) {
+          const initial = await submit(p, id, false);
+          await decide(reviewer, initial, false);
+        }
+        await check.positive({
+          p,
+          reviewer,
+          id,
+          open,
+          post,
+          decide,
+          rejectAs,
+          origin
+        });
+      }
+      return;
+    }
     const legacy = process.env.SCENARIO === "unconfigured";
     const id = process.env.ACTIVITY_ID || (await create(p, legacy));
     if (process.env.ACTIVITY_ID)
@@ -433,7 +487,7 @@ async function run() {
         origin + "/#/srvf/workbench/publish-reviews/" + change
       );
       await reviewer
-        .getByText(/本页仅支持完整核对的标题和活动说明变更/)
+        .getByText(/申请差异未完整核对/)
         .first()
         .waitFor();
       assert(
