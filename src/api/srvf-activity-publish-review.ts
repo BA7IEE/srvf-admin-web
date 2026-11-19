@@ -30,6 +30,7 @@ export type PublishReview = {
   activityTitle: string;
   organizationId: string;
   initiatorMemberId: string | null;
+  frozenMetricSets?: Record<string, unknown>[];
   changeDiff?: Record<string, unknown>;
   affectedMemberCount?: number;
 };
@@ -93,4 +94,32 @@ export const decidePublishReview = (
     "post",
     `${root}/${encodeURIComponent(reviewId)}/${action}`,
     { data }
+  );
+
+// The organizer always acts as the signed-in App member. Management privileges do not carry over.
+const managedActivity = (id: string) =>
+  "/api/app/v1/my/managed-activities/" + encodeURIComponent(id);
+type ManagedChangeState = {
+  activity: { id: string; title: string; statusCode: string };
+  myResponsibility: { responsibilityType: "owner" | "collaborator" } | null;
+  publishReview: {
+    status: PublishReviewStatus | null;
+    latestRequestId: string | null;
+  };
+};
+export const getManagedChangeState = (id: string) =>
+  http.request<ApiEnvelope<ManagedChangeState>>("get", managedActivity(id));
+export const submitTitleChange = (id: string, title: string) =>
+  http.request<ApiEnvelope<PublishReview>>(
+    "post",
+    managedActivity(id) + "/change-reviews",
+    {
+      data: {
+        operationKey: crypto.randomUUID(),
+        confirmation: true,
+        activityPatch: { title },
+        sessions: { create: [], update: [], cancel: [] },
+        positions: { create: [], update: [], cancel: [] }
+      }
+    }
   );

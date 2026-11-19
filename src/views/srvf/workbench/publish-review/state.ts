@@ -1,3 +1,4 @@
+import { canonical } from "./metrics";
 import type {
   PublishReview,
   ReviewAction,
@@ -69,7 +70,11 @@ export function projectReview(
   coverage?: PolicyCoverage | null
 ) {
   const policies = policyCoverageFor(review, coverage);
-  const result = frozenProjection(review.snapshot, policies?.facts);
+  const result = frozenProjection(
+    review.snapshot,
+    policies?.facts,
+    review.frozenMetricSets
+  );
   if (policies) result.issues.push(...policies.issues);
   if (
     review.snapshot.schemaVersion === 9 &&
@@ -83,10 +88,61 @@ export function projectReview(
     result.issues.push(
       "V9 初发必须完整核对时长和贡献政策，不能当作无政策申请通过。"
     );
-  if (review.requestType !== "initial")
-    result.issues.unshift(
-      "变更申请尚未具备完整前后对照，本页可查看和退回，不能通过。"
-    );
+  const snapshot = review.snapshot;
+  for (const side of [snapshot.base, snapshot]) {
+    if (
+      !objectValue(side) ||
+      !Number.isInteger(side.metricSelectionRevision) ||
+      Number(side.metricSelectionRevision) < 1 ||
+      !(
+        (side.metricRequirementCode === "required" &&
+          objectValue(side.metricSetPointer)) ||
+        (side.metricRequirementCode === "not_required" &&
+          side.metricSetPointer === null)
+      )
+    )
+      result.issues.push("指标要求未配置或冻结选择不完整。");
+  }
+  if (review.requestType === "change") {
+    const base = snapshot.base,
+      after = snapshot.activity;
+    const originalTitle =
+      objectValue(base) && objectValue(base.activity)
+        ? base.activity.title
+        : undefined;
+    // Only an exact title-only proposal is supported. Compare every frozen base field,
+    // including rules, sessions, reference versions and place visibility.
+    if (
+      objectValue(base) &&
+      objectValue(base.activity) &&
+      objectValue(after) &&
+      typeof base.activity.title === "string" &&
+      typeof after.title === "string" &&
+      base.activity.title !== after.title &&
+      !snapshot.metricSelectionExplicit &&
+      !snapshot.timePolicySelectionExplicit &&
+      !snapshot.contributionPolicySelectionExplicit &&
+      review.changeDiff?.kind === "proposal-v" + snapshot.schemaVersion &&
+      Object.keys(base).every(
+        k =>
+          canonical(base[k]) ===
+          canonical(
+            k === "activity" ? { ...after, title: originalTitle } : snapshot[k]
+          )
+      )
+    ) {
+      result.sections.unshift({
+        label: "本次变更",
+        children: [
+          { label: "原活动标题", value: base.activity.title },
+          { label: "申请的新标题", value: after.title }
+        ]
+      });
+    } else
+      result.issues.unshift(
+        "本页仅支持完整核对的单项标题变更，其他差异请退回或交完整审核流程。"
+      );
+  }
   if (
     (review.audienceTagCodes?.length ?? 0) ||
     (review.audienceOrganizationIds?.length ?? 0)
@@ -110,15 +166,6 @@ export function canDecide(
     (action === "return" || projectReview(review, coverage).issues.length === 0)
   );
 }
-function canonical(value: unknown): string {
-  if (Array.isArray(value)) return `[${value.map(canonical).join(",")}]`;
-  if (objectValue(value))
-    return `{${Object.keys(value)
-      .sort()
-      .map(k => `${JSON.stringify(k)}:${canonical(value[k])}`)
-      .join(",")}}`;
-  return JSON.stringify(value);
-}
 /** Local confirmation comparison only; never sent as a new backend version/hash parameter. */
 export function reviewToken(review: PublishReview) {
   return canonical({
@@ -130,6 +177,7 @@ export function reviewToken(review: PublishReview) {
     status: review.status,
     submittedByUserId: review.submittedByUserId,
     snapshot: review.snapshot,
+    frozenMetricSets: review.frozenMetricSets ?? [],
     audienceTagCodes: review.audienceTagCodes,
     audienceOrganizationIds: review.audienceOrganizationIds
   });

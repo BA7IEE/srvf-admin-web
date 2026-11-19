@@ -11,6 +11,7 @@ import { SrvfDetailShell } from "@/srvf-kit";
 import { hasPerms } from "@/utils/auth";
 import { getAdminMe } from "@/api/user";
 import { bizErrorMessage } from "@/api/srvf-error";
+import TitleChange from "./simple/title-change.vue";
 import ReviewSubmission from "./simple/review.vue";
 import ReturnedReview from "./simple/returned-review.vue";
 import { reviewDraft } from "./simple/review-state";
@@ -444,6 +445,12 @@ onBeforeUnmount(() => {
       :title="storageWarning"
     />
     <template v-if="draft">
+      <TitleChange
+        v-if="draft.statusCode === 'published' && !accountInvalid"
+        :activity-id="id"
+        :user-id="userId"
+        @submitted="load"
+      />
       <ReturnedReview
         v-if="draft.review?.status === 'returned'"
         :draft="draft"

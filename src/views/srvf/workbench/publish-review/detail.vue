@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { verifyMetricDocuments } from "./metrics";
 import { computed, onBeforeUnmount, ref, shallowRef, watch } from "vue";
 import {
   onBeforeRouteLeave,
@@ -97,6 +98,9 @@ const canReturn = computed(
     !locked.value &&
     canDecide(review.value, userId.value, permissions.value, "return")
 );
+const approveTitle = computed(() =>
+  review.value?.requestType === "change" ? "确认通过标题变更" : "确认通过并发布"
+);
 const title = computed(() => {
   const activity = review.value?.snapshot.activity;
   return objectValue(activity) && typeof activity.title === "string"
@@ -162,7 +166,10 @@ async function read(round: number) {
   const result = await getPublishReview(id.value);
   ensure(round);
   if (result.code !== 0) throw Error("未取得有效审核内容。");
-  return reviewRecord(result.data, id.value);
+  const value = reviewRecord(result.data, id.value);
+  value.frozenMetricSets = await verifyMetricDocuments(value.frozenMetricSets);
+  ensure(round);
+  return value;
 }
 async function readPolicies(value: PublishReview, round: number) {
   if (!needsReferencedPolicies(value)) return null;
@@ -595,11 +602,12 @@ onBeforeUnmount(() => {
         </p>
         <div class="decision-buttons">
           <el-button
-            v-if="review.requestType === 'initial'"
             type="primary"
             :disabled="!canApprove"
             @click="open('approve')"
-            >通过并发布</el-button
+            >{{
+              review.requestType === "change" ? "通过标题变更" : "通过并发布"
+            }}</el-button
           >
           <el-button :disabled="!canReturn" @click="open('return')"
             >退回修改</el-button
@@ -609,7 +617,7 @@ onBeforeUnmount(() => {
     </template>
     <el-dialog
       :model-value="!!dialog"
-      :title="dialog === 'approve' ? '确认通过并发布' : '退回修改'"
+      :title="dialog === 'approve' ? approveTitle : '退回修改'"
       width="min(560px, 94vw)"
       :close-on-click-modal="false"
       :close-on-press-escape="!busy"
@@ -620,7 +628,9 @@ onBeforeUnmount(() => {
       <p>
         {{
           dialog === "approve"
-            ? "此操作会通过这份冻结申请，并在同一事务发布活动。请核对活动安排及保险要求。"
+            ? review?.requestType === "change"
+              ? "通过后将按冻结申请更新活动标题，请核对原值、新值及保险要求。"
+              : "此操作会通过这份冻结申请，并在同一事务发布活动。请核对活动安排及保险要求。"
             : "请写清组织者需要修改的内容；组织者修改后需重新提审。"
         }}
       </p>
@@ -637,7 +647,7 @@ onBeforeUnmount(() => {
       />
       <el-checkbox v-model="confirmed" :disabled="busy || !!pending">{{
         dialog === "approve"
-          ? "我已核对冻结内容及保险要求，确认通过并发布"
+          ? "我已核对冻结内容及保险要求"
           : "我确认按上述原因退回这份申请"
       }}</el-checkbox>
       <p v-if="error" role="alert">{{ error }}</p>
@@ -648,9 +658,7 @@ onBeforeUnmount(() => {
           :loading="busy"
           :disabled="!confirmed || busy || !!pending"
           @click="submit"
-          >{{
-            dialog === "approve" ? "确认通过并发布" : "确认退回修改"
-          }}</el-button
+          >{{ dialog === "approve" ? approveTitle : "确认退回修改" }}</el-button
         ></template
       >
     </el-dialog>
