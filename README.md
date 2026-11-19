@@ -1,6 +1,6 @@
 # srvf-admin-web
 
-> 深圳公益救援队(SRVF)业务后台前端——派生自私有 `u-admin-web-starter`(Pure Admin Max-Ts 底座),已全面接入真实 `srvf-nest-api` 后端(3-call 登录 · 30+ 业务页真接 · srvf-kit 原语层)。**本仓永不公开**:上游 Max-Ts 为付费授权件,不可售卖或公开源代码。
+> 深圳公益救援队(SRVF)业务后台前端——派生自私有 `u-admin-web-starter`(Pure Admin Max-Ts 底座),已全面接入真实 `srvf-nest-api` 后端(3-call 登录 · 30+ 业务页真接 · srvf-kit 原语层)。
 
 ## 接手入口(人与 AI 同源)
 
