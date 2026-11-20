@@ -13,6 +13,16 @@ export default [
     },
     children: [
       {
+        path: "/srvf/workbench/settlements/:settlementVersionId",
+        name: "SrvfSettlementReviewDetail",
+        component: () => import("@/views/srvf/workbench/settlement-detail.vue"),
+        meta: {
+          title: "结算版本审核",
+          showLink: false,
+          activePath: "/srvf/workbench/approvals"
+        }
+      },
+      {
         path: "/srvf/workbench/publish-reviews/:reviewId",
         name: "SrvfPublishReviewDetail",
         component: () =>
