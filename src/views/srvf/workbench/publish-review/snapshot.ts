@@ -1,4 +1,5 @@
 /** Read-only coverage of ea4a3579 proposal fields. Unknown/complex facts never disappear into approval. */
+import { metricFacts } from "./metrics";
 import type { PolicyFacts } from "./policy-binding";
 export type FrozenFact = {
   label: string;
@@ -168,7 +169,7 @@ const target: Record<string, Shape> = {
   },
   metricRequirementCode: "指标要求|s?",
   metricSelectionRevision: "指标选择修订|n",
-  metricSetPointer: "指标集合|none",
+  metricSetPointer: "指标集合|metric",
   timePolicyPointers: "时长政策|time",
   contributionPolicyPointers: "贡献政策|contribution"
 };
@@ -229,7 +230,8 @@ function render(
   key: string,
   path: string,
   issues: string[],
-  policies?: PolicyFacts
+  policies?: PolicyFacts,
+  metricDocuments?: unknown
 ): FrozenFact {
   const label =
     typeof shape === "string" ? shape.split("|")[0] : (labels[key] ?? key);
@@ -240,6 +242,14 @@ function render(
   if (typeof shape === "string") {
     const type = shape.split("|")[1];
     if (value === undefined) return invalid("缺少冻结字段");
+    if (type === "metric") {
+      if (value === null) return { label, value: "未设置" };
+      const children =
+        objectValue(value) && metricFacts(value, metricDocuments);
+      return children
+        ? { label, children }
+        : invalid("缺少与冻结指针一致的完整指标集或指标定义");
+    }
     if (type === "time" || type === "contribution") {
       if (value === null) return { label, value: "未设置" };
       const side = path.startsWith("冻结申请.base.") ? "base" : "target";
@@ -300,7 +310,8 @@ function render(
               key,
               `${path}[${i + 1}]`,
               issues,
-              policies
+              policies,
+              metricDocuments
             ),
             label: `第 ${i + 1} 项`
           }))
@@ -309,7 +320,15 @@ function render(
   }
   if (!objectValue(value)) return invalid("缺少有效冻结内容");
   const children = Object.entries(shape).map(([name, child]) =>
-    render(value[name], child, name, `${path}.${name}`, issues, policies)
+    render(
+      value[name],
+      child,
+      name,
+      `${path}.${name}`,
+      issues,
+      policies,
+      metricDocuments
+    )
   );
   for (const name of Object.keys(value))
     if (!Object.hasOwn(shape, name))
@@ -318,7 +337,8 @@ function render(
 }
 export function frozenProjection(
   snapshot: Record<string, unknown>,
-  policies?: PolicyFacts
+  policies?: PolicyFacts,
+  metricDocuments?: unknown
 ) {
   const issues: string[] = [];
   const version = snapshot.schemaVersion;
@@ -360,7 +380,8 @@ export function frozenProjection(
     "snapshot",
     "冻结申请",
     issues,
-    policies
+    policies,
+    metricDocuments
   );
   // Put the actual target first; technical identities and the original baseline remain inspectable.
   const sections = result.children ?? [];

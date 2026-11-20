@@ -11,6 +11,7 @@ import { SrvfDetailShell } from "@/srvf-kit";
 import { hasPerms } from "@/utils/auth";
 import { getAdminMe } from "@/api/user";
 import { bizErrorMessage } from "@/api/srvf-error";
+import PublishedChange from "./simple/published-change.vue";
 import ReviewSubmission from "./simple/review.vue";
 import ReturnedReview from "./simple/returned-review.vue";
 import { reviewDraft } from "./simple/review-state";
@@ -444,6 +445,12 @@ onBeforeUnmount(() => {
       :title="storageWarning"
     />
     <template v-if="draft">
+      <PublishedChange
+        v-if="draft.statusCode === 'published' && !accountInvalid"
+        :draft="draft"
+        :user-id="userId"
+        @submitted="load"
+      />
       <ReturnedReview
         v-if="draft.review?.status === 'returned'"
         :draft="draft"
@@ -670,7 +677,10 @@ onBeforeUnmount(() => {
               displayTime(draft.session.preparationStartAt)
             }}</el-descriptions-item
           >
-          <el-descriptions-item label="地点"
+          <el-descriptions-item label="活动地点文字">{{
+            draft.location
+          }}</el-descriptions-item>
+          <el-descriptions-item label="地点安排（地址及可见范围）"
             ><p v-for="place in draft.places" :key="place.roleCode">
               {{ roleLabels[place.roleCode] }}：{{ place.inline?.name }} ·
               {{ place.inline?.addressText }} ·

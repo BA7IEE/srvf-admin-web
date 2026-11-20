@@ -30,6 +30,7 @@ export type PublishReview = {
   activityTitle: string;
   organizationId: string;
   initiatorMemberId: string | null;
+  frozenMetricSets?: Record<string, unknown>[];
   changeDiff?: Record<string, unknown>;
   affectedMemberCount?: number;
 };
@@ -93,4 +94,67 @@ export const decidePublishReview = (
     "post",
     `${root}/${encodeURIComponent(reviewId)}/${action}`,
     { data }
+  );
+
+// The organizer always acts as the signed-in App member. Management privileges do not carry over.
+const managedActivity = (id: string) =>
+  "/api/app/v1/my/managed-activities/" + encodeURIComponent(id);
+export type ActivityChangeFields = {
+  title: string;
+  description: string | null;
+  startAt: string;
+  endAt: string;
+  location: string;
+  capacity: number | null;
+};
+export type ActivityChangePatch = Partial<
+  Omit<ActivityChangeFields, "description"> & { description: string }
+>;
+export type SessionChange = Partial<
+  Pick<ActivityChangeFields, "startAt" | "endAt" | "capacity">
+> & {
+  locationText?: string;
+  checkInOpenAt?: string;
+  checkInCloseAt?: string;
+  checkOutOpenAt?: string;
+  checkOutCloseAt?: string;
+  preparationStartAt?: string;
+};
+export type PositionChange = Partial<
+  Pick<ActivityChangeFields, "startAt" | "endAt" | "capacity">
+>;
+type ManagedChangeState = {
+  activity: ActivityChangeFields & {
+    id: string;
+    statusCode: string;
+  };
+  myResponsibility: { responsibilityType: "owner" | "collaborator" } | null;
+  publishReview: {
+    status: PublishReviewStatus | null;
+    latestRequestId: string | null;
+  };
+};
+export const getManagedChangeState = (id: string) =>
+  http.request<ApiEnvelope<ManagedChangeState>>("get", managedActivity(id));
+export const submitPublishedChange = (
+  id: string,
+  activityPatch: ActivityChangePatch,
+  sessionUpdates: (SessionChange & { sessionId: string })[],
+  positionUpdates: (PositionChange & {
+    sessionId: string;
+    positionId: string;
+  })[]
+) =>
+  http.request<ApiEnvelope<PublishReview>>(
+    "post",
+    managedActivity(id) + "/change-reviews",
+    {
+      data: {
+        operationKey: crypto.randomUUID(),
+        confirmation: true,
+        activityPatch,
+        sessions: { create: [], update: sessionUpdates, cancel: [] },
+        positions: { create: [], update: positionUpdates, cancel: [] }
+      }
+    }
   );

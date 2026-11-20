@@ -1,3 +1,5 @@
+import { changeFacts } from "./change-facts";
+import { canonical } from "./metrics";
 import type {
   PublishReview,
   ReviewAction,
@@ -69,7 +71,11 @@ export function projectReview(
   coverage?: PolicyCoverage | null
 ) {
   const policies = policyCoverageFor(review, coverage);
-  const result = frozenProjection(review.snapshot, policies?.facts);
+  const result = frozenProjection(
+    review.snapshot,
+    policies?.facts,
+    review.frozenMetricSets
+  );
   if (policies) result.issues.push(...policies.issues);
   if (
     review.snapshot.schemaVersion === 9 &&
@@ -83,10 +89,29 @@ export function projectReview(
     result.issues.push(
       "V9 初发必须完整核对时长和贡献政策，不能当作无政策申请通过。"
     );
-  if (review.requestType !== "initial")
-    result.issues.unshift(
-      "变更申请尚未具备完整前后对照，本页可查看和退回，不能通过。"
-    );
+  const snapshot = review.snapshot;
+  for (const side of [snapshot.base, snapshot]) {
+    if (
+      !objectValue(side) ||
+      !Number.isInteger(side.metricSelectionRevision) ||
+      Number(side.metricSelectionRevision) < 1 ||
+      !(
+        (side.metricRequirementCode === "required" &&
+          objectValue(side.metricSetPointer)) ||
+        (side.metricRequirementCode === "not_required" &&
+          side.metricSetPointer === null)
+      )
+    )
+      result.issues.push("指标要求未配置或冻结选择不完整。");
+  }
+  if (review.requestType === "change") {
+    const children = changeFacts(review);
+    if (children) result.sections.unshift({ label: "本次变更", children });
+    else
+      result.issues.unshift(
+        "申请差异未完整核对，不能通过。请核实活动、场次、岗位和原地点安排。"
+      );
+  }
   if (
     (review.audienceTagCodes?.length ?? 0) ||
     (review.audienceOrganizationIds?.length ?? 0)
@@ -110,15 +135,6 @@ export function canDecide(
     (action === "return" || projectReview(review, coverage).issues.length === 0)
   );
 }
-function canonical(value: unknown): string {
-  if (Array.isArray(value)) return `[${value.map(canonical).join(",")}]`;
-  if (objectValue(value))
-    return `{${Object.keys(value)
-      .sort()
-      .map(k => `${JSON.stringify(k)}:${canonical(value[k])}`)
-      .join(",")}}`;
-  return JSON.stringify(value);
-}
 /** Local confirmation comparison only; never sent as a new backend version/hash parameter. */
 export function reviewToken(review: PublishReview) {
   return canonical({
@@ -130,6 +146,7 @@ export function reviewToken(review: PublishReview) {
     status: review.status,
     submittedByUserId: review.submittedByUserId,
     snapshot: review.snapshot,
+    frozenMetricSets: review.frozenMetricSets ?? [],
     audienceTagCodes: review.audienceTagCodes,
     audienceOrganizationIds: review.audienceOrganizationIds
   });
