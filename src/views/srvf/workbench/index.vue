@@ -17,6 +17,7 @@ import { useWorkbenchDashboard } from "./utils/dashboard-hook";
 import AttendanceTrendChart from "./attendance-trend-chart.vue";
 import SetupProgressCard from "./setup-progress-card.vue";
 import PendingPublishReviews from "./publish-review/pending-list.vue";
+import SettlementList from "./settlement-list.vue";
 
 defineOptions({
   name: "SrvfWorkbench"
@@ -35,7 +36,10 @@ dayjs.locale("zh-cn", { weekStart: 1 });
 const canReadPublishReviews = computed(() =>
   hasPerms("activity-review.read.request")
 );
-const activeTab = ref<"registrations" | "attendances" | "publish">(
+const canReadSettlements = computed(() => hasPerms("attendance.read.sheet"));
+const activeTab = ref<
+  "registrations" | "attendances" | "publish" | "settlement"
+>(
   canReadPublishReviews.value && !hasPerms("activity-registration.read.record")
     ? "publish"
     : "registrations"
@@ -46,6 +50,8 @@ watch(
   task => {
     if (task === "publish" && canReadPublishReviews.value)
       activeTab.value = "publish";
+    if (task === "settlement" && canReadSettlements.value)
+      activeTab.value = "settlement";
   },
   { immediate: true }
 );
@@ -492,6 +498,14 @@ onMounted(() => {
     </div>
 
     <el-tabs v-model="activeTab" class="workbench-tabs">
+      <el-tab-pane
+        v-if="canReadSettlements"
+        label="结算审核"
+        name="settlement"
+        lazy
+      >
+        <SettlementList />
+      </el-tab-pane>
       <el-tab-pane
         v-if="canReadPublishReviews"
         label="活动发布审核"
