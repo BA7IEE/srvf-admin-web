@@ -144,7 +144,7 @@ export function useSrvfGlobalSearch() {
         items: data.items.map(m => ({
           type: "member" as const,
           id: m.id,
-          title: m.displayName,
+          title: m.realName?.trim() || m.label?.trim() || m.memberNo || m.id,
           subtitle: m.memberNo,
           statusValue: m.status,
           routeName: "SrvfMemberCockpit",

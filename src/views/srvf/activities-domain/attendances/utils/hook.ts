@@ -376,7 +376,12 @@ export function useAttendances(externalActivityId: string) {
   }
 
   function memberLabel(member: MemberItem) {
-    return `${member.displayName}（${member.memberNo}）`;
+    return (
+      member.label?.trim() ||
+      member.realName?.trim() ||
+      member.memberNo ||
+      member.id
+    );
   }
 
   function registrationLabel(row: RegistrationItem) {
