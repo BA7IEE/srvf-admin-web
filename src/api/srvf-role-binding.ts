@@ -213,12 +213,45 @@ export const previewRoleBinding = (params: CreateRoleBindingBody) =>
     { params }
   );
 
+export type EditorDraft = { id: string; title: string };
+
+export type EditorAppointment = {
+  activityId: string;
+  principalId: string;
+  roleId: string;
+  binding: {
+    id: string;
+    startedAt: string;
+    endedAt: string;
+    state: "ACTIVE" | "SCHEDULED" | "EXPIRED";
+  } | null;
+};
+
+export const getEditorDrafts = (page: number, pageSize: number) =>
+  http.request<Envelope<PageResult<EditorDraft>>>(
+    "get",
+    "/api/admin/v1/role-bindings/editor-drafts",
+    { params: { page, pageSize } }
+  );
+
+export const getEditorAppointment = (activityId: string) =>
+  http.request<Envelope<EditorAppointment>>(
+    "get",
+    `/api/admin/v1/role-bindings/editor-drafts/${activityId}`
+  );
+
 /** 新建角色绑定 `POST /api/admin/v1/role-bindings`（rbac: `role-binding.create.record`）。 */
-export const createRoleBinding = (body: CreateRoleBindingBody) =>
+export const createRoleBinding = (
+  body: CreateRoleBindingBody,
+  editorActivityId?: string
+) =>
   http.request<Envelope<RoleBindingItem>>(
     "post",
     "/api/admin/v1/role-bindings",
-    { data: body }
+    {
+      data: body,
+      ...(editorActivityId ? { params: { editorActivityId } } : {})
+    }
   );
 
 /** 更新角色绑定 `PATCH /api/admin/v1/role-bindings/{id}`（rbac: `role-binding.update.record`）。 */
@@ -230,10 +263,11 @@ export const updateRoleBinding = (id: string, body: UpdateRoleBindingBody) =>
   );
 
 /** 软删角色绑定（status=ENDED + endedAt + deletedAt,保历史）`DELETE /api/admin/v1/role-bindings/{id}`（rbac: `role-binding.delete.record`）。 */
-export const deleteRoleBinding = (id: string) =>
+export const deleteRoleBinding = (id: string, editorActivityId?: string) =>
   http.request<Envelope<RoleBindingItem>>(
     "delete",
-    `/api/admin/v1/role-bindings/${id}`
+    `/api/admin/v1/role-bindings/${id}`,
+    editorActivityId ? { params: { editorActivityId } } : undefined
   );
 
 export type RoleBindingBatchOutcome = "ok" | "blocked" | "already-exists";
