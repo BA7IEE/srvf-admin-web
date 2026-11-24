@@ -6,6 +6,8 @@ import { useRouter } from "vue-router";
 import { dayjs } from "element-plus";
 import { PureTableBar } from "@/components/RePureTableBar";
 import { hasPerms } from "@/utils/auth";
+import { useUserStoreHook } from "@/store/modules/user";
+import DraftEditorAppointments from "./draft-editor-appointments.vue";
 import { useMultiTagsStoreHook } from "@/store/modules/multiTags";
 import {
   useSrvfRecentsStoreHook,
@@ -41,6 +43,10 @@ const activeTab = ref<"registrations" | "attendances" | "publish">(
     : "registrations"
 );
 const router = useRouter();
+const editorPanelOpen = ref(false);
+const canAppointEditor = computed(() =>
+  useUserStoreHook().roles.includes("SUPER_ADMIN")
+);
 watch(
   () => router.currentRoute.value.query.task,
   task => {
@@ -349,6 +355,10 @@ onMounted(() => {
 
 <template>
   <div class="main">
+    <DraftEditorAppointments
+      v-if="canAppointEditor && editorPanelOpen"
+      @close="editorPanelOpen = false"
+    />
     <SetupProgressCard />
     <el-card shadow="never" class="summary-card">
       <template #header>
@@ -360,6 +370,16 @@ onMounted(() => {
             </div>
           </div>
           <div class="summary-header-actions">
+            <el-button
+              v-if="canAppointEditor"
+              data-testid="draft-editor-entry"
+              type="primary"
+              plain
+              size="small"
+              @click="editorPanelOpen = true"
+            >
+              草稿编辑任命
+            </el-button>
             <el-button
               v-for="action in quickActions"
               :key="action.path"
