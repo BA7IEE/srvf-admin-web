@@ -154,6 +154,7 @@ export function useMembers() {
   async function openDialog(title: "新建" | "编辑", row?: MemberItem) {
     await ensureGradeOptions();
     const isEdit = title === "编辑";
+    if (!isEdit) dict.ensureTypes(["join_source"]);
     addDialog({
       title: `${title}队员`,
       width: "42%",
@@ -167,6 +168,10 @@ export function useMembers() {
           isEdit,
           memberNo: row?.memberNo ?? "",
           displayName: row?.displayName ?? "",
+          realName: "",
+          nickname: "",
+          memberSinceDate: "",
+          memberOriginCode: "",
           gradeCode: row?.gradeCode ?? ""
         } as MemberFormModel,
         gradeOptions: gradeOptions.value
@@ -189,9 +194,13 @@ export function useMembers() {
               });
               message("修改成功", { type: "success" });
             } else {
+              const nickname = curData.nickname.trim();
               await createMember({
                 memberNo: curData.memberNo,
-                displayName: curData.displayName,
+                realName: curData.realName,
+                ...(nickname ? { nickname } : {}),
+                memberSinceDate: curData.memberSinceDate,
+                memberOriginCode: curData.memberOriginCode,
                 ...(curData.gradeCode ? { gradeCode: curData.gradeCode } : {})
               });
               message("新建成功", { type: "success" });

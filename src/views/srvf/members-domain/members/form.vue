@@ -2,6 +2,7 @@
 import { ref } from "vue";
 import ReCol from "@/components/ReCol";
 import type { FormRules } from "element-plus";
+import { useSrvfDictStoreHook } from "@/store/modules/srvfDict";
 
 /** 等级下拉选项（来自 type=member_grade 字典；为空数组 = 退化为文本输入） */
 export type MemberGradeOption = { label: string; value: string };
@@ -12,6 +13,10 @@ export type MemberFormModel = {
   isEdit: boolean;
   memberNo: string;
   displayName: string;
+  realName: string;
+  nickname: string;
+  memberSinceDate: string;
+  memberOriginCode: string;
   /** 等级字典 code（type=member_grade；可空） */
   gradeCode: string;
 };
@@ -26,6 +31,10 @@ const props = withDefaults(
       isEdit: false,
       memberNo: "",
       displayName: "",
+      realName: "",
+      nickname: "",
+      memberSinceDate: "",
+      memberOriginCode: "",
       gradeCode: ""
     }),
     gradeOptions: () => []
@@ -34,9 +43,35 @@ const props = withDefaults(
 
 const ruleFormRef = ref();
 const newFormInline = ref(props.formInline);
+const dict = useSrvfDictStoreHook();
 
 const rules: FormRules = {
-  memberNo: [{ required: true, message: "请输入队员编号", trigger: "blur" }],
+  memberNo: [
+    { required: true, message: "请输入队员编号", trigger: "blur" },
+    ...(newFormInline.value.isEdit
+      ? []
+      : [
+          {
+            pattern: /^[A-Za-z0-9-]{1,32}$/,
+            message: "队员编号只允许字母、数字和连字符",
+            trigger: "blur"
+          }
+        ])
+  ],
+  realName: [
+    { required: true, whitespace: true, message: "请输入姓名", trigger: "blur" }
+  ],
+  memberSinceDate: [
+    { required: true, message: "请选择发号日", trigger: "change" }
+  ],
+  memberOriginCode: [
+    {
+      required: true,
+      whitespace: true,
+      message: "请填写来源",
+      trigger: ["change", "blur"]
+    }
+  ],
   displayName: [
     { required: true, message: "请输入称呼 / 显示名", trigger: "blur" }
   ]
@@ -69,12 +104,57 @@ defineExpose({ getRef });
         </el-form-item>
       </re-col>
       <re-col>
-        <el-form-item label="称呼" prop="displayName">
+        <el-form-item
+          v-if="newFormInline.isEdit"
+          label="称呼"
+          prop="displayName"
+        >
           <el-input
             v-model="newFormInline.displayName"
             clearable
             maxlength="100"
             placeholder="称呼 / 显示名"
+          />
+        </el-form-item>
+        <el-form-item v-else label="姓名" prop="realName">
+          <el-input v-model="newFormInline.realName" maxlength="64" />
+        </el-form-item>
+      </re-col>
+      <re-col v-if="!newFormInline.isEdit">
+        <el-form-item label="队内称呼" prop="nickname">
+          <el-input
+            v-model="newFormInline.nickname"
+            clearable
+            maxlength="64"
+            placeholder="可选"
+          />
+        </el-form-item>
+        <el-form-item label="发号日" prop="memberSinceDate">
+          <el-date-picker
+            v-model="newFormInline.memberSinceDate"
+            type="date"
+            value-format="YYYY-MM-DD"
+            placeholder="选择发号日"
+          />
+        </el-form-item>
+        <el-form-item label="来源" prop="memberOriginCode">
+          <el-select
+            v-if="dict.options('join_source').length"
+            v-model="newFormInline.memberOriginCode"
+            placeholder="选择来源"
+          >
+            <el-option
+              v-for="option in dict.options('join_source')"
+              :key="option.value"
+              :label="option.label"
+              :value="option.value"
+            />
+          </el-select>
+          <el-input
+            v-else
+            v-model="newFormInline.memberOriginCode"
+            maxlength="64"
+            placeholder="来源字典码（join_source）"
           />
         </el-form-item>
       </re-col>

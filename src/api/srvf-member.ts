@@ -69,16 +69,16 @@ export const getMember = (id: string) =>
 
 /* ----------------------------- 队员 写操作 ----------------------------- */
 
-/**
- * 创建队员入参（后端 `CreateMemberDto`；字段以 `/api/docs-json` 为准）。
- * 后端"不接收任何敏感字段"——仅以下三项。
- */
+/** 创建队员入参（后端 CreateMemberDto）。 */
 export type CreateMemberBody = {
-  /** 业务唯一编号（必填；trim 后保存，保留大小写；字母 / 数字 / 连字符；长度 1-32） */
+  /** 唯一编号，1–32 位字母、数字或连字符。 */
   memberNo: string;
-  /** 称呼 / 显示名（必填；≤ 100） */
-  displayName: string;
-  /** 等级字典 code（可选；提供时须在 type=member_grade 字典中存在且 ACTIVE；≤ 64） */
+  realName: string;
+  nickname?: string;
+  /** 发号日，YYYY-MM-DD。 */
+  memberSinceDate: string;
+  /** join_source 字典码。 */
+  memberOriginCode: string;
   gradeCode?: string;
 };
 
