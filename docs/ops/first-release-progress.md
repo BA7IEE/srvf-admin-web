@@ -1,5 +1,21 @@
 # 首发进度快照
 
+## 11 月 26 日 17:26–17:31 · 主岗兼岗并存、职务与证书标准可逆路径已走通，队员端只读补测已覆盖
+
+本段按北京时间追记现网 wave10 的脱敏结果，17:06–17:13 及更早正文原样保留。现场管理端仍为限定留存 `f7985191`，队员端 H5 仍为 `3968b0bc`，API 仍为 `8a017348`。未重新部署、未合并、未正式对外开放。已收到移动端 Draft PR #12，仍为草稿，未合并、未部署。Draft PR #177 和移动端 Draft PR #12 均未计入现网或 `main` 头。未执行权限撤回，未清场。同一虚拟测试队员未改号、未另建，级别仍为 `volunteer`，本轮未再改 `gradeCode`。四场验收活动及其报名未改、未撤销，报名截止仍为 2099-09-30。未发送通知，未编造打卡二维码。Draft PR #1459、#1460、#1461、#1463 仍为审查草稿，未合并、未部署。事项 #1454、#1455 仍为 `PR_BLOCKED`，表单白名单仍归事项 #176。首发总任务未完成。
+
+**17:29 现网 wave10 主岗与兼岗。** 本轮使用的测试队员原有 0 条 `ACTIVE PRIMARY`，另有 1 条已结束的兼岗历史。新建两个测试子组织均为 201 / 0，分别新增 `PRIMARY` 主岗与 `SECONDARY` 兼岗也均为 201 / 0，列表确认两条归属同时为 `ACTIVE`。随后先结束兼岗，再结束本轮主岗，均为 200 / 0。两个子组织软删除均为 200 / 0，再读均为 404 / 11001。活跃主岗回到基线 0，回读确认本轮测试以外的既有归属无变动。
+
+**职务定义。** 新建唯一测试职务 `t240u-pos-c09434fe3b26`，类别为 `STAFF`，创建为 201 / 0，读取与改名均为 200 / 0，删除为 204，再读为 404 / 32001。既有职务未改，可选职务规则本轮未跑。
+
+**证书标准。** 验收库原先缺少官方 `cert_type`、`cert_sub_type` 和 `cert_status`。本轮经管理端按官方种子补齐并保留三类字典项，创建均为 201 / 0。`cert_type` 七项为 `first_aid`、`bsafe`、`outdoor`、`coach`、`comm`、`medical`、`other`。`cert_sub_type` 七项为 `bsafe_l1`、`bsafe_l2`、`first_aid_basic`、`first_aid_advanced`、`amateur_radio_a`、`amateur_radio_b`、`amateur_radio_c`。`cert_status` 四项为 `pending`、`verified`、`expired`、`rejected`。随后新建测试标准 `t240u_std_c09434fe3b26`（`CREDENTIAL`）为 201 / 0，读取与改名均为 200 / 0，删除为 204，再读为 404 / 18002。未给队员创建证书，未写入证件号。
+
+**队员端只读补测。** `/me`、`/me/account`、`/me/profile`、`/me/capabilities`、`/my/registrations`、`/my/activities`、`/my/certificates`、`/my/participation-ledger`、`/my/participation-summary`、`/my/attendance-records`、`/notifications` 以及可报名活动列表均为 200 / 0，级别仍为 `volunteer`。查询当前入队申请仍返回已知的 404 / 28202，未新开事项。未取消报名，未修改资料。
+
+**附件按归属查询。** `GET /api/admin/v1/attachments/by-owner?ownerType=member&ownerId=…` 已转到现网验证，返回 400 / 13010（归属类型不合法）。冻结契约中 `member` 属于已知的 `ownerType`，成功路径尚未走通，本批未作为已确认缺陷新开事项。未改存储配置，未做附件上传。覆盖缺口还包括附件上传与可选职务规则。
+
+**证据。** `wave10-functional-probe-receipt.json` 的 SHA-256 为 `7afb377a36b2ef183d748d35c191c9cf535dc29465a07f6bceedf172af1acc86`，`SHA256SUMS-mid12.txt` 的 SHA-256 为 `fe2681072f836735cab746af3605b46619f2b5735ea7bbb62ae57c9756d9047d`。既有 mid6–mid11 与 wave9 收据原样保留。
+
 ## 11 月 26 日 17:06–17:13 · 事项 1462 已开审查草稿，字典项与兼岗可逆路径已走通
 
 本段按北京时间追记事项 #1462 与现网 wave9 的脱敏结果，保留 16:33–16:40 及更早正文。现场管理端仍为限定留存 `f7985191`，队员端 H5 仍为 `3968b0bc`，API 仍为 `8a017348`。未重新部署，未合并，未正式对外开放，未把 Draft PR #177 当作现网或 `main` 头。未执行权限撤回，未清场。同一虚拟测试队员未改号、未另建，级别仍为 `volunteer`，本轮未再改 `gradeCode`。四场验收活动及其报名未改、未撤销，报名截止仍为 2099-09-30。未发送通知，未编造打卡二维码。Draft PR #1459、#1460、#1461 仍为审查草稿，未合并、未部署。事项 #1454、#1455 仍为 `PR_BLOCKED`。表单白名单仍归事项 #176。首发总任务未完成。
