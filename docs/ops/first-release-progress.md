@@ -1,5 +1,29 @@
 # 首发进度快照
 
+## 11 月 27 日 04:53–04:59 · H5 草稿场次容量与场次岗位定位覆盖走通并完成恢复
+
+本段按北京时间（Asia/Shanghai）追记脱敏结果，04:43–04:47 及更早正文原样保留。现场管理端仍为限定留存 `f7985191`，队员端 H5 仍为 `3968b0bc`，API 仍为 `8a017348`。未重新部署、未合并、未正式对外开放。Draft PR #177 和移动端 Draft PR #12 均未计入现网或 `main` 头。未执行整站权限撤回，未清场或重部署整站。同一虚拟测试队员未改号，未与其他真实身份混用，未发明证件号，未发短信或验证码。未改四场验收活动的 2099 截止，也未把那四场改成占用夹具所管，未取消那四场报名。未改存储设置，开关保持 `enabled=true`。未重放上传或确认上传。未重放 H5 创建活动，也未重发 wave37 待核实 POST。未做整站正式开放，未启用或发送微信/短信通知。未发明经纬度或 QR。Draft PR #1459、#1460、#1461、#1463 仍为审查草稿，未合并、未部署。事项 #1454、#1455 仍为 `PR_BLOCKED`。已保留的官方证书字典与官方附件类型配置均未删除、未改值。本轮未开启 `activityV11Workflow.enabled`，也未开启责任制全局开关，未做整站或全局工作流启用。未再新建活动类型种子，已停用类型种子只读确认仍为 INACTIVE，未临时启用，未硬删。未再为复现而批准 change-reviews，未再发非空报名表写入，未再走管理端模板版本选项，也未为复现再发 H5 报名列表或时长/贡献政策只读。defaultCheckInRadiusMeters、lateGraceMinutes、earlyLeaveThresholdMinutes、archiveWaitingDays、requiresInsurance、defaultLocationRequired 与单候选抽签不记为新覆盖。首发总任务未完成。
+
+**并行。** 启动即为 1 个唯一写者加 4 路不抢写者位的只读 Codex，共 5 路，模型均为 GPT-6.2 Sol / medium。只读分别做 503 取证、尚未走过的可写草稿字段预核、草稿字段之外的剩余路径预核、清场台账入口核对。写者未等只读结束即开始写入。
+
+**登录与本机启动过程。** 管理端与占用夹具官方 H5 各尝试 7 次、重试 6 次。两端前 6 次均在发出登录请求前、于 Chrome 配置目录检查阶段被拦，脱敏报错为 `EPERM / Operation failed during profile`，未发出登录请求。首次重试间隔 2 秒，随后间隔 3.5 秒；第 7 次两端登录与服务端登出均为 HTTP 200／业务码 0。此类启动阻拦不记为产品缺陷。已保留 mid57 过程改进：启动前检查并清理官方配置目录上可能残留的 SingletonLock/crashpad；失败后等待再试，连续 EPERM 时稍微加长间隔；失败时将脱敏后的 error.message 与错误码写入收据和运行日志。未改官方登录工具，未关掉 chromiumSandbox 或官方 fillLogin 约束。临时配置目录已清理。队员用户名与用户 ID 均匹配。官方登录工具哈希复核一致。
+
+**夹具级别。** 登录后先读回为 `volunteer`（HTTP 200／业务码 0）。本轮临时调到 `level-1`（改后读回 200／0），跑完改回 `volunteer`（改回读回 200／0）。
+
+**本轮新走通。** 本轮新建隔离草稿未发布。H5 场次容量 `capacity` 经 `PATCH /api/app/v1/my/managed-activities/:activityId/sessions/:sessionId` 为 200／0，场次列表独立 GET 读回确认；随后同一 PATCH 恢复原值，再 GET 确认已恢复。H5 场次岗位成组字段 `locationRequired` 与 `radiusMeters` 经 `PATCH /api/app/v1/my/managed-activities/:activityId/sessions/:sessionId/positions/:positionId` 为 200／0，岗位列表独立 GET 读回确认；本轮在不发明坐标的前提下验证了显式关闭定位并恢复继承，随后同一 PATCH 恢复原值，再 GET 确认已恢复。本轮测试场次岗位、场次随后删除，活动删除后管理端详情读回 404／20001。未把 mid37–mid63 已走通路径记为新覆盖。
+
+**本轮因条件跳过、不记为新覆盖。** 管理端活动级与活动级岗位、以及 H5 场次岗位的 `genderRequirementCode`，因本轮未核实到可用的活跃 `gender_requirement` 字典项或可恢复基线而跳过，未编造字典项。H5 场次级 `radiusMeters` 及成组 `locationRequired + radiusMeters` 因隔离场次缺少已核实的成对坐标基线而跳过，未发明经纬度。
+
+**已知卡点。** 运行时 DTO 与责任制/v1.1 单次请求生效配置仍未核实，无额外只读核实入口，未开启任何全局开关，未开事项。H5 报名列表 503／50300 与时长/贡献政策 403／40300 本轮未为复现再发，既有卡点仍在；首个失败操作仍未确认，四类 503 是否同源仍未判定，未开事项。草稿字段之外，授权范围内暂无新的可逆成功路径。协办与交接因缺少第二名获授权成员跳过；待审考勤单因缺少已核实考勤事实跳过。未另造队员，未发明签到凭证。
+
+**代签核实。** 本轮未扩大查询，沿用 mid60 完整检索 249 条且均为 200／0、未找到目标项的结果。未发明替代 ID，也未臆造作废或替代前置，该项继续待核实，未硬删。
+
+**写入与清理。** 发出业务写请求并成功回执 12 次，确认清理或恢复 4 项（测试场次岗位、测试场次、测试活动、夹具级别）。本轮无新增待清项。清理台账仍为 6 项，状态未变：wave36 留下的 2 条指标草稿仍无公开删除入口；1 条代签请求结果待核实；wave45 已退役的 2 条指标已读回仍为退役且无公开删除入口；已停用的测试/种子活动类型 `cmwxyo6u801u9ny01uwn8f07s` 公开删除受保护，且本轮只读确认仍为 INACTIVE。均未硬删。
+
+**13034。** 无新观测。未做受控诊断，未重放上传或确认。
+
+证据：`wave62-functional-probe-receipt.json` SHA-256 `1231eecf31d39e375972877939a0f68d131ef11be086134d2ef5f5e5a22c451d`；`wave62-cleanup-ledger.json` SHA-256 `7f5f4683de5d6c9e3136ffc4e2118be94f312acff24eef1017ebd8bfbcbf833e`；`official-t230-mid64-503-localization.json` SHA-256 `dadcb763abb9e333aadab7e80a31c99d53b4ccd87099816d3e98528b536d02dc`；`official-t230-mid64-draft-fields-contract.json` SHA-256 `f5124cc690905d9dfbd2249217721bfb1e7e3ef45bef72b01bd56f23fa906e1d`；`official-t230-mid64-path-contract.json` SHA-256 `830b958f32fe315dbd42d559b979698fb755d982316b6dc9f23380f8e789cb3b`；`official-t230-mid64-ledger-contract.json` SHA-256 `8bd6e73a61e49b882638723bd065212a8d8b2fe6794b062c3370914e063352c4`；`SHA256SUMS-mid64.txt` SHA-256 `5b5138db76456b71cb0c0c12900e09ba6f60a767944e5368457c564642e8d930`。mid6–mid63 未改写。
+
 ## 11 月 27 日 04:43–04:47 · 管理端默认签到半径与 H5 场次迟到宽限、早退阈值走通并完成恢复
 
 本段按北京时间（Asia/Shanghai）追记脱敏结果，04:33–04:39 及更早正文原样保留。现场管理端仍为限定留存 `f7985191`，队员端 H5 仍为 `3968b0bc`，API 仍为 `8a017348`。未重新部署、未合并、未正式对外开放。Draft PR #177 和移动端 Draft PR #12 均未计入现网或 `main` 头。未执行整站权限撤回，未清场或重部署整站。同一虚拟测试队员未改号，未与其他真实身份混用，未发明证件号，未发短信或验证码。未改四场验收活动的 2099 截止，也未把那四场改成占用夹具所管，未取消那四场报名。未改存储设置，开关保持 `enabled=true`。未重放上传或确认上传。未重放 H5 创建活动，也未重发 wave37 待核实 POST。未做整站正式开放，未启用或发送微信/短信通知。未发明经纬度或 QR。Draft PR #1459、#1460、#1461、#1463 仍为审查草稿，未合并、未部署。事项 #1454、#1455 仍为 `PR_BLOCKED`。已保留的官方证书字典与官方附件类型配置均未删除、未改值。本轮未开启 `activityV11Workflow.enabled`，也未开启责任制全局开关，未做整站或全局工作流启用。未再新建活动类型种子，已停用类型种子只读确认仍为 INACTIVE，未临时启用，未硬删。未再为复现而批准 change-reviews，未再发非空报名表写入，未再走管理端模板版本选项，也未为复现再发 H5 报名列表或时长/贡献政策只读。archiveWaitingDays、requiresInsurance、defaultLocationRequired 与单候选抽签不记为新覆盖。首发总任务未完成。
