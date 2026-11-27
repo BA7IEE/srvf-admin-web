@@ -11,6 +11,7 @@ import type { FormInstance } from "element-plus";
 import { useLayout } from "@/layout/hooks/useLayout";
 import { useUserStoreHook } from "@/store/modules/user";
 import { initRouter, getTopMenu } from "@/router/utils";
+import { resolvePostLoginPath } from "./utils/pathAfterLogin";
 import { bg, avatar, illustration } from "./utils/static";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
 import { useDataThemeChange } from "@/layout/hooks/useDataThemeChange";
@@ -58,7 +59,11 @@ const onLogin = async (formEl: FormInstance | undefined) => {
           // 获取后端路由
           await initRouter();
           disabled.value = true;
-          router.push(getTopMenu(true).path).then(() => {
+          const nextPath = resolvePostLoginPath(
+            router.currentRoute.value.fullPath,
+            getTopMenu(true).path
+          );
+          router.push(nextPath).then(() => {
             message("登录成功", { type: "success" });
           });
         })
