@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import Motion from "./utils/motion";
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { message } from "@/utils/message";
 import { loginRules } from "./utils/rule";
 import { ref, toRaw, reactive } from "vue";
@@ -11,7 +11,7 @@ import type { FormInstance } from "element-plus";
 import { useLayout } from "@/layout/hooks/useLayout";
 import { useUserStoreHook } from "@/store/modules/user";
 import { initRouter, getTopMenu } from "@/router/utils";
-import { resolvePostLoginPath } from "./utils/pathAfterLogin";
+import { resolvePostLoginPath, takePostLoginTarget } from "./utils/pathAfterLogin";
 import { bg, avatar, illustration } from "./utils/static";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
 import { useDataThemeChange } from "@/layout/hooks/useDataThemeChange";
@@ -27,6 +27,7 @@ defineOptions({
 });
 
 const router = useRouter();
+const route = useRoute();
 const loading = ref(false);
 const disabled = ref(false);
 const ruleFormRef = ref<FormInstance>();
@@ -61,7 +62,8 @@ const onLogin = async (formEl: FormInstance | undefined) => {
           disabled.value = true;
           const nextPath = resolvePostLoginPath(
             router.currentRoute.value.fullPath,
-            getTopMenu(true).path
+            getTopMenu(true).path,
+            takePostLoginTarget(route.query.redirect)
           );
           router.push(nextPath).then(() => {
             message("登录成功", { type: "success" });
