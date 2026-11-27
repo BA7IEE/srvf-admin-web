@@ -30,7 +30,11 @@ export function sanitizeInternalTarget(
     return undefined;
   }
   value = value.trim();
-  if (!value.startsWith("/") || value.startsWith("//") || value.includes("\\")) {
+  if (
+    !value.startsWith("/") ||
+    value.startsWith("//") ||
+    value.includes("\\")
+  ) {
     return undefined;
   }
   if (value.includes("://")) return undefined;
