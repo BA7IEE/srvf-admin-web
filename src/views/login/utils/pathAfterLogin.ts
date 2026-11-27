@@ -52,7 +52,9 @@ export function clearPostLoginTarget(): void {
   sessionStore()?.removeItem(POST_LOGIN_TARGET_KEY);
 }
 
-export function takePostLoginTarget(queryRedirect?: unknown): string | undefined {
+export function takePostLoginTarget(
+  queryRedirect?: unknown
+): string | undefined {
   const raw = Array.isArray(queryRedirect) ? queryRedirect[0] : queryRedirect;
   const fromQuery = sanitizeInternalTarget(
     typeof raw === "string" ? raw : undefined

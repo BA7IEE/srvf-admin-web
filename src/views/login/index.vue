@@ -11,7 +11,10 @@ import type { FormInstance } from "element-plus";
 import { useLayout } from "@/layout/hooks/useLayout";
 import { useUserStoreHook } from "@/store/modules/user";
 import { initRouter, getTopMenu } from "@/router/utils";
-import { resolvePostLoginPath, takePostLoginTarget } from "./utils/pathAfterLogin";
+import {
+  resolvePostLoginPath,
+  takePostLoginTarget
+} from "./utils/pathAfterLogin";
 import { bg, avatar, illustration } from "./utils/static";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
 import { useDataThemeChange } from "@/layout/hooks/useDataThemeChange";
