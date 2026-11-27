@@ -1,5 +1,77 @@
 # 首发进度快照
 
+## 2026-11-28 首发总账（约 00:10，Asia/Shanghai）
+
+### 一、工作流程与接手顺序
+
+先对照下表核实 GitHub 头、现场资源版本和当前写者。首发验收仍在进行，尚未正式对公开放。本文记录采用 Asia/Shanghai。下方历史段落保留当时的观察范围。
+
+| 端 | 验收站最近观察或交接状态 | GitHub 对照 |
+| --- | --- | --- |
+| API | 现场冻结 `8a017348d4b8a642d673de539533fa8b1b750865`。T188 日志候选已回滚，API 更新和恢复预算均已用尽，不得再切。E4 仍为 off。 | 按[冻结提交](https://github.com/BA7IEE/srvf-nest-api/commit/8a017348d4b8a642d673de539533fa8b1b750865)及下方 API 事项接续。禁止改开关或 API 容器。 |
+| 管理端 | 本文采用的现场观测（含 wave96）来自 `e54dfb49` 加 Draft PR 177 热修，限定留存为 `f7985191b9af7c8ad0654cef31bc83552a1ef3d9`。t325u–t327u 正推进 178/179/180 的验收站部署，本轮未核实公网资源已更新。 | GitHub `main` 已含下列三个合并提交。177 和 f798 只按热修及留存记录使用，禁止以它们作为 `main` 头推送。 |
+| 队员端 H5 | 现网曾留存 `3968b0bc8edfc26cd0c3a435576c5b4a8b40e382`（`fix/managed-registration-direct-read`）。t325u–t327u 正推进 PR 13 的验收站部署，本轮未核实公网资源已更新。没有另行授权时，禁止部署 [PR 12 视觉升级](https://github.com/BA7IEE/SRVFMobileWeb/pull/12)。 | [Draft PR 13「接通本人保险和邀请活动考勤直达」](https://github.com/BA7IEE/SRVFMobileWeb/pull/13)头 `09489036e8f6dbbcf13faeb1be6a0da45eaf039a`，基于上表所列 3968 提交，仍为草稿、未合并。两项 CI check 于 2026-11-27 23:59:26、23:59:34 Asia/Shanghai 完成，均为 `COMPLETED / SUCCESS`。 |
+
+管理端三个合并时间均为 2026-11-27 Asia/Shanghai。公网生效待核。
+
+| 合并时间 | PR | 合并提交 |
+| --- | --- | --- |
+| 21:44:43 | [PR 178 修复路由页多根节点导致离开即白屏](https://github.com/BA7IEE/srvf-admin-web/pull/178) | `c5d2799fd72895c5e7f8039ff5b84bb751a73897` |
+| 21:45:09 | [PR 179 修复全局布局窄屏溢出与标识溢出](https://github.com/BA7IEE/srvf-admin-web/pull/179) | `35192ea3e20378f4012167b0fdde2ed87011402b` |
+| 21:47:46 | [PR 180 修复活动列表列序与系统设置文案及卡片键盘可达](https://github.com/BA7IEE/srvf-admin-web/pull/180) | `43f0fca731e9165ecac2cb97ddfd23de20aee661` |
+
+**仓库与本机对照。** 用户主克隆 `/Users/dengwang/Documents/coding/srvf-admin-web` 的本地 `main` 只读核对仍在 `2626116889affe3bda3758f7ed1ce006272503bf`（[PR 172](https://github.com/BA7IEE/srvf-admin-web/pull/172) 合并点）。本任务不 fetch 或修改主克隆。[Draft PR 177 建档表单](https://github.com/BA7IEE/srvf-admin-web/pull/177) 已推送，头 `02a9bd2362d8bb58eb847ca3d6160d6cecf29cc4`，分支 `fix/t179u-member-create-contract`，对应工作树 `/private/tmp/srvf-t179u-apply-main`。H5 保险和邀请考勤修复也已推送至 Draft PR 13。本轮清点未发现另有已完成但完全未推 GitHub 的产品修复。临时探针、回执目录和 wave 工作树只作受控材料。[Draft PR 175](https://github.com/BA7IEE/srvf-admin-web/pull/175) 只收文档，保持 draft，禁止合并。
+
+1. **确认授权及唯一写者。** 验收站同一时刻只允许一名业务写者。文档同步不占写者位或 t95，不抢 t325u–t327u 的前端部署。授权复验时先核公网页面及静态资源对应的实际提交，再按问题清单从仍未通过的步骤续接。CI、已合 main、现场资源生效和业务回归分别记结果。
+2. **官方登录与可逆写入。** 使用既定官方登录及保管工具，前后复核哈希一致。近期 helper SHA-256 `5f11b7784417ef3cdbce6a95644199d95e2eec157ca97a86da9852e1fce3d00e`。本任务不改工具，不占用 t95（protected-login 会强制使用 t95 profile），保留 ChatGPT.app PID 61139。后续业务写只用隔离对象，写后独立读回，可撤销写及时撤销，夹具用后改回 `volunteer`。禁止硬删保护对象、编造法定证件号、发短信、改四场 2099 验收活动，以及将未审查补丁直接打到现网。
+3. **封存证据。** 功能回执与 SHA256SUMS 留在官方 Mac 的受控目录，例如 `/private/tmp/srvf-t230u-live-test/` 和 `/Users/dengwang/Documents/srvf-handoff-evidence/`。仓库只收文件名、SHA-256 和脱敏结论。查不到回执时保留未证实状态。
+4. **接续门禁。** 不自动合并或正式对公开放。[API #1454](https://github.com/BA7IEE/srvf-nest-api/issues/1454)、[API #1455](https://github.com/BA7IEE/srvf-nest-api/issues/1455) 仍受阻时先搁置。[PR 1460](https://github.com/BA7IEE/srvf-nest-api/pull/1460) 不单独合并。[PR 1463](https://github.com/BA7IEE/srvf-nest-api/pull/1463) 的分片 3 和汇总检查仍红，关联一组先不落地，保留超时和门禁。E4 保持 off。验收站 API 冻结边界继续有效。
+
+### 二、已通过或已走通的证据
+
+以下均为 2026-11-27 Asia/Shanghai。通过范围以对应回执及独立读回为限。
+
+| 时间 | 分类与结论 | 收据文件名及 SHA-256 |
+| --- | --- | --- |
+| 12:44–12:51 | 官方分配 `/commit` 已走通，HTTP 200／0，独立 GET 读回 `committed`。收据分类 `WAVE70_NO_NEW_SUCCESS` 的覆盖计数漏记了该提交，详见历史专段。14:51–15:02 同一路径作为前置再次走通，200／0，独立读回已提交。 | `wave70-functional-probe-receipt.json` `3f008e7250312de913d217e0850f64f061d8d2e6c13e82dbb684e198690af336`，复核见下列 wave74 收据。 |
+| 14:51–15:02 | `WAVE74_PARTIAL`。官方 `publish-reviews` 提交和批准均 200／0，保留为后来 42501 之前的通过证据。官方 QR 签发 201／0、SVG 渲染未回显 token、本人签到 201／0、`my-punch-state` 200／0，100 米半径内正例走通。涉及 `official_check_in_qr`、`self_check_in`、`session_radius_inside`。 | `wave74-functional-probe-receipt.json` `2eaffa1fab9a69dd058463c0c8f8461789172544fa244d837d55749e677d45b1` |
+| 15:23–15:30 | `WAVE75_PARTIAL`。路径乙的 T305U-VIRT-01 至 12 全部建档并绑定成功。该段当场单独验了其中 3 人登录与登出，其余遇限流，见历史正文。 | `wave75-functional-probe-receipt.json` `9dbe2aed832898f6af6b3bda94b7b3ed523c6dc19dec770c611f707d3fa67e38` |
+| 15:49–16:25（mid79） | `WAVE77_PARTIAL`。交接与交回均已独立读回，2 人录取、1 人 `waitlisted`／第 1 位。半径外按预期拒绝，HTTP 400／22091，读回 `isPresent=false`。代签与人工确认均 201／0 并读回。 | `wave77-functional-probe-receipt.json` `bdb471ae1ed26083208525eb82faa74602c041cce7861959297c6ffc1cea64ed` |
+| 17:48–17:51（mid82） | `WAVE80_VERIFIED`。另一个隔离样本再次走通半径外拒绝 400／22091、代签和人工确认（均 201／0，独立读回）。结算为只读，关闭 E4 的现场未强行关账。 | `wave80-functional-probe-receipt.json` `3908d201e33ba8d19351e339dcff5e4854bce5a2f2da2e63b9ee49298ee9f5fa` |
+| 19:00–19:03（mid85） | `WAVE83_VERIFIED`。管理端协办 POST 201／0，撤销 200／0。负责人移交和恢复均 200／0。发起人移交 403／20020，记录为该组织无此权。 | `wave83-functional-probe-receipt.json` `5c36cd21c6e8a3b63a6ced3b270878a0ab9514aea5d2795c83839f2a9e847796` |
+| 19:16–19:23（mid86） | `WAVE84_PARTIAL`。陈旧草稿官方归档 POST 200／0，`reasonCode=stale_draft`，恢复 POST 200／0，痕迹保留。同轮在隔离活动 `cmwyw7s9l01cpny01awv81xtz` 备好考勤场次，功能收据截至提审前。 | `wave84-functional-probe-receipt.json` `fc6c87456eed0b48cd6d99ee3e1b51d1ff8a8197cac78439e071f09afd6542ab` |
+| 19:39:10–19:39:38 | 官方权限目录补齐 25→273，按冻结 8a 种子补足 248 码。SUPER_ADMIN 有效权限同会话复查和退出后重登均为 273，缺口为 0。旧会话刷新页面拿不到完整权限，续验时需重新登录。 | `receipt.json` `64449f705e3078a5a58c68b98259c3f30e024f0aa243cd067cb0617e579de79f`，说明 `receipt.md` `b192b0ffdc4d7a224ccc7f4b05d2fbbdb76fcdc0224487ad75b144efa5677e01`（受控 T315U 管理权限交接） |
+| 20:31:42–20:34:54 | `WAVE85_RESUME_PARTIAL`。在同一 WAVE84 隔离活动续用已核签到。最后一次签退 201／0，读回已确认，码已撤销，夹具恢复。考勤表创建确认仍受阻，后续汇总差异见 API #1465。 | `wave85-resume-checkout-receipt.json` `08507ff1d4e0e710f5d7728e612de2e477c049fa38635d04b9dc24ac9d360dab`，确认签退见 `wave85-resume-checkout-receipt-4.json` `fddb7c07321ca33bab57b40b3e5fe1f6844c00d803cfd5aa66f6a2a24912633e` |
+| 21:34:41–21:35:54（wave88） | 桌面 H5 Issue 9、10 均 PASS。9 覆盖既有录取只读、状态和管理名单一致性，新录取 NOT_RUN。10 覆盖工作台、负责列表和直达报名管理。为 T305U-VIRT-01 建立隔离协办 201／0 后撤销 200／0。业务写 2。Issue 8、真机、微信均 NOT_RUN。 | `official-t230-wave88-h5-8910-note.json` `5ffbbc09863b1e5689776df994e68b4cdfba2be16ddb19e7378cc07d494d0502`，说明 `official-t230-wave88-h5-8910-note.md` `7cd6841e3cd00c01d88f4eb783b9b8b33e86cbbabc4d43371bb0bde4098dc45c` |
+| 21:44:43–21:47:46 | 管理端 PR 178／179／180 已合入 GitHub main。验收站公网生效待核。 | GitHub 合并时间及提交标识见第一节。 |
+
+wave91–96 的已走通桌面和只读项、业务写次数及收据见下方逐轮记录。
+
+### 三、未通过、受阻及未跑项
+
+- **发布审核批准受阻。** 2026-11-27 22:10:25、22:15:45、22:15:53、22:16:09、22:16:33 Asia/Shanghai，`POST /api/admin/v1/activity-publish-reviews/cmwz26jnx02b0ny01itbub0fm/approve` 五次均返回 503／50300。现有日志命中过滤器映射 SQLSTATE `42501`，原始 PG／Prisma 码、操作及对象仍未知。同期同秒报名表 PUT 成功，该路径也对 Activity 做 `FOR UPDATE`，不足以把失败归结为缺少 Activity UPDATE 或表单表 SELECT／INSERT。T186 可观测补丁未部署，冻结 8a 的业务逻辑缺陷未确认。回执 `official-t230-wave90-followup-note.json` SHA-256 `18f5a13a55c06aae332b57d1d05726839c295715bb513d5402baa03d30606973`。[API #1464](https://github.com/BA7IEE/srvf-nest-api/issues/1464)
+- **v1.1 打卡后汇总仍缺记录。** 2026-11-27 20:47:11–20:47:14 Asia/Shanghai（`WAVE86_PARTIAL`），官方 QR 自签到、签退已确认，管理端仍读到 `attendeeCount=0`、时长及积分为 0、`participation-ledger` 为空。旧 `attendance-sheet-draft` 把已打卡队员列为缺席，时长证明 503／20235。E4 仍 off，冻结 8a 的业务逻辑缺陷未确认。回执 `wave86-v11-attendance-entry-receipt.json` SHA-256 `2b89afe146d4ec031ce9a2bdb48466ac1523d6fa825932cc16299baae7265e97`。[API #1465](https://github.com/BA7IEE/srvf-nest-api/issues/1465)
+- **队员端缺邀请列表读取。** wave95 的 `GET /api/app/v1/my/activity-invitations` 返回 404／40400。现场该路径仅有 accept／decline 写接口。回执 `official-t230-wave95-desktop-note.json` SHA-256 `9203f54727bf9a4e26153631df4bdbac9fa03f479e1647629ab2aad2f7b2c691`。[API #1466](https://github.com/BA7IEE/srvf-nest-api/issues/1466)
+- **管理端归属总表入口待复查。** wave96 现场 `#/srvf/org-hr/memberships` 回到首页，未落到归属总表。这次观测使用部署 178／179／180 之前的现场头，新资源生效后待复验。回执 `official-t230-wave96-desktop-note.json` SHA-256 `9064f7dfb8c2c3af46008193101b6cce4ee9f1628394b2d5a0e72ae48e42d965`。[管理端 #181](https://github.com/BA7IEE/srvf-admin-web/issues/181)
+- **H5 本人保险和邀请制考勤直达待交付。** 本人保险 API 直读 200／0，旧页面未接入口。邀请制活动的目录详情 404 符合可见性口径，但旧 H5 已录取队员的考勤页依赖该详情，未能打开。接手先核 13 的候选资源和现场头，再用已有合规样本复验两个入口。PR 13 仍为 draft、CI 绿，部署未核实。[H5 Draft PR 13](https://github.com/BA7IEE/SRVFMobileWeb/pull/13)
+- **H5 报名表版本失效刷新 NOT_RUN。** wave89 过期样本未建成，未触发 21036 或验证刷新。其后复查未重放批准，待批准路径恢复并有可逆样本再续。真机／微信仍为 NOT_RUN。[H5 #8](https://github.com/BA7IEE/SRVFMobileWeb/issues/8) · [批准受阻 API #1464](https://github.com/BA7IEE/srvf-nest-api/issues/1464)
+- **继续跟踪已开事项，不重复立项。** H5 #9／#10 桌面已 PASS，修复合入或交付未闭合，事项仍开。[H5 #9](https://github.com/BA7IEE/SRVFMobileWeb/issues/9) · [H5 #10](https://github.com/BA7IEE/SRVFMobileWeb/issues/10)
+- **旧 API 和管理端工作项。** 1454／1455 继续按受阻处理，1456／1457／1458 分别跟踪 1459／1460／1461 审查稿，1462 跟踪 1463。建档表单白名单与候选修复沿用管理端 176／177。[API #1454](https://github.com/BA7IEE/srvf-nest-api/issues/1454) · [#1455](https://github.com/BA7IEE/srvf-nest-api/issues/1455) · [#1456](https://github.com/BA7IEE/srvf-nest-api/issues/1456) · [#1457](https://github.com/BA7IEE/srvf-nest-api/issues/1457) · [#1458](https://github.com/BA7IEE/srvf-nest-api/issues/1458) · [#1462](https://github.com/BA7IEE/srvf-nest-api/issues/1462) · [PR 1459](https://github.com/BA7IEE/srvf-nest-api/pull/1459) · [PR 1460](https://github.com/BA7IEE/srvf-nest-api/pull/1460) · [PR 1461](https://github.com/BA7IEE/srvf-nest-api/pull/1461) · [PR 1463](https://github.com/BA7IEE/srvf-nest-api/pull/1463) · [管理端 #176](https://github.com/BA7IEE/srvf-admin-web/issues/176) · [管理端 Draft PR 177](https://github.com/BA7IEE/srvf-admin-web/pull/177)
+
+## wave88–wave96 追记
+
+每轮时间均为 2026-11-27 Asia/Shanghai。使用无 attempt 后缀的正式回执。业务写不含登录、登出。真机及微信均未验。
+
+- **wave88 · 21:34:41–21:35:54。** H5 #9／#10 桌面 PASS，#8 和新录取 NOT_RUN。隔离活动可逆协办 POST 201／0，撤销 200／0，业务写 2。`official-t230-wave88-h5-8910-note.json` SHA-256 `5ffbbc09863b1e5689776df994e68b4cdfba2be16ddb19e7378cc07d494d0502`，`official-t230-wave88-h5-8910-note.md` SHA-256 `7cd6841e3cd00c01d88f4eb783b9b8b33e86cbbabc4d43371bb0bde4098dc45c`。
+- **wave89 · 22:15:43–22:16:33。** H5 #8 NOT_RUN。隔离准备阶段有写入，正式 JSON 的业务写计数为 7，Markdown 的「无写入」与该计数不一致。批准 503／50300，活动留在草稿，旧版样本未建成。H5 未提交报名、未见 21036、未验证版本刷新，后续复查未重放批准。`official-t230-wave89-h5-issue8-note.json` SHA-256 `60b93c62006d36694aee7bf32d3f7521526e06b8e02db9a9b4287de2eb72e1b1`，`official-t230-wave89-h5-issue8-note.md` SHA-256 `ec5c90c1273189ccd362e8016acf2c176ed0f80106769e96d6d8b63bc0e5f31a`。
+- **wave90 · 22:28:26–22:28:28，补读至 22:30:02。** 只读核对已有日志，五次批准和一次报名表 GET 均进入特权拒绝映射，原始对象未知。另走通 5 条只读，9 条仍受阻，时间政策相关读继续 403。未重放批准，业务写 0。`official-t230-wave90-followup-note.json` SHA-256 `18f5a13a55c06aae332b57d1d05726839c295715bb513d5402baa03d30606973`。[API #1464](https://github.com/BA7IEE/srvf-nest-api/issues/1464)
+- **wave91 · 22:52:26–22:52:35，补读至 22:54:02。** 协办创建 201／0、撤销 200／0，业务写 2，活动标题、状态和时间未变。2099 活动 GET 与桌面详情可读，WAVE84 目录详情 404，没再重放批准。未定位 42501 原始对象。`official-t230-wave91-desktop-note.json` SHA-256 `1dc23fa9e36843430d871cfaf7b76053bbe29896724c3e683fb5b084eff160f2`。
+- **wave92 · 23:14:14–23:14:24。** 邀请可见性目录详情 404 符合预期。旧 H5 已录取队员的考勤页仍依赖该详情。本人保险页未接 `getMyOverview`，API 直读 200／0。业务写 0。`official-t230-wave92-desktop-note.json` SHA-256 `d46529b8c92eeec1101ee0bd898031f9cfe3d7200a734dd19c62cf5eb4ced94b`。[H5 Draft PR 13](https://github.com/BA7IEE/SRVFMobileWeb/pull/13)
+- **wave93 · 23:20:39–23:20:47。** 桌面账户、隐私说明及 2099 报名页可打开，详情、岗位和报名保险条件均 200。未提交报名。样本无该场已录取报名，`my-punch-state` 返回 400／22076。业务写 0。`official-t230-wave93-desktop-note.json` SHA-256 `26fde871f2d259ff8589eca071137c89e3a8886466d67638fad790b8058f3f23`。
+- **wave94 · 23:28:41–23:28:43。** 桌面考勤 UI NOT_RUN。现有已录取样本均属七场邀请制活动，旧 H5 目录详情 404／20001。四场 2099 样本均无已录取报名。跨活动报名和管理端活动详情等只读成功，业务写 0。`official-t230-wave94-desktop-note.json` SHA-256 `84c4a9fd105accd37a1031a8f1f3946eb5de039f741248934706d9829f5f28a0`。
+- **wave95 · 23:39:50–23:40:07。** 管理端首页、审批工作台、活动列表、队员列表、个人中心及使用手册打开，审核只读。H5 工作台和负责列表展示空态，邀请列表 GET 404／40400。拦截 1 次非 GET，业务写 0。`official-t230-wave95-desktop-note.json` SHA-256 `9203f54727bf9a4e26153631df4bdbac9fa03f479e1647629ab2aad2f7b2c691`。[API #1466](https://github.com/BA7IEE/srvf-nest-api/issues/1466)
+- **wave96 · 23:43:27–23:43:46，补读至 23:45:31。** 组织树、归属与任命、角色绑定、职责草稿、活动报名与参与汇总、审计日志等只读走通。归属体检、任命、字典、队员档案、活动详情、参与月报、审批工作台等可打开。旧现场头的归属总表路由回首页，部署后待核。审批工作台未批准，业务写 0。`official-t230-wave96-desktop-note.json` SHA-256 `9064f7dfb8c2c3af46008193101b6cce4ee9f1628394b2d5a0e72ae48e42d965`。[管理端 #181](https://github.com/BA7IEE/srvf-admin-web/issues/181)
+
 ## 11 月 27 日 19:27 · mid87 点名（wave84 归档写回）
 
 本段按北京时间（Asia/Shanghai）追记脱敏结果，19:16–19:23 及更早正文原样保留。现场管理端仍为限定留存 `f7985191`，队员端 H5 仍为 `3968b0bc`，API 仍为 `8a017348`。未重新部署、未合并、未正式对外开放，未清场，未改开关，未改存储设置，E4 仍为 off。未发明法定证件号，未发短信。未硬删既有保护对象或补种角色，也未作废已成功的代签与人工确认。未改四场 2099 验收活动。官方登录工具哈希未变。PID 61139 未杀。Draft PR 仍为审查草稿，未合并、未部署。首发总任务未完成。
@@ -1778,6 +1850,8 @@ Linux 实际交换、页面、真机、换版恢复和录取缺行提示均为 *
 当前剩余（仍未完成首发）：正式入口已解阻，管理端建档必填材料类别已核清，但建档开户尚未用真实材料提交验收，t175 仍待用户交付真实材料，现有测试活动规则清单仍未核清；字典等接口 503 仍只记录、未补列权；已部署 H5 的两项真实页面行为与真机验收；H5 主线合并仍待决定；四条源站附属 503 仍开放；启用态受众标签正例仍缺；通知、后台任务、对象存储和正式对队员开放未做；678 个规格操作中绝大多数仍缺正式真域验收。本机累计 351 个业务正例和此前 9 条真域 GET 通过，都不能改记为 UI、真机或正式开放通过。
 
 ## 换环境时如何续接
+
+旧续接里的现场版本叙述以文首 2026-11-28 总账（Asia/Shanghai）为准。
 
 1. 先读本文件的最新版本（本 Draft 文档分支；若已更新，以同一路径的最新提交为准）。
 2. 现场仍保留的产品版本是：管理端限定留存 [`f7985191b9af7c8ad0654cef31bc83552a1ef3d9`](https://github.com/BA7IEE/srvf-admin-web/commit/f7985191b9af7c8ad0654cef31bc83552a1ef3d9)，原 [`e54dfb49e329c0d869e64783d450e296ab6302ea`](https://github.com/BA7IEE/srvf-admin-web/commit/e54dfb49e329c0d869e64783d450e296ab6302ea)（[PR #174](https://github.com/BA7IEE/srvf-admin-web/pull/174)）留在恢复槽且未执行恢复；队员端限定留存 `3968b0bc8edfc26cd0c3a435576c5b4a8b40e382`。现场 API 仍为 `8a017348d4b8a642d673de539533fa8b1b750865`。T188 日志候选已回滚，该 API 更新/恢复预算已用尽，不得再切。
