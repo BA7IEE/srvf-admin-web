@@ -1,5 +1,38 @@
 # 首发进度快照
 
+## 2026-11-28 01:37:24–01:39:57 · Draft PR 182 部署复测入档，并部署 Draft PR 183 产品回跳修复（Asia/Shanghai）
+
+本段追记两件事：把已经完成的 Draft [PR 182](https://github.com/BA7IEE/srvf-admin-web/pull/182) 验收站部署与复测证据写入本文；以及在新开的 Draft [PR 183](https://github.com/BA7IEE/srvf-admin-web/pull/183) CI 变绿之后，部署管理端产品回跳修复并完成桌面复测。mid87 及更早正文逐字节保留；上文 t325／wave98 段落未改写。未合并 Draft PR 175／177／13／182／183，未把 f798 或 177 当作 `main` 头，未改动已打开的 PR 182（头仍为 `6af0caeaf0771fb6c5e45102d164ffa8ad0e99ff`），未部署 H5 [PR 12](https://github.com/BA7IEE/SRVFMobileWeb/pull/12)，未重启 API 容器，未改开关，E4 仍为 off。首发总任务未完成。
+
+### Draft PR 182 部署与复测（已发生，此处只入档）
+
+当时现网管理端为 GitHub `main` `43f0fca731e9165ecac2cb97ddfd23de20aee661` + 未推送的 Draft [PR 177](https://github.com/BA7IEE/srvf-admin-web/pull/177) 四个建档补丁文件（本地 cherry-pick `beb9494d018248a4686dbeef8c482338d529b384`）+ Draft PR 182 头 `6af0caeaf0771fb6c5e45102d164ffa8ad0e99ff`（本地组合 `c0c9d9eff8afc6d623f9adfc4cbf6c147bafe1b5`）。H5 仍为 Draft [PR 13](https://github.com/BA7IEE/SRVFMobileWeb/pull/13) `09489036e8f6dbbcf13faeb1be6a0da45eaf039a`。API 仍冻结 `8a017348d4b8a642d673de539533fa8b1b750865`。
+
+- 部署回执 `/private/tmp/srvf-t230u-live-test/official-t332-accept-admin-182-deploy-note.json`，SHA-256 `19274733d22d2b279521dd304b6919c32c64171da139d3a4f8a854e09737197f`。
+- 复测回执 `/private/tmp/srvf-t230u-live-test/official-t332-accept-admin-182-retest-note.json`，SHA-256 `b4f5eac260bc3d74fe2f77b2e638581c440c92e830d588e60de7540f43927871`。
+- 登录站稳后再打开归属总表 PASS，组织架构 PASS。登录成功后立刻哈希直达归属总表仍 FAIL（约 2 秒后仍停在 `/#/welcome`）。182 在 `initRouter` 后读一次当前路径，盖不住「当前仍是 `/login`、但登录前目标已可知」的窗口。
+
+### Draft PR 183（产品回跳，未改 182）
+
+新分支 `fix/login-preserve-target` 从 182 的分支再开，单独提交，未向 182 追加提交，也未 force-push。Draft [PR 183](https://github.com/BA7IEE/srvf-admin-web/pull/183) 头 `bb48b90024dbd28a8572e5dac91922bbc7b0764d`，base 为 `main`，仍为 draft。修复是产品回跳：未登录访问 `#/srvf/org-hr/memberships`（或登录页已带目标哈希／`redirect`）时，登录成功后应落到归属总表，而不是无条件 `router.push(getTopMenu())` 送到 `/#/welcome`；登录页本身在没有目标路由时，仍去顶栏首页。目标经清洗后写入查询参数与 `sessionStorage` 键 `srvf-admin-login-target`。CI `verify` 于 2026-11-28 01:33:10 Asia/Shanghai 成功，[run 46042579632 / job 140653787522](https://github.com/BA7IEE/srvf-admin-web/actions/runs/46042579632/job/140653787522)。
+
+### 现网版本（183 部署后，已公网核验）
+
+- **管理端** `https://admin.srvf.team` 现为 GitHub `main` `43f0fca731e9165ecac2cb97ddfd23de20aee661` + 未推送的 Draft PR 177 四个建档补丁文件（本地 cherry-pick `beb9494d`）+ Draft PR 183 头 `bb48b90024dbd28a8572e5dac91922bbc7b0764d`（183 含 182 的部分修复）。本地组合提交 `0a9ac7872785f3add523f9ca2db356a5ab12954e`，未推送，不得当作 `main` 头。指数 SHA-256 `6b43541847380104af52710d3630b1b421fc23885f71aa711f24e3bea61d77c5`，树 SHA-256 `3ee76762eafaf153b17682e774e16c8a6aca724a4a13844120e6f5d261809c29`，`platform-config.json` SHA-256 `fde5a0db313b5fbbb06dfe737989d8cc07ca424bd9fff8eaddabd76ca396f7a1`。公网 `/`、`/index.html`、`/platform-config.json` 已与该包一致，不再是 t332 的 `60b1b7d5`，也不是历史 `f798`。
+- **队员端 H5** 未改，仍为 Draft PR 13，`app.srvf.team/h5/index.html` SHA-256 `a7310f548cc320f973b3cdfb22bb043d9312d0370769e5c7b320921b5b81ce67`。
+- **API** 仍冻结 `8a017348d4b8a642d673de539533fa8b1b750865`，容器 `srvf-t68-accept-runtime-api-1`（id `b5b5bd9335602bb7988d95d38910db93a4e49ecb9d19fb8ef35afaa733a9d9da`）未重启。
+
+官方 Static 交换复用已验证路径，新运行目录 `/opt/srvf-t68-accept/t333u-admin-183`，槽前缀 `.t333-`，保留既有 `.t325-`／`.t332-` 槽。部署回执 `/private/tmp/srvf-t230u-live-test/official-t333-accept-admin-183-deploy-note.json`，SHA-256 `ca6785936479cce2422aff9babe931dad864a2b80d685cb903623b084a8a41fc`，写于 2026-11-28 01:37:24 CST。回滚针是部署前的 t332 现网包（本地组合 `c0c9d9eff8afc6d623f9adfc4cbf6c147bafe1b5`，tar SHA-256 `ee15da5e382c732bfbabb06e40c9b79a8dd4a94a8535094b5a060124ca96e9d9`，树 SHA-256 `f1860f62a93723fd7a8835e344b676537630184a56dfe59b1b8d27cda19f1f19`），不是 `f798`。一次性恢复命令：`python3 -I -B /opt/srvf-t68-accept/t333u-admin-183/switch.py restore admin /var/lib/docker/volumes/srvf-t68-accept_webroot/_data`。t325／t332／wave87–wave98 回执未被覆盖。
+
+### 183 桌面复测（2026-11-28 01:38:45–01:39:57 Asia/Shanghai）
+
+隔离 0700 Chrome，不占 t95，未真建档，未重放 approve。产品路径优先于探针竞态：未登录访问 `#/srvf/org-hr/memberships`，登录页为 `/#/login?redirect=/srvf/org-hr/memberships` 且 `sessionStorage` 已记下该目标；登录成功后应用自行落到「归属总表」，而不是 `/#/welcome`。登录站稳后再打开归属总表、组织架构均通过。另用全新隔离配置打开无目标 `/#/login`，登录成功后仍落到顶栏首页 `/#/welcome`。
+
+- 主复测回执 `/private/tmp/srvf-t230u-live-test/official-t333-accept-admin-183-retest-note.json`，SHA-256 `a9a4ee085be6008aa1757600b26cd7a9b8deaf54fb3e1c94adefddc2881d9237`（01:38:45–01:39:07）。其中产品深链回跳、站稳后归属总表、组织架构均为 PASS。同一探针在登出后再测无目标登录时，页面仍停在组织架构、未进入登录表单，该尾段记为探针 error，不能当作产品无目标路径失败。
+- 补测回执 `/private/tmp/srvf-t230u-live-test/official-t333-accept-admin-183-retest-notarget-note.json`，SHA-256 `7085e9d660272956878231a1dee7e21b2b5df0ee90b96db2cd486d98caf08559`（01:39:51–01:39:57）。全新隔离配置打开无目标登录页，登录后到达 `/#/welcome`，PASS。
+
+发布批准 42501 及 [API #1464](https://github.com/BA7IEE/srvf-nest-api/issues/1464) 仍是现网最大阻塞。
+
 ## 2026-11-28 00:50:49–00:51:15 · 验收站前端已部署并完成 wave98 桌面复测（Asia/Shanghai）
 
 本段只追记 t325 验收站前端部署与随后的 wave98 桌面复测。mid87 及更早正文逐字节保留。未合并 Draft PR 175／177／13，未把 f798 或 177 当作 `main` 头，未部署 H5 [PR 12](https://github.com/BA7IEE/SRVFMobileWeb/pull/12)，未重启 API 容器，未改开关，E4 仍为 off。首发总任务未完成。
