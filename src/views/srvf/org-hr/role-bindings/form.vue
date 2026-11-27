@@ -181,7 +181,7 @@ defineExpose({ getRef });
       type="error"
       show-icon
       :closable="false"
-      title="预检未通过,以下问题需先解决"
+      title="预检未通过，以下问题需先解决"
     >
       <ul class="conflict-list">
         <li v-for="(c, i) in props.conflicts" :key="i">
@@ -371,7 +371,7 @@ defineExpose({ getRef });
             v-model="form.startedAt"
             type="date"
             value-format="YYYY-MM-DD"
-            placeholder="可空,默认后端当前时间"
+            placeholder="可空，默认后端当前时间"
             class="w-full!"
           />
         </el-form-item>

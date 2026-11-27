@@ -72,7 +72,7 @@ defineExpose({ getRef });
           <el-select
             v-model="form.supervisorMemberId"
             filterable
-            placeholder="选择队员（与职务正交,不要求持职务）"
+            placeholder="选择队员（与职务正交，不要求持职务）"
             class="w-full"
           >
             <el-option

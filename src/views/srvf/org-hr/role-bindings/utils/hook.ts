@@ -435,7 +435,7 @@ export function useRoleBindings() {
   /** 软删（status→ENDED，保历史）。 */
   function handleDelete(row: RoleBindingItem) {
     ElMessageBox.confirm(
-      `确定删除「${row.role?.displayName ?? row.roleId}」这条角色绑定吗？记录将标记结束,保留历史。`,
+      `确定删除「${row.role?.displayName ?? row.roleId}」这条角色绑定吗？记录将标记结束，保留历史。`,
       "删除角色绑定",
       {
         confirmButtonText: "确定删除",

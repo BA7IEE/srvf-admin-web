@@ -45,7 +45,7 @@ onMounted(() => {
 <template>
   <SrvfListPage
     :can-read="canRead"
-    title="分管总表（谁分管哪些组织,与职务任命相互独立）"
+    title="分管总表（谁分管哪些组织，与职务任命相互独立）"
     intro="维护「谁分管哪些组织」：分管与职务任命相互独立，用于范围化的监督权限。"
     :columns="columns"
     :loading="loading"

@@ -213,3 +213,20 @@ export const SMS_STATUS_LABEL: Record<string, string> = {
   FAILED: "发送失败",
   PENDING: "发送中"
 };
+
+/** 凭证状态 code → 中文(sms/wecom/storage/wechat 共用契约 enum: configured / missing / invalid) */
+export const CREDENTIAL_STATUS_LABEL: Record<string, string> = {
+  configured: "已配置",
+  missing: "未配置",
+  invalid: "凭证无效"
+};
+
+/** 凭证状态 code → tag 展示色(未知码回退 info) */
+export const CREDENTIAL_STATUS_TAG: Record<
+  string,
+  "primary" | "success" | "info" | "warning" | "danger"
+> = {
+  configured: "success",
+  missing: "info",
+  invalid: "danger"
+};

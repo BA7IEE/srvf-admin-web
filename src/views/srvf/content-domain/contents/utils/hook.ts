@@ -273,7 +273,7 @@ export function useContents() {
       archive: {
         label: "归档",
         fn: archiveContent,
-        tip: "归档后为终态,不可逆。"
+        tip: "归档后为终态，不可逆。"
       }
     }[action];
     ElMessageBox.confirm(

@@ -3,6 +3,8 @@ import { h, onMounted, onBeforeUnmount, ref, computed } from "vue";
 import { useRouter } from "vue-router";
 import { addDialog, closeDialog } from "@/components/ReDialog";
 import { hasPerms } from "@/utils/auth";
+import { useRenderIcon } from "@/components/ReIcon/src/hooks";
+import RefreshIcon from "~icons/ri/refresh-line";
 import { getAdminMe } from "@/api/user";
 import {
   getSimpleDraft,
@@ -164,7 +166,7 @@ defineExpose({ openCreate });
         >{{ pending ? "继续上次创建" : "筹备单场次活动" }}</el-button
       >
     </div>
-    <p v-if="!canCreate" class="mt-2">
+    <p v-if="!canCreate" class="mt-2 text-sm text-(--el-text-color-secondary)">
       当前账号没有创建活动权限；已保存的草稿仍可通过下方入口查看。
     </p>
     <el-alert
@@ -174,17 +176,35 @@ defineExpose({ openCreate });
       :closable="false"
       title="本标签页还有待确认的创建，请先继续确认再关闭标签页；清除浏览器数据会丢失这份恢复记录。"
     />
-    <h3 class="mt-4 font-semibold">我在本设备打开过的活动草稿</h3>
-    <p class="mt-1 mb-3 text-sm text-(--el-text-color-secondary)">
-      仅供当前账号在此浏览器找回，不是完整草稿列表。换设备或清除浏览器数据后，请用已收藏的详情链接打开；移除引用不会删除活动。
-    </p>
-    <div v-if="error" class="mb-2" role="alert">{{ error }}</div>
-    <el-button link :loading="loading" @click="load"
-      >刷新本人草稿入口</el-button
-    >
-    <p v-if="!loading && !error && !rows.length" class="mt-2">
-      还没有本设备记录。创建成功后会出现在这里。
-    </p>
+    <div class="mt-4 border-t border-(--el-border-color-lighter) pt-4">
+      <div class="flex-bc flex-wrap gap-2">
+        <h3 class="font-semibold">我在本设备打开过的活动草稿</h3>
+        <el-button
+          link
+          type="primary"
+          :loading="loading"
+          :icon="useRenderIcon(RefreshIcon)"
+          @click="load"
+          >刷新本人草稿入口</el-button
+        >
+      </div>
+      <p class="mt-1 mb-3 text-sm text-(--el-text-color-secondary)">
+        仅供当前账号在此浏览器找回，不是完整草稿列表。换设备或清除浏览器数据后，请用已收藏的详情链接打开；移除引用不会删除活动。
+      </p>
+      <div
+        v-if="error"
+        class="mb-2 text-sm text-(--el-color-danger)"
+        role="alert"
+      >
+        {{ error }}
+      </div>
+      <p
+        v-if="!loading && !error && !rows.length"
+        class="mt-2 text-sm text-(--el-text-color-secondary)"
+      >
+        还没有本设备记录。创建成功后会出现在这里。
+      </p>
+    </div>
     <ul class="mt-2 space-y-3">
       <li
         v-for="row in rows"

@@ -294,7 +294,7 @@ export function useNotifications() {
       archive: {
         label: "归档",
         fn: archiveNotification,
-        tip: "归档后为终态,不可逆。"
+        tip: "归档后为终态，不可逆。"
       }
     }[action];
     ElMessageBox.confirm(
@@ -341,7 +341,7 @@ export function useNotifications() {
       return;
     }
     ElMessageBox.confirm(
-      `将向 ${recipientCount} 位「可见且有手机」的队员发送短信(= ${recipientCount} 条计费)。短信仅作紧急召集兜底,确认发送？`,
+      `将向 ${recipientCount} 位「可见且有手机」的队员发送短信(= ${recipientCount} 条计费)。短信仅作紧急召集兜底，确认发送？`,
       "发送短信 · 计费确认",
       {
         confirmButtonText: `确认发送 ${recipientCount} 条`,

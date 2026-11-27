@@ -50,7 +50,7 @@ const rules: FormRules = {
     { required: true, message: "请输入职务 code", trigger: "blur" },
     {
       pattern: /^[a-z][a-z0-9-]*$/,
-      message: "kebab 格式：小写字母开头,仅小写字母/数字/连字符",
+      message: "kebab 格式：小写字母开头，仅小写字母/数字/连字符",
       trigger: "blur"
     }
   ],

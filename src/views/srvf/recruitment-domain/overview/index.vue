@@ -59,7 +59,7 @@ const recFunnel = computed<FunnelBlock[]>(() => {
     {
       label: "已发编号",
       value: s.issuance.promoted,
-      hint: "已建立队员档案,成为志愿者"
+      hint: "已建立队员档案，成为志愿者"
     }
   ];
 });
