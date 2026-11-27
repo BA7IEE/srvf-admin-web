@@ -1,5 +1,26 @@
 # 首发进度快照
 
+## 2026-11-28 07:40:23–07:40:34 · 隔离草稿已调窗并再批一次，42501 转到 RegistrationFormVersion 的 UPDATE（Asia/Shanghai）
+
+本段只追记对隔离草稿 `cmwz1vy7f02a1ny01xuigxskj` 的时间窗口调整，以及随后只做的一次批准复测。mid87 及更早正文逐字节保留；上文 t325／wave98／182／183／t335 段落未改写。未合并 Draft PR 175／177／13／182／183，也未合并 API 1454／1455／1459／1460／1461／1463／1467，未部署或重启 API，未给其他表扩权，未改四场 2099、WAVE77–84、storage-settings 或开关，E4 仍为 off，未发短信，未占 t95。首发总任务未完成。
+
+上一轮（t335）已给 `srvf_activity_review` 补了 `RegistrationFormField` 的 21 列 SELECT。当时一次批准返回 409／20030，是因为该草稿 `endAt` 已于 2026-11-28 02:02:11.001 Asia/Shanghai 过去。本轮按授权只调整这一场隔离测试草稿的窗口，并复用已有 pending 审核单 `cmwz26jnx02b0ny01itbub0fm`，未新建审核链，未硬删草稿。
+
+### 调窗（2026-11-28 07:40:23 Asia/Shanghai）
+
+整体平移 34683 秒（9 小时 38 分 3 秒），使开始时刻大约在批准前 8 分钟，结束时刻仍在未来约 4 小时；活动与场次、签到／签退窗一并夹紧，避免 20134。为保持 schemaVersion 7 快照与现场一致，同一事务内同步改写了该审核单快照中的对应时刻，并重算 `baseSnapshotHash`／`snapshotHash`（算法与冻结 8a 一致，改前已对原快照对拍通过）。审核单仍为同一条 pending initial，`workflowRevision` 仍为 0。
+
+- 活动 `startAt`：2026-11-27 21:54:11 → 2026-11-28 07:32:14 Asia/Shanghai
+- 活动 `endAt`：2026-11-28 02:02:11.001 → 2026-11-28 11:40:14.001 Asia/Shanghai（`registrationDeadline` 仍为空）
+- 场次 `cmwz26jgy02aony015uus1swz`（仍 `scheduled`）`startAt`：2026-11-27 21:55:11 → 2026-11-28 07:33:14；`endAt`：2026-11-28 02:01:11.001 → 2026-11-28 11:39:14.001 Asia/Shanghai
+- 签到窗：`checkInOpenAt` 07:34:14，`checkInCloseAt` 10:00:50，`checkOutOpenAt` 10:01:50，`checkOutCloseAt` 11:38:59.001 Asia/Shanghai
+
+### 一次批准复测（2026-11-28 07:40:34 Asia/Shanghai）
+
+管理员 `accept_t71_admin` 对同一审核单只发送一次批准。HTTP 503，业务码 50300，请求标识 `cmwzmjrcp53783834d95e70a65d7b0c1d`。批准前后审核单仍为 `pending`，活动仍为 `draft`、未发布。PostgreSQL 日志（pid 47977，角色 `srvf_activity_review`）是 SQLSTATE 42501：`permission denied for table RegistrationFormVersion`，STATEMENT 为对该表的 **UPDATE**（`statusCode`、`workflowRevision`、`schemaHash`、`activatedAt`、`retiredAt`、`updatedAt`），不是再缺 `RegistrationFormField` 的 SELECT，也不是 20030。该角色在 `RegistrationFormVersion` 上仅有既有列级 SELECT（`id`、`activityId`、`schemaHash`、`statusCode`、`version`、`workflowRevision`），UPDATE 全为 false；`activatedAt`／`retiredAt`／`updatedAt` 连 SELECT 也没有。按授权：这是另一张表／另一类特权，已停止，未扩 GRANT，未再批准，未硬改业务状态接发布。Issue 8 未走。
+
+台账在 `/private/tmp/srvf-t336u-window/`。
+
 ## 2026-11-28 07:24:07–07:26:06 · 42501 已定位并做最小只读授权，一次批准因活动已结束被拒（Asia/Shanghai）
 
 本段追记三件事：wave99 未发批桌面复测；t334 把批准 503／50300 的拒绝对象钉到 `public."RegistrationFormField"`；以及用户在 widget t335s2292 授权后，按最小可逆范围只给 `srvf_activity_review` 补了该表只读 SELECT，并只复测批准一次。mid87 及更早正文逐字节保留；上文 t325／wave98／182／183 段落未改写。未合并 Draft PR 175／177／13／182／183，也未合并 API 1454／1455／1459／1460／1461／1463，未把 f798 当作 `main`／现网头，未部署或重启 API（容器仍为 `b5b5bd9335602bb7988d95d38910db93a4e49ecb9d19fb8ef35afaa733a9d9da`，冻结 `8a017348d4b8a642d673de539533fa8b1b750865`），未改四场 2099、WAVE77–84、storage-settings 或开关，E4 仍为 off，未发短信，未占 t95。首发总任务未完成。
