@@ -1,5 +1,27 @@
 # 首发进度快照
 
+## 11 月 27 日 13:32–13:41 · 提审带齐必填项并发布成功，官方代签已走通，作废后读回未确认恢复，工作人员手动确认未发出
+
+本段按北京时间（Asia/Shanghai）追记脱敏结果，13:12–13:18 及更早正文原样保留。现场管理端仍为限定留存 `f7985191`，队员端 H5 仍为 `3968b0bc`，API 仍为 `8a017348`。未重新部署、未合并、未正式对外开放。Draft PR #177 和移动端 Draft PR #12 均未计入现网或 `main` 头。未执行整站权限撤回，未清场或重部署整站。同一虚拟测试队员未改号，未与其他真实身份混用，未发明证件号，未发短信或验证码。未改四场验收活动的 2099 截止，也未把那四场改成占用夹具所管，未取消那四场报名。未改存储设置，开关保持 `enabled=true`。未重放上传或确认上传。未重放 H5 创建活动，也未重发 wave37 待核实 POST。未做整站正式开放，未启用或发送微信/短信通知。未发明经纬度或 QR。Draft PR #1459、#1460、#1461、#1463 仍为审查草稿，未合并、未部署。事项 #1454、#1455 仍为 `PR_BLOCKED`。已保留的官方证书字典与官方附件类型配置均未删除、未改值。未把 f798 组合头对 main 开 PR，未换 runtime-api 镜像，也未再重启 runtime-api。未再新建活动类型种子、gender_requirement 类型与字典项或考勤角色种子；已停用对象只读确认仍为 INACTIVE，未临时启用，未硬删。未再为复现而批准 change-reviews，未再发非空报名表写入，也未为复现再发未确认 503/50300。mid37–mid73 已走通项不记为新覆盖，包括已走通的分配提交 `/commit`。未把 mid73 提审漏传必填字段立项为现网 8a 逻辑缺陷。本轮结束后未自动再开空转轮次。首发总任务未完成。
+
+**并行。** 启动即为 1 个唯一写者加 3 路不抢写者位的只读 Codex，共 4 路，模型均为 GPT-6.2 Sol / medium。只读分别做 503 取证、提审必填字段与代签/手动确认路径预核、清场台账入口核对。写者未等只读结束即开始写入。
+
+**登录与本机启动过程。** 管理端与占用夹具官方 H5 各尝试 1 次、重试 0 次，均未在发出登录请求前被拦，两端登录与服务端登出均为 HTTP 200／业务码 0。本轮无 Chrome 启动失败。已保留过程改进。未改官方登录工具，未关掉 chromiumSandbox 或官方 fillLogin 约束。临时配置目录已清理。队员用户名与用户 ID 均匹配。官方登录工具哈希复核一致。
+
+**夹具级别。** 登录后先读回为 `volunteer`（HTTP 200／业务码 0）。本轮临时调到 `level-1`（改后读回 200／0），跑完改回 `volunteer`（改回读回 200／0）。
+
+**开关。** 本轮先只读确认运行进程中的 `ACTIVITY_V11_WORKFLOW_ENABLED` 仍为 `true`，就绪核对通过，未再重启、未改开关。责任制全局开关 `ACTIVITY_RESPONSIBILITY_WORKFLOW_ENABLED` 前后均为 `true`，本轮未改。E4 贡献结算模式 `ACTIVITY_E4_CONTRIBUTION_SETTLEMENT_MODE` 前后均为 `off`，本轮未改。收尾复查运行进程 v1.1 与责任制仍为 `true`，就绪仍通过，E4 仍为 `off`。
+
+**本轮新走通。** 新建隔离活动 `cmwyjsu4p006cny01jsx9bjgd`。官方提审 `POST /api/app/v1/my/managed-activities/:activityId/publish-reviews` 带齐 `operationKey` 和 `confirmation=true`，提审与批准均为 200／0，发布状态已读回。负责人按 `data.owner.id` 核对通过。分配提交 `/commit` 读回 `committed`，仅作为已走通前置，不记新覆盖。发出代签前用服务器时间确认签到窗口已开启、剩余超过 3 小时，且有效定位要求关闭。官方代签 `POST .../onsite/sessions/:sessionId/proxy-punch` 为 `forwarded=true`，HTTP 201／业务码 0；参与者本人独立读取 `my-punch-state` 为 200／0，确认签到已生效。收据覆盖分类为 `WAVE72_NEW_FUNCTIONAL_SUCCESS`，新走通 1 项：`official_proxy_punch`。
+
+**作废与未发出的手动确认。** 随后官方作废 `POST .../onsite/punch-events/:eventId/void` 返回 201／0，并生成作废事件。作废后 `my-punch-state` 读回 200／0，但探针未确认签到状态已恢复（`void_verified=false`），因此工作人员手动确认未发出（`forwarded=false`，无 HTTP 或业务码）。分类为 `WAVE72_STAFF_BASELINE_OR_PROXY_RESTORATION_UNCONFIRMED`。写者用冻结 8a 在本地对照出一个与现场读回相符的现象：已作废的服务段仍可能被 `my-punch-state` 判为开放。未重放现网请求，未开事项，未把该读回差异立项为已确认的现网 8a 逻辑缺陷。因恢复未确认，本轮未清掉该隔离活动及相关对象。
+
+**本轮因条件跳过、仍因缺前置而卡住的路径。** 自己签到仍缺已核实成对坐标与现场 QR；协办、交接与多人候补仍缺第二名正式成员；未确认 503/50300 本轮未为复现再发；封面/图库缺已批准附件；归档仍不满 30 天；封场、送审、正式入账和关账缺公开恢复入口。结算先读，确认无正式入账或关账；时长结算 404／20219；反馈资格 409／35030，可逆反馈未发出。旧代签按原审计范围查询 200／0，未找到匹配记录，未扩大检索，继续待核实。13034 无新观测。未开事项。
+
+**写入与清理。** 发出业务写请求 14 次，全部成功回执。探针记录新建对象 10 个，确认收尾 1 个（邀请已接受并结项）。清理台账现为 22 项：继承原 13 项，新增 9 项。新增待清为活动 `cmwyjsu4p006cny01jsx9bjgd`、场次 `cmwyjsuh7006kny01jvfhv0j0`、场次岗位 `cmwyjsul2006nny01t3moroxa` 和报名 `cmwyjsv59007gny010l5k62u7`。另 5 项无公开删除入口，予以保留：已批准提审 `cmwyjsupa006rny01qq9bd08e`、已提交批次 `ce5223f4-e31a-44ac-b32a-035b54227418`、参与身份 `cmwyjsv5e007lny01lwt109ge`、代签事件 `cmwyjwr0r008fny01d0hs3rf9`、作废事件 `cmwyjwr3w008lny01584l0xyv`。原 mid71 未提交批次、mid72 已提交批次与参与身份继续保留。5 个停用对象只读确认仍为 INACTIVE。未硬删。该隔离活动仍在，勿当已删除。
+
+证据：`wave72-functional-probe-receipt.json` SHA-256 `02a4803db2390ca561abffd86b8b52e8335fc3085e9d73d13913cff967e84393`；`wave72-cleanup-ledger.json` SHA-256 `19969c534c6a4c5497dbc88cbeab7df35d49f96068837c3866712baadbb52c7a`；`official-t230-mid74-503-localization.json` SHA-256 `cbd3ad58c2d7064f768370a9caffc6d77b4111c53a614f5d8c3d5533701e442d`；`official-t230-mid74-v11-path-contract.json` SHA-256 `384cfff05691bced57dc52ad19ceebf43e8076ec687029aa3ed7be76b3b8f191`；`official-t230-mid74-ledger-contract.json` SHA-256 `6232bafcca06487467ebdeab7225e6069331448aab8afaf0c0791ff185062847`；`SHA256SUMS-mid74.txt` SHA-256 `e0499bf0f970dfb7b95b006b0388b538a0ad8aa864250fd76fd12683e1fa98ab`。mid6–mid73 未改写；`SHA256SUMS-mid73.txt` 仍为 `9e1d30b0f2696394e9106adc4a2f311e569614d6af735a19582cf1e9f5424c72`，`SHA256SUMS-mid72.txt` 仍为 `7b27206e30e22b030b96898f9c84c235e05dbd51f62a7edcf47111246306a715`。
+
 ## 11 月 27 日 13:12–13:18 · 旧隔离活动签到窗已过，新建活动因探针漏传提审字段未发布，代签仍未发出
 
 本段按北京时间（Asia/Shanghai）追记脱敏结果，12:44–12:51 及更早正文原样保留。现场管理端仍为限定留存 `f7985191`，队员端 H5 仍为 `3968b0bc`，API 仍为 `8a017348`。未重新部署、未合并、未正式对外开放。Draft PR #177 和移动端 Draft PR #12 均未计入现网或 `main` 头。未执行整站权限撤回，未清场或重部署整站。同一虚拟测试队员未改号，未与其他真实身份混用，未发明证件号，未发短信或验证码。未改四场验收活动的 2099 截止，也未把那四场改成占用夹具所管，未取消那四场报名。未改存储设置，开关保持 `enabled=true`。未重放上传或确认上传。未重放 H5 创建活动，也未重发 wave37 待核实 POST。未做整站正式开放，未启用或发送微信/短信通知。未发明经纬度或 QR。Draft PR #1459、#1460、#1461、#1463 仍为审查草稿，未合并、未部署。事项 #1454、#1455 仍为 `PR_BLOCKED`。已保留的官方证书字典与官方附件类型配置均未删除、未改值。未把 f798 组合头对 main 开 PR，未换 runtime-api 镜像，也未再重启 runtime-api。未再新建活动类型种子、gender_requirement 类型与字典项或考勤角色种子；已停用对象只读确认仍为 INACTIVE，未临时启用，未硬删。未再为复现而批准 change-reviews，未再发非空报名表写入，也未为复现再发未确认 503/50300。mid37–mid72 已走通项不记为新覆盖，包括已走通的分配提交 `/commit`。未把 mid72 误读负责人字段，或本轮提审漏传必填字段，立项为现网 8a 逻辑缺陷。本轮结束后未自动再开空转轮次。首发总任务未完成。
