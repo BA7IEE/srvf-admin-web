@@ -1,5 +1,13 @@
 # 首发进度快照
 
+## 11 月 27 日 16:38–16:46 · mid80 录取后协办复测不再是 20035，返回 404／30003，现场缺哪个角色待独立核清
+
+本段按北京时间（Asia/Shanghai）追记脱敏结果，15:49–16:25 及更早正文原样保留。现场管理端仍为限定留存 `f7985191`，队员端 H5 仍为 `3968b0bc`，API 仍为 `8a017348`。未重新部署、未合并、未正式对外开放，未清场，未改开关，未改存储设置。未发明法定证件号，未发短信。未硬删 `cmwymsf1200ajny01zry6vpih`、`cmwyjsu4p006cny01jsx9bjgd`、`cmwyosbty00gyny01n4a9dke0` 或 `cmwypode200jvny01bvsidif3`，也未作废已成功的代签与人工确认。未把前三场当干净签退基线。未改四场 2099 验收活动。官方登录工具哈希未变。PID 61139 未杀。Draft PR #1459、#1460、#1461、#1463 仍为审查草稿，未合并、未部署。首发总任务未完成。
+
+mid80 只开 1 名写者，复用 12 名 T305U 队员，重建 0。在已发布活动 `cmwypode200jvny01bvsidif3` 上，Admin 先读回报名，确认候选人 T305U-VIRT-02 为 `statusCode=pass`（当场录取 2 人）后才发协办，故不再是分配前的 20035。协办 POST forwarded=true，HTTP 404／业务码 30003（冻结 8a：`ROLE_NOT_FOUND`，角色不存在）。授权投影会查找 `activity-owner`、`activity-registration-collaborator`、`activity-attendance-collaborator`，缺任一即抛此码；现场缺哪一个当时尚未独立核到。Admin 读回未见新协办，撤销未转发。活动仍为 published。台账仍为 85 项。夹具已改回 volunteer。开关仍为 true／true／off。分类 WAVE78_PARTIAL。功能收据 SHA-256 `3df461dd9581c177b0338fbb5b91ff331c330f3f6c6e9b1026abdcc6595c5ee4`。SHA256SUMS-mid80.txt 为 `90f9b2ef3f0edd0a2d05e435978d67371b9c394d0687d78d708e2e9538b6aadd`。mid69–mid79 封存校验未改。20035 仍未用录取后候选人复现，未立项为已确认 8a 缺陷；30003 同样尚未升格。
+
+并行会话不占写者位：1463 头仍为 `74b79f76`，Contract+E2E(3) 与 Lint／Typecheck／E2E 仍红，倾向偶发但本机当时未能独占复跑，未改产品超时、未放宽门禁。合入准备仅方案，建议顺序 1459→1460→1461 再重生 ROUTE_AUTHZ，1460 不单合，全量 CI／E2E 为 NOT_RUN。mid78 H5 指标 503 的首个可确认失败操作是 H5 PUT metric-selection（503／50300），内部首错未定位，材料不足以定性产品缺陷，本轮未重放。
+
 ## 11 月 27 日 15:49–16:25 · mid78 指标停在未确认 H5 503，mid79 走通交接候补半径外与代签确认，协办 20035 待录取后复测
 
 本段按北京时间（Asia/Shanghai）追记脱敏结果，15:23–15:30 及更早正文原样保留。现场管理端仍为限定留存 `f7985191`，队员端 H5 仍为 `3968b0bc`，API 仍为 `8a017348`。未重新部署、未合并、未正式对外开放，未清场，未改开关，未改存储设置。未发明法定证件号，未发短信，未发明官方微信模板 ID。未硬删 `cmwymsf1200ajny01zry6vpih`、`cmwyjsu4p006cny01jsx9bjgd`、`cmwyosbty00gyny01n4a9dke0` 或 `cmwypode200jvny01bvsidif3`，也未作废已成功的自己签到。未把前三场当干净签退基线。未改四场 2099 验收活动。官方登录工具哈希未变。PID 61139 未杀。未自动把仍红的草稿合进 main。首发总任务未完成。
