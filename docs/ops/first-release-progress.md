@@ -1,5 +1,62 @@
 # 首发进度快照
 
+## 2026-11-28 07:24:07–07:26:06 · 42501 已定位并做最小只读授权，一次批准因活动已结束被拒（Asia/Shanghai）
+
+本段追记三件事：wave99 未发批桌面复测；t334 把批准 503／50300 的拒绝对象钉到 `public."RegistrationFormField"`；以及用户在 widget t335s2292 授权后，按最小可逆范围只给 `srvf_activity_review` 补了该表只读 SELECT，并只复测批准一次。mid87 及更早正文逐字节保留；上文 t325／wave98／182／183 段落未改写。未合并 Draft PR 175／177／13／182／183，也未合并 API 1454／1455／1459／1460／1461／1463，未把 f798 当作 `main`／现网头，未部署或重启 API（容器仍为 `b5b5bd9335602bb7988d95d38910db93a4e49ecb9d19fb8ef35afaa733a9d9da`，冻结 `8a017348d4b8a642d673de539533fa8b1b750865`），未改四场 2099、WAVE77–84、storage-settings 或开关，E4 仍为 off，未发短信，未占 t95。首发总任务未完成。
+
+### wave99 桌面复测（已发生，此处入档）
+
+隔离 0700 Chrome，不占 t95，未重放批准。回执 `/private/tmp/srvf-t230u-live-test/official-t230-wave99-desktop-note.json`，SHA-256 `bb055ed531d8d2e11242b34a224928bd0f98e3fdcc0cda054b19ac81107ba4c4`。
+
+- 管理端新建队员表单 PASS：点击「新建」打开「新建队员」对话框，四个契约字段（队员编号、姓名、发号日、来源）均在。未提交。wave98 当时记成表单失败，是探针点了「新建」后刮到了列表正文，并按「入队日期」而不是「发号日」查找，不能当作产品否定这四个字段。
+- Issue 10 PASS：对已结束的 WAVE84（`cmwyw7s9l01cpny01awv81xtz`）给 T305U-VIRT-01 做了可逆协办，创建 201、随后撤销 200；直接打开 `/#/managed/activities/{id}/registrations` 落到报名管理，花名册接口 200／0。WAVE84 标题、可见性、时间、报名表和既有打卡未改。
+- Issue 9 记为轻量 PASS：队员端「我的活动」可见 5 个 pass 标签。探针把组织者一致性标成 NOT_RUN（精确文案「已通过」／队员编号未在 UI 命中），但花名册接口已有目标行且 `statusCode=pass`。本段不改写 0600 回执。
+- Issue 8 当时仍为 NOT_RUN，等待隔离草稿发布后再测。
+
+### t334：批准 42501 拒绝对象已钉死
+
+回执 `/private/tmp/srvf-t230u-live-test/official-t334-42501-object-note.json`，SHA-256 `799fb64f6637a59a670994492a0361f6c1fc8c80bff821c68d445a1ed6bd4973`。该轮只读，未授权、也未做 GRANT，未重放批准。
+
+五次批准失败的同一审核单 `cmwz26jnx02b0ny01itbub0fm`（隔离草稿活动 `cmwz1vy7f02a1ny01xuigxskj`）在 PostgreSQL 日志里是：角色 `srvf_activity_review`（oid 25224）对表 `public."RegistrationFormField"` 的 SELECT 被拒绝，SQLSTATE 42501。STATEMENT 按 `formVersionId` 读取字段列（含 `id` 与 `formVersionId`），与冻结 8a `formVersionSelect`／`formFieldSelect` 一致。同一秒报名表 PUT 成功，是因为 PUT 没有 `@ActivityCommand`，走主库角色 `srvf_t68_api`，该角色对该表已有表级 SELECT／INSERT／UPDATE／DELETE。同窗报名表 GET 的 42501 是 `srvf_activity_draft` 缺同一张表的特权；GET 走 `@ActivityCommand('draft')`。`srvf_activity_review` 在 `RegistrationFormVersion` 上已有列级 SELECT（`id`、`activityId`、`schemaHash`、`statusCode`、`version`、`workflowRevision`），但子表 `RegistrationFormField` 上当时为零授权。官方 `grant-review.sql` 也只授了 Version、没有 Field。
+
+### t335：最小可逆列级 SELECT，以及一次批准复测
+
+授权范围只覆盖 `srvf_activity_review` 对 `public."RegistrationFormField"` 的 SELECT，列集以冻结 8a 实际 STATEMENT 为准，共 21 列；不带 GRANT OPTION，不授 INSERT／UPDATE／DELETE，不授 `createdAt`／`updatedAt`，不改其他表、其他库或 PUBLIC，不给 `srvf_activity_draft` 扩权（draft 缺口只入台账和仓库说明）。GRANT 前读回该角色在该表上的列特权为空。
+
+执行时刻 2026-11-28 07:24:07 Asia/Shanghai。SQL：
+
+```sql
+GRANT SELECT (
+  "id",
+  "fieldCode",
+  "typeCode",
+  "label",
+  "helpText",
+  "required",
+  "visibilityCode",
+  "exportable",
+  "sortOrder",
+  "minValue",
+  "maxValue",
+  "minLength",
+  "maxLength",
+  "maxSelections",
+  "optionsJson",
+  "purposeCode",
+  "dataClassCode",
+  "retentionPolicyCode",
+  "maskingPolicyCode",
+  "prefillSourceCode",
+  "formVersionId"
+) ON TABLE public."RegistrationFormField" TO "srvf_activity_review";
+```
+
+读回：上述 21 列均为 SELECT，`is_grantable=NO`；`information_schema.table_privileges` 对该角色仍为空（列级，与 `RegistrationFormVersion` 风格一致）；INSERT／UPDATE／DELETE 均为 false；`createdAt`／`updatedAt` 仍无 SELECT；`srvf_activity_draft` 在该表上仍为零授权。对应 REVOKE 已落在 `/private/tmp/srvf-t335u-42501-grant/03-revoke-review-formfield-select.sql`，未执行。
+
+随后只批准一次，未连打。2026-11-28 07:26:06 Asia/Shanghai，管理员 `accept_t71_admin`（凭据只在保管路径 `/Users/dengwang/Library/Application Support/srvf-t68-accept/secrets/t71-admin.json`）对 `POST /api/admin/v1/activity-publish-reviews/cmwz26jnx02b0ny01itbub0fm/approve` 发送 `requiresInsuranceConfirmed=true` 与新的 `operationKey`。HTTP 409，业务码 20030（`ACTIVITY_STATUS_INVALID`，「活动当前状态不允许此操作」），请求标识 `cmwzm15ze31f01a4e0fde8c15d4a8b1f2`。批准前后审核单仍为 `pending`（`reviewedAt` 仍为空，未写入 `reviewOperationKey`），活动仍为 `draft`、`publishedAt` 为空、`workflowRevision=0`。GRANT 之后的 PostgreSQL 日志窗口没有新的 42501／`permission denied`／`RegistrationFormField` 拒绝；此次不再落入先前的特权映射 503／50300。20030 来自冻结 8a `ensureInitialPublishable`：活动仍是 draft，但 `endAt` 为 2026-11-27 18:02:11.001 UTC（2026-11-28 02:02:11.001 Asia/Shanghai），批准时已过结束时间。场次 `cmwz26jgy02aony015uus1swz` 仍为 `scheduled`，结束时间同样已过。未再批准，未扩 GRANT，未改该活动时间／截止／报名，Issue 8 未走（批准未发布）。API 容器启动时间仍为 2026-11-27 12:30:42 Asia/Shanghai，未重启。
+
+现网最大阻塞从「review 角色对 RegistrationFormField 的 42501」推进为「该隔离草稿的初次发布窗口已过期（20030）。draft 角色对该表的同类缺口仍未在现网授权」。持久修复应落在 API 草稿迁移（只含 review 角色 SELECT；draft 缺口可说明但不得随迁移自动应用到现网未授权范围），本文不把它标成已部署。
+
 ## 2026-11-28 01:37:24–01:39:57 · Draft PR 182 部署复测入档，并部署 Draft PR 183 产品回跳修复（Asia/Shanghai）
 
 本段追记两件事：把已经完成的 Draft [PR 182](https://github.com/BA7IEE/srvf-admin-web/pull/182) 验收站部署与复测证据写入本文；以及在新开的 Draft [PR 183](https://github.com/BA7IEE/srvf-admin-web/pull/183) CI 变绿之后，部署管理端产品回跳修复并完成桌面复测。mid87 及更早正文逐字节保留；上文 t325／wave98 段落未改写。未合并 Draft PR 175／177／13／182／183，未把 f798 或 177 当作 `main` 头，未改动已打开的 PR 182（头仍为 `6af0caeaf0771fb6c5e45102d164ffa8ad0e99ff`），未部署 H5 [PR 12](https://github.com/BA7IEE/SRVFMobileWeb/pull/12)，未重启 API 容器，未改开关，E4 仍为 off。首发总任务未完成。
