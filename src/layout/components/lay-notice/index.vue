@@ -79,6 +79,8 @@ onMounted(loadSummary);
   >
     <span
       :class="['dropdown-badge', 'navbar-bg-hover', 'select-none', 'mr-1.75']"
+      title="我的待办"
+      aria-label="我的待办"
     >
       <el-badge :value="totalPending" :max="99" :hidden="totalPending === 0">
         <span class="header-notice-icon">
