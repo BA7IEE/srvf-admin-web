@@ -54,7 +54,7 @@ const items = ref<SetupItem[]>(
     {
       key: "position",
       label: "职务定义",
-      desc: "中队长、组长等职务,任命的前提",
+      desc: "中队长、组长等职务，任命的前提",
       perm: "position.read.definition",
       probe: async () => {
         const { code, data } = await getPositionOptions({ limit: 1 });

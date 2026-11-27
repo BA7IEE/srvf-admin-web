@@ -130,6 +130,7 @@ export function useActivities() {
 
   const columns: TableColumnList = [
     { label: "标题", prop: "title", minWidth: 180 },
+    { label: "状态", prop: "statusCode", minWidth: 110, slot: "statusCode" },
     {
       label: "类型",
       prop: "activityTypeCode",
@@ -145,7 +146,6 @@ export function useActivities() {
       formatter: ({ startAt }) =>
         startAt ? dayjs(startAt).format("YYYY-MM-DD HH:mm") : "—"
     },
-    { label: "状态", prop: "statusCode", minWidth: 110, slot: "statusCode" },
     {
       label: "公开报名",
       prop: "isPublicRegistration",

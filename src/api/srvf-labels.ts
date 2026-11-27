@@ -73,6 +73,11 @@ export {
 export { SMS_STATUS_LABEL, SMS_STATUS_TAG } from "./srvf-system-settings";
 
 export {
+  CREDENTIAL_STATUS_LABEL,
+  CREDENTIAL_STATUS_TAG
+} from "./srvf-system-settings";
+
+export {
   TJ_CYCLE_STATUS_LABEL,
   TJ_APP_STATUS_LABEL,
   TJ_APP_STATUS_TAG,

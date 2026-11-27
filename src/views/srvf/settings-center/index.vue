@@ -193,7 +193,10 @@ const visibleSections = computed(() =>
           <el-card
             shadow="hover"
             class="setting-card"
+            tabindex="0"
+            role="link"
             @click="router.push(entry.path)"
+            @keydown.enter="router.push(entry.path)"
           >
             <div class="text-sm font-medium">{{ entry.title }}</div>
             <div class="setting-card__desc mt-1 text-xs">{{ entry.desc }}</div>
@@ -212,6 +215,11 @@ const visibleSections = computed(() =>
 .setting-card {
   height: 100%;
   cursor: pointer;
+}
+
+.setting-card:focus-visible {
+  outline: 2px solid var(--el-color-primary);
+  outline-offset: 2px;
 }
 
 .setting-card__desc {

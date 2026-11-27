@@ -73,7 +73,10 @@ const entries = [
           <el-card
             shadow="hover"
             class="entry-card"
+            tabindex="0"
+            role="link"
             @click="router.push(entry.path)"
+            @keydown.enter="router.push(entry.path)"
           >
             <div class="text-base font-medium">{{ entry.title }}</div>
             <div class="mt-1 text-xs text-gray-400">{{ entry.desc }}</div>
@@ -87,5 +90,10 @@ const entries = [
 <style scoped>
 .entry-card {
   cursor: pointer;
+}
+
+.entry-card:focus-visible {
+  outline: 2px solid var(--el-color-primary);
+  outline-offset: 2px;
 }
 </style>

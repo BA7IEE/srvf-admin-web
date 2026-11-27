@@ -75,7 +75,15 @@ function isFilterable(key: string): key is (typeof FILTERABLE)[number] {
               isFilterable(card.key) && 'is-clickable',
               searchForm.certStatusCode === card.key && 'is-active'
             ]"
+            :role="isFilterable(card.key) ? 'button' : undefined"
+            :tabindex="isFilterable(card.key) ? 0 : undefined"
             @click="isFilterable(card.key) && filterByStatus(card.key)"
+            @keydown.enter.prevent="
+              isFilterable(card.key) && filterByStatus(card.key)
+            "
+            @keydown.space.prevent="
+              isFilterable(card.key) && filterByStatus(card.key)
+            "
           >
             <el-statistic :value="stats[card.key]">
               <template #title>
@@ -300,6 +308,11 @@ function isFilterable(key: string): key is (typeof FILTERABLE)[number] {
 
     &:hover {
       border-color: var(--el-color-primary);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--el-color-primary);
+      outline-offset: 2px;
     }
   }
 

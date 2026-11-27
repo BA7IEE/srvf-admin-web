@@ -36,7 +36,7 @@ onMounted(() => {
       multiple: false,
       // 自定义上传:走内容附件 signed-URL 链路,成功后手动插入 markdown 图片
       handler: async (files: File[]) => {
-        if (!props.uploadContentId) return "请先保存草稿,再插入图片";
+        if (!props.uploadContentId) return "请先保存草稿，再插入图片";
         try {
           for (const f of files) {
             const att = await uploadContentAttachment(props.uploadContentId, f);

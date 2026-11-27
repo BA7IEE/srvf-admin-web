@@ -66,7 +66,7 @@ defineExpose({ getRef });
       type="error"
       show-icon
       :closable="false"
-      title="预检未通过,以下问题需先解决"
+      title="预检未通过，以下问题需先解决"
     >
       <ul class="violation-list">
         <li v-for="(v, i) in props.violations" :key="i">
@@ -141,7 +141,7 @@ defineExpose({ getRef });
           <el-input
             v-model="form.appointmentSource"
             clearable
-            placeholder="可空,如 manual"
+            placeholder="可空，如 manual"
           />
         </el-form-item>
       </el-col>

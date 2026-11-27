@@ -332,7 +332,7 @@ async function runPreview() {
     previewValid.value = false;
     previewRan.value = true;
     previewIssues.value = [
-      { bizCode: null, message: bizErrorMessage(error, "预演失败,请重试") }
+      { bizCode: null, message: bizErrorMessage(error, "预演失败，请重试") }
     ];
   } finally {
     previewLoading.value = false;

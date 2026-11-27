@@ -2,6 +2,10 @@
 import { onMounted, ref } from "vue";
 import { useSystemSettings } from "./utils/hook";
 import { SrvfPageIntro, SrvfPermEmpty } from "@/srvf-kit";
+import {
+  CREDENTIAL_STATUS_LABEL,
+  CREDENTIAL_STATUS_TAG
+} from "@/api/srvf-labels";
 
 defineOptions({
   name: "SrvfSystemSettings"
@@ -56,6 +60,15 @@ const activeTab = ref(
           ? "realname"
           : ""
 );
+
+function credentialLabel(status?: string | null) {
+  if (!status) return "未配置";
+  return CREDENTIAL_STATUS_LABEL[status] ?? status;
+}
+
+function credentialTag(status?: string | null) {
+  return (status && CREDENTIAL_STATUS_TAG[status]) || "info";
+}
 </script>
 
 <template>
@@ -117,10 +130,8 @@ const activeTab = ref(
               />
             </el-form-item>
             <el-form-item label="凭证状态">
-              <el-tag
-                :type="storage?.credentialConfigured ? 'success' : 'info'"
-              >
-                {{ storage?.credentialStatus ?? "未配置" }}
+              <el-tag :type="credentialTag(storage?.credentialStatus)">
+                {{ credentialLabel(storage?.credentialStatus) }}
               </el-tag>
             </el-form-item>
             <el-form-item>
@@ -160,8 +171,8 @@ const activeTab = ref(
               <el-input v-model="smsModel.remarks" type="textarea" :rows="2" />
             </el-form-item>
             <el-form-item label="凭证状态">
-              <el-tag :type="sms?.credentialConfigured ? 'success' : 'info'">
-                {{ sms?.credentialStatus ?? "未配置" }}
+              <el-tag :type="credentialTag(sms?.credentialStatus)">
+                {{ credentialLabel(sms?.credentialStatus) }}
               </el-tag>
             </el-form-item>
             <el-form-item>
@@ -197,8 +208,8 @@ const activeTab = ref(
               />
             </el-form-item>
             <el-form-item label="凭证状态">
-              <el-tag :type="wechat?.credentialConfigured ? 'success' : 'info'">
-                {{ wechat?.credentialStatus ?? "未配置" }}
+              <el-tag :type="credentialTag(wechat?.credentialStatus)">
+                {{ credentialLabel(wechat?.credentialStatus) }}
               </el-tag>
             </el-form-item>
             <el-form-item>
@@ -234,10 +245,8 @@ const activeTab = ref(
               />
             </el-form-item>
             <el-form-item label="凭证状态">
-              <el-tag
-                :type="realname?.credentialConfigured ? 'success' : 'info'"
-              >
-                {{ realname?.credentialStatus ?? "未配置" }}
+              <el-tag :type="credentialTag(realname?.credentialStatus)">
+                {{ credentialLabel(realname?.credentialStatus) }}
               </el-tag>
             </el-form-item>
             <el-form-item>
