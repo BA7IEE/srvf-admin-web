@@ -1,5 +1,29 @@
 # 首发进度快照
 
+## 11 月 27 日 12:01–12:11 · 已写入 v1.1 启动配置但 runtime-api 重启未完成，开关尚未生效
+
+本段按北京时间（Asia/Shanghai）追记脱敏结果，11:01–11:04 及更早正文原样保留。现场管理端仍为限定留存 `f7985191`，队员端 H5 仍为 `3968b0bc`，API 仍为 `8a017348`。未重新部署、未合并、未正式对外开放。Draft PR #177 和移动端 Draft PR #12 均未计入现网或 `main` 头。未执行整站权限撤回，未清场或重部署整站。同一虚拟测试队员未改号，未与其他真实身份混用，未发明证件号，未发短信或验证码。未改四场验收活动的 2099 截止，也未把那四场改成占用夹具所管，未取消那四场报名。未改存储设置，开关保持 `enabled=true`。未重放上传或确认上传。未重放 H5 创建活动，也未重发 wave37 待核实 POST。未做整站正式开放，未启用或发送微信/短信通知。未发明经纬度或 QR。Draft PR #1459、#1460、#1461、#1463 仍为审查草稿，未合并、未部署。事项 #1454、#1455 仍为 `PR_BLOCKED`。已保留的官方证书字典与官方附件类型配置均未删除、未改值。未把 f798 组合头对 main 开 PR。未再新建活动类型种子、gender_requirement 类型与字典项或考勤角色种子；已停用对象只读确认仍为 INACTIVE，未临时启用，未硬删。未再为复现而批准 change-reviews，未再发非空报名表写入，未再走管理端模板版本选项，也未为复现再发 H5 报名列表或时长/贡献政策只读。mid37–mid69 已走通项不记为新覆盖。未把「开关原本关着」立项为现网 8a 逻辑缺陷。首发总任务未完成。
+
+**并行。** 启动即为 1 个唯一写者加 4 路不抢写者位的只读 Codex，共 5 路，模型均为 GPT-6.2 Sol / medium。只读分别做 503 取证、v1.1/代签/工作流路径预核、开关改法与责任制是否独立的核对、清场台账入口核对。写者未等只读结束即开始写入。
+
+**登录与本机启动过程。** 管理端与占用夹具官方 H5 各尝试 1 次、重试 0 次，均未在发出登录请求前被拦，两端登录与服务端登出均为 HTTP 200／业务码 0。本轮无 Chrome 启动失败，故无失败报错可附，也无需加长重试间隔。已保留过程改进。未改官方登录工具，未关掉 chromiumSandbox 或官方 fillLogin 约束。临时配置目录已清理。队员用户名与用户 ID 均匹配。官方登录工具哈希复核一致。
+
+**夹具级别。** 登录后先读回为 `volunteer`（HTTP 200／业务码 0）。本轮临时调到 `level-1`（改后读回 200／0），跑完改回 `volunteer`（改回读回 200／0）。
+
+**开关。** 用户已于 11:56 点头打开验收环境 instance 级 `activityV11Workflow.enabled`。写者按官方启动环境变量 `ACTIVITY_V11_WORKFLOW_ENABLED`、以文件方式把启动配置从 `false` 写成 `true`，配置读回已确认。随后在重启 `runtime-api` 阶段停止：探针使用了现场 Docker 不支持的 `--timeout`，现场支持的是 `--time`。因此未完成重启，运行中的 8a 进程读回仍为 `false`，生效读回与就绪核对均未通过，收据记 `stopped_stage=restart_runtime_api`、`restarted=false`、`effective_readback=false`。启动配置中的 `true` 已保留，本轮没有把配置改回 `false`。只读预核另指出：该变量在 Nest 启动时读取，生产和 smoke 只接受显式 `true`/`false`；若由 Compose 的 `environment` 或 `env_file` 注入，改完后须重建容器以装载新环境，单纯重启旧容器可能沿用原环境。本轮未把开关打开到生效，也未为该阻撞开事项。
+
+**责任制与结算取证。** 责任制全局开关 `ACTIVITY_RESPONSIBILITY_WORKFLOW_ENABLED` 是独立于 v1.1 的 instance/启动项，映射到 `activityResponsibilityWorkflow.enabled`。本轮进程读回改前已为 `true`，写者未改。E4 贡献结算模式 `ACTIVITY_E4_CONTRIBUTION_SETTLEMENT_MODE` 是另一项独立设置，改前为 `off`，本轮未改。均未默默打开或关闭。
+
+**本轮新走通。** 无。收据记为 `WAVE68_NO_NEW_SUCCESS`。因 v1.1 开关尚未在运行进程生效，官方代签、工作人员手动确认、H5 活动级与活动级岗位管理写入、责任工作流、结算与可逆反馈均未执行。本轮仅 2 次业务写入（夹具调级与恢复），新建对象 0 个。
+
+**本轮因条件跳过、仍因缺前置而卡住的路径。** 除上述开关尚未生效外：本人签到仍缺已核实成对坐标与现场 QR；协办、交接与多人候补仍缺第二名正式成员；未确认 503/50300 的 H5 报名列表、非空报名表写后 GET、change-reviews 批准、队员端组织选项本轮未为复现再发；封面/图库缺已批准附件基线；归档仍不满 30 天且无已关账合格隔离活动；结算关账另缺合格服务时长等前置。只读确认 503/20153 在开关打开前已定位为 v1.1 关闭，不作为新的 8a 逻辑缺陷。
+
+**已知卡点。** 运行时 DTO 与 v1.1/责任制单次请求生效配置仍未核实。503/50300 首个失败操作仍未确认，四类是否同源仍未判定，未开事项。代签旧记录本轮未扩大查询，继续待核实。13034 无新观测。
+
+**写入与清理。** 发出业务写请求并成功回执 2 次，均为夹具级别调整与恢复。本轮新建对象 0 个，清理新建对象 0 个。清理台账仍为 10 项，状态未变，已停用 5 项只读确认仍为 INACTIVE。均未硬删。
+
+证据：`wave68-functional-probe-receipt.json` SHA-256 `8c2aee67008822c69fb9c93a6897a3c8ceec9a6b9f1d531f4e4beb0e05ada857`；`wave68-cleanup-ledger.json` SHA-256 `66c4cc948e95e1a26db3bd6917786e8e89ed03082859f04e2e0d4fe222b24148`；`official-t230-mid70-503-localization.json` SHA-256 `fe514ef19b5ecf1253b2dbf32f01df86cbf85ec1f77ae77ac909809592695b23`；`official-t230-mid70-v11-path-contract.json` SHA-256 `fd7f76312abe4f5d220181ce588ec8a04c7bc6b7df884711bf9aedb031139f28`；`official-t230-mid70-switch-contract.json` SHA-256 `fa333096849715e7ed2b21c0ab62ca69df5c232565f265f49240c133c51c4660`；`official-t230-mid70-ledger-contract.json` SHA-256 `4b92bb2638e2739bf02f0a03ecda3bba79b0cafda52b690872675351fc230a6c`；`SHA256SUMS-mid70.txt` SHA-256 `a810676777f638bbc98679a363f8c262b707caf154a08829247cc75e80552b9c`。mid6–mid69 未改写。
+
 ## 11 月 27 日 11:01–11:04 · 授权范围内预核后无新的可逆成功路径
 
 本段按北京时间（Asia/Shanghai）追记脱敏结果，05:30–05:35 及更早正文原样保留。现场管理端仍为限定留存 `f7985191`，队员端 H5 仍为 `3968b0bc`，API 仍为 `8a017348`。未重新部署、未合并、未正式对外开放。Draft PR #177 和移动端 Draft PR #12 均未计入现网或 `main` 头。未执行整站权限撤回，未清场或重部署整站。同一虚拟测试队员未改号，未与其他真实身份混用，未发明证件号，未发短信或验证码。未改四场验收活动的 2099 截止，也未把那四场改成占用夹具所管，未取消那四场报名。未改存储设置，开关保持 `enabled=true`。未重放上传或确认上传。未重放 H5 创建活动，也未重发 wave37 待核实 POST。未做整站正式开放，未启用或发送微信/短信通知。未发明经纬度或 QR。Draft PR #1459、#1460、#1461、#1463 仍为审查草稿，未合并、未部署。事项 #1454、#1455 仍为 `PR_BLOCKED`。已保留的官方证书字典与官方附件类型配置均未删除、未改值。本轮未开启 `activityV11Workflow.enabled`，也未开启责任制全局开关，未做整站或全局工作流启用。t272u「继续」未当作新的开关、清场重部署、合并草稿、另造队员或编造经纬度授权。未再新建活动类型种子、gender_requirement 类型与字典项或考勤角色种子；已停用类型种子、性别字典类型及 `any`、`male` 字典项、`assistant` 考勤角色只读确认仍为 INACTIVE，未临时启用，未硬删。未再为复现而批准 change-reviews，未再发非空报名表写入，未再走管理端模板版本选项，也未为复现再发 H5 报名列表或时长/贡献政策只读。registrationSchema、两处 attendanceRoleCode、preparationStartAt、三处 genderRequirementCode、H5 场次 capacity、场次岗位 locationRequired/radiusMeters（关定位并恢复继承）、defaultCheckInRadiusMeters、lateGraceMinutes、earlyLeaveThresholdMinutes、archiveWaitingDays、requiresInsurance、defaultLocationRequired 与单候选抽签不记为新覆盖。首发总任务未完成。
