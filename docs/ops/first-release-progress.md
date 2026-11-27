@@ -1,5 +1,30 @@
 # 首发进度快照
 
+## 2026-11-28 07:44:30–07:44:44 · 补 RegistrationFormVersion 六列 UPDATE 后，一次批准返回 20035（Asia/Shanghai）
+
+本段只追记对 `srvf_activity_review` 补 `public."RegistrationFormVersion"` 最小可逆 UPDATE，以及随后只做的一次批准。mid87 及更早正文逐字节保留；上文调窗／t335 段落未改写。未合并 Draft PR 175／177／13／182／183 或 API 1454／1455／1459／1460／1461／1463／1467，未部署或重启 API，未改四场 2099、WAVE77–84，未再平移窗口，未给 draft 角色扩权，未开 E4，未发短信，未占 t95。首发总任务未完成。
+
+### GRANT（2026-11-28 07:44:30 Asia/Shanghai）
+
+GRANT 前读回：该角色在此表仅有列级 SELECT（`id`、`activityId`、`schemaHash`、`statusCode`、`version`、`workflowRevision`），六列 UPDATE 均为 false。执行：
+
+```sql
+GRANT UPDATE (
+  "statusCode",
+  "workflowRevision",
+  "schemaHash",
+  "activatedAt",
+  "retiredAt",
+  "updatedAt"
+) ON TABLE public."RegistrationFormVersion" TO "srvf_activity_review";
+```
+
+读回：上述 6 列 UPDATE 均为 true，且 `is_grantable=NO`；INSERT／DELETE 仍为 false；`srvf_activity_draft` 的 UPDATE 仍为 false。未另授 `activatedAt`／`retiredAt`／`updatedAt` 的 SELECT。对应 REVOKE 已留在 `/private/tmp/srvf-t337u-formversion-update/03-revoke-review-formversion-update.sql`，未执行。本条发布批准链上累计增量 GRANT 为 1／3。
+
+### 一次批准复测（2026-11-28 07:44:44 Asia/Shanghai）
+
+窗口仍有效（结束于 11:40:14.001 Asia/Shanghai），未再平移。管理员 `accept_t71_admin` 对审核单 `cmwz26jnx02b0ny01itbub0fm` 只批准一次。HTTP 400，业务码 20035（`ACTIVITY_RESPONSIBILITY_TARGET_INVALID`，「责任人或协办人不符合条件」），请求标识 `cmwzmp474749e1f188639282456e49aeb`。批准前后审核单仍为 `pending`，活动仍为 `draft`、未发布。GRANT 之后的 PostgreSQL 日志窗口没有新的 42501。这说明报名表版本 UPDATE 已不再挡路；失败发生在冻结 8a 初次发布写入负责人（`createOwnerForPublish`／`assertActiveTarget`，要求正式队员）的业务校验。未再批准，未扩 GRANT，未改成员等级或责任绑定，Issue 8 未走。
+
 ## 2026-11-28 07:40:23–07:40:34 · 隔离草稿已调窗并再批一次，42501 转到 RegistrationFormVersion 的 UPDATE（Asia/Shanghai）
 
 本段只追记对隔离草稿 `cmwz1vy7f02a1ny01xuigxskj` 的时间窗口调整，以及随后只做的一次批准复测。mid87 及更早正文逐字节保留；上文 t325／wave98／182／183／t335 段落未改写。未合并 Draft PR 175／177／13／182／183，也未合并 API 1454／1455／1459／1460／1461／1463／1467，未部署或重启 API，未给其他表扩权，未改四场 2099、WAVE77–84、storage-settings 或开关，E4 仍为 off，未发短信，未占 t95。首发总任务未完成。
