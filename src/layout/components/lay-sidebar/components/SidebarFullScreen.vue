@@ -26,6 +26,8 @@ watch(
 <template>
   <span
     class="fullscreen-icon navbar-bg-hover hover:[&>svg]:animate-scale-bounce"
+    :title="isFullscreen ? '退出全屏' : '全屏'"
+    :aria-label="isFullscreen ? '退出全屏' : '全屏'"
     @click="toggle"
   >
     <IconifyIconOffline :icon="screenIcon" />

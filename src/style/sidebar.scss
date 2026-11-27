@@ -405,6 +405,12 @@
     justify-content: center;
     height: 48px;
     cursor: pointer;
+
+    img {
+      max-width: 40px;
+      max-height: 36px;
+      object-fit: contain;
+    }
   }
 
   .double-left {

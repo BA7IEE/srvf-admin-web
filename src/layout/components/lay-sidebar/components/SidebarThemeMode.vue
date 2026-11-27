@@ -35,6 +35,8 @@ watch(
 <template>
   <span
     class="theme-mode-icon navbar-bg-hover hover:[&>svg]:animate-scale-bounce"
+    title="切换深浅色"
+    aria-label="切换深浅色"
     @click="onToggle"
   >
     <IconifyIconOffline :icon="themeModeIcon" />

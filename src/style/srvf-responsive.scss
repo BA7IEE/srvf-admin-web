@@ -1,0 +1,65 @@
+/* 表格工具栏：RePureTableBar 标题栏是单行 flex，筛选按钮多时会把标题、刷新/设置图标挤出视口，允许换行。
+   标题不被 truncate 挤成零宽；右组与标题同行、占剩余宽度，内部筛选控件自行多行、右对齐，
+   图标留在组尾——flex-ac 本是 justify-around，整组换行后会把四枚图标摊满一行，要按行末对齐。 */
+.h-15.justify-between {
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  align-items: center;
+  height: auto;
+  min-height: 60px;
+}
+
+.h-15.justify-between > p {
+  flex-shrink: 0;
+}
+
+.h-15.justify-between > .flex-ac {
+  flex: 1 1 0;
+  justify-content: flex-end;
+  min-width: min(100%, 280px);
+}
+
+.h-15.justify-between > .flex-ac > .flex.mr-4 {
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  row-gap: 8px;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+@media (width <= 760px) {
+  .h-15.justify-between > .flex-ac {
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+}
+
+/* 手机宽度下固定右侧操作列（200–340px）会盖住数据，改回普通列；桌面保留 sticky */
+@media (width <= 760px) {
+  .el-table .el-table__cell.el-table-fixed-column--right {
+    position: static !important;
+    box-shadow: none !important;
+  }
+}
+
+/* 弹窗/抽屉宽度按百分比计算，在窄屏上会挤压两列表单，这里给出下限与手机端满宽 */
+.el-dialog:not(.is-fullscreen) {
+  max-width: calc(100vw - 32px);
+}
+
+@media (width > 760px) {
+  .el-dialog:not(.is-fullscreen) {
+    min-width: min(600px, calc(100vw - 32px));
+  }
+}
+
+@media (width <= 760px) {
+  .el-dialog:not(.is-fullscreen) {
+    width: calc(100vw - 32px) !important;
+  }
+
+  .el-drawer.rtl,
+  .el-drawer.ltr {
+    width: 100% !important;
+  }
+}
