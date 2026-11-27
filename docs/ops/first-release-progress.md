@@ -1,5 +1,35 @@
 # 首发进度快照
 
+## 2026-11-28 00:50:49–00:51:15 · 验收站前端已部署并完成 wave98 桌面复测（Asia/Shanghai）
+
+本段只追记 t325 验收站前端部署与随后的 wave98 桌面复测。mid87 及更早正文逐字节保留。未合并 Draft PR 175／177／13，未把 f798 或 177 当作 `main` 头，未部署 H5 [PR 12](https://github.com/BA7IEE/SRVFMobileWeb/pull/12)，未重启 API 容器，未改开关，E4 仍为 off。首发总任务未完成。
+
+### 现网版本（已公网核验）
+
+- **管理端** `https://admin.srvf.team` 已部署为 GitHub `main` `43f0fca731e9165ecac2cb97ddfd23de20aee661`（已含合入的 178／179／180），再加上未推送的 Draft [PR 177](https://github.com/BA7IEE/srvf-admin-web/pull/177) 四个建档补丁文件（本地 cherry-pick `beb9494d018248a4686dbeef8c482338d529b384`）。PR 177 仍为 draft，不得把它或历史 `f7985191` 当作 `main`／现网正式头合并或推送。
+- **队员端 H5** `https://app.srvf.team/h5/` 已部署为 Draft [PR 13](https://github.com/BA7IEE/SRVFMobileWeb/pull/13) 头 `09489036e8f6dbbcf13faeb1be6a0da45eaf039a`（基于 `3968b0bc`，不含 PR 12）。PR 13 仍为 draft，未合并。
+- **API** 仍冻结 `8a017348d4b8a642d673de539533fa8b1b750865`，容器 `srvf-t68-accept-runtime-api-1` 未重启。
+
+部署回执 `/private/tmp/srvf-t230u-live-test/official-t325-accept-frontend-deploy-note.json`，SHA-256 `1eb649609067eae65dbe8d5f12c0dfef498f522bc6a5a686704beecebcbc2bfc`。公网 `admin.srvf.team/index.html` 与 `app.srvf.team/h5/index.html` 的内容哈希已与该包一致。wave87–wave97 及该部署回执均未覆盖。
+
+### wave98 桌面复测（2026-11-28 00:50:49–00:51:15 Asia/Shanghai）
+
+隔离 0700 Chrome，不占 t95。回执 `/private/tmp/srvf-t230u-live-test/official-t325-wave98-post-deploy-note.json`，SHA-256 `ca8e21654541e11a23122d42cd6e923e9b90170209c8c0c4f7b45a2e3ae3fa91`。业务写 0。
+
+**通过证据**
+
+- 队员端保险页 PASS。已接通 `getMyOverview`，页面发出 `GET /api/app/v1/me/insurances` 且 200／0，不再出现「服务尚未接通」。未新建或填写保单。
+- 邀请活动考勤深链 PASS。公开详情仍为 404／20001，未改可见性。已 pass 队员从考勤深链进入，`my-punch-state` 200／0，可进入最小考勤 UI。未打卡，未改 WAVE77–84 或四场 2099。
+- `#/srvf/base-data/organizations` 现已落到「组织架构」页。
+- 178／179／180 离页抽查 PASS。队保单、系统账号、附件配置之间切换及再到证书管理，无白屏。
+
+**剩余缺口**
+
+- `#/srvf/org-hr/memberships` 在新管理端头上仍被送到 `/#/welcome`。[Issue 181](https://github.com/BA7IEE/srvf-admin-web/issues/181) 仍成立，但范围应收窄到归属总表（组织架构已在同一头上通过）。
+- 建档页点击「新建」后表单未打开，不能据此否定部包时已核验的四个必填契约字段（`memberNo`、`realName`、`memberSinceDate`、`memberOriginCode`）。未提交建档。
+- Issue 9 本轮是连续 H5 登录触发 429／42900，不是功能失败。Issue 8／10 NOT_RUN（未重放 publish approve，未开责任工作台）。
+- 发布批准 42501 及 [API #1464](https://github.com/BA7IEE/srvf-nest-api/issues/1464) 仍是现网最大阻塞。
+
 ## 2026-11-28 首发总账（约 00:10，Asia/Shanghai）
 
 ### 一、工作流程与接手顺序
