@@ -1,5 +1,46 @@
 # 首发进度快照
 
+## 2026-11-28 08:37–08:42 · 发布后正式报名已通过，列表 42501 补权后可读，可逆协办已撤销（Asia/Shanghai）
+
+本段追记已发布隔离活动 WAVE89 上的发布后路径：正式队员报名、录取读回、可逆协办后撤销，以及同一路径上新钉死的两处最小可逆 42501 补权。Issue 8 PASS 前情不在此重述。mid87 及更早正文逐字节保留；上文 t339 段落未改写。未合并 Draft PR 175／1467，未部署或重启 API 容器 `b5b5bd933560`，未改四场 2099、WAVE77–84，未再平移窗口，未开 E4，未发短信，未占 t95，未随机补应用层权限，未向 issue 1464 追加评论。夹具保持 volunteer。未对已发布活动 POST transfer-initiator。首发总任务未完成。
+
+### GRANT 与读回
+
+1. 08:37:48.161，`srvf_activity_registration`（oid 25228）：对 `public."RegistrationFormAnswer"` 补 `GRANT INSERT (id, createdAt, registrationRevisionId, fieldId, valueText), SELECT (id, attachmentId)`。读回上述列权限为 true，`is_grantable=NO`，UPDATE／DELETE 为 false。原因是第一次正式报名 POST 返回 HTTP 503／50300（请求 `cmwzok7nx8456902b55fc912b31381460`），PostgreSQL 于 08:36:54 以 42501 拒绝该角色的 INSERT … RETURNING。
+2. 08:40:41.450，`srvf_activity_admission`（oid 25225）：对 `public.organization_position_role_policies` 补 `GRANT SELECT (id, positionId, roleId, scopeMode, conditionJson, status, deletedAt)`。`deletedAt` 出现在 STATEMENT 的 WHERE 中。读回 7 列 SELECT 为 true，`is_grantable=NO`，INSERT／UPDATE／DELETE 为 false。同句已对 `public.roles` 的 `id`、`deletedAt` 有 SELECT，未再扩权。原因是负责人列出报名返回 HTTP 503／50300（请求 `cmwzomcw9c6089e56783cf2c1b1077be8`），PostgreSQL 于 08:38:35.149 以 42501 拒绝该角色。
+
+对应 REVOKE 留在 `/private/tmp/srvf-t340u-post-publish/`、`/private/tmp/srvf-t230u-live-test/t340-revoke-*.sql` 与 Draft PR 1467 的 `docs/ops/runtime-acl/t340/`，未执行。
+
+### 正式报名与录取读回
+
+队员 T305U-VIRT-01（`cmwynvb3300dbny0188n4szhw`，level-1，ACTIVE）对 WAVE89 `cmwz1vy7f02a1ny01xuigxskj` 提交报名：2026-11-28 08:38:34.789 Asia/Shanghai，HTTP 201／0，请求标识 `cmwzomcrgf53eedef6c4640ef9f9d6e21`，报名 `cmwzomcs30322ny019p4jdwq7`。库读回 `statusCode=pass`，`sourceCode=self`，`statusSummaryCode=active`，`reviewedAt`／`reviewedBy` 为空，提交当时即已通过，因此未再发送 `PATCH .../approve`。
+
+补权前列表 HTTP 503／50300；补权后 08:42:43 列表 HTTP 200／0，请求标识 `cmwzorp3wb986ead7038bafa53a27a457`，读到同一条报名、`statusCode=pass`。窗口仍为 07:32:14–11:40:14.001，`workflowRevision=5`，v5 active，活动仍 published。
+
+### 可逆协办
+
+先前用尚未录取的 T305U-VIRT-02 创建协办，HTTP 400／20035（请求 `cmwzok7q83bd85fcb742f619bf6fc99ec`）：`assertCollaboratorEligible` 要求目标已有该活动的 pass 报名或组织 ACTIVE 成员身份，不是缺正式档。对已通过的 T305U-VIRT-01：08:42:44.125 创建 HTTP 201／0，请求标识 `cmwzorp563437c9d1fdb047790869f0b5`，委派 `cmwzorp5p0332ny01r5xcd5kf`；08:42:44.207 撤销 HTTP 200／0，请求标识 `cmwzorp7m042861f8c8dd9a6993760a1e`。库读回该委派 `status=ended`，职责读回 `stillPresent=false`，发起人 owner 委派仍 active。报名保留。夹具读回 volunteer。
+
+### transfer-initiator（只读，未 POST）
+
+冻结 8a 要求活动 `statusCode==='draft'`，否则 `ACTIVITY_STATUS_INVALID`。WAVE89 已 published，故未发送 POST。历史 20020 是 `ACTIVITY_INITIATION_ORG_FORBIDDEN`（目标在活动组织中无 ACTIVE 成员身份，且调用方无 `activity.create.cross-org`），不是目录缺权；20019 才是非正式档。本轮没有可用来只重试一次的遗留隔离草稿。
+
+### time-policy／simple-draft 403（只读立项，未补应用权限）
+
+目录缺口仍为 0，未随机补应用层权限。以官方管理员或 WAVE89 发起人探测，三条均仍为 HTTP 403／业务码 40300（08:38:35 Asia/Shanghai）：
+
+1. `GET /api/admin/v1/activities/:id/simple-draft`（管理员，请求 `cmwzomd9kaef6a2dcc3f80ae3c0e21d04`）。冻结 8a 为 `@LoginScoped({ admission: 'app-member', require: 'all', engine: 'authz-scoped', scopes: ['responsibility'] })`，GET 未声明权限码。这是平台管理员与 app-member／职责范围的产品准入不匹配，不是目录缺码。
+2. `GET /api/admin/v1/activities/:id/time-policy-selection`（管理员，请求 `cmwzomdabb6f049c86803916d53bc4e87`）。冻结 8a 为 `@RequiresPermission('activity.time-policy.read', { require: 'all', engine: 'authz-scoped' })`。
+3. `GET /api/app/v1/my/managed-activities/time-policy-options`（发起人／owner，已改正查询参数 `organizationId`＋`plannedFrom`＋`plannedUntil`，请求 `cmwzomdb962542283cb91869350445261`）。冻结 8a 为 `@RequiresPermission('activity.time-policy.read', { admission: 'app-member', require: 'all', engine: 'authz-scoped', scopes: ['responsibility'] })`。此前用 `activityId` 探得的 400／40000 是探针对错参数，不是产品 403。
+
+权限码已在目录中，但现网官方管理员与已发布活动的发起人／owner 仍 403，说明该权限未绑定到这些现场主体。记入产品缺口，待后续立项，本轮不补权。这三条 403 的请求标识未出现在 API 容器标准输出（与 503／42501 不同）；证据是 HTTP 响应与冻结 8a 装饰器。
+
+成功的列表／协办请求上仍有 `AuthzDeclarationGuard` 观察缺口（`missingAdmission=true`，协办还缺 `activity-responsibility.override.record`），但 HTTP 已是 200／201，只记观察、不补权。
+
+### 回执
+
+`/private/tmp/srvf-t230u-live-test/official-t340-post-publish-paths-note.json`，SHA-256 `39a376d82737df587dd06f87710cdeaf4ac225f4aeeb6579042adbba700e9ad2`。未覆盖 t325–t339 与 wave98／99 回执，也未改 mid87 清单。官方登录工具 SHA-256 仍为 `5f11b7784417ef3cdbce6a95644199d95e2eec157ca97a86da9852e1fce3d00e`。
+
 ## 2026-11-28 08:17–08:28 · 已补 FormVersion INSERT，变更批准通过，Issue 8 PASS（Asia/Shanghai）
 
 本段追记对 `srvf_activity_review` 补 `RegistrationFormVersion` 最小 INSERT，以及同一变更批准／Issue 8 刷新路径上随后钉死的最小可逆授权；初始发布与 20035 前情不在此重述。mid87 及更早正文逐字节保留；上文 t338 段落未改写。未合并 Draft PR 175／1467，未部署或重启 API 容器 `b5b5bd933560`，未改四场 2099、WAVE77–84，未再平移窗口，未开 E4，未发短信，未占 t95，未给 draft 角色扩权，未向 issue 1464 追加评论。夹具保持 volunteer。首发总任务未完成。
