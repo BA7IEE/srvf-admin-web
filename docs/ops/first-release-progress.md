@@ -1,5 +1,30 @@
 # 首发进度快照
 
+## 2026-11-28 08:17–08:28 · 已补 FormVersion INSERT，变更批准通过，Issue 8 PASS（Asia/Shanghai）
+
+本段追记对 `srvf_activity_review` 补 `RegistrationFormVersion` 最小 INSERT，以及同一变更批准／Issue 8 刷新路径上随后钉死的最小可逆授权；初始发布与 20035 前情不在此重述。mid87 及更早正文逐字节保留；上文 t338 段落未改写。未合并 Draft PR 175／1467，未部署或重启 API 容器 `b5b5bd933560`，未改四场 2099、WAVE77–84，未再平移窗口，未开 E4，未发短信，未占 t95，未给 draft 角色扩权，未向 issue 1464 追加评论。夹具保持 volunteer。首发总任务未完成。
+
+### GRANT 与读回
+
+1. 08:17:23，`srvf_activity_review`：`GRANT INSERT (id, createdAt, updatedAt, activityId, version, statusCode, workflowRevision, schemaHash, activatedAt) ON TABLE public."RegistrationFormVersion"`。读回：上述 9 列 INSERT 为 true，`retiredAt` INSERT 为 false，`is_grantable=NO`，DELETE 为 false。因未授 `retiredAt`，表级 `has_table_privilege(INSERT)` 仍为 false。
+2. 08:18:29，同一角色：钉死请求 `cmwznvfm91a5277e87722d8ffec08149a` 后，对 `public."RegistrationFormField"` 按 STATEMENT 23 列补 INSERT（`is_grantable=NO`，无 UPDATE／DELETE）。
+3. 08:19:44，同一角色：钉死请求 `cmwznxa6d5c4be6d98baf7949aeb32fb0` 后，对 `public."CapacityReservation"` 补 `SELECT (bucketId, status)`（`is_grantable=NO`，无 INSERT／UPDATE／DELETE）。
+4. 08:27:59，`srvf_activity_registration`（oid 25228）：Issue 8 过期表提交 503／42501（请求 `cmwzo7k05c256b1ba39e99933c0b21165`）后，对 `RegistrationFormField` 补 STATEMENT 所需 12 列 SELECT（含 ORDER BY 的 `sortOrder`），`is_grantable=NO`，无 INSERT／UPDATE／DELETE。未给 `srvf_activity_draft` 补 FormField SELECT，因为本轮 Issue 8 并不依赖负责方 GET registration-form。
+
+对应 REVOKE 留在 `/private/tmp/srvf-t339u-formversion-insert/` 与 Draft PR 1467 的 `docs/ops/runtime-acl/t339/`，未执行。
+
+### 变更批准
+
+管理员对既有变更单 `cmwzn1g2l02syny01qhxgft55` 只批准一次：2026-11-28 08:20:13.510 Asia/Shanghai，HTTP 200／0，请求标识 `cmwznyqys71e961e50d7b420dd01205b3`。审核单 `approved`，报名表 v1 retired、v2 active，活动仍为 published（随后为完成 Issue 8 又批准了新的变更单，当前 `workflowRevision=5`、v5 active）。窗口未再平移。
+
+### Issue 8：PASS
+
+隔离 0700 Chrome，队员 T305U-VIRT-01，未占 t95。场次勾选需用 `getByRole(checkbox, 参加本场次)`（`getByText` 再向上找 `label` 会找不到，因为匹配到的就是 label 本身）；资格为 pass，勾选可用。最终在 v4 旧表打开并填写后批准变更到 v5，提交 HTTP 409、业务码 21036（「报名表版本不匹配或已失效」），出现「刷新定义并核对」，点击后读到「WAVE89 复核题」。未做成功的新报名提交。夹具读回 volunteer。
+
+### 回执
+
+`/private/tmp/srvf-t230u-live-test/official-t339-formversion-insert-grant-retest-note.json`，SHA-256 `348d467f0fd7b906ff14a9e8eb6b9a05ad2e0a826057386fa18817c3a6d7792f`。未覆盖 t325–t338 与 wave98／99 回执。官方登录工具 SHA-256 仍为 `5f11b7784417ef3cdbce6a95644199d95e2eec157ca97a86da9852e1fce3d00e`。
+
 ## 2026-11-28 07:48–07:58 · 20035 已用可逆正式档前提一次批准并发布；Issue 8 卡在变更批准的 INSERT（Asia/Shanghai）
 
 本段追记：先只读钉死 20035 的对象与失败条件，再按既有授权对占用夹具做临时 `level-1` 并在同一流程内恢复 `volunteer`，然后只批准一次初始审核；活动已发布后立即走 Issue 8。mid87 及更早正文逐字节保留；上文 t337／调窗／t335 段落未改写。未合并 Draft PR 175／177／13／182／183 或 API 1454／1455／1459／1460／1461／1463／1467，未部署或重启 API 容器 `b5b5bd933560`，未再平移窗口，未改四场 2099、WAVE77–84，未开 E4，未发短信，未占 t95，未虚构身份证，未把合成数据与真实身份混用，未硬改审核单或活动状态接发布。首发总任务未完成。
