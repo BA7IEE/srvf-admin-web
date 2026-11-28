@@ -1,5 +1,25 @@
 # 首发进度快照
 
+## 2026-11-28 10:52–10:59 · 正式时长证明已启用并复测；窗内考勤单／封场闸门（Asia/Shanghai）
+
+本段追记 t346u／t347u 授权后，按官方 D8 路径写入时长切换单例，以及对 WAVE89 在 11:40:14.001 结束前仍可走、且不依赖已禁止项的桌面路径。t354 的 20235 与 t350 签退不在此重述；未重跑已 PASS 项，未再试导入预览／存储 PUT／prepare／候补 06 取消，未开 E4，未关账，未发 declare-attendance-complete，未平移 WAVE89 窗口，未作废 01／03 打卡，未撤销仍 active 的签到码与签退码。mid87 及更早正文逐字节保留；上文 t354 段落未改写。未合并 Draft PR 175／177／13／182／183／1467／1468／1469，未部署或重启 API 容器 `b5b5bd933560`。夹具最终 volunteer。首发总任务未完成。
+
+### 正式时长证明启用
+
+官方 `--check-only` 在现网 PID 1 环境下为 `blocked`，唯一阻断 `readonly_maintenance_required`（v11 已开，在途 posting／prepare 均为 0）。现网只读维护闸若要打开需改容器环境并重启，已禁止；仅在一次性 CLI 进程设置 `ACTIVITY_WORKFLOW_READONLY=true` 后预检为 `ready`。官方命令还要求 ACTIVE 用户持有显式 USER×GLOBAL `activity.settlement-final-review.record`；库内该码无角色无绑定，SUPER_ADMIN 枚举不够。已做最小可逆补权（角色 `t346u-activity-time-cutover-actor` 仅此一模权限，绑定 `accept_t71_admin`），REVOKE 未执行。随后在未重启的现网镜像 `8a017348` 上执行一次官方切换：单例 `activity-time-v1` 于 10:52:05.561 写入，`replayed=false`，contentHash `1d4ef6728ef8dd173c0b330d86ca312471024345bd941a718bdb81c158851368`。事后预检 `already_cut_over`。现网 PID 1 只读闸仍关，E4 仍 off。
+
+### 时长证明复测
+
+管理端与 App、队员 01／03 四面于 10:52:53 均为 HTTP 200／0（此前 503／20235），payload 含 cutoverReceiptId。条目 total=0、volunteerServiceSeconds=0：官方不回填历史，且未做结算过账。请求依次为 `cmwztf3ap8476e57af24519926394e509`、`cmwztf3dgcf551947ab5fa8f26dcafc13`、`cmwztf3etcc89ca5cc8048e9bbb6f624e`、`cmwztf3frf3ec80d5a483d1ba11742a01`。启用回执 `official-t356-time-cutover-enable-note.json` SHA-256 `b0db7741e0f27fdca09758c46c270e23295ec5720903f3413accd60c9246ee95`。
+
+### 窗内桌面路径
+
+签到窗已于 10:00:50 关闭，签退窗仍开至 11:38:59；01／03 签退后 isPresent=false、nextAllowedAction=check_in（请求 `cmwztn2kg4be3a1df91992a87a4304531`、`cmwztn2m2ea292cd536d87f5fbfe654ed`）。未再签到、未重复签退、未移窗口。离线复核项／资格规则／场次列表均为 HTTP 200／0（请求 `cmwztn2mzca11132d27df602da0f74f73`、`cmwztn2oj1aad1ea091443854c3db28e9`、`cmwztn2pmba9603053de893a3ccf36d5c`）。负责人提交旧考勤单 HTTP 410／20154（请求 `cmwztn2s59fce20e3b7ddfc4ed32a31fc`），无残留单。证据封场 HTTP 409／20040「仍有场次的签退窗口未结束,不可封场」（请求 `cmwztn2st183767c137254f8effdc8043`）；签退窗结束后可再试，本轮未等窗。
+
+### 回执
+
+本回合窗内回执为 `/private/tmp/srvf-t230u-live-test/official-t357-inwindow-sheet-seal-note.json`（SHA-256 以该文件为准）。未覆盖 t325–t356 与 wave98／99，也未改 mid87 清单。官方登录工具 SHA-256 仍为 `5f11b7784417ef3cdbce6a95644199d95e2eec157ca97a86da9852e1fce3d00e`。
+
 ## 2026-11-28 10:27–10:35 · 1468／1469 已开草稿；时长证明 20235（Asia/Shanghai）
 
 本段追记 t350 之后的卡点处理：Issue 1465 已在独立工作树起草稿并按仓库规范开出 Draft PR，候补 06 的 20147 另开独立草稿 PR，以及 Issue 1465 中尚未单独走通的正式时长证明只读复查。t350 签退与对照不在此重述，未重跑签退，未再试导入预览或存储 PUT，未再试 prepare 或候补 06 取消／拒绝，未改桶计数或现网数据行，未启动 storage-consistency-worker，未开 E4，未发 complete／settlement close／declare-attendance-complete，未写入时长切换收据。mid87 及更早正文逐字节保留；上文 t350 段落未改写。未合并 Draft PR 175／177／13／182／183／1467／1468／1469，未部署或重启 API 容器 `b5b5bd933560`。夹具最终 volunteer。首发总任务未完成。
