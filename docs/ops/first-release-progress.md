@@ -1,5 +1,29 @@
 # 首发进度快照
 
+## 2026-11-28 09:06 · 管理端可逆协办与队员凭证已走通；目录 30100；1465 对照扩展（Asia/Shanghai）
+
+本段追记 71 分类中不依赖新建官方组织草稿／移交／跨组织发起的桌面项。WAVE89 官方签到与隔离草稿 20020 前情不在此重述。本轮未发送 check-out，未加组织在籍，未打移交，未作废签到事件 `cmwzp3th3033xny01o62ctbup`，未撤销仍 active 的签到码。mid87 及更早正文逐字节保留；上文 t342 段落未改写。未合并 Draft PR 175／1467，未部署或重启 API 容器 `b5b5bd933560`，未改 WAVE89、四场 2099、WAVE77–84，未开 E4，未发 complete／settlement close，未随机补应用层权限，未使用 T69-ACCEPT-A。夹具最终 volunteer。报名仍为 pass。首发总任务未完成。
+
+### 管理端可逆协办
+
+已录取队员 T305U-VIRT-01（报名 `cmwzomcs30322ny019p4jdwq7` 仍为 pass）走管理端口：`POST /api/admin/v1/activities/:id/responsibilities/collaborators` 于 09:06:03.711 返回 HTTP 201／0（请求 `cmwzplp2kb1f92c47f38212765c9551ba`），指派 `cmwzplp330354ny01lpj0p303`，读回 responsibilities 可见。随后 `DELETE .../collaborators/:assignmentId` 于 09:06:03.964 返回 HTTP 200／0（请求 `cmwzplp9nf0c8eec4715fd606d98175de`），读回不再在场，库中 status=ended。应用端口可逆协办已在 t340 走通并保持 ended，本轮不再重做。
+
+### 队员考勤凭证渲染
+
+T305U-VIRT-01 调用 `POST /api/app/v1/my/attendance-member-credential/render`，09:06:04 返回 HTTP 201，`Content-Type: image/svg+xml; charset=utf-8`，SVG 9470 字节（请求 `cmwzplpwuaf5876b073f1cbbe6252da3c`）。未以 JSON 回传 token，明文 token 未落盘；仅保留 SVG SHA-16 `8e8af4c580c7083c`。
+
+### 时间策略目录与打卡后只读核对
+
+`GET /api/admin/v1/activity-time-policies`（`activity-time-policy.read.catalog`）于 09:06:03 返回 HTTP 403／业务码 30100（「无权执行此操作」，请求 `cmwzplp0id58fcbd8b566530a0af6d3b3`）。这与此前已定性的活动范围 time-policy-selection／options、simple-draft 的 403／40300 不同，属于官方管理端权限未绑定，本轮未补应用层权限。
+
+打卡后只读：队员 `my-punch-state` 仍为 isPresent=true、nextAllowedAction=check_out、checkInAt 08:52:09.580。主办方 `GET .../managed-activities/:id/check-ins` 两次均为 HTTP 200／0 但 total=0（请求 `cmwzplpilb9b70e0697c606b38300413d`、`cmwzpmq1k06e465221aac691d7f93c142`）。`attendance-sheet-draft` 两次均为 HTTP 200／0，records 为空、flags 为空，且该已在场报名仍出现在 absentRegistrations（请求 `cmwzplpnu141cb6cf7a9f38e553f60edc`、`cmwzpmpzweb312f579819b09b68315128`）。管理端与主办方 attendance-sheets 列表均为 total=0。这是 Issue 1465 的对照扩展：官方 self_qr 签到已确认，但主办方签到列表与考勤草稿仍把该队员视为缺席。只对照、未改产品、未开 E4。
+
+候补未做：WAVE89 容量 2、仅 1 条 pass，满员前提不成立，未人为占满。考勤单据创建未做：提交需要签退／服务时长记录，签退窗尚未打开，本轮不编造签退时间。无新的 42501，未改 ACL，Draft PR 1467 未追加。
+
+### 回执
+
+`/private/tmp/srvf-t230u-live-test/official-t343-71-followup-note.json`，SHA-256 `9dc4d093148a4eb609196e99b8e4dd4bebc3ad987fdbbd9d0ac3ddd373a4ee3f`。未覆盖 t325–t342 与 wave98／99 回执，也未改 mid87 清单。官方登录工具 SHA-256 仍为 `5f11b7784417ef3cdbce6a95644199d95e2eec157ca97a86da9852e1fce3d00e`。
+
 ## 2026-11-28 08:59–09:01 · 隔离草稿创建钉死 20020；未发 transfer-initiator，未发 check-out（Asia/Shanghai）
 
 本段追记为测试移交发起人而新建可逆隔离草稿的只读前提与一次创建。WAVE89 官方签到前情不在此重述。本轮未发送 check-out，未作废签到事件 `cmwzp3th3033xny01o62ctbup`，未撤销签到码。mid87 及更早正文逐字节保留；上文 t341 段落未改写。未合并 Draft PR 175／1467，未部署或重启 API 容器 `b5b5bd933560`，未改 WAVE89、四场 2099、WAVE77–84，未开 E4，未发 complete／settlement close，未随机补应用层权限，未编造组织成员身份。夹具最终 volunteer。报名仍为 pass。首发总任务未完成。
