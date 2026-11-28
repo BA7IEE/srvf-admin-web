@@ -1,5 +1,25 @@
 # 首发进度快照
 
+## 2026-11-28 08:52 · 官方 QR 本人签到已确认；签退窗未到；汇总/账本仍对照 1465（Asia/Shanghai）
+
+本段追记已发布隔离活动 WAVE89 上的官方考勤路径：负责人签发签到二维码、受保护 SVG 解码、已录取队员 T305U-VIRT-01 本人签到。上一轮报名/协办前情不在此重述。mid87 及更早正文逐字节保留；上文 t340 段落未改写。未合并 Draft PR 175／1467，未部署或重启 API 容器 `b5b5bd933560`，未改四场 2099、WAVE77–84，未作废既有官方打卡，未再平移窗口，未开 E4，未发 complete／settlement close／declare-attendance-complete，未发短信，未占 t95，未随机补应用层权限。夹具保持 volunteer。报名 `cmwzomcs30322ny019p4jdwq7` 仍为 pass，未取消。首发总任务未完成。
+
+### 官方 QR 签发、解码与本人签到
+
+08:52:09.261，负责方对场次 `cmwz26jgy02aony015uus1swz` 签发 check-in 二维码：HTTP 201／0，请求标识 `cmwzp3t7i22f0f3a9d56700b00fa75c04`，凭证 `211f2c03-1b11-4abf-b9a7-8481685a6e3b`，`actionCode=check_in`，`statusCode=active`，版本 1，有效期 07:34:14–10:00:50。随后 render HTTP 201，`image/svg+xml` 9327 字节，请求标识 `cmwzp3t8l31f5569828e4d33da89fd1b6`；合成解码成功（token 长度 400，未落盘明文）。签发前该场次无已有二维码。
+
+签到前 `my-punch-state`：`isPresent=false`，`nextAllowedAction=check_in`。08:52:09.580，T305U-VIRT-01 在场次合成测试坐标（-140，-40，精度 5 米，非实际场地）提交本人签到：HTTP 201／0，请求标识 `cmwzp3tg95e6122dd96c37205ef37c655`，事件 `cmwzp3th3033xny01o62ctbup`，`eventTypeCode=check_in`，`sourceCode=self_qr`，`segmentStatusCode=open`，`geoVerified=true`，`outOfRange=false`，`distance=0.00`。签到后状态：`isPresent=true`，`nextAllowedAction=check_out`，`checkInAt=08:52:09.580`。库读回一致，报名仍为 pass，夹具 volunteer。
+
+未做签退。场次冻结签退窗为 10:01:50–11:38:59.001；当时仍在签到窗（至 10:00:50）。`checkOutAllowedAt=09:22:09.580` 只是最短在场 30 分钟提示，不能代替冻结场次签退窗，故未发送 check-out。
+
+### 只读汇总／账本（对照 API #1465）
+
+打卡成功后只读：本人与管理端的 `participation-summary`／`participation-ledger` 均为 HTTP 200／0。管理端活动汇总 `attendeeCount=0`，两侧账本 `total=0`／`itemCount=0`，积分仍为 0。这与 WAVE86／API #1465 的模式相同：官方 `self_qr` 事件和 `my-punch-state` 已确认在场，但 v1.1 汇总与账本尚未计入。本轮只对照，不改产品、不开 E4。本轮无新的 42501，也未把该已知缺口另立新单。
+
+### 回执
+
+`/private/tmp/srvf-t230u-live-test/official-t341-official-qr-checkin-note.json`，SHA-256 `e025773f2d2b80dc9525324228dbc12ab329f4a366a19a79b192883676bdf35c`。未覆盖 t325–t340 与 wave98／99 回执，也未改 mid87 清单。官方登录工具 SHA-256 仍为 `5f11b7784417ef3cdbce6a95644199d95e2eec157ca97a86da9852e1fce3d00e`。
+
 ## 2026-11-28 08:37–08:42 · 发布后正式报名已通过，列表 42501 补权后可读，可逆协办已撤销（Asia/Shanghai）
 
 本段追记已发布隔离活动 WAVE89 上的发布后路径：正式队员报名、录取读回、可逆协办后撤销，以及同一路径上新钉死的两处最小可逆 42501 补权。Issue 8 PASS 前情不在此重述。mid87 及更早正文逐字节保留；上文 t339 段落未改写。未合并 Draft PR 175／1467，未部署或重启 API 容器 `b5b5bd933560`，未改四场 2099、WAVE77–84，未再平移窗口，未开 E4，未发短信，未占 t95，未随机补应用层权限，未向 issue 1464 追加评论。夹具保持 volunteer。未对已发布活动 POST transfer-initiator。首发总任务未完成。
