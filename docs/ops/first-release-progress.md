@@ -1,5 +1,23 @@
 # 首发进度快照
 
+## 2026-11-28 09:35 · 递补队员 03 官方签到、邀请主链候补与访客登记已走通（Asia/Shanghai）
+
+本段追记在签到窗关闭前，为已递补为 pass 的 T305U-VIRT-03 走官方 QR 签到，并以报名主链邀请补上管理端旧代报名无法提交的 04 候补，同时登记一条合成访客。t346 产品闸前情不在此重述。本轮未发送 check-out，未取消 01，未作废 01 签到事件，未撤销仍 active 的签到码，未加组织在籍，未打移交，未随机补应用层权限，未改容量，未平移 WAVE89 窗口。mid87 及更早正文逐字节保留；上文 t346 段落未改写。未合并 Draft PR 175／1467，未部署或重启 API 容器 `b5b5bd933560`。夹具最终 volunteer。首发总任务未完成。
+
+### 官方 QR 签到（03）
+
+复用既有签到码 `211f2c03-1b11-4abf-b9a7-8481685a6e3b`（render HTTP 201，SVG 9327 字节，请求 `cmwzqo0v078475ca7ce37e0a5197a514c`），未新签发、未撤销。T305U-VIRT-03 于 09:35:52.301 本人签到，HTTP 201／0（请求 `cmwzqo15q3d1439ef83d8da7a151b347c`），事件 `cmwzqo16e03diny01wpep691g`，source=self_qr，geoVerified=true。随后 isPresent=true、nextAllowedAction=check_out。01 状态仍为在场，事件 `cmwzp3th3033xny01o62ctbup` 未作废。明文 token 未落盘。
+
+### 邀请主链候补与访客
+
+主办方创建邀请 `cmwzqo1dx03dtny01mfsddltu` HTTP 201／0（请求 `cmwzqo1d12ecb61bc06a83425608b550c`）。T305U-VIRT-04 以 canonical 报名主链接受，HTTP 201／0（请求 `cmwzqo1iu5e5559eb85eedc70c799db2f`），报名 `cmwzqo1jq03e2ny01yu0gr8nv`，statusCode=waitlisted，waitlistPosition=1，sourceCode=invitation，09:35:52.768。这补上了管理端旧代报名 21038 走不通的主链。未再撤回。01／03 仍为 pass，02 仍为 cancelled。
+
+访客 `POST .../visitors` 于 09:35:52 返回 HTTP 201／0（请求 `cmwzqo1mrf1e72619db3108ba0335e46c`），访客 `cmwzqo1nd03emny01wobv47ag`，姓名为合成「WAVE89 隔离验收访客」，列表 HTTP 200／0、total=1。无撤销口，留作可逆测试数据。01 读评价返回 HTTP 409／35030（「活动尚未完结，暂不能评价」），属未完结闸，未当缺陷连打。
+
+### 回执
+
+`/private/tmp/srvf-t230u-live-test/official-t347-qr03-invite-visitor-note.json`，SHA-256 `01286673974515c61a8249b7e737712b20450e29b4ce2b78a0fa5a92c281bd64`。未覆盖 t325–t346 与 wave98／99 回执，也未改 mid87 清单。官方登录工具 SHA-256 仍为 `5f11b7784417ef3cdbce6a95644199d95e2eec157ca97a86da9852e1fce3d00e`。
+
 ## 2026-11-28 09:31 · 模板解析已走通；管理端代报名 21038；旧 GPS 打卡 20154／22002（Asia/Shanghai）
 
 本段追记 71 分类中不依赖签退／移交／跨组织／随机补应用权限的项。候补递补前情不在此重述。本轮未发送 check-out，未取消 01，未加组织在籍，未打移交，未随机补应用层权限，未改容量，未平移 WAVE89 窗口，未改四场 2099 与 WAVE77–84，未开 E4，未发 complete／settlement close／宣布出勤完成。mid87 及更早正文逐字节保留；上文 t345 段落未改写。未合并 Draft PR 175／1467，未部署或重启 API 容器 `b5b5bd933560`。夹具最终 volunteer。01／03 仍为 pass，02 仍为 cancelled，官方签到事件与签到码未动。首发总任务未完成。
