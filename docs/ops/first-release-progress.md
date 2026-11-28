@@ -1,5 +1,25 @@
 # 首发进度快照
 
+## 2026-11-28 09:31 · 模板解析已走通；管理端代报名 21038；旧 GPS 打卡 20154／22002（Asia/Shanghai）
+
+本段追记 71 分类中不依赖签退／移交／跨组织／随机补应用权限的项。候补递补前情不在此重述。本轮未发送 check-out，未取消 01，未加组织在籍，未打移交，未随机补应用层权限，未改容量，未平移 WAVE89 窗口，未改四场 2099 与 WAVE77–84，未开 E4，未发 complete／settlement close／宣布出勤完成。mid87 及更早正文逐字节保留；上文 t345 段落未改写。未合并 Draft PR 175／1467，未部署或重启 API 容器 `b5b5bd933560`。夹具最终 volunteer。01／03 仍为 pass，02 仍为 cancelled，官方签到事件与签到码未动。首发总任务未完成。
+
+### 走通与产品闸
+
+主办方 `GET /api/app/v1/my/managed-activities/:id/template-resolution` 于 09:31:03 返回 HTTP 200／0（请求 `cmwzqhu7m22d4e1d9560aec3ff68e7ece`）。WAVE89 无选中模板（templateVersionId 为空），接口本身可读。
+
+管理端代报名 `POST /api/admin/v1/activities/:id/registrations` 为 T305U-VIRT-04 返回 HTTP 409／业务码 21038（「该活动必须使用报名主链提交」，请求 `cmwzqhtyu0e9eaca085fff7734ab2aa19`）。未生成 04 报名行。这是 v1.1 活动对旧管理端代报名入口的产品闸，管理端 DTO 无法携带 formVersion／answers／preferences，未再连打，未改产品。
+
+旧 GPS 打卡：01（已有官方 self_qr 签到）与 03 的 `GET /api/app/v1/my/activities/:id/check-in` 均为 HTTP 404／22002（「活动打卡记录不存在」）。对 03 只 POST 一次，返回 HTTP 410／20154（「本实例已切换至活动 v1.1,旧考勤写入口已关闭」，请求 `cmwzqhui94306472e496a8d3cbb92ff45`），无落盘。只对照 1465，未新开 issue，未再打。
+
+### 归档时间门
+
+现网无超过 30 天无人处理的隔离草稿；已发布活动归档需要结算关账，本轮禁止关账。未改系统时钟或全局库时间，未为归档改 WAVE89／WAVE77–84／四场 2099 的窗口。归档／撤档本轮未做。
+
+### 回执
+
+`/private/tmp/srvf-t230u-live-test/official-t346-71-continue-note.json`，SHA-256 `8620c901ab243f82b2784445e640e93e9243bada5b59d05964be68a0667432ee`。未覆盖 t325–t345 与 wave98／99 回执，也未改 mid87 清单。官方登录工具 SHA-256 仍为 `5f11b7784417ef3cdbce6a95644199d95e2eec157ca97a86da9852e1fce3d00e`。
+
 ## 2026-11-28 09:22 · 取消无打卡的 02 后，候补 03 自动递补为 pass（Asia/Shanghai）
 
 本段追记 WAVE89 候补递补：只走官方取消口取消无打卡的 T305U-VIRT-02，观察第 1 位候补 T305U-VIRT-03 是否出队。候补建成前情不在此重述。本轮未发送 check-out，未取消 01 报名 `cmwzomcs30322ny019p4jdwq7`，未加组织在籍，未打移交，未随机补应用层权限，未改容量，未硬删，未作废签到事件，未撤销签到码。mid87 及更早正文逐字节保留；上文 t344 段落未改写。未合并 Draft PR 175／1467，未部署或重启 API 容器 `b5b5bd933560`，未改四场 2099、WAVE77–84，未开 E4，未发 complete／settlement close，未使用 T69-ACCEPT-A。夹具最终 volunteer。01 仍为 pass，官方签到事件仍在。首发总任务未完成。
