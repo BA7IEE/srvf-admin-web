@@ -1,5 +1,23 @@
 # 首发进度快照
 
+## 2026-11-28 08:59–09:01 · 隔离草稿创建钉死 20020；未发 transfer-initiator，未发 check-out（Asia/Shanghai）
+
+本段追记为测试移交发起人而新建可逆隔离草稿的只读前提与一次创建。WAVE89 官方签到前情不在此重述。本轮未发送 check-out，未作废签到事件 `cmwzp3th3033xny01o62ctbup`，未撤销签到码。mid87 及更早正文逐字节保留；上文 t341 段落未改写。未合并 Draft PR 175／1467，未部署或重启 API 容器 `b5b5bd933560`，未改 WAVE89、四场 2099、WAVE77–84，未开 E4，未发 complete／settlement close，未随机补应用层权限，未编造组织成员身份。夹具最终 volunteer。报名仍为 pass。首发总任务未完成。
+
+### 只读前提
+
+官方组织 `cmwsjdykr001dqi017q03rdbq`（T80U-20261122 候选试点单位）中，Path 乙夹具与 T305U-VIRT-01／02 均无 ACTIVE 成员身份；T305U-VIRT-01 的 organization-options 为 HTTP 200／0 但可选组织数为 0。夹具 volunteer 读 organization-options 为 HTTP 403／20019（「只有正式队员可以发起活动」）。该组织唯一 ACTIVE 成员为 T69-ACCEPT-A，本轮未使用、未登录、未作为移交目标。
+
+### 42501 与一次创建
+
+临时将夹具升为 level-1 后，`POST /api/app/v1/my/managed-activities` 先于 08:59:40 返回 HTTP 503／50300（请求 `cmwzpdhm1374a1845969c78f1e3bd8bd2`）。PostgreSQL 42501 拒绝 `srvf_activity_draft`（oid 25222）读取 `organization_position_role_policies`。09:00:35.424 按 STATEMENT 补 `SELECT (id, positionId, roleId, scopeMode, conditionJson, status, deletedAt)`，`is_grantable=NO`，无 INSERT／UPDATE／DELETE；`public.roles` 所需列已有 SELECT，未再扩权。REVOKE 留档未执行。库中无 WAVE342 残留行。
+
+补权后只再创建一次：09:01:01，HTTP 403／业务码 20020（「无权为该组织发起活动」，请求 `cmwzpf7yt32c5a937c583c4220622f2b1`），标题拟用「WAVE342 隔离移交验收 65b49adf」，窗口拟 13:00–16:00。这就是 `ACTIVITY_INITIATION_ORG_FORBIDDEN`：发起人在目标组织无 ACTIVE 成员身份，且调用方无 `activity.create.cross-org`。未再连打，未补该应用权限，未编造成员身份。草稿未建成，因此未 POST transfer-initiator，也无需取消。夹具已恢复 volunteer。活动状态机无 INACTIVE；若草稿建成，官方停用口是 `POST /cancel` → `cancelled`，不是硬删。
+
+### 回执
+
+`/private/tmp/srvf-t230u-live-test/official-t342-transfer-initiator-draft-note.json`，SHA-256 `39a23df3fe48960662636eec6f81b6edc7f8dcf34d180c07991179e9655c090e`。未覆盖 t325–t341 与 wave98／99 回执，也未改 mid87 清单。官方登录工具 SHA-256 仍为 `5f11b7784417ef3cdbce6a95644199d95e2eec157ca97a86da9852e1fce3d00e`。
+
 ## 2026-11-28 08:52 · 官方 QR 本人签到已确认；签退窗未到；汇总/账本仍对照 1465（Asia/Shanghai）
 
 本段追记已发布隔离活动 WAVE89 上的官方考勤路径：负责人签发签到二维码、受保护 SVG 解码、已录取队员 T305U-VIRT-01 本人签到。上一轮报名/协办前情不在此重述。mid87 及更早正文逐字节保留；上文 t340 段落未改写。未合并 Draft PR 175／1467，未部署或重启 API 容器 `b5b5bd933560`，未改四场 2099、WAVE77–84，未作废既有官方打卡，未再平移窗口，未开 E4，未发 complete／settlement close／declare-attendance-complete，未发短信，未占 t95，未随机补应用层权限。夹具保持 volunteer。报名 `cmwzomcs30322ny019p4jdwq7` 仍为 pass，未取消。首发总任务未完成。
