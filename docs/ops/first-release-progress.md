@@ -1,5 +1,33 @@
 # 首发进度快照
 
+## 2026-11-28 07:48–07:58 · 20035 已用可逆正式档前提一次批准并发布；Issue 8 卡在变更批准的 INSERT（Asia/Shanghai）
+
+本段追记：先只读钉死 20035 的对象与失败条件，再按既有授权对占用夹具做临时 `level-1` 并在同一流程内恢复 `volunteer`，然后只批准一次初始审核；活动已发布后立即走 Issue 8。mid87 及更早正文逐字节保留；上文 t337／调窗／t335 段落未改写。未合并 Draft PR 175／177／13／182／183 或 API 1454／1455／1459／1460／1461／1463／1467，未部署或重启 API 容器 `b5b5bd933560`，未再平移窗口，未改四场 2099、WAVE77–84，未开 E4，未发短信，未占 t95，未虚构身份证，未把合成数据与真实身份混用，未硬改审核单或活动状态接发布。首发总任务未完成。
+
+### 20035 对象与条件（只读）
+
+隔离活动 `cmwz1vy7f02a1ny01xuigxskj` 的拟写入负责人就是发起人 `cmwx5pu3r0024ny01o20nsa5s`（`T175U-VIRT-DVI5ZE0Q`／`t175u_virt_qtn2xuyu`）。队员状态 ACTIVE、未删除，且有 ACTIVE 用户。失败只发生在冻结 8a `createOwnerForPublish` → `assertActiveTarget(..., { formal: true })`：`gradeCode` 为 `volunteer`，不属于 `level-1`…`level-7`。对照已发布的 WAVE84 `cmwyw7s9l01cpny01awv81xtz`：同一发起人，现仍为 volunteer，当时是按历史 Issue 8 探针对该占用夹具临时升档后再恢复。不是「发起人缺失」或冻结 8a 逻辑缺陷，也未改那些已发布活动。
+
+### 可逆前提与一次初始批准（2026-11-28 07:49:51 Asia/Shanghai）
+
+经产品接口 `PATCH /api/admin/v1/members/:id`，夹具等级 volunteer → `level-1`（HTTP 200／0，请求标识 `cmwzmvoxj752a3d6213110f2d46e2b949`）。管理员 `accept_t71_admin` 对审核单 `cmwz26jnx02b0ny01itbub0fm` 只批准一次：HTTP 200，业务码 0，请求标识 `cmwzmvp2r380a9b3d9df594183ef4095d`。审核单变为 `approved`（`reviewedAt` 07:49:51.485），活动变为 `published`（`publishedAt` 同时刻，`workflowRevision=1`）。窗口仍为 07:32:14–11:40:14.001 Asia/Shanghai，未再平移。同一流程的 `finally` 已把夹具改回 `volunteer`（HTTP 200／0，请求标识 `cmwzmvp9x0e770e5f3ea16f55e80894a6`）；读回 `grade_final=volunteer`。未改 T305U-VIRT-01..12 的等级。
+
+### Issue 8（PARTIAL）与本链第 2、3 次增量 GRANT
+
+隔离 0700 Chrome（因 t96u 的 playwright-core 安装不完整，改用已有的 t113u-h5-fix 1.65.0），队员 T305U-VIRT-01 登录 200／0，打开已发布活动的 v1 报名页，标题与「WAVE89 隔离题目」可见并已填写，未占 t95。随后负责方一次提交变更审核 `cmwzn1g2l02syny01qhxgft55`（HTTP 200／0，写入 v2 字段「WAVE89 新题」），之后只复用这一条 pending 变更单，未再提交新的变更。
+
+变更批准三次都返回 HTTP 503／50300，且每次都先钉死了新的 42501，不是对同一失败连打：
+
+1. 07:54:19，请求标识 `cmwzn1g3y8dc238aee0ef93542d1ff650`：`srvf_activity_review` 对 `public."RegistrationUploadSession"` 做 `UPDATE ("statusCode","updatedAt") WHERE formVersionId,statusCode` 被拒。07:56:29 补最小列级 `SELECT ("formVersionId","statusCode"), UPDATE ("statusCode","updatedAt")`，`is_grantable=NO`，无 INSERT／DELETE。本链累计 2／3。
+2. 07:57:07，请求标识 `cmwzn51v594bc7d35896ac94cb5f70e55`：同一角色 `UPDATE` 旧版 `RegistrationFormVersion`（`statusCode,retiredAt,updatedAt`）并 `RETURNING` 整行时，缺 `createdAt`／`updatedAt`／`activatedAt`／`retiredAt` 的 SELECT（t337 只授了 SET 列的 UPDATE）。07:58:03 补这四列 SELECT，`is_grantable=NO`。本链累计 3／3。
+3. 07:58:32，请求标识 `cmwzn6v3if5b2c75e108c08f1af0575f9`：同一角色、同一连接对 `RegistrationFormVersion` 做 **INSERT**（`id,createdAt,updatedAt,activityId,version,statusCode,workflowRevision,schemaHash,activatedAt`）被拒。授权范围只覆盖 SELECT／UPDATE，且增量已到 3／3，因此未再 GRANT，未用改库绕过，变更单仍为 pending，报名表仍为 v1／active。未观察到 21036，也未见到「刷新定义并核对」入口。Issue 8 记为 PARTIAL。
+
+另：负责方 `GET .../registration-form` 曾 503／50300，是 `srvf_activity_draft` 对 `RegistrationFormField` 仍缺 SELECT（此前已记录）；本轮未给 draft 角色扩权。
+
+### 回执
+
+`/private/tmp/srvf-t230u-live-test/official-t338-20035-prerequisite-retest-note.json`，SHA-256 `5239bf8dbef61238309840e73a037f25bdb7d089bc67ddedf319d636bae8c078`。未覆盖 t325–t337 与 wave98／99 回执。对应 REVOKE 脚本留在 `/private/tmp/srvf-t338u-20035/`，未执行。官方登录工具 SHA-256 仍为 `5f11b7784417ef3cdbce6a95644199d95e2eec157ca97a86da9852e1fce3d00e`。
+
 ## 2026-11-28 07:44:30–07:44:44 · 补 RegistrationFormVersion 六列 UPDATE 后，一次批准返回 20035（Asia/Shanghai）
 
 本段只追记对 `srvf_activity_review` 补 `public."RegistrationFormVersion"` 最小可逆 UPDATE，以及随后只做的一次批准。mid87 及更早正文逐字节保留；上文调窗／t335 段落未改写。未合并 Draft PR 175／177／13／182／183 或 API 1454／1455／1459／1460／1461／1463／1467，未部署或重启 API，未改四场 2099、WAVE77–84，未再平移窗口，未给 draft 角色扩权，未开 E4，未发短信，未占 t95。首发总任务未完成。
