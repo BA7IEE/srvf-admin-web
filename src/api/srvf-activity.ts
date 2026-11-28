@@ -55,6 +55,7 @@ export type ActivityListQuery = {
   /** 截止时间过滤（ISO 8601，含） */
   dateTo?: string;
   includeDescendants?: boolean;
+  initiatedByMe?: boolean;
   /** true 时列表项附带 registrationCount / attendanceSheetCount */
   includeStats?: boolean;
 };
@@ -62,8 +63,8 @@ export type ActivityListResult = Envelope<PageResult<ActivityItem>>;
 
 /**
  * 活动分页列表 `GET /api/admin/v1/activities`。
- * 该端点是 **`[auth]`-only（仅需登录，无 RBAC 读码）**;可见性由后端按角色强制
- * （USER 只见 published/completed，忽略入参 statusCode）。前端不另设 hasPerms 码门。
+ * 该端点仅需登录，后端按组织授权范围过滤，无授权时只列本人发起的活动。
+ * USER 仍只见 published/completed。前端不另设 hasPerms 读码门。
  */
 export const getActivities = (params?: ActivityListQuery) =>
   http.request<ActivityListResult>("get", "/api/admin/v1/activities", {
@@ -79,14 +80,15 @@ export type ActivityOptionItem = {
 };
 
 /**
- * 活动选择器投影 `GET /api/admin/v1/activities/options`（`[auth]`-only,USER 强制只见
- * published/completed）。q 模糊命中 title；limit ≤100（后端硬校验,同 members/positions/organizations
- * 的 options 端点）。
+ * 活动选择器投影 `GET /api/admin/v1/activities/options`，数据范围和状态限制与列表一致。
+ * q 模糊命中 title，limit 上限为 100。
  */
 export const getActivityOptions = (params?: {
   q?: string;
   statusCode?: string;
   organizationId?: string;
+  includeDescendants?: boolean;
+  initiatedByMe?: boolean;
   limit?: number;
 }) =>
   http.request<Envelope<{ items: ActivityOptionItem[] }>>(
