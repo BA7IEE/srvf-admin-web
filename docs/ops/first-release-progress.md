@@ -1,5 +1,25 @@
 # 首发进度快照
 
+## 2026-11-28 10:27–10:35 · 1468／1469 已开草稿；时长证明 20235（Asia/Shanghai）
+
+本段追记 t350 之后的卡点处理：Issue 1465 已在独立工作树起草稿并按仓库规范开出 Draft PR，候补 06 的 20147 另开独立草稿 PR，以及 Issue 1465 中尚未单独走通的正式时长证明只读复查。t350 签退与对照不在此重述，未重跑签退，未再试导入预览或存储 PUT，未再试 prepare 或候补 06 取消／拒绝，未改桶计数或现网数据行，未启动 storage-consistency-worker，未开 E4，未发 complete／settlement close／declare-attendance-complete，未写入时长切换收据。mid87 及更早正文逐字节保留；上文 t350 段落未改写。未合并 Draft PR 175／177／13／182／183／1467／1468／1469，未部署或重启 API 容器 `b5b5bd933560`。夹具最终 volunteer。首发总任务未完成。
+
+### 1465 Draft PR 1468
+
+因 GitHub `main` 不含现网提交 `8a017348`，而四个目标文件在 `main` 与 8a 上字节相同，将现网树草稿 `47a15d0dcc310fa8577672ebded0f1ef8d7dec7d` cherry-pick 到 `main` 后再补 changelog。Draft [PR 1468](https://github.com/BA7IEE/srvf-nest-api/pull/1468) 于 10:27:54 打开，仍为 draft，base=`main`，头分支 `fix/issue-1465-v11-official-attendance-reads`，头 SHA `086ade741bc45af2372ebdf00d36e2f16f2b46e0`（与 ls-remote 一致）。闸开启后 list／attendance-sheet-draft／活动汇总 attendeeCount 改读当前官方服务段；账本与工时仍走结算后的 committed-ledger。未部署，现网读回在部署前仍为空。未与 1459／1460／1461／1463／1467 搅合。
+
+### 20147 Draft PR 1469
+
+候补取消／拒绝的真实根因是身份 `currentPositionId=null` 与当前修订 `positionId` 对账矛盾，不是缺预留。独立工作树 Draft [PR 1469](https://github.com/BA7IEE/srvf-nest-api/pull/1469) 于 10:31:24 打开，仍为 draft，头分支 `fix/waitlisted-revision-position-reconcile`，头 SHA `eddee8d496e05a0059f820eff6661c073696256a`。未并进 1468，未改现网 04／06 数据或桶计数，未部署。对象：06 报名 `cmwzrb4a003h8ny01r6hre56u`、身份 `cmwzrb4a803hfny0114ao6hk2`；04 报名 `cmwzqo1jq03e2ny01yu0gr8nv`、身份 `cmwzqo1jx03e9ny01ckgk1fex`；岗位 `cmwz26jji02arny01b2qdirhb`。
+
+### 时长证明 20235
+
+对已官方签退的 T305U-VIRT-01／03 只读 `participation-time-proof`（`dateFrom=dateTo=2026-11-28`）。管理端与 App 四面均为 HTTP 503／20235「正式参与时长证明尚未启用」，请求依次为 `cmwzssejmb5e571bc8540d24264d82727`、`cmwzssem34478ed76a5f943893a6c5149`、`cmwzssemy5e809c126e2071410118d019`、`cmwzssenleb8a56b8814d65e45bd12939`（10:35:15）。库内 `ActivityTimeCutoverReceipt` 行数为 0，单例 `activity-time-v1` 不存在；`readMemberTruthInTx` 因此抛 20235。这与 1468 要修的列表／草稿读路径不同：时长证明要等正式时长切换收据，本轮未执行切换命令。
+
+### 回执
+
+本回合回执为 `/private/tmp/srvf-t230u-live-test/official-t354-time-proof-20235-note.json`（SHA-256 以该文件为准）。t352／t353 回执分别为 `official-t352-1465-draft-pr-note.json` SHA-256 `41c1dba3621b169f21decc949cd36cc075f7a7c67fa4e3f8b9d02e5e2ebd86c2`，以及 `official-t353-20147-draft-pr-note.json` SHA-256 `35e19f8b9443813f1f8e744f5a54926d64556ce375f564fb59e0689a1a3b23e3`。未覆盖 t325–t353 与 wave98／99 回执，也未改 mid87 清单。官方登录工具 SHA-256 仍为 `5f11b7784417ef3cdbce6a95644199d95e2eec157ca97a86da9852e1fce3d00e`。
+
 ## 2026-11-28 10:01–10:05 · WAVE89 01／03 官方签退已走通；1465 对照仍空（Asia/Shanghai）
 
 本段追记签退窗开启后，用已备好的签退码为 WAVE89 在场队员做官方签退，并只读对照 Issue 1465。t349 前情不在此重述。本轮未提前签退，未重复签退，未作废 01／03 签到或签退事件，未撤销仍 active 的签到码与签退码，未再试导入预览或存储 PUT，未再试候补 06 取消／拒绝，未改桶计数或容量，未准备分配批次，未加组织在籍，未打移交，未随机补应用层权限，未开 E4，未发 complete／settlement close／declare-attendance-complete。mid87 及更早正文逐字节保留；上文 t349 段落未改写。未合并 Draft PR 175／1467，未部署或重启 API 容器 `b5b5bd933560`。夹具最终 volunteer。首发总任务未完成。
