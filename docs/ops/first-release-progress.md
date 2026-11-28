@@ -1,5 +1,29 @@
 # 首发进度快照
 
+## 2026-11-28 09:53–09:56 · 邀请拒绝已走通；候补取消/拒绝均 20147（Asia/Shanghai）
+
+本段追记 WAVE89 上不依赖存储上传与签退窗的报名主路径：队员拒绝邀请、first_come 活动上的分配批次准备口，以及候补本人取消。t348 前情不在此重述。本轮未发送 check-out，未取消 01，未作废 01／03 签到事件，未撤销仍 active 的签到码与签退码，未再试导入预览或存储 PUT，未加组织在籍，未打移交，未随机补应用层权限，未改容量，未平移 WAVE89 窗口，未开 E4，未发 complete／settlement close。mid87 及更早正文逐字节保留；上文 t348 段落未改写。未合并 Draft PR 175／1467，未部署或重启 API 容器 `b5b5bd933560`。夹具最终 volunteer。首发总任务未完成。
+
+### 邀请拒绝
+
+主办方邀请 T305U-VIRT-05，`cmwzrb3ts03gsny01g9s8e3wq` 于 09:53:48 创建 HTTP 201／0（请求 `cmwzrb3t0590ff81584057174b7756429`），当时 status=pending。05 随即以 canonical 拒绝口 `POST .../activity-invitations/:id/decline` 返回 HTTP 200／0（请求 `cmwzrb3y7c65d288d8cd9e041521aabc1`），status=declined，respondedAt=09:53:49.031。列表无 05 报名行。
+
+### 分配批次准备口
+
+`POST .../allocation-batches` 于 09:53:48 返回 HTTP 409／20152「活动分配方式与既有分配批次不一致」（请求 `cmwzrb3rfa5fc25c1faaf95edbf7a6692`）。WAVE89 为 first_come，官方准备口拒绝冻结资格排序／抽签批次。未得到 batch，未 void、未 commit。不是 42501，未改分配方式。
+
+### 候补 06 取消／拒绝 20147
+
+06 本人报名于 09:53:49 返回 HTTP 201／0（请求 `cmwzrb4898f358f3eb00e3d82b7b64422`），报名 `cmwzrb4a003h8ny01r6hre56u`，waitlisted／第 2 位。随后本人取消、负责人口取消、负责人口拒绝（reviewNote）均返回 HTTP 409／20147「活动容量与当前占用不一致」。只读库内 activity_person 桶 capacity=2、occupied=2，且有 01／03 两条 active 预留，与占用一致；position_participation 与 session_participation 两桶 occupied=2，但没有任何对应预留行。取消／拒绝候补时按此失败闭合。未改桶计数，未补预留，未改容量。06 留作可逆候补测试数据，未硬删。04 仍为候补第 1 位。
+
+### 读回
+
+09:56:18 官方 `my-punch-state`：01／03 均 isPresent=true、nextAllowedAction=check_out，尚无签退。事件 `cmwzp3th3033xny01o62ctbup`、`cmwzqo16e03diny01wpep691g` 仍在且无后续 supersede。签到码 `211f2c03-1b11-4abf-b9a7-8481685a6e3b` 与签退码 `cce8049e-459c-474f-a682-5f62fa034ca6` 仍 active。夹具 volunteer。API 容器 `b5b5bd933560` 仍 Up 21 hours，本轮未重启。PID 61139 仍在。签退尚未做。
+
+### 回执
+
+`/private/tmp/srvf-t230u-live-test/official-t349-invite-decline-waitlist-cancel-note.json`，SHA-256 `54d64c76846954b39280daff80f584a11a52346b024ab579e5382baca3b1a866`。未覆盖 t325–t348 与 wave98／99 回执，也未改 mid87 清单。官方登录工具 SHA-256 仍为 `5f11b7784417ef3cdbce6a95644199d95e2eec157ca97a86da9852e1fce3d00e`。
+
 ## 2026-11-28 09:41–09:44 · 离线考勤包可逆签发撤销与签退码签发已走通；导入预览 13034（Asia/Shanghai）
 
 本段追记 WAVE89 上不依赖签退窗的现场主路径：离线考勤包签发与撤销、签退二维码签发渲染（不用其发 check-out），以及 CSV 导入预览。t347 前情不在此重述。本轮未发送 check-out，未取消 01，未作废 01／03 签到事件，未撤销仍 active 的签到码 `211f2c03-1b11-4abf-b9a7-8481685a6e3b`，未执行导入预览，未加组织在籍，未打移交，未随机补应用层权限，未改容量，未平移 WAVE89 窗口，未开 E4，未发 complete／settlement close。mid87 及更早正文逐字节保留；上文 t347 段落未改写。未合并 Draft PR 175／1467，未部署或重启 API 容器 `b5b5bd933560`。夹具最终 volunteer。首发总任务未完成。
