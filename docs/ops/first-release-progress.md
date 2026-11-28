@@ -1,5 +1,29 @@
 # 首发进度快照
 
+## 2026-11-28 09:41–09:44 · 离线考勤包可逆签发撤销与签退码签发已走通；导入预览 13034（Asia/Shanghai）
+
+本段追记 WAVE89 上不依赖签退窗的现场主路径：离线考勤包签发与撤销、签退二维码签发渲染（不用其发 check-out），以及 CSV 导入预览。t347 前情不在此重述。本轮未发送 check-out，未取消 01，未作废 01／03 签到事件，未撤销仍 active 的签到码 `211f2c03-1b11-4abf-b9a7-8481685a6e3b`，未执行导入预览，未加组织在籍，未打移交，未随机补应用层权限，未改容量，未平移 WAVE89 窗口，未开 E4，未发 complete／settlement close。mid87 及更早正文逐字节保留；上文 t347 段落未改写。未合并 Draft PR 175／1467，未部署或重启 API 容器 `b5b5bd933560`。夹具最终 volunteer。首发总任务未完成。
+
+### 离线考勤包
+
+主办方 `POST .../onsite/sessions/:sessionId/offline-packages` 于 09:41:32 返回 HTTP 201／0（请求 `cmwzqvboy5ba3ab5454b46576b7597485`），包 `550dff20-8c8e-45f1-9dde-03bcb3b77617`，deviceId=`wave89-t348-isolated-device`，statusCode=active，workflowRevision=5。复核列表 HTTP 200／0、total=0，因尚未上传离线事件，属预期。随即以官方撤销口 `POST .../offline-packages/:packageId/revoke` 返回 HTTP 201／0（请求 `cmwzqvbri2d34c881bea0ed3e4f4c0570`），statusCode=revoked。明文 packageToken 未落盘。
+
+### 签退码签发
+
+主办方 `POST .../qr-credentials/check-out/issue` 于 09:41:32 返回 HTTP 201／0（请求 `cmwzqvbtn018f3efa0c83af2a6d9f6905`），凭证 `cce8049e-459c-474f-a682-5f62fa034ca6`，actionCode=check_out，statusCode=active，validFrom=10:01:50、validUntil=11:38:59.001。render HTTP 201（请求 `cmwzqvbuz34b4bb1ef69598e358941d47`），SVG 9189 字节，解码成功。列表读回签到码 `211f2c03-1b11-4abf-b9a7-8481685a6e3b` 仍为 active。未用签退码发 check-out，明文 token 未落盘。
+
+### 导入预览 13034
+
+`POST .../onsite/sessions/:sessionId/import-previews`（01／03 的 check_out CSV，仅预览）连续 4 次返回 HTTP 503／13034「附件存储操作处理中,请稍后重试」（09:41:32／09:42:56／09:43:31／09:44:16，请求 `cmwzqvbz94d92d42b1fea2ff0c9764847`、`cmwzqx4k699e40ca69e37d9e9af19426e`、`cmwzqxvoj843565a7203c79550cf62495`、`cmwzqyuipd6edc735c78eb10c8f585231`）。未执行 execute。只读库内 `storage_object_operations` 共 8 条，全部为 pending 的 `attachment_upload_verify`，attempts=0、无 leaseOwner；其中 4 条由本轮预览产生，另 4 条更早（含 2026-11-26 的 EAI_AGAIN）。这不是 42501。未改 storage-settings，未重启 API，未再重试以免继续堆 pending。
+
+### 读回
+
+09:44:37 官方 `my-punch-state`：01／03 均 isPresent=true、nextAllowedAction=check_out，checkOutAt 为空。库内事件 `cmwzp3th3033xny01o62ctbup`、`cmwzqo16e03diny01wpep691g` 仍在且无后续 supersede。夹具 volunteer。API 容器 `b5b5bd933560` 仍 Up 21 hours，创建于 2026-11-25 22:37:56，本轮未重启。PID 61139 仍在。
+
+### 回执
+
+`/private/tmp/srvf-t230u-live-test/official-t348-offline-package-checkout-qr-import-preview-note.json`，SHA-256 `7f2b561894cb00d73457dbb0cdd98b3d9f7a6b97d68b9830ffdd1d751a677d55`。未覆盖 t325–t347 与 wave98／99 回执，也未改 mid87 清单。官方登录工具 SHA-256 仍为 `5f11b7784417ef3cdbce6a95644199d95e2eec157ca97a86da9852e1fce3d00e`。
+
 ## 2026-11-28 09:35 · 递补队员 03 官方签到、邀请主链候补与访客登记已走通（Asia/Shanghai）
 
 本段追记在签到窗关闭前，为已递补为 pass 的 T305U-VIRT-03 走官方 QR 签到，并以报名主链邀请补上管理端旧代报名无法提交的 04 候补，同时登记一条合成访客。t346 产品闸前情不在此重述。本轮未发送 check-out，未取消 01，未作废 01 签到事件，未撤销仍 active 的签到码，未加组织在籍，未打移交，未随机补应用层权限，未改容量，未平移 WAVE89 窗口。mid87 及更早正文逐字节保留；上文 t346 段落未改写。未合并 Draft PR 175／1467，未部署或重启 API 容器 `b5b5bd933560`。夹具最终 volunteer。首发总任务未完成。
