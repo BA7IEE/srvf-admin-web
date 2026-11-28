@@ -69,9 +69,10 @@ export function useActivities() {
   dict.ensureTypes(["activity_type", "activity_status"]);
 
   const formRef = ref();
+  const initiatedByMe = ref(false);
 
-  // 活动列表端点是 [auth]-only、无 RBAC 读码 → 不设 hasPerms 读码门;
-  // 可见性由后端按角色强制（USER 只见 published/completed）。
+  // 活动列表仅需登录，前端不设 hasPerms 读码门。
+  // 后端按组织授权范围过滤，无授权时只列本人发起的活动，并保留 Q-A7 状态限制。
   // 写操作按真实 RBAC 码做按钮级显隐（SUPER_ADMIN 拥有全部码故全部可见）。
   const canCreate = hasPerms("activity.create.record");
   const canUpdate = hasPerms("activity.update.record");
@@ -93,11 +94,14 @@ export function useActivities() {
     loading,
     pagination,
     onSearch,
+    onFilterChange,
     handleSizeChange,
     handleCurrentChange
   } = useSrvfList<ActivityItem, ActivityListQuery>({
     fetch: getActivities,
-    buildParams: () => ({}),
+    buildParams: () => ({
+      initiatedByMe: initiatedByMe.value || undefined
+    }),
     errorMessage: "加载活动列表失败"
   });
 
@@ -470,7 +474,9 @@ export function useActivities() {
     dataList,
     pagination,
     statusMeta,
+    initiatedByMe,
     onSearch,
+    onFilterChange,
     openDialog,
     openCockpit,
     handleDelete,

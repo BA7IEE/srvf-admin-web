@@ -36,7 +36,9 @@ const {
   dataList,
   pagination,
   statusMeta,
+  initiatedByMe,
   onSearch,
+  onFilterChange,
   openDialog,
   openCockpit,
   handleDelete,
@@ -68,6 +70,15 @@ onMounted(() => {
     @page-current-change="handleCurrentChange"
   >
     <template #banner><SimpleEntry :quick-create="quickCreate" /></template>
+    <template #buttons>
+      <el-checkbox
+        v-model="initiatedByMe"
+        :disabled="loading"
+        @change="onFilterChange"
+      >
+        我发起的
+      </el-checkbox>
+    </template>
     <template #statusCode="{ row }">
       <el-tag :type="statusMeta(row.statusCode).type">
         {{ statusMeta(row.statusCode).text }}
