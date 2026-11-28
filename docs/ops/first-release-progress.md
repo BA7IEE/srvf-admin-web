@@ -1,5 +1,17 @@
 # 首发进度快照
 
+## 2026-11-28 09:22 · 取消无打卡的 02 后，候补 03 自动递补为 pass（Asia/Shanghai）
+
+本段追记 WAVE89 候补递补：只走官方取消口取消无打卡的 T305U-VIRT-02，观察第 1 位候补 T305U-VIRT-03 是否出队。候补建成前情不在此重述。本轮未发送 check-out，未取消 01 报名 `cmwzomcs30322ny019p4jdwq7`，未加组织在籍，未打移交，未随机补应用层权限，未改容量，未硬删，未作废签到事件，未撤销签到码。mid87 及更早正文逐字节保留；上文 t344 段落未改写。未合并 Draft PR 175／1467，未部署或重启 API 容器 `b5b5bd933560`，未改四场 2099、WAVE77–84，未开 E4，未发 complete／settlement close，未使用 T69-ACCEPT-A。夹具最终 volunteer。01 仍为 pass，官方签到事件仍在。首发总任务未完成。
+
+### 官方取消 02 与自动递补
+
+`PATCH /api/admin/v1/activities/:activityId/registrations/:id/cancel` 于 09:22:54.861 返回 HTTP 200／0（请求 `cmwzq7da431aaa907cd374999f23872c0`），目标仅 02 报名 `cmwzq04ui039ony014hbj944r`，statusCode=cancelled，deletedAt 仍为空。取消同一事务内 first_come 释放名额后，03 报名 `cmwzq055z03ahny01u9aapkfl` 由 waitlisted（原第 1 位）自动变为 pass，waitlistPosition 清空，reviewedAt 仍为空。管理端与主办方列表读回一致（请求 `cmwzq7dio2104d91b91f19742aa826ea5`、`cmwzq7djmf603c3dc34f7b0da4169d552`）。未再走官方录取／approve。活动／场次／岗位容量仍为 2。无新的 42501，无新的产品缺口。
+
+### 回执
+
+`/private/tmp/srvf-t230u-live-test/official-t345-waitlist-promotion-note.json`，SHA-256 `5fc976b16d9ce2e092c095d07f76adb159391ef3c68906db48c1b4f2faad65fe`。未覆盖 t325–t344 与 wave98／99 回执，也未改 mid87 清单。官方登录工具 SHA-256 仍为 `5f11b7784417ef3cdbce6a95644199d95e2eec157ca97a86da9852e1fce3d00e`。
+
 ## 2026-11-28 09:13–09:17 · WAVE89 可逆候补已走通；42501 已按 STATEMENT 补权（Asia/Shanghai）
 
 本段追记在已发布隔离活动 WAVE89 上，用既有测试队员按正常报名流程填满容量并观察候补。管理端协办与队员凭证前情不在此重述。本轮未发送 check-out，未加组织在籍，未打移交，未随机补应用层权限，未取消报名 `cmwzomcs30322ny019p4jdwq7`，未改容量，未作废签到事件，未撤销签到码。mid87 及更早正文逐字节保留；上文 t343 段落未改写。未合并 Draft PR 175／1467，未部署或重启 API 容器 `b5b5bd933560`，未改四场 2099、WAVE77–84，未开 E4，未发 complete／settlement close，未使用 T69-ACCEPT-A。夹具最终 volunteer。01 报名仍为 pass。候补与填满报名留作可逆测试数据，未硬删。首发总任务未完成。
