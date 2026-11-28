@@ -1,5 +1,25 @@
 # 首发进度快照
 
+## 2026-11-28 09:13–09:17 · WAVE89 可逆候补已走通；42501 已按 STATEMENT 补权（Asia/Shanghai）
+
+本段追记在已发布隔离活动 WAVE89 上，用既有测试队员按正常报名流程填满容量并观察候补。管理端协办与队员凭证前情不在此重述。本轮未发送 check-out，未加组织在籍，未打移交，未随机补应用层权限，未取消报名 `cmwzomcs30322ny019p4jdwq7`，未改容量，未作废签到事件，未撤销签到码。mid87 及更早正文逐字节保留；上文 t343 段落未改写。未合并 Draft PR 175／1467，未部署或重启 API 容器 `b5b5bd933560`，未改四场 2099、WAVE77–84，未开 E4，未发 complete／settlement close，未使用 T69-ACCEPT-A。夹具最终 volunteer。01 报名仍为 pass。候补与填满报名留作可逆测试数据，未硬删。首发总任务未完成。
+
+### 容量前提与填满
+
+只读确认：活动／场次／岗位容量均为 2，未改。当时仅 1 条 pass（T305U-VIRT-01），剩余 1 个名额，无需改容量。T305U-VIRT-02 按与 01 相同的自助报名于 09:17:17.307 返回 HTTP 201／0（请求 `cmwzq04tv3c2de7cd34ee0cd62b683876`），报名 `cmwzq04ui039ony014hbj944r`，first_come 自动为 pass，主办方列表 pass 数变为 2。未再手工 approve。
+
+### 候补观察
+
+名额已满后，T305U-VIRT-03 于 09:17:17.722 报名，HTTP 201／0（请求 `cmwzq055ee15df94dbe17b254d81a304b`），报名 `cmwzq055z03ahny01u9aapkfl`，statusCode=waitlisted，waitlistPosition=1。本人详情、主办方列表与管理端列表读回一致。01 仍为 pass，未被取消。活动／场次／岗位容量仍为 2。
+
+### 42501 与最小可逆补权
+
+02／03 首次报名于 09:13:21 均为 HTTP 503／50300（请求 `cmwzpv2fl6bcf3ad9dec9c41fa26fdf0b`、`cmwzpv2osf970d194c1f52ad87e0c62a9`）。PostgreSQL 42501 拒绝 `srvf_activity_registration`（oid 25228）更新 `public."ActivityEvidenceState"` 的 `populationRevision`／`version`／`lastPopulationAt`。09:14:15.894 按 STATEMENT 补这三列 UPDATE，`is_grantable=NO`；`updatedAt` 原已有 UPDATE，未纳入以免 REVOKE 误剥。该补权后同句仍 42501（请求 `cmwzpwv4wc5ba137c4bf047b8e381b971`、`cmwzpwvbuc4532f832d29a2a70cfa3e59`），原因是增量表达式读取 `populationRevision` 还缺 SELECT。09:16:18.695 再补该列 SELECT，`SET ROLE` 探测 UPDATE 1 后回滚，version 仍为 2。随后只再报名一次即走通。未 GRANT OPTION／SUPERUSER／PUBLIC／其他库。REVOKE 留档未执行。
+
+### 回执
+
+`/private/tmp/srvf-t230u-live-test/official-t344-waitlist-note.json`，SHA-256 `afd74e45dc34012cf54fc65ab88c16090353ebb059f7645365b2f9c74c258446`。未覆盖 t325–t343 与 wave98／99 回执，也未改 mid87 清单。官方登录工具 SHA-256 仍为 `5f11b7784417ef3cdbce6a95644199d95e2eec157ca97a86da9852e1fce3d00e`。
+
 ## 2026-11-28 09:06 · 管理端可逆协办与队员凭证已走通；目录 30100；1465 对照扩展（Asia/Shanghai）
 
 本段追记 71 分类中不依赖新建官方组织草稿／移交／跨组织发起的桌面项。WAVE89 官方签到与隔离草稿 20020 前情不在此重述。本轮未发送 check-out，未加组织在籍，未打移交，未作废签到事件 `cmwzp3th3033xny01o62ctbup`，未撤销仍 active 的签到码。mid87 及更早正文逐字节保留；上文 t342 段落未改写。未合并 Draft PR 175／1467，未部署或重启 API 容器 `b5b5bd933560`，未改 WAVE89、四场 2099、WAVE77–84，未开 E4，未发 complete／settlement close，未随机补应用层权限，未使用 T69-ACCEPT-A。夹具最终 volunteer。报名仍为 pass。首发总任务未完成。
