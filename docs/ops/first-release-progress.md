@@ -1,5 +1,23 @@
 # 首发进度快照
 
+## 2026-11-28 10:01–10:05 · WAVE89 01／03 官方签退已走通；1465 对照仍空（Asia/Shanghai）
+
+本段追记签退窗开启后，用已备好的签退码为 WAVE89 在场队员做官方签退，并只读对照 Issue 1465。t349 前情不在此重述。本轮未提前签退，未重复签退，未作废 01／03 签到或签退事件，未撤销仍 active 的签到码与签退码，未再试导入预览或存储 PUT，未再试候补 06 取消／拒绝，未改桶计数或容量，未准备分配批次，未加组织在籍，未打移交，未随机补应用层权限，未开 E4，未发 complete／settlement close／declare-attendance-complete。mid87 及更早正文逐字节保留；上文 t349 段落未改写。未合并 Draft PR 175／1467，未部署或重启 API 容器 `b5b5bd933560`。夹具最终 volunteer。首发总任务未完成。
+
+### 官方签退
+
+复用签退码 `cce8049e-459c-474f-a682-5f62fa034ca6`（未新签发、未撤销）。窗口于 10:01:50 开启后，T305U-VIRT-01 于 10:01:50.681 本人签退，HTTP 201／0（请求 `cmwzrlfm040eba84e4dc13bfe29ec559d`），事件 `cmwzrlfms03j3ny014sllemy1`，eventTypeCode=check_out，segmentStatusCode=closed_valid，geoVerified=true。随后 isPresent=false、nextAllowedAction=check_in。
+
+同分钟对已在场的 T305U-VIRT-03 首次签退返回 HTTP 409／22094「普通签退距签到不足30分钟」（请求 `cmwzrlfp7d0f05fc7ca348bb102de1314`）；官方 checkOutAllowedAt=10:05:52.301。未走 early-departure-close。10:05:53.979 再次官方签退成功，HTTP 201／0（请求 `cmwzrqnce879cc702f23e14125b8a689d`），事件 `cmwzrqncz03jvny01cc5327vl`，同样 closed_valid、geoVerified=true。随后 01／03 均 isPresent=false、nextAllowedAction=check_in。明文 token 未落盘。
+
+### 1465 只读对照
+
+签退完成后只读 participation-summary／ledger／check-ins／attendance-sheet-draft。接口本身均为 HTTP 200／0（管理端队员账本去掉误加的 activityId 查询参数后亦 200／0）。但官方四条事件在库内均在且无 supersede，列表与账本 total 仍为 0；考勤草稿 records 为空、absentRegistrations=2；活动汇总 registrationCounts 能看到报名（pass=2、waitlisted=2、cancelled=1），attendeeCount／attendanceRate／totalServiceHours 仍为 0。与 Issue 1465 同类，未为此改产品或开 E4。签到码 `211f2c03-1b11-4abf-b9a7-8481685a6e3b` 与签退码仍 active。
+
+### 回执
+
+`/private/tmp/srvf-t230u-live-test/official-t350-official-checkout-1465-note.json`，SHA-256 `de4d5ee748e77d56d9613b94a6e4d8ca626758a9233fa47a22230b0c186fe121`。未覆盖 t325–t349 与 wave98／99 回执，也未改 mid87 清单。官方登录工具 SHA-256 仍为 `5f11b7784417ef3cdbce6a95644199d95e2eec157ca97a86da9852e1fce3d00e`。
+
 ## 2026-11-28 09:53–09:56 · 邀请拒绝已走通；候补取消/拒绝均 20147（Asia/Shanghai）
 
 本段追记 WAVE89 上不依赖存储上传与签退窗的报名主路径：队员拒绝邀请、first_come 活动上的分配批次准备口，以及候补本人取消。t348 前情不在此重述。本轮未发送 check-out，未取消 01，未作废 01／03 签到事件，未撤销仍 active 的签到码与签退码，未再试导入预览或存储 PUT，未加组织在籍，未打移交，未随机补应用层权限，未改容量，未平移 WAVE89 窗口，未开 E4，未发 complete／settlement close。mid87 及更早正文逐字节保留；上文 t348 段落未改写。未合并 Draft PR 175／1467，未部署或重启 API 容器 `b5b5bd933560`。夹具最终 volunteer。首发总任务未完成。
